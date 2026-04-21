@@ -19,7 +19,7 @@ app.get('/health', (_req, res) => {
 });
 
 // ── Routes (to be wired in later tasks) ───────────────────────────────────
-// app.use('/api/auth',          require('./modules/auth/auth.routes'));
+app.use('/api/auth', require('./modules/auth/auth.routes'));
 // app.use('/api/orphans',       require('./modules/orphans/orphans.routes'));
 // app.use('/api/families',      require('./modules/families/families.routes'));
 // app.use('/api/quran-reports', require('./modules/quran/quran.routes'));
