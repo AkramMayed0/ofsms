@@ -21,16 +21,16 @@ app.get('/health', (_req, res) => {
 // ── Routes (to be wired in later tasks) ───────────────────────────────────
 // app.use('/api/auth',          require('./modules/auth/auth.routes'));
 // app.use('/api/orphans',       require('./modules/orphans/orphans.routes'));
-// app.use('/api/families',      require('./modules/families/families.routes'));
+app.use('/api/families',      require('./modules/families/families.routes'));
 // app.use('/api/quran-reports', require('./modules/quran/quran.routes'));
 // app.use('/api/disbursements', require('./modules/disbursements/disbursements.routes'));
 // app.use('/api/receipts',      require('./modules/receipts/receipts.routes'));
-// app.use('/api/sponsor',       require('./modules/sponsor/sponsor.routes'));
+app.use('/api/sponsor',       require('./modules/sponsor/sponsor.routes'));
 // app.use('/api/notifications', require('./modules/notifications/notifications.routes'));
 // app.use('/api/announcements', require('./modules/announcements/announcements.routes'));
 // app.use('/api/reports',       require('./modules/reports/reports.routes'));
-// app.use('/api/users',         require('./modules/users/users.routes'));
-// app.use('/api/governorates',  require('./modules/governorates/governorates.routes'));
+app.use('/api/users',         require('./modules/users/users.routes'));
+app.use('/api/governorates',  require('./modules/governorates/governorates.routes'));
 
 // ── Global error handler ──────────────────────────────────────────────────
 // eslint-disable-next-line no-unused-vars
