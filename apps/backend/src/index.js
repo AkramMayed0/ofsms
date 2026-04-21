@@ -30,7 +30,7 @@ app.get('/health', (_req, res) => {
 // app.use('/api/announcements', require('./modules/announcements/announcements.routes'));
 // app.use('/api/reports',       require('./modules/reports/reports.routes'));
 // app.use('/api/users',         require('./modules/users/users.routes'));
-// app.use('/api/governorates',  require('./modules/governorates/governorates.routes'));
+app.use('/api/governorates', require('./modules/governorates/governorates.routes'));
 
 // ── Global error handler ──────────────────────────────────────────────────
 // eslint-disable-next-line no-unused-vars
