@@ -18,6 +18,9 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+const cookieParser = require('cookie-parser');
+app.use(cookieParser()); // add this before routes
+
 // ── Routes (to be wired in later tasks) ───────────────────────────────────
 app.use('/api/auth', require('./modules/auth/auth.routes'));
 // app.use('/api/orphans',       require('./modules/orphans/orphans.routes'));
