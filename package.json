@@ -1,0 +1,19 @@
+{
+  "name": "ofsms",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/backend",
+    "apps/frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=apps/backend\" \"npm run dev --workspace=apps/frontend\"",
+    "lint": "eslint apps/*/src --ext .js,.jsx,.ts,.tsx",
+    "format": "prettier --write \"apps/*/src/**/*.{js,jsx,ts,tsx,json}\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5"
+  }
+}
