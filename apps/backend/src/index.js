@@ -5,17 +5,23 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 
+// ── Firebase: initialize before any route that may send notifications ─────────
+require('./config/firebase');
+
+// ── Scheduler: register monthly cron jobs ────────────────────────────────────
+const { initScheduler } = require('./scheduler');
+
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// ── Security & middleware ──────────────────────────────────────────────────
+// ── Security & middleware ─────────────────────────────────────────────────────
 app.use(helmet());
 app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
 app.use(morgan('dev'));
 app.use(cookieParser());
 
-// ── Health check ──────────────────────────────────────────────────────────
+// ── Health check ──────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
@@ -31,12 +37,11 @@ app.use('/api/dashboard',    require('./modules/dashboard/dashboard.routes'));
 // app.use('/api/quran-reports',  require('./modules/quran/quran.routes'));
 // app.use('/api/disbursements',  require('./modules/disbursements/disbursements.routes'));
 // app.use('/api/receipts',       require('./modules/receipts/receipts.routes'));
-// app.use('/api/notifications',  require('./modules/notifications/notifications.routes'));
 // app.use('/api/announcements',  require('./modules/announcements/announcements.routes'));
 // app.use('/api/reports',        require('./modules/reports/reports.routes'));
 // app.use('/api/users',          require('./modules/users/users.routes'));
 
-// ── Global error handler ──────────────────────────────────────────────────
+// ── Global error handler ──────────────────────────────────────────────────────
 // eslint-disable-next-line no-unused-vars
 app.use((err, _req, res, _next) => {
   console.error(err.stack);
@@ -48,6 +53,9 @@ app.use((err, _req, res, _next) => {
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
   console.log(`✅ OFSMS backend running on port ${PORT}`);
+
+  // Start cron jobs after server is up
+  initScheduler();
 });
 
 module.exports = app;

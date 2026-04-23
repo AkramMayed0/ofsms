@@ -1,9 +1,13 @@
 /**
  * orphans.service.js
  * All database queries for the orphans module.
+ *
+ * updateOrphanStatus now fires a push notification to the agent on rejection
+ * (FR-007, FR-048) and saves a notification record for in-app bell.
  */
 
 const { query } = require('../../config/db');
+const { sendPushNotification } = require('../notifications/notifications.service');
 
 /**
  * Create a new orphan record.
@@ -33,7 +37,6 @@ const createOrphan = async ({
 
 /**
  * Get orphans — supports filtering by status, agentId, governorateId, isGifted.
- * Agents only see their own orphans (enforced in controller via req.user).
  */
 const getOrphans = async ({ status, agentId, governorateId, isGifted } = {}) => {
   const conditions = [];
@@ -84,6 +87,7 @@ const getOrphanById = async (id) => {
        o.*,
        g.name_ar AS governorate_ar, g.name_en AS governorate_en,
        u.full_name AS agent_name,
+       u.id AS agent_id,
        sp.monthly_amount, sp.start_date AS sponsorship_start,
        s.full_name AS sponsor_name
      FROM orphans o
@@ -98,14 +102,16 @@ const getOrphanById = async (id) => {
 };
 
 /**
- * Update orphan status.
+ * Update orphan status with optional notes.
+ * Fires FCM push notification to the agent on rejection (FR-007, FR-048).
+ *
  * Valid transitions per SADD §7.3:
- *   under_review → under_marketing (supervisor approves)
- *   under_review → rejected        (supervisor rejects)
+ *   under_review    → under_marketing  (supervisor approves)
+ *   under_review    → rejected         (supervisor rejects — fires notification)
  *   under_marketing → under_sponsorship (GM assigns sponsor)
- *   any → inactive
+ *   any             → inactive
  */
-const updateOrphanStatus = async (id, status, notes) => {
+const updateOrphanStatus = async (id, status, notes, reviewerName = 'المشرف') => {
   const { rows } = await query(
     `UPDATE orphans
      SET status = $1, notes = COALESCE($2, notes)
@@ -113,12 +119,39 @@ const updateOrphanStatus = async (id, status, notes) => {
      RETURNING *`,
     [status, notes || null, id]
   );
-  return rows[0] || null;
+
+  const orphan = rows[0] || null;
+
+  // FR-007 / FR-048: fire push notification to agent on rejection
+  if (orphan && status === 'rejected' && orphan.agent_id) {
+    const notesText = notes ? ` السبب: ${notes}` : '';
+    await sendPushNotification(
+      orphan.agent_id,
+      'تم رفض تسجيل يتيم',
+      `تم رفض طلب تسجيل ${orphan.full_name} من قِبَل ${reviewerName}.${notesText}`,
+      { orphanId: id, action: 'registration_rejected' },
+      'registration_rejected',
+      id
+    );
+  }
+
+  // Also notify agent on approval so they know to expect sponsorship assignment
+  if (orphan && status === 'under_marketing' && orphan.agent_id) {
+    await sendPushNotification(
+      orphan.agent_id,
+      'تمت الموافقة على تسجيل يتيم',
+      `تمت الموافقة على طلب تسجيل ${orphan.full_name} وهو الآن تحت التسويق`,
+      { orphanId: id, action: 'registration_approved' },
+      'registration_approved',
+      id
+    );
+  }
+
+  return orphan;
 };
 
 /**
  * Update orphan details (agent can edit while under_review).
- * Only updates fields that are explicitly passed (COALESCE pattern).
  */
 const updateOrphan = async (id, fields) => {
   const { fullName, dateOfBirth, gender, governorateId, guardianName, guardianRelation, isGifted, notes } = fields;
@@ -142,7 +175,6 @@ const updateOrphan = async (id, fields) => {
 
 /**
  * Get orphans under marketing pool (status = under_marketing).
- * Used by GM to assign sponsors.
  */
 const getOrphansUnderMarketing = async () => {
   const { rows } = await query(
