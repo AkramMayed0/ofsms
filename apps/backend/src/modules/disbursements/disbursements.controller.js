@@ -61,8 +61,64 @@ const getDisbursementListById = async (req, res, next) => {
   }
 };
 
+// ADD to apps/backend/src/modules/disbursements/disbursements.controller.js
+
+/**
+ * PATCH /api/disbursements/:id/supervisor-approve
+ * Supervisor approves → status: supervisor_approved → Finance queue.
+ */
+const supervisorApproveDisbursement = async (req, res, next) => {
+  try {
+    const list = await service.supervisorApproveDisbursement(req.params.id, req.user.id);
+
+    if (!list) {
+      return res.status(404).json({
+        error: 'كشف الصرف غير موجود أو لا يمكن اعتماده في وضعه الحالي (يجب أن يكون في وضع مسودة)',
+      });
+    }
+
+    return res.json({
+      message: `تم اعتماد كشف الصرف لشهر ${list.month}/${list.year} وإرساله للقسم المالي`,
+      list,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * PATCH /api/disbursements/:id/supervisor-reject
+ * Supervisor rejects → status: rejected, notes required.
+ */
+const supervisorRejectDisbursement = async (req, res, next) => {
+  try {
+    const { notes } = req.body;
+
+    if (!notes || !notes.trim()) {
+      return res.status(422).json({ error: 'ملاحظات الرفض مطلوبة' });
+    }
+
+    const list = await service.supervisorRejectDisbursement(req.params.id, req.user.id, notes.trim());
+
+    if (!list) {
+      return res.status(404).json({
+        error: 'كشف الصرف غير موجود أو لا يمكن رفضه في وضعه الحالي (يجب أن يكون في وضع مسودة)',
+      });
+    }
+
+    return res.json({
+      message: `تم رفض كشف الصرف لشهر ${list.month}/${list.year}`,
+      list,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   generateDisbursementList,
   getAllDisbursementLists,
   getDisbursementListById,
+  supervisorApproveDisbursement,   
+  supervisorRejectDisbursement,    
 };
