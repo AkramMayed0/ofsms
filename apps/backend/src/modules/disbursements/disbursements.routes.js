@@ -65,4 +65,12 @@ router.patch(
   controller.financeRejectDisbursement
 );
 
+// GM only: final release (finance_approved → released)
+router.patch(
+  '/:id/gm-release',
+  authenticate,
+  authorize('gm'),
+  controller.gmReleaseDisbursement
+);
+
 module.exports = router;

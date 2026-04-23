@@ -339,12 +339,103 @@ const financeRejectDisbursement = async (listId, financeUserId, notes) => {
   return list;
 };
 
+/**
+ * GM releases a disbursement list.
+ * Status: finance_approved → released
+ * Logs a disbursement assignment per item (agent gets funds to distribute).
+ * Notifies all involved agents + GM (FR-027, FR-047).
+ */
+const gmReleaseDisbursement = async (listId, gmUserId) => {
+  const { rows } = await query(
+    `UPDATE disbursement_lists
+     SET status           = 'released',
+         approved_by_gm   = $1,
+         gm_approved_at   = NOW()
+     WHERE id = $2 AND status = 'finance_approved'
+     RETURNING *`,
+    [gmUserId, listId]
+  );
+
+  if (!rows[0]) return null;
+  const list = rows[0];
+
+  // Fetch all included items with agent info for logging + notification
+  const { rows: items } = await query(
+    `SELECT
+       di.id AS item_id,
+       di.amount,
+       di.orphan_id,
+       di.family_id,
+       COALESCE(o.agent_id, f.agent_id) AS agent_id,
+       COALESCE(o.full_name, f.family_name) AS beneficiary_name
+     FROM disbursement_items di
+     LEFT JOIN orphans   o ON o.id = di.orphan_id
+     LEFT JOIN families  f ON f.id = di.family_id
+     WHERE di.list_id = $1 AND di.included = TRUE`,
+    [listId]
+  );
+
+  // Log one audit entry per item (FR-027 — funds assigned to agent)
+  for (const item of items) {
+    await query(
+      `INSERT INTO audit_logs
+         (user_id, action, entity_type, entity_id, new_value)
+       VALUES ($1, 'disbursement_released', 'disbursement_item', $2, $3)`,
+      [
+        gmUserId,
+        item.item_id,
+        JSON.stringify({
+          list_id:          listId,
+          agent_id:         item.agent_id,
+          beneficiary_name: item.beneficiary_name,
+          amount:           item.amount,
+          month:            list.month,
+          year:             list.year,
+        }),
+      ]
+    );
+  }
+
+  // Collect unique agent IDs
+  const agentIds = [...new Set(items.map((i) => i.agent_id).filter(Boolean))];
+
+  const { sendBulkNotification } = require('../notifications/notifications.service');
+
+  // Notify agents (FR-027)
+  if (agentIds.length > 0) {
+    await sendBulkNotification(
+      agentIds,
+      'تم إصدار أمر الصرف',
+      `تم إقرار صرف كشف شهر ${list.month}/${list.year} من قِبَل المدير العام. يرجى توزيع المبالغ على الأيتام والأسر وتسجيل تأكيدات الاستلام.`,
+      { listId, action: 'disbursement_released' },
+      'disbursement_approved'
+    );
+  }
+
+  // Notify GM themselves as a record (FR-047)
+  const { rows: gmUsers } = await query(
+    `SELECT id FROM users WHERE role = 'gm' AND is_active = TRUE`
+  );
+  if (gmUsers.length > 0) {
+    await sendBulkNotification(
+      gmUsers.map((u) => u.id),
+      'تم إصدار كشف الصرف',
+      `تم إصدار كشف الصرف لشهر ${list.month}/${list.year} بنجاح. ${agentIds.length} مندوب سيتلقى إشعاراً بالتوزيع.`,
+      { listId, action: 'disbursement_released' },
+      'disbursement_approved'
+    );
+  }
+
+  return { list, released_items: items.length, notified_agents: agentIds.length };
+};
+
 module.exports = {
   generateDisbursementList,
   getDisbursementListById,
   getAllDisbursementLists,
   supervisorApproveDisbursement,
   supervisorRejectDisbursement,
-  financeApproveDisbursement,    
-  financeRejectDisbursement,     
+  financeApproveDisbursement,
+  financeRejectDisbursement,
+  gmReleaseDisbursement,    
 };
