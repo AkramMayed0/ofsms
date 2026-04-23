@@ -1,0 +1,161 @@
+/**
+ * disbursements.service.js
+ * Database queries for the disbursements module.
+ */
+
+const { query } = require('../../config/db');
+
+/**
+ * Generate a disbursement list for the current month.
+ * - Creates one DisbursementList row (draft status)
+ * - Inserts one DisbursementItem per active sponsored orphan/family
+ * - Skips beneficiaries with no active sponsorship (no amount to disburse)
+ *
+ * @param {string} createdBy - UUID of the user triggering generation (GM/supervisor)
+ * @returns {{ list, items }}
+ */
+const generateDisbursementList = async (createdBy) => {
+  const now   = new Date();
+  const month = now.getMonth() + 1; // JS months are 0-indexed
+  const year  = now.getFullYear();
+
+  // Create the DisbursementList — DB unique constraint handles duplicates
+  const { rows: listRows } = await query(
+    `INSERT INTO disbursement_lists (month, year, status, created_by)
+     VALUES ($1, $2, 'draft', $3)
+     RETURNING *`,
+    [month, year, createdBy]
+  );
+  const list = listRows[0];
+
+  // Pull all active orphan sponsorships
+  const { rows: orphanSponsorships } = await query(
+    `SELECT
+       sp.beneficiary_id AS orphan_id,
+       sp.monthly_amount,
+       o.full_name,
+       o.agent_id,
+       s.full_name      AS sponsor_name,
+       g.name_ar        AS governorate_ar
+     FROM sponsorships sp
+     JOIN orphans      o ON o.id = sp.beneficiary_id
+     JOIN sponsors     s ON s.id = sp.sponsor_id
+     JOIN governorates g ON g.id = o.governorate_id
+     WHERE sp.beneficiary_type = 'orphan'
+       AND sp.is_active         = TRUE
+       AND o.status             = 'under_sponsorship'`
+  );
+
+  // Pull all active family sponsorships
+  const { rows: familySponsorships } = await query(
+    `SELECT
+       sp.beneficiary_id AS family_id,
+       sp.monthly_amount,
+       f.family_name     AS full_name,
+       f.agent_id,
+       s.full_name       AS sponsor_name,
+       g.name_ar         AS governorate_ar
+     FROM sponsorships sp
+     JOIN families     f ON f.id = sp.beneficiary_id
+     JOIN sponsors     s ON s.id = sp.sponsor_id
+     JOIN governorates g ON g.id = f.governorate_id
+     WHERE sp.beneficiary_type = 'family'
+       AND sp.is_active         = TRUE
+       AND f.status             = 'under_sponsorship'`
+  );
+
+  // Bulk insert DisbursementItems for orphans
+  const insertedItems = [];
+
+  for (const o of orphanSponsorships) {
+    const { rows } = await query(
+      `INSERT INTO disbursement_items
+         (list_id, orphan_id, family_id, amount, included)
+       VALUES ($1, $2, NULL, $3, TRUE)
+       RETURNING *`,
+      [list.id, o.orphan_id, o.monthly_amount]
+    );
+    insertedItems.push({ ...rows[0], full_name: o.full_name, sponsor_name: o.sponsor_name, governorate_ar: o.governorate_ar });
+  }
+
+  // Bulk insert DisbursementItems for families
+  for (const f of familySponsorships) {
+    const { rows } = await query(
+      `INSERT INTO disbursement_items
+         (list_id, orphan_id, family_id, amount, included)
+       VALUES ($1, NULL, $2, $3, TRUE)
+       RETURNING *`,
+      [list.id, f.family_id, f.monthly_amount]
+    );
+    insertedItems.push({ ...rows[0], full_name: f.full_name, sponsor_name: f.sponsor_name, governorate_ar: f.governorate_ar });
+  }
+
+  return { list, items: insertedItems };
+};
+
+/**
+ * Get a disbursement list by ID with all its items.
+ */
+const getDisbursementListById = async (id) => {
+  const { rows: listRows } = await query(
+    `SELECT
+       dl.*,
+       u.full_name AS created_by_name
+     FROM disbursement_lists dl
+     LEFT JOIN users u ON u.id = dl.created_by
+     WHERE dl.id = $1`,
+    [id]
+  );
+
+  if (!listRows[0]) return null;
+
+  const { rows: items } = await query(
+    `SELECT
+       di.id, di.amount, di.included, di.exclusion_reason,
+       di.orphan_id, di.family_id,
+       COALESCE(o.full_name, f.family_name)  AS beneficiary_name,
+       COALESCE(go.name_ar, gf.name_ar)      AS governorate_ar,
+       COALESCE(uo.full_name, uf.full_name)  AS agent_name,
+       so.full_name                          AS sponsor_name
+     FROM disbursement_items di
+     LEFT JOIN orphans      o  ON o.id  = di.orphan_id
+     LEFT JOIN families     f  ON f.id  = di.family_id
+     LEFT JOIN governorates go ON go.id = o.governorate_id
+     LEFT JOIN governorates gf ON gf.id = f.governorate_id
+     LEFT JOIN users        uo ON uo.id = o.agent_id
+     LEFT JOIN users        uf ON uf.id = f.agent_id
+     LEFT JOIN sponsorships sp ON sp.beneficiary_id = COALESCE(di.orphan_id, di.family_id)
+                               AND sp.is_active = TRUE
+     LEFT JOIN sponsors     so ON so.id = sp.sponsor_id
+     WHERE di.list_id = $1
+     ORDER BY di.created_at ASC`,
+    [id]
+  );
+
+  return { list: listRows[0], items };
+};
+
+/**
+ * Get all disbursement lists (paginated, latest first).
+ */
+const getAllDisbursementLists = async () => {
+  const { rows } = await query(
+    `SELECT
+       dl.*,
+       u.full_name AS created_by_name,
+       COUNT(di.id) AS total_items,
+       SUM(di.amount) FILTER (WHERE di.included = TRUE) AS total_amount
+     FROM disbursement_lists dl
+     LEFT JOIN users u ON u.id = dl.created_by
+     LEFT JOIN disbursement_items di ON di.list_id = dl.id
+     GROUP BY dl.id, u.full_name
+     ORDER BY dl.year DESC, dl.month DESC`
+  );
+  return rows;
+};
+
+module.exports = {
+  generateDisbursementList,
+  getDisbursementListById,
+  getAllDisbursementLists,
+};
