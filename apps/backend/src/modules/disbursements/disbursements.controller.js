@@ -161,12 +161,38 @@ const financeRejectDisbursement = async (req, res, next) => {
   }
 };
 
+/**
+ * PATCH /api/disbursements/:id/gm-release
+ * GM final release → status: released, agents notified.
+ */
+const gmReleaseDisbursement = async (req, res, next) => {
+  try {
+    const result = await service.gmReleaseDisbursement(req.params.id, req.user.id);
+
+    if (!result) {
+      return res.status(404).json({
+        error: 'كشف الصرف غير موجود أو لا يمكن إصداره في وضعه الحالي (يجب أن يكون معتمداً من القسم المالي)',
+      });
+    }
+
+    return res.json({
+      message: `تم إصدار كشف الصرف لشهر ${result.list.month}/${result.list.year} بنجاح. تم إشعار ${result.notified_agents} مندوب.`,
+      list:             result.list,
+      released_items:   result.released_items,
+      notified_agents:  result.notified_agents,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   generateDisbursementList,
   getAllDisbursementLists,
   getDisbursementListById,
   supervisorApproveDisbursement,
   supervisorRejectDisbursement,
-  financeApproveDisbursement,    
-  financeRejectDisbursement,     
+  financeApproveDisbursement,
+  financeRejectDisbursement,
+  gmReleaseDisbursement,    
 };
