@@ -49,4 +49,20 @@ router.patch(
   controller.supervisorRejectDisbursement
 );
 
+// Finance + GM: approve (supervisor_approved → finance_approved)
+router.patch(
+  '/:id/finance-approve',
+  authenticate,
+  authorize('finance', 'gm'),
+  controller.financeApproveDisbursement
+);
+
+// Finance + GM: reject (supervisor_approved → rejected), notes required
+router.patch(
+  '/:id/finance-reject',
+  authenticate,
+  authorize('finance', 'gm'),
+  controller.financeRejectDisbursement
+);
+
 module.exports = router;

@@ -249,10 +249,102 @@ const supervisorRejectDisbursement = async (listId, supervisorId, notes) => {
   return list;
 };
 
+/**
+ * Finance approves a disbursement list.
+ * Status: supervisor_approved → finance_approved
+ * Notifies all GM users (FR-026, FR-047).
+ */
+const financeApproveDisbursement = async (listId, financeUserId) => {
+  const { rows } = await query(
+    `UPDATE disbursement_lists
+     SET status               = 'finance_approved',
+         approved_by_finance  = $1,
+         finance_approved_at  = NOW()
+     WHERE id = $2 AND status = 'supervisor_approved'
+     RETURNING *`,
+    [financeUserId, listId]
+  );
+
+  if (!rows[0]) return null;
+  const list = rows[0];
+
+  const { sendBulkNotification } = require('../notifications/notifications.service');
+
+  // Notify GM (FR-026, FR-047)
+  const { rows: gmUsers } = await query(
+    `SELECT id FROM users WHERE role = 'gm' AND is_active = TRUE`
+  );
+  if (gmUsers.length > 0) {
+    await sendBulkNotification(
+      gmUsers.map((u) => u.id),
+      'كشف الصرف بانتظار إقرارك النهائي',
+      `صادق القسم المالي على كشف الصرف لشهر ${list.month}/${list.year}. يرجى مراجعته وإصدار الأمر النهائي.`,
+      { listId, action: 'disbursement_finance_approved' },
+      'disbursement_approved'
+    );
+  }
+
+  return list;
+};
+
+/**
+ * Finance rejects a disbursement list (sends it back to supervisor).
+ * Status: supervisor_approved → rejected
+ * Notes are required. Notifies all active supervisors.
+ */
+const financeRejectDisbursement = async (listId, financeUserId, notes) => {
+  const { rows } = await query(
+    `UPDATE disbursement_lists
+     SET status          = 'rejected',
+         rejection_notes = $1,
+         updated_at      = NOW()
+     WHERE id = $2 AND status = 'supervisor_approved'
+     RETURNING *`,
+    [notes, listId]
+  );
+
+  if (!rows[0]) return null;
+  const list = rows[0];
+
+  const { sendBulkNotification } = require('../notifications/notifications.service');
+
+  // Notify all active supervisors
+  const { rows: supervisors } = await query(
+    `SELECT id FROM users WHERE role = 'supervisor' AND is_active = TRUE`
+  );
+  if (supervisors.length > 0) {
+    await sendBulkNotification(
+      supervisors.map((u) => u.id),
+      'تم رفض كشف الصرف من القسم المالي',
+      `رفض القسم المالي كشف الصرف لشهر ${list.month}/${list.year}. السبب: ${notes}`,
+      { listId, action: 'disbursement_finance_rejected' },
+      'disbursement_rejected'
+    );
+  }
+
+  // Also notify GM (FR-047)
+  const { rows: gmUsers } = await query(
+    `SELECT id FROM users WHERE role = 'gm' AND is_active = TRUE`
+  );
+  if (gmUsers.length > 0) {
+    await sendBulkNotification(
+      gmUsers.map((u) => u.id),
+      'رفض المالي لكشف الصرف',
+      `رفض القسم المالي كشف الصرف لشهر ${list.month}/${list.year}. السبب: ${notes}`,
+      { listId, action: 'disbursement_finance_rejected' },
+      'disbursement_rejected'
+    );
+  }
+
+  return list;
+};
+
 module.exports = {
   generateDisbursementList,
   getDisbursementListById,
   getAllDisbursementLists,
-  supervisorApproveDisbursement,   
-  supervisorRejectDisbursement,    
+  supervisorApproveDisbursement,
+  supervisorRejectDisbursement,
+  financeApproveDisbursement,    
+  financeRejectDisbursement,     
 };

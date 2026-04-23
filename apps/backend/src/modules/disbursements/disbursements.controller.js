@@ -115,10 +115,58 @@ const supervisorRejectDisbursement = async (req, res, next) => {
   }
 };
 
+/**
+ * PATCH /api/disbursements/:id/finance-approve
+ * Finance approves → status: finance_approved → GM notified.
+ */
+const financeApproveDisbursement = async (req, res, next) => {
+  try {
+    const list = await service.financeApproveDisbursement(req.params.id, req.user.id);
+    if (!list) {
+      return res.status(404).json({
+        error: 'كشف الصرف غير موجود أو لا يمكن مصادقته في وضعه الحالي (يجب أن يكون معتمداً من المشرف)',
+      });
+    }
+    return res.json({
+      message: `تمت مصادقة القسم المالي على كشف الصرف لشهر ${list.month}/${list.year} وأُرسل للمدير العام`,
+      list,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * PATCH /api/disbursements/:id/finance-reject
+ * Finance rejects → status: rejected, back to supervisor. Notes required.
+ */
+const financeRejectDisbursement = async (req, res, next) => {
+  try {
+    const { notes } = req.body;
+    if (!notes || !notes.trim()) {
+      return res.status(422).json({ error: 'ملاحظات الرفض مطلوبة' });
+    }
+    const list = await service.financeRejectDisbursement(req.params.id, req.user.id, notes.trim());
+    if (!list) {
+      return res.status(404).json({
+        error: 'كشف الصرف غير موجود أو لا يمكن رفضه في وضعه الحالي (يجب أن يكون معتمداً من المشرف)',
+      });
+    }
+    return res.json({
+      message: `تم رفض كشف الصرف لشهر ${list.month}/${list.year} وإعادته للمشرف`,
+      list,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   generateDisbursementList,
   getAllDisbursementLists,
   getDisbursementListById,
-  supervisorApproveDisbursement,   
-  supervisorRejectDisbursement,    
+  supervisorApproveDisbursement,
+  supervisorRejectDisbursement,
+  financeApproveDisbursement,    
+  financeRejectDisbursement,     
 };
