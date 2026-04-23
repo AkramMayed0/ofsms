@@ -6,10 +6,6 @@
 const { validationResult } = require('express-validator');
 const service = require('./families.service');
 
-/**
- * POST /api/families
- * Agent — register a new family (status starts as under_review).
- */
 const createFamily = async (req, res, next) => {
   try {
     const errors = validationResult(req);
@@ -22,7 +18,7 @@ const createFamily = async (req, res, next) => {
       headOfFamily,
       memberCount,
       governorateId,
-      agentId: req.user.id,  // always the logged-in agent
+      agentId: req.user.id,
       notes,
     });
 
@@ -32,11 +28,6 @@ const createFamily = async (req, res, next) => {
   }
 };
 
-/**
- * GET /api/families
- * - Agent: sees only their own families
- * - Supervisor / GM: sees all families, filterable by status
- */
 const getFamilies = async (req, res, next) => {
   try {
     const { status } = req.query;
@@ -49,10 +40,6 @@ const getFamilies = async (req, res, next) => {
   }
 };
 
-/**
- * GET /api/families/marketing
- * GM only — families available for sponsorship assignment.
- */
 const getFamiliesUnderMarketing = async (_req, res, next) => {
   try {
     const families = await service.getFamiliesUnderMarketing();
@@ -62,16 +49,11 @@ const getFamiliesUnderMarketing = async (_req, res, next) => {
   }
 };
 
-/**
- * GET /api/families/:id
- * Get a single family with documents.
- */
 const getFamilyById = async (req, res, next) => {
   try {
     const family = await service.getFamilyById(req.params.id);
     if (!family) return res.status(404).json({ error: 'الأسرة غير موجودة' });
 
-    // Agents can only view their own families
     if (req.user.role === 'agent' && family.agent_id !== req.user.id) {
       return res.status(403).json({ error: 'ليس لديك صلاحية للوصول إلى هذا المورد' });
     }
@@ -83,10 +65,6 @@ const getFamilyById = async (req, res, next) => {
   }
 };
 
-/**
- * PATCH /api/families/:id
- * Agent — edit family details (only while under_review).
- */
 const updateFamily = async (req, res, next) => {
   try {
     const errors = validationResult(req);
@@ -113,8 +91,7 @@ const updateFamily = async (req, res, next) => {
 
 /**
  * PATCH /api/families/:id/status
- * Supervisor — approve (→ under_marketing) or reject with notes.
- * GM — can also move to under_sponsorship.
+ * Now passes req.user.name to the service so the FCM message is human-readable.
  */
 const updateFamilyStatus = async (req, res, next) => {
   try {
@@ -123,12 +100,17 @@ const updateFamilyStatus = async (req, res, next) => {
 
     const { status, notes } = req.body;
 
-    // Supervisors cannot move directly to under_sponsorship
     if (req.user.role === 'supervisor' && status === 'under_sponsorship') {
       return res.status(403).json({ error: 'هذه الصلاحية للمدير العام فقط' });
     }
 
-    const family = await service.updateFamilyStatus(req.params.id, status, notes);
+    const family = await service.updateFamilyStatus(
+      req.params.id,
+      status,
+      notes,
+      req.user.name  // ← NEW: passed to notification message
+    );
+
     if (!family) return res.status(404).json({ error: 'الأسرة غير موجودة' });
 
     return res.json({ message: 'تم تحديث حالة الأسرة', family });

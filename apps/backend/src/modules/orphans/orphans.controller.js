@@ -14,24 +14,8 @@ const { validationResult } = require('express-validator');
 const service = require('./orphans.service');
 const { uploadFile } = require('../../config/s3');
 
-// ── Allowed document types per SADD §8.3 ─────────────────────────────────────
-const DOC_TYPE_MAP = {
-  death_cert:   'death_cert',
-  birth_cert:   'birth_cert',
-  guardian_id:  'guardian_id',
-  other:        'other',
-};
-
 /**
  * POST /api/orphans
- * Agent registers a new orphan with multipart form data + document uploads.
- *
- * Required fields: fullName, dateOfBirth, gender, governorateId,
- *                  guardianName, guardianRelation
- * Required files:  deathCert (father's death certificate),
- *                  birthCert (orphan's birth certificate)
- * Optional files:  additionalDocs (up to 5 extra files)
- * Optional fields: notes, isGifted (GM only — ignored unless role = gm)
  */
 const createOrphan = async (req, res, next) => {
   try {
@@ -50,10 +34,8 @@ const createOrphan = async (req, res, next) => {
       notes,
     } = req.body;
 
-    // isGifted is GM-only — silently ignore if set by an agent
     const isGifted = req.user.role === 'gm' ? req.body.isGifted === 'true' : false;
 
-    // 1. Create orphan record in DB (status = under_review)
     const orphan = await service.createOrphan({
       fullName,
       dateOfBirth,
@@ -66,20 +48,17 @@ const createOrphan = async (req, res, next) => {
       notes,
     });
 
-    // 2. Upload documents to S3 and save records
     const uploadedDocs = [];
 
     const filesToUpload = [
-      { field: 'deathCert',  docType: 'death_cert',  required: true },
-      { field: 'birthCert',  docType: 'birth_cert',  required: true },
+      { field: 'deathCert', docType: 'death_cert', required: true },
+      { field: 'birthCert', docType: 'birth_cert', required: true },
     ];
 
     for (const { field, docType, required } of filesToUpload) {
       const file = req.files?.[field]?.[0];
       if (!file) {
         if (required) {
-          // Roll back orphan creation and return error
-          // (In production use a DB transaction; for V1 this is acceptable)
           return res.status(422).json({
             errors: [{ msg: `ملف ${field} مطلوب`, field }],
           });
@@ -88,44 +67,43 @@ const createOrphan = async (req, res, next) => {
       }
 
       const { key } = await uploadFile({
-        buffer:       file.buffer,
+        buffer: file.buffer,
         originalName: file.originalname,
-        mimetype:     file.mimetype,
-        folder:       'documents',
+        mimetype: file.mimetype,
+        folder: 'documents',
       });
 
       const doc = await service.addDocument({
-        entityType:    'orphan',
-        entityId:      orphan.id,
+        entityType: 'orphan',
+        entityId: orphan.id,
         docType,
-        fileKey:       key,
-        originalName:  file.originalname,
-        mimeType:      file.mimetype,
+        fileKey: key,
+        originalName: file.originalname,
+        mimeType: file.mimetype,
         fileSizeBytes: file.size,
-        uploadedBy:    req.user.id,
+        uploadedBy: req.user.id,
       });
       uploadedDocs.push(doc);
     }
 
-    // 3. Handle optional additional docs (up to 5)
     const additionalFiles = req.files?.additionalDocs || [];
     for (const file of additionalFiles.slice(0, 5)) {
       const { key } = await uploadFile({
-        buffer:       file.buffer,
+        buffer: file.buffer,
         originalName: file.originalname,
-        mimetype:     file.mimetype,
-        folder:       'documents',
+        mimetype: file.mimetype,
+        folder: 'documents',
       });
 
       const doc = await service.addDocument({
-        entityType:    'orphan',
-        entityId:      orphan.id,
-        docType:       'other',
-        fileKey:       key,
-        originalName:  file.originalname,
-        mimeType:      file.mimetype,
+        entityType: 'orphan',
+        entityId: orphan.id,
+        docType: 'other',
+        fileKey: key,
+        originalName: file.originalname,
+        mimeType: file.mimetype,
         fileSizeBytes: file.size,
-        uploadedBy:    req.user.id,
+        uploadedBy: req.user.id,
       });
       uploadedDocs.push(doc);
     }
@@ -142,14 +120,10 @@ const createOrphan = async (req, res, next) => {
 
 /**
  * GET /api/orphans
- * - Agent: sees only their own orphans
- * - Supervisor / GM: sees all, filterable by ?status=&governorateId=&isGifted=
  */
 const getOrphans = async (req, res, next) => {
   try {
     const { status, governorateId, isGifted } = req.query;
-
-    // Agents are scoped to their own orphans
     const agentId = req.user.role === 'agent' ? req.user.id : req.query.agentId;
 
     const orphans = await service.getOrphans({
@@ -167,7 +141,6 @@ const getOrphans = async (req, res, next) => {
 
 /**
  * GET /api/orphans/marketing
- * GM only — orphans available for sponsor assignment.
  */
 const getOrphansUnderMarketing = async (_req, res, next) => {
   try {
@@ -180,7 +153,6 @@ const getOrphansUnderMarketing = async (_req, res, next) => {
 
 /**
  * GET /api/orphans/:id
- * Returns orphan details + documents + active sponsorship info.
  */
 const getOrphanById = async (req, res, next) => {
   try {
@@ -189,7 +161,6 @@ const getOrphanById = async (req, res, next) => {
       return res.status(404).json({ error: 'اليتيم غير موجود' });
     }
 
-    // Agents can only view their own orphans
     if (req.user.role === 'agent' && orphan.agent_id !== req.user.id) {
       return res.status(403).json({ error: 'ليس لديك صلاحية للوصول إلى هذا المورد' });
     }
@@ -203,7 +174,6 @@ const getOrphanById = async (req, res, next) => {
 
 /**
  * PATCH /api/orphans/:id
- * Agent edits orphan details — only allowed while status = under_review.
  */
 const updateOrphan = async (req, res, next) => {
   try {
@@ -232,6 +202,8 @@ const updateOrphan = async (req, res, next) => {
  * PATCH /api/orphans/:id/status
  * Supervisor approves (→ under_marketing) or rejects with mandatory notes.
  * GM can also move to under_sponsorship or inactive.
+ *
+ * Now passes req.user.name to service so the notification shows reviewer name.
  */
 const updateOrphanStatus = async (req, res, next) => {
   try {
@@ -242,12 +214,18 @@ const updateOrphanStatus = async (req, res, next) => {
 
     const { status, notes } = req.body;
 
-    // Supervisors cannot jump directly to under_sponsorship
     if (req.user.role === 'supervisor' && status === 'under_sponsorship') {
       return res.status(403).json({ error: 'هذه الصلاحية للمدير العام فقط' });
     }
 
-    const orphan = await service.updateOrphanStatus(req.params.id, status, notes);
+    // Pass reviewer name so the FCM message is human-readable
+    const orphan = await service.updateOrphanStatus(
+      req.params.id,
+      status,
+      notes,
+      req.user.name  // ← NEW: passed to notification message
+    );
+
     if (!orphan) {
       return res.status(404).json({ error: 'اليتيم غير موجود' });
     }
