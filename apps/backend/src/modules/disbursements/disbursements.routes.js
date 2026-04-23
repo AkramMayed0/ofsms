@@ -33,4 +33,20 @@ router.get(
   controller.getDisbursementListById
 );
 
+// Supervisor + GM: approve a disbursement list (draft → supervisor_approved)
+router.patch(
+  '/:id/supervisor-approve',
+  authenticate,
+  authorize('supervisor', 'gm'),
+  controller.supervisorApproveDisbursement
+);
+
+// Supervisor + GM: reject a disbursement list (draft → rejected)
+router.patch(
+  '/:id/supervisor-reject',
+  authenticate,
+  authorize('supervisor', 'gm'),
+  controller.supervisorRejectDisbursement
+);
+
 module.exports = router;

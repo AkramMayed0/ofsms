@@ -154,8 +154,105 @@ const getAllDisbursementLists = async () => {
   return rows;
 };
 
+// apps/backend/src/modules/disbursements/disbursements.service.js
+// ADD these two functions at the bottom (before module.exports)
+
+/**
+ * Supervisor approves a disbursement list.
+ * Status transition: draft → supervisor_approved
+ * Notifies all Finance users that a list is ready for their review.
+ */
+const supervisorApproveDisbursement = async (listId, supervisorId) => {
+  const { rows } = await query(
+    `UPDATE disbursement_lists
+     SET
+       status                   = 'supervisor_approved',
+       approved_by_supervisor   = $1,
+       supervisor_approved_at   = NOW()
+     WHERE id = $2
+       AND status = 'draft'
+     RETURNING *`,
+    [supervisorId, listId]
+  );
+
+  if (!rows[0]) return null; // not found or wrong status
+
+  const list = rows[0];
+
+  // Notify all active Finance users (FR-024)
+  const { rows: financeUsers } = await query(
+    `SELECT id FROM users WHERE role = 'finance' AND is_active = TRUE`
+  );
+  const { sendBulkNotification } = require('../notifications/notifications.service');
+  if (financeUsers.length > 0) {
+    await sendBulkNotification(
+      financeUsers.map((u) => u.id),
+      'كشف الصرف بانتظار مصادقتك',
+      `تمت الموافقة على كشف الصرف لشهر ${list.month}/${list.year} من قِبَل المشرف. يرجى المراجعة والمصادقة.`,
+      { listId, action: 'disbursement_supervisor_approved' },
+      'disbursement_approved'
+    );
+  }
+
+  // Also notify GM (FR-047 — GM receives all system notifications)
+  const { rows: gmUsers } = await query(
+    `SELECT id FROM users WHERE role = 'gm' AND is_active = TRUE`
+  );
+  if (gmUsers.length > 0) {
+    await sendBulkNotification(
+      gmUsers.map((u) => u.id),
+      'كشف الصرف وصل للمالي',
+      `كشف الصرف لشهر ${list.month}/${list.year} اعتمده المشرف وأُرسل للقسم المالي.`,
+      { listId, action: 'disbursement_supervisor_approved' },
+      'disbursement_approved'
+    );
+  }
+
+  return list;
+};
+
+/**
+ * Supervisor rejects a disbursement list (sends it back for correction).
+ * Status transition: draft → rejected
+ * Notifies the list creator.
+ */
+const supervisorRejectDisbursement = async (listId, supervisorId, notes) => {
+  const { rows } = await query(
+    `UPDATE disbursement_lists
+     SET
+       status           = 'rejected',
+       rejection_notes  = $1,
+       updated_at       = NOW()
+     WHERE id = $2
+       AND status = 'draft'
+     RETURNING *`,
+    [notes, listId]
+  );
+
+  if (!rows[0]) return null;
+
+  const list = rows[0];
+
+  // Notify the creator
+  if (list.created_by) {
+    const { sendPushNotification } = require('../notifications/notifications.service');
+    await sendPushNotification(
+      list.created_by,
+      'تم رفض كشف الصرف',
+      `تم رفض كشف الصرف لشهر ${list.month}/${list.year}. السبب: ${notes}`,
+      { listId, action: 'disbursement_rejected' },
+      'disbursement_rejected',
+      listId
+    );
+  }
+
+  return list;
+};
+
 module.exports = {
   generateDisbursementList,
   getDisbursementListById,
   getAllDisbursementLists,
+  supervisorApproveDisbursement,   
+  supervisorRejectDisbursement,    
 };
