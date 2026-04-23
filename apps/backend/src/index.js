@@ -25,6 +25,7 @@ app.use('/api/auth',         require('./modules/auth/auth.routes'));
 app.use('/api/orphans',      require('./modules/orphans/orphans.routes'));
 app.use('/api/families',     require('./modules/families/families.routes'));
 app.use('/api/sponsors',     require('./modules/sponsors/sponsors.routes'));
+app.use('/api/sponsor',      require('./modules/sponsor-portal/sponsorPortal.routes'));
 app.use('/api/governorates', require('./modules/governorates/governorates.routes'));
 app.use('/api/dashboard',    require('./modules/dashboard/dashboard.routes'));
 // app.use('/api/quran-reports',  require('./modules/quran/quran.routes'));
