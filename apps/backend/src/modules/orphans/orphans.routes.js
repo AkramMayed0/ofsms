@@ -11,6 +11,7 @@ const { body } = require('express-validator');
 const multer = require('multer');
 const { authenticate, authorize } = require('../../middleware/rbac');
 const controller = require('./orphans.controller');
+const giftedRouter = require('./gifted.routes');
 
 const router = Router();
 
@@ -36,8 +37,8 @@ const upload = multer({
 
 // Accept: deathCert (1), birthCert (1), additionalDocs (up to 5)
 const uploadFields = upload.fields([
-  { name: 'deathCert',      maxCount: 1 },
-  { name: 'birthCert',      maxCount: 1 },
+  { name: 'deathCert', maxCount: 1 },
+  { name: 'birthCert', maxCount: 1 },
   { name: 'additionalDocs', maxCount: 5 },
 ]);
 
@@ -93,6 +94,7 @@ router.get(
   authorize('gm'),
   controller.getOrphansUnderMarketing
 );
+router.use('/', giftedRouter);
 
 // Agent / Supervisor / GM: list orphans (with filters)
 router.get(
@@ -136,6 +138,7 @@ router.patch(
   updateStatusRules,
   controller.updateOrphanStatus
 );
+
 
 // ── Multer error handler (must be last in this router) ────────────────────────
 router.use((err, _req, res, next) => {
