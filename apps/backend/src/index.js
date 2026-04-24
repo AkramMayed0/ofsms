@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const helmet = require('helmet');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 
@@ -11,14 +10,26 @@ require('./config/firebase');
 // ── Scheduler: register monthly cron jobs ────────────────────────────────────
 const { initScheduler } = require('./scheduler');
 
+// ── Security middleware (helmet + HSTS + HTTPS redirect) ─────────────────────
+const { applySecurityMiddleware } = require('./middleware/security');
+
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// ── Security & middleware ─────────────────────────────────────────────────────
-app.use(helmet());
-app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true }));
+// ── Security (must come before routes and other middleware) ───────────────────
+applySecurityMiddleware(app);
+
+// ── CORS ──────────────────────────────────────────────────────────────────────
+app.use(cors({
+  origin:         process.env.FRONTEND_URL,
+  credentials:    true,
+  methods:        ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
+// ── Body parsing & logging ────────────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
-app.use(morgan('dev'));
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(cookieParser());
 
 // ── Health check ──────────────────────────────────────────────────────────────
@@ -54,8 +65,6 @@ app.use((err, _req, res, _next) => {
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
   console.log(`✅ OFSMS backend running on port ${PORT}`);
-
-  // Start cron jobs after server is up
   initScheduler();
 });
 
