@@ -102,4 +102,81 @@ const getReportsByAgent = async (agentId) => {
   return rows;
 };
 
-module.exports = { submitReport, getPendingReports, getReportsByAgent };
+const { sendPushNotification } = require('../notifications/notifications.service');
+
+/**
+ * Supervisor approves or rejects a Quran report.
+ * On approve: status → approved (orphan included in next disbursement via quran_reports.status)
+ * On reject:  status → rejected + push notification to agent (FR-019, FR-020)
+ */
+const reviewReport = async ({ reportId, action, notes, reviewerId, reviewerName }) => {
+  if (!['approved', 'rejected'].includes(action)) {
+    throw Object.assign(new Error('الإجراء يجب أن يكون approved أو rejected'), { status: 400 });
+  }
+  if (action === 'rejected' && !notes?.trim()) {
+    throw Object.assign(new Error('ملاحظات الرفض مطلوبة'), { status: 422 });
+  }
+
+  // Fetch report + orphan info before updating
+  const { rows: existing } = await query(
+    `SELECT qr.*, o.full_name AS orphan_name, o.agent_id
+     FROM quran_reports qr
+     JOIN orphans o ON o.id = qr.orphan_id
+     WHERE qr.id = $1`,
+    [reportId]
+  );
+  const report = existing[0];
+  if (!report) throw Object.assign(new Error('التقرير غير موجود'), { status: 404 });
+  if (report.status !== 'pending') {
+    throw Object.assign(new Error('لا يمكن مراجعة تقرير تمت معالجته مسبقاً'), { status: 409 });
+  }
+
+  // Update report status
+  const { rows } = await query(
+    `UPDATE quran_reports
+     SET status = $1, supervisor_notes = $2
+     WHERE id = $3
+     RETURNING *`,
+    [action, notes || null, reportId]
+  );
+  const updated = rows[0];
+
+  // Audit log
+  await logAudit({
+    userId:     reviewerId,
+    action:     `quran_report_${action}`,
+    entityType: 'quran_report',
+    entityId:   reportId,
+    oldValue:   { status: 'pending' },
+    newValue:   { status: action, notes },
+  });
+
+  // FR-019 / FR-020: push notification to agent on rejection
+  if (action === 'rejected' && report.agent_id) {
+    await sendPushNotification(
+      report.agent_id,
+      'تم رفض تقرير الحفظ',
+      `تم رفض تقرير حفظ القرآن للشهر ${report.month}/${report.year} لليتيم ${report.orphan_name} من قِبَل ${reviewerName}. السبب: ${notes}`,
+      { reportId, action: 'quran_report_rejected' },
+      'general',
+      reportId
+    );
+  }
+
+  return updated;
+};
+
+/**
+ * Get all approved orphan IDs for a given month/year.
+ * Used by disbursement generation to know who to include.
+ */
+const getApprovedOrphanIds = async (month, year) => {
+  const { rows } = await query(
+    `SELECT orphan_id FROM quran_reports
+     WHERE month = $1 AND year = $2 AND status = 'approved'`,
+    [month, year]
+  );
+  return rows.map(r => r.orphan_id);
+};
+
+module.exports = { submitReport, getPendingReports, getReportsByAgent, reviewReport, getApprovedOrphanIds };
