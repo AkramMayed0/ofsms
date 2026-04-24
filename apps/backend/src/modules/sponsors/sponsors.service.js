@@ -6,6 +6,7 @@
  * beneficiary status to 'under_sponsorship' (FR-012) after assigning a sponsor.
  */
 
+const { logAudit } = require('../../utils/auditLog');
 const { query } = require('../../config/db');
 const crypto = require('crypto');
 
@@ -176,6 +177,8 @@ const transferSponsorship = async ({
 }) => {
   await query('BEGIN');
 
+
+
   try {
     // 1. Close existing active sponsorship
     await query(
@@ -199,6 +202,16 @@ const transferSponsorship = async ({
     // (already under_sponsorship from initial assignment)
 
     await query('COMMIT');
+
+    await logAudit({
+      userId:     null,
+      action:     'sponsorship_transferred',
+      entityType: 'sponsorship',
+      entityId:   rows[0].id,
+      oldValue:   { beneficiary_type: beneficiaryType, beneficiary_id: beneficiaryId },
+      newValue:   { new_sponsor_id: newSponsorId, monthly_amount: monthlyAmount },
+    });
+
     return rows[0];
   } catch (err) {
     await query('ROLLBACK');

@@ -239,7 +239,8 @@ const updateOrphanStatus = async (req, res, next) => {
       req.params.id,
       status,
       notes,
-      req.user.name
+      req.user.name,
+      req.user.id  
     );
 
     if (!orphan) {
