@@ -28,7 +28,7 @@ const NAV_ITEMS = {
     { label: 'التقارير',         href: '/reports',             icon: '📄' },
   ],
   supervisor: [
-    { label: 'لوحة التحكم',     href: '/dashboard',           icon: '📊' },
+    { label: 'لوحة التحكم', href: '/dashboard/supervisor', icon: '📊' },    
     { label: 'طلبات التسجيل',   href: '/registrations',       icon: '📋' },
     { label: 'تقارير الحفظ',    href: '/quran-reports',       icon: '📖' },
     { label: 'كشف الصرف',       href: '/disbursements',       icon: '💰' },
