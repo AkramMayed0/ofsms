@@ -14,11 +14,15 @@ const { validationResult } = require('express-validator');
 const service = require('./orphans.service');
 const { uploadFile } = require('../../config/s3');
 
+const VALID_RELATIONS = ['uncle', 'maternal_uncle', 'grandfather', 'sibling', 'other'];
+const VALID_GENDERS   = ['male', 'female'];
+
 /**
  * POST /api/orphans
  */
 const createOrphan = async (req, res, next) => {
   try {
+    // 1. Run express-validator checks
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(422).json({ errors: errors.array() });
@@ -34,8 +38,23 @@ const createOrphan = async (req, res, next) => {
       notes,
     } = req.body;
 
+    // 2. Hard guards — catch anything that slipped past validation
+    //    (multer multipart fields can arrive as undefined if not sent)
+    if (!gender || !VALID_GENDERS.includes(gender)) {
+      return res.status(422).json({
+        errors: [{ field: 'gender', msg: 'الجنس مطلوب ويجب أن يكون male أو female' }],
+      });
+    }
+
+    if (!guardianRelation || !VALID_RELATIONS.includes(guardianRelation)) {
+      return res.status(422).json({
+        errors: [{ field: 'guardianRelation', msg: 'صلة الوصي مطلوبة ويجب أن تكون قيمة صحيحة' }],
+      });
+    }
+
     const isGifted = req.user.role === 'gm' ? req.body.isGifted === 'true' : false;
 
+    // 3. Create orphan record
     const orphan = await service.createOrphan({
       fullName,
       dateOfBirth,
@@ -48,6 +67,7 @@ const createOrphan = async (req, res, next) => {
       notes,
     });
 
+    // 4. Upload required documents to S3
     const uploadedDocs = [];
 
     const filesToUpload = [
@@ -86,6 +106,7 @@ const createOrphan = async (req, res, next) => {
       uploadedDocs.push(doc);
     }
 
+    // 5. Upload optional additional documents (up to 5)
     const additionalFiles = req.files?.additionalDocs || [];
     for (const file of additionalFiles.slice(0, 5)) {
       const { key } = await uploadFile({
@@ -200,10 +221,6 @@ const updateOrphan = async (req, res, next) => {
 
 /**
  * PATCH /api/orphans/:id/status
- * Supervisor approves (→ under_marketing) or rejects with mandatory notes.
- * GM can also move to under_sponsorship or inactive.
- *
- * Now passes req.user.name to service so the notification shows reviewer name.
  */
 const updateOrphanStatus = async (req, res, next) => {
   try {
@@ -218,12 +235,11 @@ const updateOrphanStatus = async (req, res, next) => {
       return res.status(403).json({ error: 'هذه الصلاحية للمدير العام فقط' });
     }
 
-    // Pass reviewer name so the FCM message is human-readable
     const orphan = await service.updateOrphanStatus(
       req.params.id,
       status,
       notes,
-      req.user.name  // ← NEW: passed to notification message
+      req.user.name
     );
 
     if (!orphan) {
