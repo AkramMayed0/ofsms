@@ -16,11 +16,7 @@ const { body }   = require('express-validator');
 const { authenticate } = require('../../middleware/rbac');
 const { validationResult } = require('express-validator');
 const { query } = require('../../config/db');
-const {
-  remindAgentsToSubmitReports,
-  remindSupervisorToFollowUp,
-  remindDisbursementDeadline,
-} = require('../../scheduler');
+
 
 const router = Router();
 
@@ -133,6 +129,12 @@ router.post('/test/trigger-cron', authenticate, async (req, res, next) => {
   if (process.env.NODE_ENV === 'production') {
     return res.status(403).json({ error: 'غير متاح في بيئة الإنتاج' });
   }
+
+  const {
+    remindAgentsToSubmitReports,
+    remindSupervisorToFollowUp,
+    remindDisbursementDeadline,
+  } = require('../../scheduler');
 
   const { job } = req.body; // 'agents' | 'supervisor' | 'disbursement'
 

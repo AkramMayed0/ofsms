@@ -113,3 +113,83 @@ const getAgentDashboard = async (agentId) => {
 };
 
 module.exports = { getGmDashboard, getAgentDashboard };
+const getSupervisorDashboard = async () => {
+  // 1. Pending registrations (orphans + families awaiting review)
+  const { rows: [regCounts] } = await query(`
+    SELECT
+      (SELECT COUNT(*) FROM orphans  WHERE status = 'under_review') AS pending_orphans,
+      (SELECT COUNT(*) FROM families WHERE status = 'under_review') AS pending_families
+  `);
+
+  // 2. Pending Quran reports (submitted by agents, awaiting supervisor review)
+  const { rows: [{ pending_quran_reports }] } = await query(`
+    SELECT COUNT(*) AS pending_quran_reports
+    FROM quran_reports
+    WHERE status = 'pending'
+  `);
+
+  // 3. Active disbursement list status (is there one in progress this month?)
+  const now   = new Date();
+  const month = now.getMonth() + 1;
+  const year  = now.getFullYear();
+
+  const { rows: [currentList] } = await query(`
+    SELECT id, status, month, year,
+           supervisor_approved_at, finance_approved_at, gm_approved_at
+    FROM disbursement_lists
+    WHERE month = $1 AND year = $2
+    LIMIT 1
+  `, [month, year]);
+
+  // 4. Next disbursement date: always the 28th of the current month
+  const nextDisbursementDate = new Date(year, month - 1, 28);
+  // If we're past the 28th, point to next month's 28th
+  if (now.getDate() > 28) {
+    nextDisbursementDate.setMonth(nextDisbursementDate.getMonth() + 1);
+  }
+
+  // 5. Upcoming actions — what does the supervisor need to do right now?
+  const upcomingActions = [];
+
+  const pendingRegistrationsTotal =
+    parseInt(regCounts.pending_orphans) + parseInt(regCounts.pending_families);
+
+  if (pendingRegistrationsTotal > 0) {
+    upcomingActions.push({
+      type:    'pending_registrations',
+      label:   `مراجعة ${pendingRegistrationsTotal} طلب تسجيل معلّق`,
+      count:   pendingRegistrationsTotal,
+      link:    '/registrations',
+    });
+  }
+
+  if (parseInt(pending_quran_reports) > 0) {
+    upcomingActions.push({
+      type:  'pending_quran_reports',
+      label: `مراجعة ${pending_quran_reports} تقرير حفظ معلّق`,
+      count: parseInt(pending_quran_reports),
+      link:  '/quran-reports',
+    });
+  }
+
+  if (currentList && currentList.status === 'draft') {
+    upcomingActions.push({
+      type:  'approve_disbursement',
+      label: `اعتماد كشف الصرف لشهر ${currentList.month}/${currentList.year}`,
+      count: 1,
+      link:  `/disbursements/${currentList.id}`,
+    });
+  }
+
+  return {
+    pending_registrations_count: pendingRegistrationsTotal,
+    pending_orphans_count:       parseInt(regCounts.pending_orphans),
+    pending_families_count:      parseInt(regCounts.pending_families),
+    pending_quran_reports_count: parseInt(pending_quran_reports),
+    current_disbursement_list:   currentList || null,
+    next_disbursement_date:      nextDisbursementDate.toISOString().split('T')[0],
+    upcoming_actions:            upcomingActions,
+  };
+};
+
+module.exports = { getGmDashboard, getAgentDashboard, getSupervisorDashboard };

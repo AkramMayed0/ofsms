@@ -18,4 +18,13 @@ const getAgentDashboard = async (req, res, next) => {
   }
 };
 
-module.exports = { getGmDashboard, getAgentDashboard };
+const getSupervisorDashboard = async (_req, res, next) => {
+  try {
+    const data = await service.getSupervisorDashboard();
+    return res.json(data);
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { getGmDashboard, getAgentDashboard, getSupervisorDashboard };
