@@ -14,8 +14,8 @@
 import { useState, useEffect, useRef, Fragment } from 'react';  // [Fix 3a] Fragment imported
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import api from '../../../lib/api';
-import AppShell from '../../../components/AppShell';
+import api from '@/lib/api';
+import AppShell from '@/components/AppShell';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
