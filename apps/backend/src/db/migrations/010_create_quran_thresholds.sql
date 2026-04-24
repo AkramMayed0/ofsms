@@ -1,34 +1,40 @@
 -- ============================================================
--- OFSMS Migration 010 — Quran Memorization Thresholds
--- Configurable by GM (FR-016)
+-- OFSMS Migration 010 — Quran Thresholds Config
 -- Depends on: 000_init.sql
+--
+-- Stores configurable minimum juz memorization per month
+-- per orphan age range. GM can update these via the API.
+-- Used by quran report submission to determine if an orphan
+-- met the monthly requirement (FR-016).
 -- ============================================================
-CREATE EXTENSION IF NOT EXISTS btree_gist;
 
 CREATE TABLE IF NOT EXISTS quran_thresholds (
-  id              SERIAL       PRIMARY KEY,
-  age_min         SMALLINT     NOT NULL CHECK (age_min >= 0),
-  age_max         SMALLINT     NOT NULL CHECK (age_max > age_min),
-  min_juz_per_month NUMERIC(4,2) NOT NULL CHECK (min_juz_per_month > 0),
-  label           VARCHAR(100),        -- e.g. "أطفال (5-9)" for display
-  created_by      UUID         REFERENCES users(id) ON DELETE SET NULL,
-  created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-  updated_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  id                 SERIAL       PRIMARY KEY,
+  age_min            SMALLINT     NOT NULL CHECK (age_min >= 0),
+  age_max            SMALLINT     NOT NULL CHECK (age_max > age_min),
+  min_juz_per_month  NUMERIC(4,2) NOT NULL CHECK (min_juz_per_month >= 0),
+  label              VARCHAR(100),          -- human-readable label e.g. "6-9 سنوات"
+  updated_by         UUID         REFERENCES users(id) ON DELETE SET NULL,
+  updated_at         TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
 
-  -- No overlapping age ranges allowed
-  CONSTRAINT no_overlap EXCLUDE USING gist (
-    int4range(age_min, age_max, '[]') WITH &&
-  )
+  -- Enforce no overlapping age ranges
+  CONSTRAINT quran_thresholds_age_range_unique UNIQUE (age_min, age_max)
 );
 
-CREATE TRIGGER trg_quran_thresholds_updated_at
-  BEFORE UPDATE ON quran_thresholds
-  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+-- ── Seed with reasonable defaults ─────────────────────────────────────────────
+-- Based on typical Islamic education expectations per age group
+INSERT INTO quran_thresholds (age_min, age_max, min_juz_per_month, label)
+VALUES
+  (4,  6,  0.25, '4-6 سنوات'),    -- very young: quarter juz/month
+  (7,  9,  0.50, '7-9 سنوات'),    -- early stage: half juz/month
+  (10, 12, 1.00, '10-12 سنة'),    -- developing: 1 juz/month
+  (13, 15, 1.50, '13-15 سنة'),    -- intermediate: 1.5 juz/month
+  (16, 18, 2.00, '16-18 سنة'),    -- advanced: 2 juz/month
+  (19, 99, 1.00, '19+ سنة')       -- adults: 1 juz/month
+ON CONFLICT (age_min, age_max) DO NOTHING;
 
--- Seed reasonable defaults
-INSERT INTO quran_thresholds (age_min, age_max, min_juz_per_month, label) VALUES
-  (5,  9,  0.25, 'أطفال صغار (5-9)'),
-  (10, 13, 0.50, 'أطفال (10-13)'),
-  (14, 17, 1.00, 'مراهقون (14-17)'),
-  (18, 99, 1.00, 'بالغون (18+)')
-ON CONFLICT DO NOTHING;
+-- ============================================================
+-- Verify:
+--   SELECT * FROM quran_thresholds ORDER BY age_min;
+-- Expected: 6 rows with the seeded defaults above
+-- ============================================================
