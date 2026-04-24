@@ -108,7 +108,8 @@ const updateFamilyStatus = async (req, res, next) => {
       req.params.id,
       status,
       notes,
-      req.user.name  // ← NEW: passed to notification message
+      req.user.name,
+      req.user.id   // ← add this
     );
 
     if (!family) return res.status(404).json({ error: 'الأسرة غير موجودة' });

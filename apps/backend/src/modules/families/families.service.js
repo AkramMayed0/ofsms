@@ -6,6 +6,7 @@
  * (FR-007, FR-048) and on approval.
  */
 
+const { logAudit } = require('../../utils/auditLog');
 const { query } = require('../../config/db');
 const { sendPushNotification } = require('../notifications/notifications.service');
 
@@ -81,7 +82,11 @@ const getFamilyById = async (id) => {
  * Update family status with optional notes.
  * Fires FCM push notification to the agent on rejection or approval (FR-007, FR-048).
  */
-const updateFamilyStatus = async (id, status, notes, reviewerName = 'المشرف') => {
+const updateFamilyStatus = async (id, status, notes, reviewerName = 'المشرف', actorId = null) => {
+  // Grab old status before updating
+  const { rows: oldRows } = await query('SELECT status FROM families WHERE id = $1', [id]);
+  const oldStatus = oldRows[0]?.status;
+
   const { rows } = await query(
     `UPDATE families
      SET status = $1, notes = COALESCE($2, notes)
@@ -91,6 +96,18 @@ const updateFamilyStatus = async (id, status, notes, reviewerName = 'المشر�
   );
 
   const family = rows[0] || null;
+
+  // Write audit log
+  if (family && actorId) {
+    await logAudit({
+      userId:     actorId,
+      action:     'family_status_updated',
+      entityType: 'family',
+      entityId:   id,
+      oldValue:   { status: oldStatus },
+      newValue:   { status, notes },
+    });
+  }
 
   // FR-007 / FR-048: fire push notification to agent on rejection
   if (family && status === 'rejected' && family.agent_id) {
