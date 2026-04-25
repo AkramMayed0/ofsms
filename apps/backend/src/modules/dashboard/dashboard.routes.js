@@ -10,7 +10,12 @@ router.get('/gm', authenticate, authorize('gm'), controller.getGmDashboard);
 // Agent dashboard summary
 router.get('/agent', authenticate, authorize('agent'), controller.getAgentDashboard);
 
-// Supervisor dashboard summary
-router.get('/supervisor', authenticate, authorize('supervisor', 'gm'), controller.getSupervisorDashboard);
+// Supervisor + GM: supervisor dashboard summary
+router.get(
+  '/supervisor',
+  authenticate,
+  authorize('supervisor', 'gm'),
+  controller.getSupervisorDashboard
+);
 
 module.exports = router;

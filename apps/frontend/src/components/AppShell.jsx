@@ -21,6 +21,7 @@ const NAV_ITEMS = {
     { label: 'الأيتام',          href: '/orphans',             icon: '👦' },
     { label: 'الأسر',            href: '/families',            icon: '👨‍👩‍👧' },
     { label: 'الكفلاء',          href: '/sponsors',            icon: '🤝' },
+    { label: 'قائمة التسويق',    href: '/marketing-pool',   icon: '📣' }, 
     { label: 'الأيتام الموهوبون', href: '/gifted',             icon: '🌟' },
     { label: 'تحليلات المحافظات', href: '/governorates',       icon: '🗺️' },
     { label: 'إدارة المستخدمين', href: '/users',               icon: '👥' },
