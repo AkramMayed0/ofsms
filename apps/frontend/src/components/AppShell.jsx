@@ -21,11 +21,11 @@ const NAV_ITEMS = {
     { label: 'الأيتام',          href: '/orphans',             icon: '👦' },
     { label: 'الأسر',            href: '/families',            icon: '👨‍👩‍👧' },
     { label: 'الكفلاء',          href: '/sponsors',            icon: '🤝' },
-    { label: 'قائمة التسويق',    href: '/marketing-pool',   icon: '📣' }, 
     { label: 'الأيتام الموهوبون', href: '/gifted',             icon: '🌟' },
     { label: 'تحليلات المحافظات', href: '/governorates',       icon: '🗺️' },
     { label: 'إدارة المستخدمين', href: '/users',               icon: '👥' },
     { label: 'الإعلانات',        href: '/announcements',       icon: '📢' },
+    { label: 'إعدادات الحفظ',   href: '/quran-thresholds',    icon: '📖' },
     { label: 'التقارير',         href: '/reports',             icon: '📄' },
   ],
   supervisor: [
