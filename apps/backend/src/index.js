@@ -52,7 +52,7 @@ app.use('/api/audit-logs', require('./modules/users/users.routes'));
 app.use('/api/quran-reports', require('./modules/quran/quranReports.routes'));
 app.use('/api/disbursements', require('./modules/disbursements/disbursements.routes'));
 app.use('/api/receipts', require('./modules/receipts/receipts.routes'));
-// app.use('/api/announcements',  require('./modules/announcements/announcements.routes'));
+app.use('/api/announcements',  require('./modules/announcements/announcements.routes'));
 // app.use('/api/reports',        require('./modules/reports/reports.routes'));
 app.use('/api/users', require('./modules/users/users.routes'));
 
