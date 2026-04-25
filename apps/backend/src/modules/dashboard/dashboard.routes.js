@@ -17,5 +17,4 @@ router.get(
   authorize('supervisor', 'gm'),
   controller.getSupervisorDashboard
 );
-
 module.exports = router;
