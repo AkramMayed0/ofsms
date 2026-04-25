@@ -20,12 +20,14 @@ const PORT = process.env.PORT || 4000;
 applySecurityMiddleware(app);
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
-app.use(cors({
-  origin:         process.env.FRONTEND_URL,
-  credentials:    true,
-  methods:        ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
 
 // ── Body parsing & logging ────────────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
@@ -38,21 +40,21 @@ app.get('/health', (_req, res) => {
 });
 
 // ── Routes ────────────────────────────────────────────────────────────────
-app.use('/api/auth',         require('./modules/auth/auth.routes'));
-app.use('/api/orphans',      require('./modules/orphans/orphans.routes'));
-app.use('/api/families',     require('./modules/families/families.routes'));
-app.use('/api/sponsors',     require('./modules/sponsors/sponsors.routes'));
-app.use('/api/sponsor',      require('./modules/sponsor-portal/sponsorPortal.routes'));
+app.use('/api/auth', require('./modules/auth/auth.routes'));
+app.use('/api/orphans', require('./modules/orphans/orphans.routes'));
+app.use('/api/families', require('./modules/families/families.routes'));
+app.use('/api/sponsors', require('./modules/sponsors/sponsors.routes'));
+app.use('/api/sponsor', require('./modules/sponsor-portal/sponsorPortal.routes'));
 app.use('/api/governorates', require('./modules/governorates/governorates.routes'));
-app.use('/api/dashboard',    require('./modules/dashboard/dashboard.routes'));
-app.use('/api/notifications',require('./modules/notifications/notifications.routes'));
+app.use('/api/dashboard', require('./modules/dashboard/dashboard.routes'));
+app.use('/api/notifications', require('./modules/notifications/notifications.routes'));
 app.use('/api/audit-logs', require('./modules/users/users.routes'));
-app.use('/api/quran-reports',  require('./modules/quran/quranReports.routes'));
-app.use('/api/disbursements',  require('./modules/disbursements/disbursements.routes'));
-// app.use('/api/receipts',       require('./modules/receipts/receipts.routes'));
+app.use('/api/quran-reports', require('./modules/quran/quranReports.routes'));
+app.use('/api/disbursements', require('./modules/disbursements/disbursements.routes'));
+app.use('/api/receipts', require('./modules/receipts/receipts.routes'));
 // app.use('/api/announcements',  require('./modules/announcements/announcements.routes'));
 // app.use('/api/reports',        require('./modules/reports/reports.routes'));
-app.use('/api/users',          require('./modules/users/users.routes'));
+app.use('/api/users', require('./modules/users/users.routes'));
 
 // ── Global error handler ──────────────────────────────────────────────────────
 // eslint-disable-next-line no-unused-vars
