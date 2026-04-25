@@ -1,0 +1,363 @@
+'use client';
+
+/**
+ * SupervisorDashboard.jsx
+ * Component: rendered inside /dashboard when role === 'supervisor'
+ * API: GET /api/dashboard/supervisor
+ */
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import api from '@/lib/api';
+
+const formatDate = (iso) => {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('ar-YE', { dateStyle: 'medium' });
+};
+
+const daysUntil = (iso) => {
+  const diff = new Date(iso) - new Date();
+  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+};
+
+function StatCard({ icon, label, value, sub, color = '#1B5E8C', onClick, urgent }) {
+  return (
+    <div
+      className={`stat-card ${urgent ? 'stat-urgent' : ''}`}
+      onClick={onClick}
+      style={{ cursor: onClick ? 'pointer' : 'default', '--c': color }}
+    >
+      <div className="stat-icon" style={{ background: `${color}15`, color }}>{icon}</div>
+      <div>
+        <div className="stat-value" style={{ color }}>{value ?? '—'}</div>
+        <div className="stat-label">{label}</div>
+        {sub && <div className="stat-sub">{sub}</div>}
+      </div>
+    </div>
+  );
+}
+
+function Skel({ w, h, r }) {
+  return <div className="skel" style={{ width: w, height: h, borderRadius: r || 6 }} />;
+}
+
+function QueueItem({ item, onClick }) {
+  return (
+    <div className="queue-item" onClick={onClick}>
+      <div className="queue-avatar">
+        {item.name?.charAt(0) || '؟'}
+      </div>
+      <div className="queue-info">
+        <div className="queue-name">{item.name}</div>
+        <div className="queue-meta">
+          <span className="queue-tag">{item.record_type === 'orphan' ? 'يتيم' : 'أسرة'}</span>
+          <span className="queue-gov">{item.governorate_ar || '—'}</span>
+          <span className="queue-agent">المندوب: {item.agent_name || '—'}</span>
+        </div>
+      </div>
+      <div className="queue-date">{formatDate(item.created_at)}</div>
+    </div>
+  );
+}
+
+export default function SupervisorDashboard() {
+  const router  = useRouter();
+  const [data,    setData]    = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState('');
+
+  useEffect(() => {
+    api.get('/dashboard/supervisor')
+      .then(({ data: res }) => setData(res))
+      .catch(() => setError('تعذّر تحميل البيانات. يرجى تحديث الصفحة.'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const counts        = data?.pending_counts        || {};
+  const pendingOrphans  = data?.pending_orphans     || [];
+  const pendingFamilies = data?.pending_families    || [];
+  const quranReports  = data?.pending_quran_reports || [];
+  const disbDate      = data?.next_disbursement_date;
+  const daysLeft      = disbDate ? daysUntil(disbDate) : null;
+
+  const today = new Date().toLocaleDateString('ar-YE', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+  });
+
+  const allPending = [
+    ...pendingOrphans.map(o => ({ ...o, record_type: 'orphan' })),
+    ...pendingFamilies.map(f => ({ ...f, record_type: 'family' })),
+  ].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+  return (
+    <div className="sup-dash" dir="rtl">
+
+      {/* Header */}
+      <div className="greeting">
+        <div>
+          <h1 className="greeting-title">لوحة تحكم المشرف</h1>
+          <p className="greeting-sub">{today}</p>
+        </div>
+        <button className="btn-primary" onClick={() => router.push('/registrations')}>
+          مراجعة الطلبات ←
+        </button>
+      </div>
+
+      {error && <div className="err-banner">⚠ {error}</div>}
+
+      {/* Stat cards */}
+      <div className="stats-grid">
+        {loading ? (
+          [1,2,3,4].map(i => (
+            <div key={i} className="stat-card">
+              <Skel w={44} h={44} r={12} />
+              <div style={{ flex: 1 }}>
+                <Skel w={50} h={22} r={6} />
+                <div style={{ marginTop: 6 }}><Skel w={80} h={12} r={4} /></div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <>
+            <StatCard
+              icon="📋" label="طلبات تسجيل معلّقة"
+              value={counts.total_registrations}
+              sub={`${counts.orphans || 0} يتيم · ${counts.families || 0} أسرة`}
+              color="#f59e0b"
+              urgent={counts.total_registrations > 0}
+              onClick={() => router.push('/registrations')}
+            />
+            <StatCard
+              icon="📖" label="تقارير حفظ معلّقة"
+              value={counts.quran_reports}
+              sub="بانتظار المراجعة والاعتماد"
+              color="#8b5cf6"
+              urgent={counts.quran_reports > 0}
+              onClick={() => router.push('/quran-reports')}
+            />
+            <StatCard
+              icon="💰" label="كشوف صرف معلّقة"
+              value={counts.disbursements}
+              sub="تحتاج اعتمادك"
+              color="#ef4444"
+              urgent={counts.disbursements > 0}
+              onClick={() => router.push('/disbursements')}
+            />
+            <StatCard
+              icon="📅" label="موعد الصرف القادم"
+              value={daysLeft !== null ? `${daysLeft} يوم` : '—'}
+              sub={disbDate ? formatDate(disbDate) : ''}
+              color={daysLeft !== null && daysLeft <= 3 ? '#ef4444' : '#10b981'}
+              urgent={daysLeft !== null && daysLeft <= 3}
+            />
+          </>
+        )}
+      </div>
+
+      {/* Disbursement countdown banner */}
+      {!loading && daysLeft !== null && daysLeft <= 5 && (
+        <div className="countdown-banner" style={{
+          borderColor: daysLeft <= 2 ? '#fca5a5' : '#fed7aa',
+          background:  daysLeft <= 2 ? '#fef2f2' : '#fff7ed',
+        }}>
+          <div className="countdown-icon">{daysLeft <= 2 ? '🚨' : '⏰'}</div>
+          <div>
+            <strong style={{ color: daysLeft <= 2 ? '#b91c1c' : '#9a3412' }}>
+              {daysLeft === 0 ? 'موعد الصرف اليوم!' : `${daysLeft} ${daysLeft === 1 ? 'يوم' : 'أيام'} على موعد الصرف`}
+            </strong>
+            <p style={{ color: daysLeft <= 2 ? '#dc2626' : '#c2410c', margin: '.25rem 0 0', fontSize: '.82rem' }}>
+              يرجى مراجعة كشف الصرف واعتماده للقسم المالي في أقرب وقت
+            </p>
+          </div>
+          <button className="alert-action" onClick={() => router.push('/disbursements')}>
+            مراجعة الكشف ←
+          </button>
+        </div>
+      )}
+
+      {/* Two-col: pending queue + quran reports */}
+      <div className="two-col">
+
+        {/* Pending registrations queue */}
+        <div className="card">
+          <div className="card-head">
+            <h2 className="card-title">طلبات التسجيل المعلّقة</h2>
+            <button className="link-btn" onClick={() => router.push('/registrations')}>
+              عرض الكل ({counts.total_registrations || 0}) →
+            </button>
+          </div>
+
+          {loading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '.65rem' }}>
+              {[1,2,3].map(i => (
+                <div key={i} style={{ display: 'flex', gap: '.75rem', alignItems: 'center' }}>
+                  <Skel w={38} h={38} r="50%" />
+                  <div style={{ flex: 1 }}>
+                    <Skel w="60%" h={13} />
+                    <div style={{ marginTop: 5 }}><Skel w="80%" h={11} /></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : allPending.length === 0 ? (
+            <div className="empty-state">
+              <span style={{ fontSize: '2rem' }}>✅</span>
+              <p>لا توجد طلبات معلّقة</p>
+            </div>
+          ) : (
+            <div className="queue-list">
+              {allPending.slice(0, 5).map((item) => (
+                <QueueItem
+                  key={item.id}
+                  item={item}
+                  onClick={() => router.push('/registrations')}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Quran reports pending */}
+        <div className="card">
+          <div className="card-head">
+            <h2 className="card-title">تقارير الحفظ المعلّقة</h2>
+            <button className="link-btn" onClick={() => router.push('/quran-reports')}>
+              عرض الكل →
+            </button>
+          </div>
+
+          {loading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '.65rem' }}>
+              {[1,2,3].map(i => (
+                <div key={i} style={{ display: 'flex', gap: '.75rem', alignItems: 'center' }}>
+                  <Skel w={38} h={38} r="50%" />
+                  <div style={{ flex: 1 }}>
+                    <Skel w="55%" h={13} />
+                    <div style={{ marginTop: 5 }}><Skel w="40%" h={11} /></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : quranReports.length === 0 ? (
+            <div className="empty-state">
+              <span style={{ fontSize: '2rem' }}>✅</span>
+              <p>لا توجد تقارير معلّقة</p>
+            </div>
+          ) : (
+            <div className="queue-list">
+              {quranReports.map((r) => (
+                <div key={r.id} className="queue-item" onClick={() => router.push('/quran-reports')}>
+                  <div className="queue-avatar" style={{ background: 'linear-gradient(135deg,#7c3aed,#5b21b6)' }}>
+                    {r.orphan_name?.charAt(0) || '؟'}
+                  </div>
+                  <div className="queue-info">
+                    <div className="queue-name">{r.orphan_name}</div>
+                    <div className="queue-meta">
+                      <span className="queue-tag" style={{ color: '#7c3aed', background: '#f5f3ff' }}>
+                        {r.juz_memorized} جزء
+                      </span>
+                      <span className="queue-agent">المندوب: {r.agent_name}</span>
+                    </div>
+                  </div>
+                  <div className="queue-date">{r.month}/{r.year}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Quick actions */}
+      <div className="card">
+        <h2 className="card-title">إجراءات سريعة</h2>
+        <div className="actions-grid">
+          {[
+            { icon: '📋', label: 'مراجعة التسجيلات',    href: '/registrations',  color: '#f59e0b' },
+            { icon: '📖', label: 'مراجعة تقارير الحفظ', href: '/quran-reports',  color: '#8b5cf6' },
+            { icon: '💰', label: 'مراجعة كشف الصرف',    href: '/disbursements',  color: '#ef4444' },
+            { icon: '📄', label: 'التقارير والتصدير',    href: '/reports',        color: '#059669' },
+          ].map(({ icon, label, href, color }) => (
+            <button
+              key={href}
+              className="action-card"
+              onClick={() => router.push(href)}
+              style={{ '--ac': color }}
+            >
+              <span className="action-icon" style={{ background: `${color}15`, color }}>{icon}</span>
+              <span className="action-label">{label}</span>
+              <span className="action-arrow" style={{ color }}>←</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <style jsx>{`
+        .sup-dash { display:flex; flex-direction:column; gap:1.75rem; font-family:'Cairo','Tajawal',sans-serif; }
+        .greeting { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+        .greeting-title { font-size:1.6rem; font-weight:800; color:#0d3d5c; margin:0 0 .2rem; }
+        .greeting-sub { font-size:.82rem; color:#94a3b8; margin:0; }
+        .err-banner { background:#fef2f2; border:1px solid #fecaca; border-radius:.75rem; padding:.85rem 1rem; font-size:.85rem; color:#b91c1c; }
+
+        .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; }
+        .stat-card { background:#fff; border:1.5px solid #e5eaf0; border-radius:1rem; padding:1.25rem; display:flex; align-items:flex-start; gap:.85rem; box-shadow:0 1px 4px rgba(27,94,140,.05); transition:all .15s; }
+        .stat-card:hover { box-shadow:0 4px 16px rgba(27,94,140,.1); transform:translateY(-1px); }
+        .stat-urgent { border-color:var(--c) !important; box-shadow:0 0 0 3px color-mix(in srgb, var(--c) 12%, transparent) !important; }
+        .stat-icon { width:44px; height:44px; border-radius:.75rem; display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0; }
+        .stat-value { font-size:1.75rem; font-weight:800; line-height:1; margin-bottom:.2rem; font-family:'Cairo',sans-serif; }
+        .stat-label { font-size:.78rem; font-weight:700; color:#374151; }
+        .stat-sub { font-size:.72rem; color:#94a3b8; margin-top:.15rem; }
+
+        .countdown-banner { display:flex; align-items:center; gap:1rem; border:1.5px solid; border-radius:1rem; padding:1.1rem 1.5rem; }
+        .countdown-icon { font-size:1.5rem; flex-shrink:0; }
+        .countdown-banner strong { display:block; font-size:.92rem; font-weight:700; }
+        .countdown-banner div { flex:1; }
+        .alert-action { flex-shrink:0; display:inline-flex; align-items:center; padding:.6rem 1.1rem; background:#1B5E8C; color:#fff; font-family:'Cairo',sans-serif; font-size:.82rem; font-weight:700; border:none; border-radius:.625rem; cursor:pointer; transition:all .15s; white-space:nowrap; }
+        .alert-action:hover { background:#134569; }
+
+        .two-col { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; }
+        .card { background:#fff; border:1px solid #e5eaf0; border-radius:1rem; padding:1.5rem; box-shadow:0 1px 4px rgba(27,94,140,.05); }
+        .card-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.1rem; }
+        .card-title { font-size:.95rem; font-weight:800; color:#0d3d5c; margin:0; }
+
+        .queue-list { display:flex; flex-direction:column; gap:.35rem; }
+        .queue-item { display:flex; align-items:center; gap:.75rem; padding:.65rem .5rem; border-radius:.625rem; cursor:pointer; transition:background .12s; }
+        .queue-item:hover { background:#f8fbff; }
+        .queue-avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#1B5E8C,#0d3d5c); color:#fff; display:flex; align-items:center; justify-content:center; font-size:.88rem; font-weight:700; flex-shrink:0; }
+        .queue-info { flex:1; min-width:0; }
+        .queue-name { font-size:.83rem; font-weight:700; color:#1f2937; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .queue-meta { display:flex; gap:.4rem; align-items:center; margin-top:.2rem; flex-wrap:wrap; }
+        .queue-tag { font-size:.68rem; font-weight:700; padding:.1rem .45rem; border-radius:2rem; background:#eff6ff; color:#3b82f6; }
+        .queue-gov { font-size:.72rem; color:#6b7a8d; }
+        .queue-agent { font-size:.72rem; color:#94a3b8; }
+        .queue-date { font-size:.72rem; color:#94a3b8; flex-shrink:0; white-space:nowrap; }
+
+        .empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2rem; gap:.5rem; }
+        .empty-state p { font-size:.83rem; color:#94a3b8; margin:0; font-weight:600; }
+
+        .actions-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:.85rem; margin-top:1rem; }
+        .action-card { background:#f8fafc; border:1.5px solid #e5eaf0; border-radius:1rem; padding:1.1rem; display:flex; flex-direction:column; align-items:flex-start; gap:.6rem; cursor:pointer; transition:all .15s; font-family:'Cairo',sans-serif; }
+        .action-card:hover { border-color:var(--ac); background:#fff; box-shadow:0 4px 16px rgba(0,0,0,.06); transform:translateY(-1px); }
+        .action-icon { width:40px; height:40px; border-radius:.65rem; display:flex; align-items:center; justify-content:center; font-size:1.2rem; }
+        .action-label { font-size:.82rem; font-weight:700; color:#1f2937; }
+        .action-arrow { font-size:.82rem; font-weight:700; align-self:flex-end; margin-top:auto; }
+
+        .skel { background:linear-gradient(90deg,#f0f4f8 25%,#e5eaf0 50%,#f0f4f8 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; }
+        @keyframes shimmer { to { background-position:-200% 0; } }
+
+        .btn-primary { display:inline-flex; align-items:center; gap:.4rem; padding:.7rem 1.4rem; background:linear-gradient(135deg,#1B5E8C,#134569); color:#fff; font-family:'Cairo',sans-serif; font-size:.9rem; font-weight:700; border:none; border-radius:.75rem; cursor:pointer; box-shadow:0 2px 8px rgba(27,94,140,.25); transition:all .15s; }
+        .btn-primary:hover { background:linear-gradient(135deg,#2E7EB8,#1B5E8C); transform:translateY(-1px); }
+        .link-btn { background:none; border:none; font-family:'Cairo',sans-serif; font-size:.78rem; font-weight:700; color:#1B5E8C; cursor:pointer; padding:0; white-space:nowrap; }
+        .link-btn:hover { opacity:.7; }
+
+        @media (max-width: 900px) {
+          .stats-grid { grid-template-columns:repeat(2,1fr); }
+          .two-col { grid-template-columns:1fr; }
+          .actions-grid { grid-template-columns:repeat(2,1fr); }
+        }
+        @media (max-width: 600px) {
+          .greeting { flex-direction:column; align-items:flex-start; }
+        }
+      `}</style>
+    </div>
+  );
+}
