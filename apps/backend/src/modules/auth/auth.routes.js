@@ -62,7 +62,7 @@ router.post('/login', async (req, res, next) => {
     // 5. Verify password
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
     if (!passwordMatch) {
-      return res.status(401).json({ error: 'البريد الإلكتروني أو كلمة المرور غير ' });
+      return res.status(401).json({ error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' });
     }
 
     // 6. Issue tokens
