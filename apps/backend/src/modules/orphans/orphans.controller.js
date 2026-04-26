@@ -71,8 +71,8 @@ const createOrphan = async (req, res, next) => {
     const uploadedDocs = [];
 
     const filesToUpload = [
-      { field: 'deathCert', docType: 'death_cert', required: true },
-      { field: 'birthCert', docType: 'birth_cert', required: true },
+      { field: 'deathCert', docType: 'death_certificate', required: true },
+      { field: 'birthCert', docType: 'birth_certificate', required: true },
     ];
 
     for (const { field, docType, required } of filesToUpload) {

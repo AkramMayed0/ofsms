@@ -21,6 +21,7 @@ const NAV_ITEMS = {
     { label: 'الأيتام',          href: '/orphans',             icon: '👦' },
     { label: 'الأسر',            href: '/families',            icon: '👨‍👩‍👧' },
     { label: 'الكفلاء',          href: '/sponsors',            icon: '🤝' },
+    { label: 'قائمة التسويق',    href: '/marketing-pool',   icon: '📣' }, 
     { label: 'الأيتام الموهوبون', href: '/gifted',             icon: '🌟' },
     { label: 'تحليلات المحافظات', href: '/governorates',       icon: '🗺️' },
     { label: 'إدارة المستخدمين', href: '/users',               icon: '👥' },
@@ -28,7 +29,7 @@ const NAV_ITEMS = {
     { label: 'التقارير',         href: '/reports',             icon: '📄' },
   ],
   supervisor: [
-    { label: 'لوحة التحكم',     href: '/dashboard',           icon: '📊' },
+    { label: 'لوحة التحكم', href: '/dashboard/supervisor', icon: '📊' },    
     { label: 'طلبات التسجيل',   href: '/registrations',       icon: '📋' },
     { label: 'تقارير الحفظ',    href: '/quran-reports',       icon: '📖' },
     { label: 'كشف الصرف',       href: '/disbursements',       icon: '💰' },

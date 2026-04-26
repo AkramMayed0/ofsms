@@ -111,17 +111,39 @@ const getOrphanById = async (id) => {
  *   under_marketing → under_sponsorship (GM assigns sponsor)
  *   any             → inactive
  */
-const updateOrphanStatus = async (id, status, notes, reviewerName = 'المشرف') => {
+// const updateOrphanStatus = async (id, status, notes, reviewerName = 'المشرف') => {
+//   const { rows } = await query(
+//     `UPDATE orphans
+//      SET status = $1, notes = COALESCE($2, notes)
+//      WHERE id = $3
+//      RETURNING *`,
+//     [status, notes || null, id]
+//   );
+//   const orphan = rows[0] || null;
+const { logAudit } = require('../../utils/auditLog');
+
+const updateOrphanStatus = async (id, status, notes, reviewerName = 'المشرف', actorId = null) => {
+  // fetch old value first
+  const { rows: oldRows } = await query('SELECT status FROM orphans WHERE id = $1', [id]);
+  const oldStatus = oldRows[0]?.status;
+
   const { rows } = await query(
-    `UPDATE orphans
-     SET status = $1, notes = COALESCE($2, notes)
-     WHERE id = $3
-     RETURNING *`,
+    `UPDATE orphans SET status = $1, notes = COALESCE($2, notes) WHERE id = $3 RETURNING *`,
     [status, notes || null, id]
   );
-
   const orphan = rows[0] || null;
 
+  if (orphan && actorId) {
+    await logAudit({
+      userId:     actorId,
+      action:     'orphan_status_updated',
+      entityType: 'orphan',
+      entityId:   id,
+      oldValue:   { status: oldStatus },
+      newValue:   { status, notes },
+    });
+  }
+  
   // FR-007 / FR-048: fire push notification to agent on rejection
   if (orphan && status === 'rejected' && orphan.agent_id) {
     const notesText = notes ? ` السبب: ${notes}` : '';
