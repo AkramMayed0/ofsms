@@ -7,7 +7,7 @@ const router = Router();
 // GM dashboard summary
 router.get('/gm', authenticate, authorize('gm'), controller.getGmDashboard);
 
-// Agent dashboard summary (already In Progress by someone else — wire it here too)
+// Agent dashboard summary
 router.get('/agent', authenticate, authorize('agent'), controller.getAgentDashboard);
 
 // Supervisor + GM: supervisor dashboard summary
@@ -17,4 +17,5 @@ router.get(
   authorize('supervisor', 'gm'),
   controller.getSupervisorDashboard
 );
+
 module.exports = router;

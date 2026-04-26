@@ -37,19 +37,19 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ── Routes ────────────────────────────────────────────────────────────────
+// ── Routes ────────────────────────────────────────────────────────────────────
 app.use('/api/auth',         require('./modules/auth/auth.routes'));
 app.use('/api/orphans',      require('./modules/orphans/orphans.routes'));
 app.use('/api/families',     require('./modules/families/families.routes'));
 app.use('/api/sponsors',     require('./modules/sponsors/sponsors.routes'));
 app.use('/api/sponsor',      require('./modules/sponsor-portal/sponsorPortal.routes'));
 app.use('/api/governorates', require('./modules/governorates/governorates.routes'));
-app.use('/api/dashboard',    require('./modules/dashboard/dashboard.routes'));
-app.use('/api/notifications',require('./modules/notifications/notifications.routes'));
+app.use('/api/dashboard', require('./modules/dashboard/dashboard.routes'));
+app.use('/api/notifications', require('./modules/notifications/notifications.routes'));
 app.use('/api/audit-logs', require('./modules/users/users.routes'));
-app.use('/api/quran-reports',  require('./modules/quran/quranReports.routes'));
-app.use('/api/disbursements',  require('./modules/disbursements/disbursements.routes'));
-// app.use('/api/receipts',       require('./modules/receipts/receipts.routes'));
+app.use('/api/quran-reports', require('./modules/quran/quranReports.routes'));
+app.use('/api/disbursements', require('./modules/disbursements/disbursements.routes'));
+app.use('/api/receipts', require('./modules/receipts/receipts.routes'));
 // app.use('/api/announcements',  require('./modules/announcements/announcements.routes'));
 // app.use('/api/reports',        require('./modules/reports/reports.routes'));
 app.use('/api/users',          require('./modules/users/users.routes'));

@@ -1,16 +1,13 @@
 const { query } = require('../../config/db');
 
+// ── GM Dashboard ───────────────────────────────────────────────────────────────
+
 const getGmDashboard = async () => {
-  // 1. Total orphans + gifted count
   const { rows: [totals] } = await query(`
-    SELECT
-      COUNT(*)                              AS total_orphans,
-      COUNT(*) FILTER (WHERE is_gifted)    AS gifted_count
-    FROM orphans
-    WHERE status != 'inactive'
+    SELECT COUNT(*) AS total_orphans
+    FROM orphans WHERE status != 'inactive'
   `);
 
-  // 2. Orphans per governorate
   const { rows: orphansPerGov } = await query(`
     SELECT g.name_ar AS governorate_ar, g.name_en AS governorate_en,
            COUNT(o.id) AS count
@@ -21,10 +18,8 @@ const getGmDashboard = async () => {
     ORDER BY count DESC
   `);
 
-  // 3. Orphans per sponsor (top 10)
   const { rows: orphansPerSponsor } = await query(`
-    SELECT s.full_name AS sponsor_name,
-           COUNT(sp.id) AS count
+    SELECT s.full_name AS sponsor_name, COUNT(sp.id) AS count
     FROM sponsorships sp
     JOIN sponsors s ON s.id = sp.sponsor_id
     WHERE sp.is_active = TRUE
@@ -33,7 +28,6 @@ const getGmDashboard = async () => {
     LIMIT 10
   `);
 
-  // 4. Latest 10 orphans added
   const { rows: latestOrphans } = await query(`
     SELECT o.id, o.full_name, o.status, o.is_gifted, o.created_at,
            g.name_ar AS governorate_ar
@@ -43,20 +37,19 @@ const getGmDashboard = async () => {
     LIMIT 10
   `);
 
-  // 5. Pending counts
   const { rows: [pending] } = await query(`
     SELECT
-      (SELECT COUNT(*) FROM orphans WHERE status = 'under_review')                           AS registrations,
-      (SELECT COUNT(*) FROM quran_reports WHERE status = 'pending')                          AS quran_reports,
-      (SELECT COUNT(*) FROM disbursement_lists WHERE status IN ('draft','supervisor_approved')) AS disbursements
+      (SELECT COUNT(*) FROM orphans WHERE status = 'under_review')          AS registrations,
+      (SELECT COUNT(*) FROM quran_reports WHERE status = 'pending')          AS quran_reports,
+      (SELECT COUNT(*) FROM disbursement_lists
+       WHERE status IN ('draft','supervisor_approved'))                       AS disbursements
   `);
 
-  // 6. Monthly disbursement summary (current month)
   const { rows: [disbursement] } = await query(`
     SELECT
-      COALESCE(SUM(di.amount), 0)                                                    AS total,
-      COALESCE(SUM(di.amount) FILTER (WHERE dl.status = 'released'), 0)              AS released,
-      COALESCE(SUM(di.amount) FILTER (WHERE dl.status != 'released'), 0)             AS pending
+      COALESCE(SUM(di.amount), 0)                                                     AS total,
+      COALESCE(SUM(di.amount) FILTER (WHERE dl.status = 'released'), 0)               AS released,
+      COALESCE(SUM(di.amount) FILTER (WHERE dl.status != 'released'), 0)              AS pending
     FROM disbursement_items di
     JOIN disbursement_lists dl ON dl.id = di.list_id
     WHERE dl.month = EXTRACT(MONTH FROM NOW())
@@ -65,11 +58,10 @@ const getGmDashboard = async () => {
   `);
 
   return {
-    total_orphans:   parseInt(totals.total_orphans),
-    gifted_count:    parseInt(totals.gifted_count),
+    total_orphans: parseInt(totals.total_orphans),
     orphans_per_governorate: orphansPerGov.map(r => ({ ...r, count: parseInt(r.count) })),
-    orphans_per_sponsor:     orphansPerSponsor.map(r => ({ ...r, count: parseInt(r.count) })),
-    latest_orphans:  latestOrphans,
+    orphans_per_sponsor: orphansPerSponsor.map(r => ({ ...r, count: parseInt(r.count) })),
+    latest_orphans: latestOrphans,
     pending_count: {
       registrations: parseInt(pending.registrations),
       quran_reports: parseInt(pending.quran_reports),
@@ -83,9 +75,11 @@ const getGmDashboard = async () => {
   };
 };
 
+// ── Agent Dashboard ────────────────────────────────────────────────────────────
+
 const getAgentDashboard = async (agentId) => {
   const { rows: myOrphans } = await query(`
-    SELECT o.id, o.full_name, o.status, o.is_gifted, o.created_at,
+    SELECT o.id, o.full_name, o.status, o.is_gifted, o.date_of_birth, o.created_at,
            g.name_ar AS governorate_ar
     FROM orphans o
     LEFT JOIN governorates g ON g.id = o.governorate_id
@@ -106,89 +100,96 @@ const getAgentDashboard = async (agentId) => {
       )
   `, [agentId]);
 
-  return {
-    my_orphans:      myOrphans,
-    pending_reports: pendingReports,
-  };
+  return { my_orphans: myOrphans, pending_reports: pendingReports };
 };
 
-module.exports = { getGmDashboard, getAgentDashboard };
+// ── Supervisor Dashboard ───────────────────────────────────────────────────────
+
 const getSupervisorDashboard = async () => {
-  // 1. Pending registrations (orphans + families awaiting review)
-  const { rows: [regCounts] } = await query(`
+  // Pending registrations count
+  const { rows: [regCount] } = await query(`
     SELECT
-      (SELECT COUNT(*) FROM orphans  WHERE status = 'under_review') AS pending_orphans,
-      (SELECT COUNT(*) FROM families WHERE status = 'under_review') AS pending_families
+      COUNT(*) FILTER (WHERE status = 'under_review')   AS pending_registrations,
+      COUNT(*) FILTER (WHERE TRUE)                       AS total
+    FROM (
+      SELECT status FROM orphans
+      UNION ALL
+      SELECT status FROM families
+    ) combined
+    WHERE status = 'under_review'
   `);
 
-  // 2. Pending Quran reports (submitted by agents, awaiting supervisor review)
-  const { rows: [{ pending_quran_reports }] } = await query(`
-    SELECT COUNT(*) AS pending_quran_reports
-    FROM quran_reports
-    WHERE status = 'pending'
+  // Simpler version — separate counts
+  const { rows: [counts] } = await query(`
+    SELECT
+      (SELECT COUNT(*) FROM orphans   WHERE status = 'under_review')   AS pending_orphans,
+      (SELECT COUNT(*) FROM families  WHERE status = 'under_review')   AS pending_families,
+      (SELECT COUNT(*) FROM quran_reports WHERE status = 'pending')     AS pending_quran_reports,
+      (SELECT COUNT(*) FROM disbursement_lists
+       WHERE status IN ('draft', 'supervisor_approved'))                AS pending_disbursements
   `);
 
-  // 3. Active disbursement list status (is there one in progress this month?)
-  const now   = new Date();
-  const month = now.getMonth() + 1;
-  const year  = now.getFullYear();
+  // Latest pending registrations — orphans
+  const { rows: pendingOrphans } = await query(`
+    SELECT o.id, o.full_name AS name, 'orphan' AS record_type,
+           o.status, o.created_at,
+           g.name_ar AS governorate_ar,
+           u.full_name AS agent_name
+    FROM orphans o
+    LEFT JOIN governorates g ON g.id = o.governorate_id
+    LEFT JOIN users u ON u.id = o.agent_id
+    WHERE o.status = 'under_review'
+    ORDER BY o.created_at ASC
+    LIMIT 5
+  `);
 
-  const { rows: [currentList] } = await query(`
-    SELECT id, status, month, year,
-           supervisor_approved_at, finance_approved_at, gm_approved_at
-    FROM disbursement_lists
-    WHERE month = $1 AND year = $2
-    LIMIT 1
-  `, [month, year]);
+  // Latest pending registrations — families
+  const { rows: pendingFamilies } = await query(`
+    SELECT f.id, f.family_name AS name, 'family' AS record_type,
+           f.status, f.created_at,
+           g.name_ar AS governorate_ar,
+           u.full_name AS agent_name
+    FROM families f
+    LEFT JOIN governorates g ON g.id = f.governorate_id
+    LEFT JOIN users u ON u.id = f.agent_id
+    WHERE f.status = 'under_review'
+    ORDER BY f.created_at ASC
+    LIMIT 5
+  `);
 
-  // 4. Next disbursement date: always the 28th of the current month
-  const nextDisbursementDate = new Date(year, month - 1, 28);
-  // If we're past the 28th, point to next month's 28th
-  if (now.getDate() > 28) {
-    nextDisbursementDate.setMonth(nextDisbursementDate.getMonth() + 1);
-  }
+  // Recent quran reports pending review
+  const { rows: pendingQuranReports } = await query(`
+    SELECT qr.id, o.full_name AS orphan_name,
+           qr.month, qr.year, qr.juz_memorized, qr.submitted_at,
+           u.full_name AS agent_name
+    FROM quran_reports qr
+    JOIN orphans o ON o.id = qr.orphan_id
+    JOIN users u ON u.id = qr.agent_id
+    WHERE qr.status = 'pending'
+    ORDER BY qr.submitted_at ASC
+    LIMIT 5
+  `);
 
-  // 5. Upcoming actions — what does the supervisor need to do right now?
-  const upcomingActions = [];
-
-  const pendingRegistrationsTotal =
-    parseInt(regCounts.pending_orphans) + parseInt(regCounts.pending_families);
-
-  if (pendingRegistrationsTotal > 0) {
-    upcomingActions.push({
-      type:    'pending_registrations',
-      label:   `مراجعة ${pendingRegistrationsTotal} طلب تسجيل معلّق`,
-      count:   pendingRegistrationsTotal,
-      link:    '/registrations',
-    });
-  }
-
-  if (parseInt(pending_quran_reports) > 0) {
-    upcomingActions.push({
-      type:  'pending_quran_reports',
-      label: `مراجعة ${pending_quran_reports} تقرير حفظ معلّق`,
-      count: parseInt(pending_quran_reports),
-      link:  '/quran-reports',
-    });
-  }
-
-  if (currentList && currentList.status === 'draft') {
-    upcomingActions.push({
-      type:  'approve_disbursement',
-      label: `اعتماد كشف الصرف لشهر ${currentList.month}/${currentList.year}`,
-      count: 1,
-      link:  `/disbursements/${currentList.id}`,
-    });
+  // Next disbursement date (28th of current month)
+  const now = new Date();
+  const disbursementDay = 28;
+  const nextDisbursement = new Date(now.getFullYear(), now.getMonth(), disbursementDay);
+  if (now.getDate() > disbursementDay) {
+    nextDisbursement.setMonth(nextDisbursement.getMonth() + 1);
   }
 
   return {
-    pending_registrations_count: pendingRegistrationsTotal,
-    pending_orphans_count:       parseInt(regCounts.pending_orphans),
-    pending_families_count:      parseInt(regCounts.pending_families),
-    pending_quran_reports_count: parseInt(pending_quran_reports),
-    current_disbursement_list:   currentList || null,
-    next_disbursement_date:      nextDisbursementDate.toISOString().split('T')[0],
-    upcoming_actions:            upcomingActions,
+    pending_counts: {
+      orphans:          parseInt(counts.pending_orphans),
+      families:         parseInt(counts.pending_families),
+      quran_reports:    parseInt(counts.pending_quran_reports),
+      disbursements:    parseInt(counts.pending_disbursements),
+      total_registrations: parseInt(counts.pending_orphans) + parseInt(counts.pending_families),
+    },
+    pending_orphans:       pendingOrphans,
+    pending_families:      pendingFamilies,
+    pending_quran_reports: pendingQuranReports,
+    next_disbursement_date: nextDisbursement.toISOString(),
   };
 };
 
