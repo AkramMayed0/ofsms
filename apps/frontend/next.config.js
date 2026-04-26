@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  
   // Arabic-first, English secondary
   i18n: {
     locales: ['ar', 'en'],
@@ -16,4 +17,7 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+module.exports ={
+  nextConfig,
+  allowedDevOrigins: ['192.168.1.130'],
+};
