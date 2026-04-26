@@ -53,7 +53,8 @@ app.use('/api/disbursements',  require('./modules/disbursements/disbursements.ro
 // app.use('/api/announcements',  require('./modules/announcements/announcements.routes'));
 // app.use('/api/reports',        require('./modules/reports/reports.routes'));
 app.use('/api/users',          require('./modules/users/users.routes'));
-
+// In apps/backend/src/index.js — add this line with the other routes
+app.use('/api/supervisor', require('./modules/supervisor/supervisor.routes'));
 // ── Global error handler ──────────────────────────────────────────────────────
 // eslint-disable-next-line no-unused-vars
 app.use((err, _req, res, _next) => {

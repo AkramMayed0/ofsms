@@ -4,6 +4,7 @@
  */
 
 const { validationResult } = require('express-validator');
+const { uploadFile } = require('../../config/s3');
 const service = require('./families.service');
 
 const createFamily = async (req, res, next) => {
@@ -13,16 +14,64 @@ const createFamily = async (req, res, next) => {
 
     const { familyName, headOfFamily, memberCount, governorateId, notes } = req.body;
 
+    // 1. Create family record (status = under_review automatically)
     const family = await service.createFamily({
       familyName,
       headOfFamily,
-      memberCount,
-      governorateId,
+      memberCount: parseInt(memberCount, 10),
+      governorateId: parseInt(governorateId, 10),
       agentId: req.user.id,
       notes,
     });
 
-    return res.status(201).json({ message: 'تم تسجيل الأسرة بنجاح', family });
+    // 2. Upload documents to S3
+    const uploadedDocs = [];
+
+    // Optional: head of family ID document
+    const headIdFile = req.files?.headOfFamilyId?.[0];
+    if (headIdFile) {
+      const { key } = await uploadFile({
+        buffer: headIdFile.buffer,
+        originalName: headIdFile.originalname,
+        mimetype: headIdFile.mimetype,
+        folder: 'documents',
+      });
+      const doc = await service.addDocument({
+        entityType: 'family',
+        entityId: family.id,
+        docType: 'guardian_id',
+        fileKey: key,
+        originalName: headIdFile.originalname,
+        uploadedBy: req.user.id,
+      });
+      uploadedDocs.push(doc);
+    }
+
+    // Optional: additional docs (up to 5)
+    const additionalFiles = req.files?.additionalDocs || [];
+    for (const file of additionalFiles.slice(0, 5)) {
+      const { key } = await uploadFile({
+        buffer: file.buffer,
+        originalName: file.originalname,
+        mimetype: file.mimetype,
+        folder: 'documents',
+      });
+      const doc = await service.addDocument({
+        entityType: 'family',
+        entityId: family.id,
+        docType: 'other',
+        fileKey: key,
+        originalName: file.originalname,
+        uploadedBy: req.user.id,
+      });
+      uploadedDocs.push(doc);
+    }
+
+    return res.status(201).json({
+      message: 'تم تسجيل الأسرة بنجاح وهي الآن في قائمة انتظار المراجعة',
+      family,
+      documents: uploadedDocs,
+    });
   } catch (err) {
     next(err);
   }
@@ -89,10 +138,6 @@ const updateFamily = async (req, res, next) => {
   }
 };
 
-/**
- * PATCH /api/families/:id/status
- * Now passes req.user.name to the service so the FCM message is human-readable.
- */
 const updateFamilyStatus = async (req, res, next) => {
   try {
     const errors = validationResult(req);
@@ -109,7 +154,7 @@ const updateFamilyStatus = async (req, res, next) => {
       status,
       notes,
       req.user.name,
-      req.user.id   // ← add this
+      req.user.id
     );
 
     if (!family) return res.status(404).json({ error: 'الأسرة غير موجودة' });
