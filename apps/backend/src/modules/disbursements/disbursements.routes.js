@@ -4,73 +4,76 @@
  */
 
 const { Router } = require('express');
+const { body } = require('express-validator');
 const { authenticate, authorize } = require('../../middleware/rbac');
 const controller = require('./disbursements.controller');
 
 const router = Router();
 
-// GM + Supervisor: generate this month's disbursement list
-router.post(
-  '/generate',
-  authenticate,
-  authorize('gm', 'supervisor'),
-  controller.generateDisbursementList
-);
-
-// GM + Supervisor + Finance: list all disbursement lists
+// ── GET /api/disbursements — list all disbursement lists
 router.get(
   '/',
   authenticate,
-  authorize('gm', 'supervisor', 'finance'),
-  controller.getAllDisbursementLists
+  authorize('supervisor', 'finance', 'gm'),
+  controller.getDisbursementLists
 );
 
-// GM + Supervisor + Finance: get a single list with items
+// ── POST /api/disbursements/generate — generate current month list (GM/Supervisor)
+router.post(
+  '/generate',
+  authenticate,
+  authorize('supervisor', 'gm'),
+  controller.generateDisbursementList
+);
+
+// ── GET /api/disbursements/:id — get single list with items
 router.get(
   '/:id',
   authenticate,
-  authorize('gm', 'supervisor', 'finance'),
-  controller.getDisbursementListById
+  authorize('supervisor', 'finance', 'gm'),
+  controller.getDisbursementById
 );
 
-// Supervisor + GM: approve a disbursement list (draft → supervisor_approved)
+// ── PATCH /api/disbursements/:id/approve — supervisor approves list
 router.patch(
-  '/:id/supervisor-approve',
+  '/:id/approve',
   authenticate,
   authorize('supervisor', 'gm'),
-  controller.supervisorApproveDisbursement
+  controller.supervisorApprove
 );
 
-// Supervisor + GM: reject a disbursement list (draft → rejected)
+// ── PATCH /api/disbursements/:id/reject — supervisor rejects list
 router.patch(
-  '/:id/supervisor-reject',
+  '/:id/reject',
   authenticate,
   authorize('supervisor', 'gm'),
-  controller.supervisorRejectDisbursement
+  [body('notes').notEmpty().withMessage('ملاحظات الرفض مطلوبة')],
+  controller.supervisorReject
 );
 
-// Finance + GM: approve (supervisor_approved → finance_approved)
+// ── PATCH /api/disbursements/:id/finance-approve — finance approves
 router.patch(
   '/:id/finance-approve',
   authenticate,
   authorize('finance', 'gm'),
-  controller.financeApproveDisbursement
+  controller.financeApprove
 );
 
-// Finance + GM: reject (supervisor_approved → rejected), notes required
+// ── PATCH /api/disbursements/:id/finance-reject — finance rejects
 router.patch(
   '/:id/finance-reject',
   authenticate,
   authorize('finance', 'gm'),
-  controller.financeRejectDisbursement
+  [body('notes').notEmpty().withMessage('ملاحظات الرفض مطلوبة')],
+  controller.financeReject
 );
 
-// GM only: final release (finance_approved → released)
+// ── PATCH /api/disbursements/:id/release — GM releases funds
 router.patch(
-  '/:id/gm-release',
+  '/:id/release',
   authenticate,
   authorize('gm'),
-  controller.gmReleaseDisbursement
+  controller.gmRelease
 );
 
 module.exports = router;

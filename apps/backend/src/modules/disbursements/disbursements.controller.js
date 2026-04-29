@@ -1,198 +1,95 @@
 /**
  * disbursements.controller.js
- * HTTP handlers for the disbursements module.
  */
 
+const { validationResult } = require('express-validator');
 const service = require('./disbursements.service');
 
-/**
- * POST /api/disbursements/generate
- * Creates a DisbursementList for the current month + auto-fills items.
- * GM and Supervisor only.
- */
+const getDisbursementLists = async (_req, res, next) => {
+  try {
+    return res.json({ lists: await service.getDisbursementLists() });
+  } catch (err) { next(err); }
+};
+
+const getDisbursementById = async (req, res, next) => {
+  try {
+    const data = await service.getDisbursementById(req.params.id);
+    if (!data) return res.status(404).json({ error: 'الكشف غير موجود' });
+    return res.json(data);
+  } catch (err) { next(err); }
+};
+
 const generateDisbursementList = async (req, res, next) => {
   try {
-    const { list, items } = await service.generateDisbursementList(req.user.id);
-
-    return res.status(201).json({
-      message: `تم توليد كشف الصرف لشهر ${list.month}/${list.year} بنجاح`,
-      list,
-      items,
-      total_items:  items.length,
-      total_amount: items.reduce((sum, i) => sum + parseFloat(i.amount), 0),
-    });
+    const data = await service.generateDisbursementList(req.user.id);
+    return res.status(201).json({ message: 'تم إنشاء كشف الصرف بنجاح', ...data });
   } catch (err) {
-    // Unique constraint violation = list already exists for this month
-    if (err.code === '23505') {
-      return res.status(409).json({
-        error: `كشف الصرف لهذا الشهر موجود بالفعل. لا يمكن توليد كشفين لنفس الشهر`,
-      });
-    }
+    if (err.status === 409) return res.status(409).json({ error: err.message });
     next(err);
   }
 };
 
-/**
- * GET /api/disbursements
- * List all disbursement lists.
- */
-const getAllDisbursementLists = async (_req, res, next) => {
+const supervisorApprove = async (req, res, next) => {
   try {
-    const lists = await service.getAllDisbursementLists();
-    return res.json({ lists });
+    const list = await service.supervisorApprove(req.params.id, req.user.id);
+    return res.json({ message: 'تم اعتماد كشف الصرف بنجاح', list });
   } catch (err) {
+    if (err.status === 400) return res.status(400).json({ error: err.message });
     next(err);
   }
 };
 
-/**
- * GET /api/disbursements/:id
- * Get a single disbursement list with all its items.
- */
-const getDisbursementListById = async (req, res, next) => {
+const supervisorReject = async (req, res, next) => {
   try {
-    const result = await service.getDisbursementListById(req.params.id);
-    if (!result) {
-      return res.status(404).json({ error: 'كشف الصرف غير موجود' });
-    }
-    return res.json(result);
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
+    const list = await service.supervisorReject(req.params.id, req.user.id, req.body.notes);
+    return res.json({ message: 'تم رفض كشف الصرف', list });
   } catch (err) {
+    if (err.status === 400) return res.status(400).json({ error: err.message });
     next(err);
   }
 };
 
-// ADD to apps/backend/src/modules/disbursements/disbursements.controller.js
-
-/**
- * PATCH /api/disbursements/:id/supervisor-approve
- * Supervisor approves → status: supervisor_approved → Finance queue.
- */
-const supervisorApproveDisbursement = async (req, res, next) => {
+const financeApprove = async (req, res, next) => {
   try {
-    const list = await service.supervisorApproveDisbursement(req.params.id, req.user.id);
-
-    if (!list) {
-      return res.status(404).json({
-        error: 'كشف الصرف غير موجود أو لا يمكن اعتماده في وضعه الحالي (يجب أن يكون في وضع مسودة)',
-      });
-    }
-
-    return res.json({
-      message: `تم اعتماد كشف الصرف لشهر ${list.month}/${list.year} وإرساله للقسم المالي`,
-      list,
-    });
+    const list = await service.financeApprove(req.params.id, req.user.id);
+    return res.json({ message: 'تمت المصادقة المالية بنجاح', list });
   } catch (err) {
+    if (err.status === 400) return res.status(400).json({ error: err.message });
     next(err);
   }
 };
 
-/**
- * PATCH /api/disbursements/:id/supervisor-reject
- * Supervisor rejects → status: rejected, notes required.
- */
-const supervisorRejectDisbursement = async (req, res, next) => {
+const financeReject = async (req, res, next) => {
   try {
-    const { notes } = req.body;
-
-    if (!notes || !notes.trim()) {
-      return res.status(422).json({ error: 'ملاحظات الرفض مطلوبة' });
-    }
-
-    const list = await service.supervisorRejectDisbursement(req.params.id, req.user.id, notes.trim());
-
-    if (!list) {
-      return res.status(404).json({
-        error: 'كشف الصرف غير موجود أو لا يمكن رفضه في وضعه الحالي (يجب أن يكون في وضع مسودة)',
-      });
-    }
-
-    return res.json({
-      message: `تم رفض كشف الصرف لشهر ${list.month}/${list.year}`,
-      list,
-    });
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
+    const list = await service.financeReject(req.params.id, req.user.id, req.body.notes);
+    return res.json({ message: 'تم رد الكشف للمشرف', list });
   } catch (err) {
+    if (err.status === 400) return res.status(400).json({ error: err.message });
     next(err);
   }
 };
 
-/**
- * PATCH /api/disbursements/:id/finance-approve
- * Finance approves → status: finance_approved → GM notified.
- */
-const financeApproveDisbursement = async (req, res, next) => {
+const gmRelease = async (req, res, next) => {
   try {
-    const list = await service.financeApproveDisbursement(req.params.id, req.user.id);
-    if (!list) {
-      return res.status(404).json({
-        error: 'كشف الصرف غير موجود أو لا يمكن مصادقته في وضعه الحالي (يجب أن يكون معتمداً من المشرف)',
-      });
-    }
-    return res.json({
-      message: `تمت مصادقة القسم المالي على كشف الصرف لشهر ${list.month}/${list.year} وأُرسل للمدير العام`,
-      list,
-    });
+    const list = await service.gmRelease(req.params.id, req.user.id);
+    return res.json({ message: 'تم إصدار الأموال بنجاح', list });
   } catch (err) {
-    next(err);
-  }
-};
-
-/**
- * PATCH /api/disbursements/:id/finance-reject
- * Finance rejects → status: rejected, back to supervisor. Notes required.
- */
-const financeRejectDisbursement = async (req, res, next) => {
-  try {
-    const { notes } = req.body;
-    if (!notes || !notes.trim()) {
-      return res.status(422).json({ error: 'ملاحظات الرفض مطلوبة' });
-    }
-    const list = await service.financeRejectDisbursement(req.params.id, req.user.id, notes.trim());
-    if (!list) {
-      return res.status(404).json({
-        error: 'كشف الصرف غير موجود أو لا يمكن رفضه في وضعه الحالي (يجب أن يكون معتمداً من المشرف)',
-      });
-    }
-    return res.json({
-      message: `تم رفض كشف الصرف لشهر ${list.month}/${list.year} وإعادته للمشرف`,
-      list,
-    });
-  } catch (err) {
-    next(err);
-  }
-};
-
-/**
- * PATCH /api/disbursements/:id/gm-release
- * GM final release → status: released, agents notified.
- */
-const gmReleaseDisbursement = async (req, res, next) => {
-  try {
-    const result = await service.gmReleaseDisbursement(req.params.id, req.user.id);
-
-    if (!result) {
-      return res.status(404).json({
-        error: 'كشف الصرف غير موجود أو لا يمكن إصداره في وضعه الحالي (يجب أن يكون معتمداً من القسم المالي)',
-      });
-    }
-
-    return res.json({
-      message: `تم إصدار كشف الصرف لشهر ${result.list.month}/${result.list.year} بنجاح. تم إشعار ${result.notified_agents} مندوب.`,
-      list:             result.list,
-      released_items:   result.released_items,
-      notified_agents:  result.notified_agents,
-    });
-  } catch (err) {
+    if (err.status === 400) return res.status(400).json({ error: err.message });
     next(err);
   }
 };
 
 module.exports = {
+  getDisbursementLists,
+  getDisbursementById,
   generateDisbursementList,
-  getAllDisbursementLists,
-  getDisbursementListById,
-  supervisorApproveDisbursement,
-  supervisorRejectDisbursement,
-  financeApproveDisbursement,
-  financeRejectDisbursement,
-  gmReleaseDisbursement,    
+  supervisorApprove,
+  supervisorReject,
+  financeApprove,
+  financeReject,
+  gmRelease,
 };
