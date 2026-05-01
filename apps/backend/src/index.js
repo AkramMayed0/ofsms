@@ -14,6 +14,7 @@ const { initScheduler } = require('./scheduler');
 const { applySecurityMiddleware } = require('./middleware/security');
 
 const app = express();
+app.set('etag', false); // ← add this
 const PORT = process.env.PORT || 4000;
 
 // ── Security (must come before routes and other middleware) ───────────────────

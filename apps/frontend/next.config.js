@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  
   // Arabic-first, English secondary
   i18n: {
     locales: ['ar', 'en'],
@@ -15,9 +14,9 @@ const nextConfig = {
   images: {
     domains: ['ofsms-documents.s3.amazonaws.com'],
   },
-};
 
-module.exports ={
-  nextConfig,
+  // Allow dev access from local network
   allowedDevOrigins: ['192.168.1.130'],
 };
+
+module.exports = nextConfig; // ✅ Fixed: was module.exports = { nextConfig, ... }
