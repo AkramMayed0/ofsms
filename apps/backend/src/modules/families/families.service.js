@@ -1,9 +1,14 @@
 /**
  * families.service.js
  * All database queries for the families module.
+ *
+ * updateFamilyStatus now fires a push notification to the agent on rejection
+ * (FR-007, FR-048) and on approval.
  */
 
+const { logAudit } = require('../../utils/auditLog');
 const { query } = require('../../config/db');
+const { sendPushNotification } = require('../notifications/notifications.service');
 
 /**
  * Create a new family record.
@@ -22,7 +27,6 @@ const createFamily = async ({ familyName, headOfFamily, memberCount, governorate
 
 /**
  * Get all families — supports filtering by status and agent.
- * Agents only see their own families (enforced in controller via req.user).
  */
 const getFamilies = async ({ status, agentId } = {}) => {
   const conditions = [];
@@ -32,7 +36,6 @@ const getFamilies = async ({ status, agentId } = {}) => {
     params.push(status);
     conditions.push(`f.status = $${params.length}`);
   }
-
   if (agentId) {
     params.push(agentId);
     conditions.push(`f.agent_id = $${params.length}`);
@@ -43,7 +46,7 @@ const getFamilies = async ({ status, agentId } = {}) => {
   const { rows } = await query(
     `SELECT
        f.id, f.family_name, f.head_of_family, f.member_count,
-       f.status, f.is_active, f.notes, f.created_at,
+       f.status, f.notes, f.created_at,
        g.name_ar AS governorate_ar, g.name_en AS governorate_en,
        u.full_name AS agent_name
      FROM families f
@@ -57,14 +60,15 @@ const getFamilies = async ({ status, agentId } = {}) => {
 };
 
 /**
- * Get a single family by ID with documents.
+ * Get a single family by ID.
  */
 const getFamilyById = async (id) => {
   const { rows } = await query(
     `SELECT
        f.*,
        g.name_ar AS governorate_ar, g.name_en AS governorate_en,
-       u.full_name AS agent_name
+       u.full_name AS agent_name,
+       u.id AS agent_id
      FROM families f
      LEFT JOIN governorates g ON g.id = f.governorate_id
      LEFT JOIN users u ON u.id = f.agent_id
@@ -75,13 +79,14 @@ const getFamilyById = async (id) => {
 };
 
 /**
- * Update family status (supervisor / GM only).
- * Valid transitions per SADD:
- *   under_review → under_marketing (approved)
- *   under_review → rejected
- *   under_marketing → under_sponsorship (GM assigns sponsor)
+ * Update family status with optional notes.
+ * Fires FCM push notification to the agent on rejection or approval (FR-007, FR-048).
  */
-const updateFamilyStatus = async (id, status, notes) => {
+const updateFamilyStatus = async (id, status, notes, reviewerName = 'المشرف', actorId = null) => {
+  // Grab old status before updating
+  const { rows: oldRows } = await query('SELECT status FROM families WHERE id = $1', [id]);
+  const oldStatus = oldRows[0]?.status;
+
   const { rows } = await query(
     `UPDATE families
      SET status = $1, notes = COALESCE($2, notes)
@@ -89,7 +94,47 @@ const updateFamilyStatus = async (id, status, notes) => {
      RETURNING *`,
     [status, notes || null, id]
   );
-  return rows[0] || null;
+
+  const family = rows[0] || null;
+
+  // Write audit log
+  if (family && actorId) {
+    await logAudit({
+      userId:     actorId,
+      action:     'family_status_updated',
+      entityType: 'family',
+      entityId:   id,
+      oldValue:   { status: oldStatus },
+      newValue:   { status, notes },
+    });
+  }
+
+  // FR-007 / FR-048: fire push notification to agent on rejection
+  if (family && status === 'rejected' && family.agent_id) {
+    const notesText = notes ? ` السبب: ${notes}` : '';
+    await sendPushNotification(
+      family.agent_id,
+      'تم رفض تسجيل أسرة',
+      `تم رفض طلب تسجيل أسرة ${family.family_name} من قِبَل ${reviewerName}.${notesText}`,
+      { familyId: id, action: 'registration_rejected' },
+      'registration_rejected',
+      id
+    );
+  }
+
+  // Notify agent on approval
+  if (family && status === 'under_marketing' && family.agent_id) {
+    await sendPushNotification(
+      family.agent_id,
+      'تمت الموافقة على تسجيل أسرة',
+      `تمت الموافقة على طلب تسجيل أسرة ${family.family_name} وهي الآن تحت التسويق`,
+      { familyId: id, action: 'registration_approved' },
+      'registration_approved',
+      id
+    );
+  }
+
+  return family;
 };
 
 /**
@@ -113,7 +158,6 @@ const updateFamily = async (id, { familyName, headOfFamily, memberCount, governo
 
 /**
  * Get families under marketing (available for sponsorship assignment).
- * Used by GM in the marketing pool screen.
  */
 const getFamiliesUnderMarketing = async () => {
   const { rows } = await query(

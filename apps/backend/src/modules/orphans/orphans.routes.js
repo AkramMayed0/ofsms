@@ -45,7 +45,6 @@ const uploadFields = upload.fields([
 // ── Validation rules ──────────────────────────────────────────────────────────
 const createOrphanRules = [
   body('fullName')
-    .trim()
     .notEmpty().withMessage('الاسم الكامل مطلوب')
     .isLength({ min: 3 }).withMessage('الاسم يجب أن يكون 3 أحرف على الأقل'),
 
@@ -60,6 +59,7 @@ const createOrphanRules = [
     }),
 
   body('gender')
+    .notEmpty().withMessage('الجنس مطلوب')
     .isIn(['male', 'female']).withMessage('الجنس يجب أن يكون male أو female'),
 
   body('governorateId')
@@ -67,16 +67,18 @@ const createOrphanRules = [
     .isInt({ min: 1 }).withMessage('المحافظة غير صحيحة'),
 
   body('guardianName')
-    .trim()
-    .notEmpty().withMessage('اسم الوصي مطلوب'),
+    .notEmpty().withMessage('اسم الوصي مطلوب')
+    .trim(),
 
   body('guardianRelation')
+    .notEmpty().withMessage('صلة الوصي مطلوبة')
     .isIn(['uncle', 'maternal_uncle', 'grandfather', 'sibling', 'other'])
     .withMessage('صلة الوصي غير صحيحة'),
 ];
 
 const updateStatusRules = [
   body('status')
+    .notEmpty().withMessage('الحالة مطلوبة')
     .isIn(['under_marketing', 'under_sponsorship', 'rejected', 'inactive'])
     .withMessage('حالة غير صحيحة'),
 
@@ -138,7 +140,6 @@ router.patch(
   updateStatusRules,
   controller.updateOrphanStatus
 );
-
 
 // ── Multer error handler (must be last in this router) ────────────────────────
 router.use((err, _req, res, next) => {

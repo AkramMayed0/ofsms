@@ -1,8 +1,12 @@
 /**
  * sponsors.service.js
  * All database queries for the sponsors module.
+ *
+ * Fix applied: createSponsorship and transferSponsorship now update the
+ * beneficiary status to 'under_sponsorship' (FR-012) after assigning a sponsor.
  */
 
+const { logAudit } = require('../../utils/auditLog');
 const { query } = require('../../config/db');
 const crypto = require('crypto');
 
@@ -48,7 +52,7 @@ const getAllSponsors = async () => {
 };
 
 /**
- * Get a single sponsor by ID with their sponsorships.
+ * Get a single sponsor by ID.
  */
 const getSponsorById = async (id) => {
   const { rows } = await query(
@@ -65,7 +69,6 @@ const getSponsorById = async (id) => {
 
 /**
  * Get a sponsor by portal token (used for portal login).
- * Returns password hash for bcrypt comparison.
  */
 const getSponsorByToken = async (portalToken) => {
   const { rows } = await query(
@@ -78,16 +81,29 @@ const getSponsorByToken = async (portalToken) => {
 };
 
 /**
- * Get all active sponsorships for a sponsor (used in sponsor portal).
+ * Get all sponsorships for a sponsor.
  */
 const getSponsorshipsBySponsorId = async (sponsorId) => {
   const { rows } = await query(
     `SELECT
        sp.id, sp.beneficiary_type, sp.beneficiary_id,
        sp.monthly_amount, sp.start_date, sp.intermediary, sp.is_active,
-       u.full_name AS agent_name
+       u.full_name AS agent_name,
+       -- Pull the beneficiary name dynamically
+       CASE
+         WHEN sp.beneficiary_type = 'orphan'  THEN o.full_name
+         WHEN sp.beneficiary_type = 'family'  THEN f.family_name
+       END AS beneficiary_name,
+       CASE
+         WHEN sp.beneficiary_type = 'orphan'  THEN g1.name_ar
+         WHEN sp.beneficiary_type = 'family'  THEN g2.name_ar
+       END AS governorate_ar
      FROM sponsorships sp
-     LEFT JOIN users u ON u.id = sp.agent_id
+     LEFT JOIN users u      ON u.id  = sp.agent_id
+     LEFT JOIN orphans o    ON o.id  = sp.beneficiary_id AND sp.beneficiary_type = 'orphan'
+     LEFT JOIN families f   ON f.id  = sp.beneficiary_id AND sp.beneficiary_type = 'family'
+     LEFT JOIN governorates g1 ON g1.id = o.governorate_id
+     LEFT JOIN governorates g2 ON g2.id = f.governorate_id
      WHERE sp.sponsor_id = $1
      ORDER BY sp.is_active DESC, sp.start_date DESC`,
     [sponsorId]
@@ -96,8 +112,10 @@ const getSponsorshipsBySponsorId = async (sponsorId) => {
 };
 
 /**
- * Create a new sponsorship (called when GM assigns a sponsor to a beneficiary).
- * Automatically deactivates any existing active sponsorship for the same beneficiary.
+ * Create a new sponsorship and flip the beneficiary status to under_sponsorship.
+ * FR-012: beneficiary automatically moves to 'under_sponsorship' on assignment.
+ *
+ * Runs inside a transaction to keep the sponsorship insert and status update atomic.
  */
 const createSponsorship = async ({
   sponsorId,
@@ -108,28 +126,46 @@ const createSponsorship = async ({
   startDate,
   monthlyAmount,
 }) => {
-  // Deactivate any existing active sponsorship for this beneficiary
-  await query(
-    `UPDATE sponsorships
-     SET is_active = FALSE, end_date = NOW(), end_reason = 'reassigned'
-     WHERE beneficiary_type = $1 AND beneficiary_id = $2 AND is_active = TRUE`,
-    [beneficiaryType, beneficiaryId]
-  );
+  // Use a transaction: sponsorship insert + status update must both succeed or both fail
+  const { rows: [sponsorship] } = await query('BEGIN');
 
-  const { rows } = await query(
-    `INSERT INTO sponsorships
-       (sponsor_id, beneficiary_type, beneficiary_id, agent_id,
-        intermediary, start_date, monthly_amount)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
-     RETURNING *`,
-    [sponsorId, beneficiaryType, beneficiaryId, agentId, intermediary, startDate, monthlyAmount]
-  );
-  return rows[0];
+  try {
+    // 1. Deactivate any existing active sponsorship for this beneficiary
+    await query(
+      `UPDATE sponsorships
+       SET is_active = FALSE, end_date = NOW(), end_reason = 'reassigned'
+       WHERE beneficiary_type = $1 AND beneficiary_id = $2 AND is_active = TRUE`,
+      [beneficiaryType, beneficiaryId]
+    );
+
+    // 2. Insert the new sponsorship
+    const { rows } = await query(
+      `INSERT INTO sponsorships
+         (sponsor_id, beneficiary_type, beneficiary_id, agent_id,
+          intermediary, start_date, monthly_amount)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [sponsorId, beneficiaryType, beneficiaryId, agentId, intermediary, startDate, monthlyAmount]
+    );
+
+    // 3. FR-012: flip beneficiary status to under_sponsorship
+    const table = beneficiaryType === 'orphan' ? 'orphans' : 'families';
+    await query(
+      `UPDATE ${table} SET status = 'under_sponsorship' WHERE id = $1`,
+      [beneficiaryId]
+    );
+
+    await query('COMMIT');
+    return rows[0];
+  } catch (err) {
+    await query('ROLLBACK');
+    throw err;
+  }
 };
 
 /**
  * Transfer a beneficiary from one sponsor to another (GM only).
- * Closes old sponsorship and opens a new one.
+ * Closes old sponsorship, opens new one, keeps beneficiary status as under_sponsorship.
  */
 const transferSponsorship = async ({
   beneficiaryType,
@@ -139,22 +175,48 @@ const transferSponsorship = async ({
   monthlyAmount,
   endReason,
 }) => {
-  await query(
-    `UPDATE sponsorships
-     SET is_active = FALSE, end_date = NOW(), end_reason = $1
-     WHERE beneficiary_type = $2 AND beneficiary_id = $3 AND is_active = TRUE`,
-    [endReason || 'transferred', beneficiaryType, beneficiaryId]
-  );
+  await query('BEGIN');
 
-  const { rows } = await query(
-    `INSERT INTO sponsorships
-       (sponsor_id, beneficiary_type, beneficiary_id, agent_id,
-        start_date, monthly_amount)
-     VALUES ($1, $2, $3, $4, NOW(), $5)
-     RETURNING *`,
-    [newSponsorId, beneficiaryType, beneficiaryId, agentId, monthlyAmount]
-  );
-  return rows[0];
+
+
+  try {
+    // 1. Close existing active sponsorship
+    await query(
+      `UPDATE sponsorships
+       SET is_active = FALSE, end_date = NOW(), end_reason = $1
+       WHERE beneficiary_type = $2 AND beneficiary_id = $3 AND is_active = TRUE`,
+      [endReason || 'transferred', beneficiaryType, beneficiaryId]
+    );
+
+    // 2. Open new sponsorship
+    const { rows } = await query(
+      `INSERT INTO sponsorships
+         (sponsor_id, beneficiary_type, beneficiary_id, agent_id,
+          start_date, monthly_amount)
+       VALUES ($1, $2, $3, $4, NOW(), $5)
+       RETURNING *`,
+      [newSponsorId, beneficiaryType, beneficiaryId, agentId, monthlyAmount]
+    );
+
+    // 3. Beneficiary stays under_sponsorship — no status change needed
+    // (already under_sponsorship from initial assignment)
+
+    await query('COMMIT');
+
+    await logAudit({
+      userId:     null,
+      action:     'sponsorship_transferred',
+      entityType: 'sponsorship',
+      entityId:   rows[0].id,
+      oldValue:   { beneficiary_type: beneficiaryType, beneficiary_id: beneficiaryId },
+      newValue:   { new_sponsor_id: newSponsorId, monthly_amount: monthlyAmount },
+    });
+
+    return rows[0];
+  } catch (err) {
+    await query('ROLLBACK');
+    throw err;
+  }
 };
 
 module.exports = {
