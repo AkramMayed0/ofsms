@@ -201,4 +201,57 @@ const batchConfirm = async (agentId, listId, notes = null) => {
   return rows[0] || { list_id: listId, agent_id: agentId, already_confirmed: true };
 };
 
-module.exports = { uploadBiometricReceipt, getReceipts, getAgentReceiptSummary, batchConfirm };
+/**
+ * Get the active disbursement batch items for an agent,
+ * along with their current receipt status.
+ */
+const getAgentActiveBatch = async (agentId) => {
+  // 1. Find the latest released list
+  const { rows: lists } = await query(
+    `SELECT id, month, year 
+     FROM disbursement_lists 
+     WHERE status = 'released' 
+     ORDER BY created_at DESC LIMIT 1`
+  );
+  if (!lists.length) return null;
+  const list = lists[0];
+
+  // 2. Find items for this agent
+  const { rows: items } = await query(
+    `SELECT 
+       di.id AS item_id, 
+       di.amount, 
+       di.included, 
+       di.exclusion_reason,
+       COALESCE(o.full_name, f.family_name) AS beneficiary_name,
+       CASE WHEN di.orphan_id IS NOT NULL THEN 'orphan' ELSE 'family' END AS beneficiary_type,
+       br.id AS receipt_id,
+       br.confirmed_at
+     FROM disbursement_items di
+     LEFT JOIN orphans o ON o.id = di.orphan_id
+     LEFT JOIN families f ON f.id = di.family_id
+     LEFT JOIN biometric_receipts br ON br.item_id = di.id
+     WHERE di.list_id = $1
+       AND di.included = TRUE
+       AND (o.agent_id = $2 OR f.agent_id = $2)
+     ORDER BY beneficiary_name ASC`,
+    [list.id, agentId]
+  );
+
+  // 3. Check if batch is already confirmed
+  const { rows: confs } = await query(
+    `SELECT confirmed_at FROM agent_batch_confirmations 
+     WHERE list_id = $1 AND agent_id = $2`,
+    [list.id, agentId]
+  );
+
+  return {
+    list_id: list.id,
+    month: list.month,
+    year: list.year,
+    batch_confirmed_at: confs.length ? confs[0].confirmed_at : null,
+    items,
+  };
+};
+
+module.exports = { uploadBiometricReceipt, getReceipts, getAgentReceiptSummary, batchConfirm, getAgentActiveBatch };

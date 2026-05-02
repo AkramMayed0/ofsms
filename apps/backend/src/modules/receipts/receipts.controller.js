@@ -100,4 +100,20 @@ const batchConfirm = async (req, res, next) => {
   }
 };
 
-module.exports = { uploadBiometricReceipt, getReceipts, getAgentReceiptSummary, batchConfirm };
+/**
+ * GET /api/receipts/my-batch
+ * Fetch the active disbursement batch items for an agent.
+ */
+const getMyBatch = async (req, res, next) => {
+  try {
+    const batch = await service.getAgentActiveBatch(req.user.id);
+    if (!batch) {
+      return res.json({ message: 'لا يوجد كشف صرف فعّال حالياً', items: [] });
+    }
+    return res.json(batch);
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { uploadBiometricReceipt, getReceipts, getAgentReceiptSummary, batchConfirm, getMyBatch };

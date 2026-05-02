@@ -76,4 +76,13 @@ router.post(
   controller.batchConfirm
 );
 
+// ── GET /api/receipts/my-batch ────────────────────────────────────────────────
+// Agent: get active disbursement batch items
+router.get(
+  '/my-batch',
+  authenticate,
+  authorize('agent'),
+  controller.getMyBatch
+);
+
 module.exports = router;
