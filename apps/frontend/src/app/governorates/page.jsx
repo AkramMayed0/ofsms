@@ -15,6 +15,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
+import ExportButtons from '../../components/ExportButtons';
 
 // ── Status config ─────────────────────────────────────────────────────────────
 const STATUS = {
@@ -234,6 +235,14 @@ export default function GovernoratesPage() {
                       </div>
                     )}
                   </div>
+                  {!loadingRight && orphans.length > 0 && (
+                    <ExportButtons
+                      pdfUrl={`/reports/governorate/${selected.id}/pdf`}
+                      excelUrl={`/reports/governorate/${selected.id}/excel`}
+                      filename={`أيتام-${selected.name}`}
+                      size="sm"
+                    />
+                  )}
 
                   {/* Toolbar */}
                   {!loadingRight && orphans.length > 0 && (
