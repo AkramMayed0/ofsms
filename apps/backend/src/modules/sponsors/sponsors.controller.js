@@ -124,6 +124,7 @@ const transferSponsorship = async (req, res, next) => {
       agentId,
       monthlyAmount,
       endReason,
+      actorId: req.user.id,
     });
 
     return res.status(200).json({

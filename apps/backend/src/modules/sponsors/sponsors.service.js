@@ -138,31 +138,44 @@ const transferSponsorship = async ({
   agentId,
   monthlyAmount,
   endReason,
+  actorId,          // ← add this param
 }) => {
-  await query(
-    `UPDATE sponsorships
-     SET is_active = FALSE, end_date = NOW(), end_reason = $1
-     WHERE beneficiary_type = $2 AND beneficiary_id = $3 AND is_active = TRUE`,
-    [endReason || 'transferred', beneficiaryType, beneficiaryId]
-  );
+  await query('BEGIN');   // ← fix: no destructuring
 
-  const { rows } = await query(
-    `INSERT INTO sponsorships
-       (sponsor_id, beneficiary_type, beneficiary_id, agent_id,
-        start_date, monthly_amount)
-     VALUES ($1, $2, $3, $4, NOW(), $5)
-     RETURNING *`,
-    [newSponsorId, beneficiaryType, beneficiaryId, agentId, monthlyAmount]
-  );
-  return rows[0];
-};
+  try {
+    // 1. Close existing active sponsorship
+    await query(
+      `UPDATE sponsorships
+       SET is_active = FALSE, end_date = NOW(), end_reason = $1
+       WHERE beneficiary_type = $2 AND beneficiary_id = $3 AND is_active = TRUE`,
+      [endReason || 'transferred', beneficiaryType, beneficiaryId]
+    );
 
-module.exports = {
-  createSponsor,
-  getAllSponsors,
-  getSponsorById,
-  getSponsorByToken,
-  getSponsorshipsBySponsorId,
-  createSponsorship,
-  transferSponsorship,
+    // 2. Open new sponsorship
+    const { rows } = await query(
+      `INSERT INTO sponsorships
+         (sponsor_id, beneficiary_type, beneficiary_id, agent_id,
+          start_date, monthly_amount)
+       VALUES ($1, $2, $3, $4, NOW(), $5)
+       RETURNING *`,
+      [newSponsorId, beneficiaryType, beneficiaryId, agentId, monthlyAmount]
+    );
+
+    await query('COMMIT');
+
+    // 3. Audit log with real actor
+    await logAudit({
+      userId:     actorId || null,
+      action:     'sponsorship_transferred',
+      entityType: 'sponsorship',
+      entityId:   rows[0].id,
+      oldValue:   { beneficiary_type: beneficiaryType, beneficiary_id: beneficiaryId },
+      newValue:   { new_sponsor_id: newSponsorId, monthly_amount: monthlyAmount },
+    });
+
+    return rows[0];
+  } catch (err) {
+    await query('ROLLBACK');
+    throw err;
+  }
 };
