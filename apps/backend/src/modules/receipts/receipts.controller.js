@@ -5,6 +5,7 @@
 
 const { validationResult } = require('express-validator');
 const service = require('./receipts.service');
+const { scanBuffer } = require('../../middleware/fileScanner');
 
 /**
  * POST /api/receipts/biometric
@@ -17,6 +18,21 @@ const uploadBiometricReceipt = async (req, res, next) => {
     }
 
     const { itemId, fingerprintBase64, mimeType } = req.body;
+
+    // Remove data URI prefix if present
+    const base64Data = fingerprintBase64.replace(/^data:image\/\w+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    // 1. Enforce 5MB limit
+    if (buffer.length > 5 * 1024 * 1024) {
+      return res.status(400).json({ error: 'حجم الملف يتجاوز 5 ميجابايت' });
+    }
+
+    // 2. Scan magic bytes for executables / whitelist
+    const scanResult = scanBuffer(buffer);
+    if (!scanResult.valid) {
+      return res.status(400).json({ error: scanResult.error });
+    }
 
     const receipt = await service.uploadBiometricReceipt({
       itemId,
