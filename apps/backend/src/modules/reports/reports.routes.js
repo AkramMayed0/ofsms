@@ -759,4 +759,125 @@ router.get(
   }
 );
 
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/reports/disbursement/:id/excel
+// ─────────────────────────────────────────────────────────────────────────────
+router.get(
+  '/disbursement/:id/excel',
+  authenticate,
+  authorize('supervisor', 'finance', 'gm'),
+  async (req, res, next) => {
+    try {
+      const listId = req.params.id;
+
+      // 1. Fetch the disbursement list details
+      const { rows: lists } = await query(
+        'SELECT id, month, year FROM disbursement_lists WHERE id = $1',
+        [listId]
+      );
+      if (!lists[0]) {
+        return res.status(404).json({ error: 'الكشف غير موجود' });
+      }
+      const list = lists[0];
+
+      // 2. Fetch the disbursement items
+      const { rows: items } = await query(
+        `SELECT
+           COALESCE(o.full_name, f.family_name) AS beneficiary_name,
+           CASE
+             WHEN di.orphan_id IS NOT NULL THEN 'يتيم'
+             ELSE 'أسرة'
+           END AS type_ar,
+           COALESCE(go.name_ar, gf.name_ar) AS governorate_ar,
+           COALESCE(uo.full_name, uf.full_name) AS agent_name,
+           s.full_name AS sponsor_name,
+           di.amount
+         FROM disbursement_items di
+         LEFT JOIN orphans o ON o.id = di.orphan_id
+         LEFT JOIN families f ON f.id = di.family_id
+         LEFT JOIN governorates go ON go.id = o.governorate_id
+         LEFT JOIN governorates gf ON gf.id = f.governorate_id
+         LEFT JOIN users uo ON uo.id = o.agent_id
+         LEFT JOIN users uf ON uf.id = f.agent_id
+         LEFT JOIN sponsorships sp ON sp.beneficiary_id = COALESCE(o.id, f.id)
+               AND sp.beneficiary_type = CASE WHEN di.orphan_id IS NOT NULL THEN 'orphan' ELSE 'family' END
+               AND sp.is_active = TRUE
+         LEFT JOIN sponsors s ON s.id = sp.sponsor_id
+         WHERE di.list_id = $1 AND di.included = TRUE
+         ORDER BY governorate_ar ASC, agent_name ASC, beneficiary_name ASC`,
+        [listId]
+      );
+
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename  = `disbursement-${list.month}-${list.year}-${timestamp}`;
+      const totalAmount = items.reduce((sum, i) => sum + Number(i.amount || 0), 0);
+
+      // ── EXCEL GENERATION ────────────────────────────────────────────────────
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = 'OFSMS';
+      workbook.created = new Date();
+
+      const sheet = workbook.addWorksheet(`Month ${list.month} - Year ${list.year}`, {
+        views: [{ rightToLeft: true }],
+      });
+
+      sheet.columns = [
+        { header: 'المستفيد',        key: 'name',       width: 25 },
+        { header: 'النوع',           key: 'type_ar',    width: 10 },
+        { header: 'المحافظة',        key: 'gov',        width: 18 },
+        { header: 'الكافل',          key: 'sponsor',    width: 25 },
+        { header: 'المندوب',         key: 'agent',      width: 25 },
+        { header: 'المبلغ (ريال)',   key: 'amount',     width: 18 },
+      ];
+
+      const headerRow = sheet.getRow(1);
+      headerRow.fill = {
+        type: 'pattern', pattern: 'solid',
+        fgColor: { argb: 'FF1B5E8C' },
+      };
+      headerRow.font      = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+      headerRow.alignment = { horizontal: 'center' };
+
+      items.forEach((item) => {
+        const row = sheet.addRow({
+          name:    item.beneficiary_name || '—',
+          type_ar: item.type_ar,
+          gov:     item.governorate_ar   || '—',
+          sponsor: item.sponsor_name     || '—',
+          agent:   item.agent_name       || '—',
+          amount:  item.amount
+            ? `${Number(item.amount).toLocaleString()}`
+            : '—',
+        });
+        row.alignment = { horizontal: 'right' };
+      });
+
+      sheet.addRow([]);
+      const sumRow = sheet.addRow({
+        agent:  `الإجمالي (${items.length} مستفيد):`,
+        amount: `${totalAmount.toLocaleString()} ر.ي`,
+      });
+      sumRow.font = { bold: true };
+
+      sheet.views = [{ state: 'frozen', ySplit: 1, rightToLeft: true }];
+
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      );
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${filename}.xlsx"`
+      );
+      res.setHeader('X-Report-Date', timestamp);
+      res.setHeader('X-Report-Total', String(items.length));
+
+      await workbook.xlsx.write(res);
+      return res.end();
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 module.exports = router;
