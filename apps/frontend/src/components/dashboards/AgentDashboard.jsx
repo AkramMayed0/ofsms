@@ -309,6 +309,7 @@ export default function AgentDashboard() {
             { icon: '👦', label: 'تسجيل يتيم جديد',  href: '/orphans/new',       color: '#1B5E8C' },
             { icon: '👨‍👩‍👧', label: 'تسجيل أسرة جديدة', href: '/families/new',      color: '#7c3aed' },
             { icon: '📖', label: 'رفع تقرير حفظ',     href: '/quran-reports/new', color: '#059669' },
+            { icon: '👆', label: 'رفع بصمات الصرف',   href: '/receipts/batch',    color: '#db2777' },
             { icon: '📋', label: 'عرض أيتامي',         href: '/my-orphans',        color: '#d97706' },
           ].map(({ icon, label, href, color }) => (
             <button key={href} className="action-card" onClick={() => router.push(href)}
