@@ -20,6 +20,7 @@ const NAV_ITEMS = {
     { label: 'لوحة التحكم',     href: '/dashboard',          icon: '📊' },
     { label: 'الأيتام',          href: '/orphans',             icon: '👦' },
     { label: 'الأسر',            href: '/families',            icon: '👨‍👩‍👧' },
+    { label: 'مجمع التسويق',    href: '/marketing-pool',      icon: '🏷️' },
     { label: 'الكفلاء',          href: '/sponsors',            icon: '🤝' },
     { label: 'الأيتام الموهوبون', href: '/gifted',             icon: '🌟' },
     { label: 'تحليلات المحافظات', href: '/governorates',       icon: '🗺️' },
