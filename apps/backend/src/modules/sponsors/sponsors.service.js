@@ -174,7 +174,10 @@ const transferSponsorship = async ({
   agentId,
   monthlyAmount,
   endReason,
+  actorId,          // ← add this param
 }) => {
+  await query('BEGIN');   // ← fix: no destructuring
+
   await query('BEGIN');
 
 
@@ -198,6 +201,11 @@ const transferSponsorship = async ({
       [newSponsorId, beneficiaryType, beneficiaryId, agentId, monthlyAmount]
     );
 
+    await query('COMMIT');
+
+    // 3. Audit log with real actor
+    await logAudit({
+      userId:     actorId || null,
     // 3. Beneficiary stays under_sponsorship — no status change needed
     // (already under_sponsorship from initial assignment)
 
@@ -219,12 +227,9 @@ const transferSponsorship = async ({
   }
 };
 
-module.exports = {
-  createSponsor,
-  getAllSponsors,
-  getSponsorById,
-  getSponsorByToken,
-  getSponsorshipsBySponsorId,
-  createSponsorship,
-  transferSponsorship,
+    return rows[0];
+  } catch (err) {
+    await query('ROLLBACK');
+    throw err;
+  }
 };
