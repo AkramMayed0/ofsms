@@ -561,4 +561,202 @@ router.get(
   }
 );
 
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/reports/disbursement/:id/pdf
+// ─────────────────────────────────────────────────────────────────────────────
+router.get(
+  '/disbursement/:id/pdf',
+  authenticate,
+  authorize('supervisor', 'finance', 'gm'),
+  async (req, res, next) => {
+    try {
+      const listId = req.params.id;
+
+      // 1. Fetch the disbursement list details
+      const { rows: lists } = await query(
+        'SELECT id, month, year FROM disbursement_lists WHERE id = $1',
+        [listId]
+      );
+      if (!lists[0]) {
+        return res.status(404).json({ error: 'الكشف غير موجود' });
+      }
+      const list = lists[0];
+
+      // 2. Fetch the disbursement items
+      const { rows: items } = await query(
+        `SELECT
+           COALESCE(o.full_name, f.family_name) AS beneficiary_name,
+           CASE
+             WHEN di.orphan_id IS NOT NULL THEN 'يتيم'
+             ELSE 'أسرة'
+           END AS type_ar,
+           COALESCE(go.name_ar, gf.name_ar) AS governorate_ar,
+           COALESCE(uo.full_name, uf.full_name) AS agent_name,
+           s.full_name AS sponsor_name,
+           di.amount
+         FROM disbursement_items di
+         LEFT JOIN orphans o ON o.id = di.orphan_id
+         LEFT JOIN families f ON f.id = di.family_id
+         LEFT JOIN governorates go ON go.id = o.governorate_id
+         LEFT JOIN governorates gf ON gf.id = f.governorate_id
+         LEFT JOIN users uo ON uo.id = o.agent_id
+         LEFT JOIN users uf ON uf.id = f.agent_id
+         LEFT JOIN sponsorships sp ON sp.beneficiary_id = COALESCE(o.id, f.id)
+               AND sp.beneficiary_type = CASE WHEN di.orphan_id IS NOT NULL THEN 'orphan' ELSE 'family' END
+               AND sp.is_active = TRUE
+         LEFT JOIN sponsors s ON s.id = sp.sponsor_id
+         WHERE di.list_id = $1 AND di.included = TRUE
+         ORDER BY governorate_ar ASC, agent_name ASC, beneficiary_name ASC`,
+        [listId]
+      );
+
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename  = `disbursement-${list.month}-${list.year}-${timestamp}`;
+      const totalAmount = items.reduce((sum, i) => sum + Number(i.amount || 0), 0);
+
+      // ── PDF GENERATION ────────────────────────────────────────────────────────
+      const doc = new PDFDocument({
+        size:    'A4',
+        layout:  'landscape',
+        margins: { top: 40, bottom: 60, left: 40, right: 40 },
+        info: {
+          Title:        `Disbursement Report - ${list.month}/${list.year}`,
+          Author:       'OFSMS',
+          CreationDate: new Date(),
+        },
+      });
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${filename}.pdf"`
+      );
+      res.setHeader('X-Report-Date', timestamp);
+      res.setHeader('X-Report-Total', String(items.length));
+      doc.pipe(res);
+
+      let totalPages = 1;
+      doc.on('pageAdded', () => { totalPages++; });
+
+      // Title block
+      doc
+        .fontSize(16)
+        .text('OFSMS - Orphan & Family Sponsorship Management System', { align: 'center' })
+        .moveDown(0.3)
+        .fontSize(13)
+        .text(`Disbursement List: Month ${list.month} / Year ${list.year}`, { align: 'center' })
+        .moveDown(0.3)
+        .fontSize(9)
+        .fillColor('#555555')
+        .text(
+          `Export Date: ${timestamp}   |   Total Items: ${items.length}`,
+          { align: 'center' }
+        )
+        .fillColor('#000000')
+        .moveDown(1);
+
+      const tTop      = doc.y;
+      const pWidth    = doc.page.width - 80;
+      const cols      = [150, 50, 110, 140, 140, 100];
+      const hdrs      = ['Beneficiary', 'Type', 'Governorate', 'Sponsor', 'Agent', 'Amount (YER)'];
+      const rh        = 18;
+      const fs        = 8;
+
+      // Draw Headers
+      doc.rect(40, tTop, pWidth, rh).fill('#1B5E8C');
+      let hx = 40;
+      hdrs.forEach((h, i) => {
+        doc.fillColor('#FFFFFF').fontSize(fs).text(h, hx + 2, tTop + 5, {
+          width:    cols[i] - 4,
+          align:    'center',
+          lineBreak: false,
+        });
+        hx += cols[i];
+      });
+
+      // Data rows
+      let rowY = tTop + rh;
+      items.forEach((item, idx) => {
+        if (rowY + rh > doc.page.height - 80) {
+          doc.addPage();
+          rowY = 40; // Reset Y for new page
+          
+          // Re-draw Headers
+          doc.rect(40, rowY, pWidth, rh).fill('#1B5E8C');
+          let cx = 40;
+          hdrs.forEach((h, i) => {
+            doc.fillColor('#FFFFFF').fontSize(fs).text(h, cx + 2, rowY + 5, {
+              width:    cols[i] - 4,
+              align:    'center',
+              lineBreak: false,
+            });
+            cx += cols[i];
+          });
+          rowY += rh;
+        }
+
+        if (idx % 2 === 0) {
+          doc.rect(40, rowY, pWidth, rh).fill('#F0F4F8');
+        }
+
+        const cells = [
+          item.beneficiary_name || '—',
+          item.type_ar,
+          item.governorate_ar   || '—',
+          item.sponsor_name     || '—',
+          item.agent_name       || '—',
+          item.amount
+            ? `${Number(item.amount).toLocaleString()}`
+            : '—'
+        ];
+
+        let cx = 40;
+        doc.fillColor('#000000');
+        cells.forEach((cell, i) => {
+          doc.fontSize(fs).text(String(cell), cx + 2, rowY + 5, {
+            width:    cols[i] - 4,
+            align:    'center',
+            lineBreak: false,
+          });
+          cx += cols[i];
+        });
+
+        rowY += rh;
+      });
+
+      // Summary footer
+      doc
+        .x = 40;
+      doc.y = Math.max(rowY + 20, doc.y);
+      
+      doc
+        .fontSize(10)
+        .fillColor('#333333')
+        .text(
+          `Total Disbursement Amount: ${totalAmount.toLocaleString()} YER`,
+          { align: 'center' }
+        );
+
+      // Add Page Numbers
+      const range = doc.bufferedPageRange(); 
+      for (let i = 0; i < totalPages; i++) {
+        doc.switchToPage(i);
+        doc
+          .fontSize(8)
+          .fillColor('#999999')
+          .text(
+            `Page ${i + 1} of ${totalPages}  |  Generated by OFSMS on ${new Date().toLocaleString()}`,
+            40,
+            doc.page.height - 40,
+            { align: 'center', width: doc.page.width - 80 }
+          );
+      }
+
+      doc.end();
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 module.exports = router;
