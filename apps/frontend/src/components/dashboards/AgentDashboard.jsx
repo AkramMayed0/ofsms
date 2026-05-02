@@ -174,6 +174,38 @@ export default function AgentDashboard() {
         </div>
       )}
 
+      {/* Rejected submissions alert */}
+      {!loading && data?.rejected_submissions?.length > 0 && (
+        <div className="alert-card alert-danger">
+          <div className="alert-icon">⚠</div>
+          <div className="alert-body">
+            <strong>طلبات تسجيل مرفوضة</strong>
+            <p>لديك <strong>{data.rejected_submissions.length}</strong> طلب تسجيل تم رفضه من قبل المشرف ويحتاج إلى تعديل.</p>
+            <div className="rejected-list">
+              {data.rejected_submissions.map((sub) => (
+                <div key={`${sub.type}-${sub.id}`} className="rejected-item">
+                  <div className="rej-info">
+                    <span className="rej-type">{sub.type === 'orphan' ? 'يتيم' : 'أسرة'}</span>
+                    <span className="rej-name">{sub.name}</span>
+                  </div>
+                  {sub.notes && (
+                    <div className="rej-notes">
+                      <span className="rej-notes-lbl">سبب الرفض:</span> {sub.notes}
+                    </div>
+                  )}
+                  <button 
+                    className="rej-btn"
+                    onClick={() => router.push(`/${sub.type === 'orphan' ? 'orphans' : 'families'}/${sub.id}/edit`)}
+                  >
+                    تعديل وإعادة إرسال ←
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Status breakdown */}
       {!loading && orphans.length > 0 && (
         <div className="section">
@@ -277,6 +309,7 @@ export default function AgentDashboard() {
             { icon: '👦', label: 'تسجيل يتيم جديد',  href: '/orphans/new',       color: '#1B5E8C' },
             { icon: '👨‍👩‍👧', label: 'تسجيل أسرة جديدة', href: '/families/new',      color: '#7c3aed' },
             { icon: '📖', label: 'رفع تقرير حفظ',     href: '/quran-reports/new', color: '#059669' },
+            { icon: '👆', label: 'رفع بصمات الصرف',   href: '/receipts/batch',    color: '#db2777' },
             { icon: '📋', label: 'عرض أيتامي',         href: '/my-orphans',        color: '#d97706' },
           ].map(({ icon, label, href, color }) => (
             <button key={href} className="action-card" onClick={() => router.push(href)}
@@ -314,6 +347,19 @@ export default function AgentDashboard() {
         .alert-more { color:#6b7280; border-color:#e5eaf0; background:#f9fafb; }
         .alert-action { flex-shrink:0; display:inline-flex; align-items:center; padding:.6rem 1.1rem; background:#ea580c; color:#fff; font-family:'Cairo',sans-serif; font-size:.82rem; font-weight:700; border:none; border-radius:.625rem; cursor:pointer; transition:all .15s; white-space:nowrap; }
         .alert-action:hover { background:#c2410c; }
+
+        .alert-danger { background:#fef2f2; border-color:#fecaca; }
+        .alert-danger .alert-body strong { color:#991b1b; }
+        .alert-danger .alert-body p { color:#b91c1c; }
+        .rejected-list { display:flex; flex-direction:column; gap:.75rem; margin-top:1rem; }
+        .rejected-item { background:#fff; border:1px solid #fecaca; border-radius:.75rem; padding:.85rem 1rem; display:flex; flex-direction:column; gap:.5rem; }
+        .rej-info { display:flex; align-items:center; gap:.5rem; }
+        .rej-type { font-size:.7rem; font-weight:700; padding:.15rem .5rem; background:#fee2e2; color:#991b1b; border-radius:1rem; }
+        .rej-name { font-size:.85rem; font-weight:700; color:#1f2937; }
+        .rej-notes { font-size:.8rem; color:#dc2626; background:#fef2f2; padding:.5rem .75rem; border-radius:.5rem; margin-bottom:.25rem; }
+        .rej-notes-lbl { font-weight:700; }
+        .rej-btn { align-self:flex-start; background:none; border:none; font-family:'Cairo',sans-serif; font-size:.78rem; font-weight:700; color:#dc2626; cursor:pointer; padding:0; transition:opacity .15s; }
+        .rej-btn:hover { opacity:.7; }
 
         .section { display:flex; flex-direction:column; gap:.85rem; }
         .section-title-row { display:flex; align-items:center; justify-content:space-between; }

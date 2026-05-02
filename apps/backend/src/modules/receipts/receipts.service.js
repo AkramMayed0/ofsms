@@ -167,4 +167,158 @@ const getAgentReceiptSummary = async (agentId, listId) => {
   return rows[0];
 };
 
-module.exports = { uploadBiometricReceipt, getReceipts, getAgentReceiptSummary };
+/**
+ * Confirm that all receipts for a batch have been submitted.
+ */
+const batchConfirm = async (agentId, listId, notes = null) => {
+  const summary = await getAgentReceiptSummary(agentId, listId);
+  
+  if (parseInt(summary.total_items, 10) === 0) {
+    throw Object.assign(new Error('لا يوجد مستفيدين في هذا الكشف'), { status: 400 });
+  }
+  if (!summary.all_confirmed) {
+    throw Object.assign(new Error(`لم يتم تسجيل بصمات جميع المستفيدين (متبقي ${summary.pending_items})`), { status: 400 });
+  }
+
+  const { rows } = await query(
+    `INSERT INTO agent_batch_confirmations (list_id, agent_id, notes)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (list_id, agent_id) DO NOTHING
+     RETURNING *`,
+    [listId, agentId, notes]
+  );
+
+  if (rows.length > 0) {
+    await logAudit({
+      userId:     agentId,
+      action:     'agent_batch_confirmed',
+      entityType: 'agent_batch_confirmation',
+      entityId:   listId,
+      newValue:   { list_id: listId, agent_id: agentId, notes },
+    });
+  }
+
+  return rows[0] || { list_id: listId, agent_id: agentId, already_confirmed: true };
+};
+
+/**
+ * Get the active disbursement batch items for an agent,
+ * along with their current receipt status.
+ */
+const getAgentActiveBatch = async (agentId) => {
+  // 1. Find the latest released list
+  const { rows: lists } = await query(
+    `SELECT id, month, year 
+     FROM disbursement_lists 
+     WHERE status = 'released' 
+     ORDER BY created_at DESC LIMIT 1`
+  );
+  if (!lists.length) return null;
+  const list = lists[0];
+
+  // 2. Find items for this agent
+  const { rows: items } = await query(
+    `SELECT 
+       di.id AS item_id, 
+       di.amount, 
+       di.included, 
+       di.exclusion_reason,
+       COALESCE(o.full_name, f.family_name) AS beneficiary_name,
+       CASE WHEN di.orphan_id IS NOT NULL THEN 'orphan' ELSE 'family' END AS beneficiary_type,
+       br.id AS receipt_id,
+       br.confirmed_at
+     FROM disbursement_items di
+     LEFT JOIN orphans o ON o.id = di.orphan_id
+     LEFT JOIN families f ON f.id = di.family_id
+     LEFT JOIN biometric_receipts br ON br.item_id = di.id
+     WHERE di.list_id = $1
+       AND di.included = TRUE
+       AND (o.agent_id = $2 OR f.agent_id = $2)
+     ORDER BY beneficiary_name ASC`,
+    [list.id, agentId]
+  );
+
+  // 3. Check if batch is already confirmed
+  const { rows: confs } = await query(
+    `SELECT confirmed_at FROM agent_batch_confirmations 
+     WHERE list_id = $1 AND agent_id = $2`,
+    [list.id, agentId]
+  );
+
+  return {
+    list_id: list.id,
+    month: list.month,
+    year: list.year,
+    batch_confirmed_at: confs.length ? confs[0].confirmed_at : null,
+    items,
+  };
+};
+
+/**
+ * Get supervisor log for a specific list.
+ * Groups disbursement items by agent and includes receipt status.
+ */
+const getSupervisorLog = async (listId) => {
+  // 1. Get the list details
+  const { rows: lists } = await query(
+    `SELECT id, month, year, status FROM disbursement_lists WHERE id = $1`,
+    [listId]
+  );
+  if (!lists.length) throw Object.assign(new Error('الكشف غير موجود'), { status: 404 });
+  const list = lists[0];
+
+  // 2. Get all agents who have items in this list, and their batch confirmations
+  const { rows: agents } = await query(
+    `SELECT DISTINCT 
+       u.id AS agent_id, 
+       u.full_name AS agent_name,
+       abc.confirmed_at AS batch_confirmed_at
+     FROM disbursement_items di
+     LEFT JOIN orphans o ON o.id = di.orphan_id
+     LEFT JOIN families f ON f.id = di.family_id
+     JOIN users u ON u.id = COALESCE(o.agent_id, f.agent_id)
+     LEFT JOIN agent_batch_confirmations abc ON abc.list_id = di.list_id AND abc.agent_id = u.id
+     WHERE di.list_id = $1 AND di.included = TRUE`,
+    [listId]
+  );
+
+  // 3. Get all items with their receipt status
+  const { rows: items } = await query(
+    `SELECT 
+       di.id AS item_id, 
+       COALESCE(o.agent_id, f.agent_id) AS agent_id,
+       COALESCE(o.full_name, f.family_name) AS beneficiary_name,
+       CASE WHEN di.orphan_id IS NOT NULL THEN 'orphan' ELSE 'family' END AS beneficiary_type,
+       br.id AS receipt_id,
+       br.fingerprint_key,
+       br.confirmed_at
+     FROM disbursement_items di
+     LEFT JOIN orphans o ON o.id = di.orphan_id
+     LEFT JOIN families f ON f.id = di.family_id
+     LEFT JOIN biometric_receipts br ON br.item_id = di.id
+     WHERE di.list_id = $1 AND di.included = TRUE`,
+    [listId]
+  );
+
+  // 4. Group items by agent
+  const agentsLog = agents.map(agent => {
+    const agentItems = items.filter(item => item.agent_id === agent.agent_id);
+    const confirmedCount = agentItems.filter(item => item.receipt_id).length;
+    return {
+      agent_id: agent.agent_id,
+      agent_name: agent.agent_name,
+      batch_confirmed_at: agent.batch_confirmed_at,
+      total_items: agentItems.length,
+      confirmed_items: confirmedCount,
+      all_confirmed: confirmedCount === agentItems.length,
+      items: agentItems,
+    };
+  });
+
+  return {
+    list,
+    agents: agentsLog,
+  };
+};
+
+module.exports = { uploadBiometricReceipt, getReceipts, getAgentReceiptSummary, batchConfirm, getAgentActiveBatch, getSupervisorLog };

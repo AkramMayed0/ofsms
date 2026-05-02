@@ -126,7 +126,7 @@ const updateFamily = async (req, res, next) => {
       if (existing.agent_id !== req.user.id) {
         return res.status(403).json({ error: 'ليس لديك صلاحية لتعديل هذه الأسرة' });
       }
-      if (existing.status !== 'under_review') {
+      if (existing.status !== 'under_review' && existing.status !== 'rejected') {
         return res.status(400).json({ error: 'لا يمكن تعديل الأسرة بعد اعتمادها' });
       }
     }

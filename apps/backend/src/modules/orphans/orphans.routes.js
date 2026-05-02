@@ -10,6 +10,7 @@ const { Router } = require('express');
 const { body } = require('express-validator');
 const multer = require('multer');
 const { authenticate, authorize } = require('../../middleware/rbac');
+const { scanUploadedFiles } = require('../../middleware/fileScanner');
 const controller = require('./orphans.controller');
 const giftedRouter = require('./gifted.routes');
 
@@ -112,6 +113,7 @@ router.post(
   authenticate,
   authorize('agent', 'gm'),
   uploadFields,
+  scanUploadedFiles,
   createOrphanRules,
   controller.createOrphan
 );

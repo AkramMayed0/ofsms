@@ -8,7 +8,7 @@
  */
 
 const { Router } = require('express');
-const { body, query: qv } = require('express-validator');
+const { body, query: qv, param } = require('express-validator');
 const { authenticate, authorize } = require('../../middleware/rbac');
 const controller = require('./receipts.controller');
 
@@ -57,6 +57,44 @@ router.get(
   authenticate,
   authorize('agent', 'supervisor', 'gm'),
   controller.getAgentReceiptSummary
+);
+
+// ── POST /api/receipts/batch-confirm ──────────────────────────────────────────
+// Agent: confirms that all orphans in their batch have been paid for a list
+router.post(
+  '/batch-confirm',
+  authenticate,
+  authorize('agent', 'gm'),
+  [
+    body('listId')
+      .isUUID()
+      .withMessage('معرّف كشف الصرف غير صحيح'),
+    body('notes')
+      .optional()
+      .trim(),
+  ],
+  controller.batchConfirm
+);
+
+// ── GET /api/receipts/my-batch ────────────────────────────────────────────────
+// Agent: get active disbursement batch items
+router.get(
+  '/my-batch',
+  authenticate,
+  authorize('agent'),
+  controller.getMyBatch
+);
+
+// ── GET /api/receipts/supervisor-log/:listId ──────────────────────────────────
+// Supervisor: get completion log per agent
+router.get(
+  '/supervisor-log/:listId',
+  authenticate,
+  authorize('supervisor', 'finance', 'gm'),
+  [
+    param('listId').isUUID().withMessage('listId غير صحيح'),
+  ],
+  controller.getSupervisorLog
 );
 
 module.exports = router;

@@ -7,6 +7,7 @@ const { Router } = require('express');
 const { body } = require('express-validator');
 const multer = require('multer');
 const { authenticate, authorize } = require('../../middleware/rbac');
+const { scanUploadedFiles } = require('../../middleware/fileScanner');
 const controller = require('./families.controller');
 
 const router = Router();
@@ -78,6 +79,7 @@ router.post(
   authenticate,
   authorize('agent'),
   uploadFields,
+  scanUploadedFiles,
   createFamilyRules,
   controller.createFamily
 );

@@ -275,6 +275,7 @@ export default function SupervisorDashboard() {
             { icon: '📋', label: 'مراجعة التسجيلات',    href: '/registrations',  color: '#f59e0b' },
             { icon: '📖', label: 'مراجعة تقارير الحفظ', href: '/quran-reports',  color: '#8b5cf6' },
             { icon: '💰', label: 'مراجعة كشف الصرف',    href: '/disbursements',  color: '#ef4444' },
+            { icon: '👆', label: 'متابعة البصمات',      href: '/receipts/supervisor', color: '#db2777' },
             { icon: '📄', label: 'التقارير والتصدير',    href: '/reports',        color: '#059669' },
           ].map(({ icon, label, href, color }) => (
             <button

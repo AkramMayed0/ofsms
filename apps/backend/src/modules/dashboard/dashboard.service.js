@@ -85,7 +85,20 @@ const getAgentDashboard = async (agentId) => {
       )
   `, [agentId]);
 
-  return { my_orphans: myOrphans, pending_reports: pendingReports };
+  const { rows: rejectedSubmissions } = await query(`
+    SELECT id, full_name AS name, 'orphan' AS type, status, notes, created_at
+    FROM orphans WHERE agent_id = $1 AND status = 'rejected'
+    UNION ALL
+    SELECT id, family_name AS name, 'family' AS type, status, notes, created_at
+    FROM families WHERE agent_id = $1 AND status = 'rejected'
+    ORDER BY created_at DESC
+  `, [agentId]);
+
+  return { 
+    my_orphans: myOrphans, 
+    pending_reports: pendingReports, 
+    rejected_submissions: rejectedSubmissions 
+  };
 };
 
 // ── Supervisor Dashboard ───────────────────────────────────────────────────────

@@ -174,10 +174,11 @@ const transferSponsorship = async ({
   agentId,
   monthlyAmount,
   endReason,
+  actorId,          // ← add this param
 }) => {
+  await query('BEGIN');   // ← fix: no destructuring
+
   await query('BEGIN');
-
-
 
   try {
     // 1. Close existing active sponsorship
@@ -203,13 +204,14 @@ const transferSponsorship = async ({
 
     await query('COMMIT');
 
+    // 4. Audit log with real actor
     await logAudit({
-      userId:     null,
-      action:     'sponsorship_transferred',
+      userId: actorId || null,
+      action: 'sponsorship_transferred',
       entityType: 'sponsorship',
-      entityId:   rows[0].id,
-      oldValue:   { beneficiary_type: beneficiaryType, beneficiary_id: beneficiaryId },
-      newValue:   { new_sponsor_id: newSponsorId, monthly_amount: monthlyAmount },
+      entityId: rows[0].id,
+      oldValue: { beneficiary_type: beneficiaryType, beneficiary_id: beneficiaryId },
+      newValue: { new_sponsor_id: newSponsorId, monthly_amount: monthlyAmount },
     });
 
     return rows[0];
@@ -223,7 +225,6 @@ module.exports = {
   createSponsor,
   getAllSponsors,
   getSponsorById,
-  getSponsorByToken,
   getSponsorshipsBySponsorId,
   createSponsorship,
   transferSponsorship,
