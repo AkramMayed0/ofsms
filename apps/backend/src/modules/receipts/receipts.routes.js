@@ -8,7 +8,7 @@
  */
 
 const { Router } = require('express');
-const { body, query: qv } = require('express-validator');
+const { body, query: qv, param } = require('express-validator');
 const { authenticate, authorize } = require('../../middleware/rbac');
 const controller = require('./receipts.controller');
 
