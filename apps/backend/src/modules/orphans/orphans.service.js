@@ -204,6 +204,7 @@ const getOrphansUnderMarketing = async () => {
     `SELECT
        o.id, o.full_name, o.date_of_birth, o.gender,
        o.guardian_name, o.is_gifted, o.created_at,
+       o.agent_id, 
        g.name_ar AS governorate_ar,
        u.full_name AS agent_name
      FROM orphans o

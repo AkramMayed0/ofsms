@@ -21,6 +21,7 @@ import { useParams, useRouter } from 'next/navigation';
 import api from '../../../lib/api';
 import AppShell from '../../../components/AppShell';
 import useAuthStore from '../../../store/useAuthStore';
+import ExportButtons from '../../../components/ExportButtons';
 
 // ── Arabic months ─────────────────────────────────────────────────────────────
 const ARABIC_MONTHS = [
@@ -265,6 +266,12 @@ const { list, items = [] } = data;
           <span className="status-badge" style={{ color: cfg.color, background: cfg.bg }}>
             {cfg.icon} {cfg.label}
           </span>
+          <ExportButtons
+            pdfUrl={`/reports/disbursement/${id}/pdf`}
+            excelUrl={`/reports/disbursement/${id}/excel`}
+            filename={`كشف-صرف-${list?.month}-${list?.year}`}
+            variant="menu"
+          />
         </div>
 
         {/* Summary cards */}

@@ -47,8 +47,8 @@ app.use('/api/sponsor',      require('./modules/sponsor-portal/sponsorPortal.rou
 app.use('/api/governorates', require('./modules/governorates/governorates.routes'));
 app.use('/api/reports', require('./modules/reports/reports.routes'));
 app.use('/api/dashboard',    require('./modules/dashboard/dashboard.routes'));
-// app.use('/api/quran-reports',  require('./modules/quran/quran.routes'));
- //app.use('/api/disbursements',  require('./modules/disbursements/disbursements.routes'));
+app.use('/api/quran-reports',  require('./modules/quran/quran.routes'));
+ app.use('/api/disbursements',  require('./modules/disbursements/disbursements.routes'));
 // app.use('/api/receipts',       require('./modules/receipts/receipts.routes'));
 // app.use('/api/notifications',  require('./modules/notifications/notifications.routes'));
 app.use('/api/dashboard', require('./modules/dashboard/dashboard.routes'));
@@ -57,9 +57,10 @@ app.use('/api/audit-logs', require('./modules/users/users.routes'));
 app.use('/api/quran-reports', require('./modules/quran/quranReports.routes'));
 app.use('/api/disbursements', require('./modules/disbursements/disbursements.routes'));
 app.use('/api/receipts', require('./modules/receipts/receipts.routes'));
-// app.use('/api/announcements',  require('./modules/announcements/announcements.routes'));
+app.use('/api/announcements',  require('./modules/announcements/announcements.routes'));
 // app.use('/api/reports',        require('./modules/reports/reports.routes'));
 app.use('/api/users',          require('./modules/users/users.routes'));
+app.use('/api/quran-thresholds', require('./modules/quran/thresholds.routes'));
 // In apps/backend/src/index.js — add this line with the other routes
 app.use('/api/supervisor', require('./modules/supervisor/supervisor.routes'));
 // ── Global error handler ──────────────────────────────────────────────────────
