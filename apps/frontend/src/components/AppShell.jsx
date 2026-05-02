@@ -25,10 +25,11 @@ const NAV_ITEMS = {
     { label: 'تحليلات المحافظات', href: '/governorates',       icon: '🗺️' },
     { label: 'إدارة المستخدمين', href: '/users',               icon: '👥' },
     { label: 'الإعلانات',        href: '/announcements',       icon: '📢' },
+    { label: 'إعدادات الحفظ',   href: '/quran-thresholds',    icon: '📖' },
     { label: 'التقارير',         href: '/reports',             icon: '📄' },
   ],
   supervisor: [
-    { label: 'لوحة التحكم',     href: '/dashboard',           icon: '📊' },
+    { label: 'لوحة التحكم', href: '/dashboard/supervisor', icon: '📊' },    
     { label: 'طلبات التسجيل',   href: '/registrations',       icon: '📋' },
     { label: 'تقارير الحفظ',    href: '/quran-reports',       icon: '📖' },
     { label: 'كشف الصرف',       href: '/disbursements',       icon: '💰' },

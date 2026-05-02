@@ -14,6 +14,9 @@ const nextConfig = {
   images: {
     domains: ['ofsms-documents.s3.amazonaws.com'],
   },
+
+  // Allow dev access from local network
+  allowedDevOrigins: ['192.168.1.130'],
 };
 
-module.exports = nextConfig;
+module.exports = nextConfig; // ✅ Fixed: was module.exports = { nextConfig, ... }

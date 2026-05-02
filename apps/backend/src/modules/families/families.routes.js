@@ -5,13 +5,32 @@
 
 const { Router } = require('express');
 const { body } = require('express-validator');
+const multer = require('multer');
 const { authenticate, authorize } = require('../../middleware/rbac');
 const controller = require('./families.controller');
 
 const router = Router();
 
-// ── Validation rules ──────────────────────────────────────────
+// ── Multer config ─────────────────────────────────────────────
+const ALLOWED_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
+const upload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: (_req, file, cb) => {
+    ALLOWED_MIME_TYPES.includes(file.mimetype)
+      ? cb(null, true)
+      : cb(new Error('نوع الملف غير مسموح. المقبول: PDF، JPG، PNG'), false);
+  },
+  limits: { fileSize: MAX_FILE_SIZE_BYTES },
+});
+
+const uploadFields = upload.fields([
+  { name: 'headOfFamilyId', maxCount: 1 },
+  { name: 'additionalDocs', maxCount: 5 },
+]);
+
+// ── Validation rules ──────────────────────────────────────────
 const createFamilyRules = [
   body('familyName')
     .trim()
@@ -53,11 +72,12 @@ router.get(
   controller.getFamilies
 );
 
-// Agent: register a new family
+// Agent: register a new family (multipart)
 router.post(
   '/',
   authenticate,
   authorize('agent'),
+  uploadFields,
   createFamilyRules,
   controller.createFamily
 );
@@ -70,7 +90,7 @@ router.get(
   controller.getFamilyById
 );
 
-// Agent: edit family details (only while under_review)
+// Agent / GM: edit family details
 router.patch(
   '/:id',
   authenticate,
@@ -86,5 +106,13 @@ router.patch(
   updateStatusRules,
   controller.updateFamilyStatus
 );
+
+// ── Multer error handler (must be last) ───────────────────────
+router.use((err, _req, res, next) => {
+  if (err instanceof multer.MulterError || err.message?.includes('نوع الملف')) {
+    return res.status(400).json({ error: err.message });
+  }
+  next(err);
+});
 
 module.exports = router;
