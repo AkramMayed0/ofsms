@@ -187,7 +187,8 @@ const updateOrphan = async (id, fields) => {
        guardian_name     = COALESCE($5, guardian_name),
        guardian_relation = COALESCE($6, guardian_relation),
        is_gifted         = COALESCE($7, is_gifted),
-       notes             = COALESCE($8, notes)
+       notes             = COALESCE($8, notes),
+       status            = 'under_review'
      WHERE id = $9
      RETURNING *`,
     [fullName, dateOfBirth, gender, governorateId, guardianName, guardianRelation, isGifted, notes, id]

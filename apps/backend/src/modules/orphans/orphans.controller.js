@@ -207,7 +207,7 @@ const updateOrphan = async (req, res, next) => {
       if (existing.agent_id !== req.user.id) {
         return res.status(403).json({ error: 'ليس لديك صلاحية لتعديل هذا اليتيم' });
       }
-      if (existing.status !== 'under_review') {
+      if (existing.status !== 'under_review' && existing.status !== 'rejected') {
         return res.status(400).json({ error: 'لا يمكن تعديل بيانات اليتيم بعد اعتمادها' });
       }
     }
