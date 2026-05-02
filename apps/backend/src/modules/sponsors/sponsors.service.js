@@ -180,8 +180,6 @@ const transferSponsorship = async ({
 
   await query('BEGIN');
 
-
-
   try {
     // 1. Close existing active sponsorship
     await query(
@@ -201,23 +199,19 @@ const transferSponsorship = async ({
       [newSponsorId, beneficiaryType, beneficiaryId, agentId, monthlyAmount]
     );
 
-    await query('COMMIT');
-
-    // 3. Audit log with real actor
-    await logAudit({
-      userId:     actorId || null,
     // 3. Beneficiary stays under_sponsorship — no status change needed
     // (already under_sponsorship from initial assignment)
 
     await query('COMMIT');
 
+    // 4. Audit log with real actor
     await logAudit({
-      userId:     null,
-      action:     'sponsorship_transferred',
+      userId: actorId || null,
+      action: 'sponsorship_transferred',
       entityType: 'sponsorship',
-      entityId:   rows[0].id,
-      oldValue:   { beneficiary_type: beneficiaryType, beneficiary_id: beneficiaryId },
-      newValue:   { new_sponsor_id: newSponsorId, monthly_amount: monthlyAmount },
+      entityId: rows[0].id,
+      oldValue: { beneficiary_type: beneficiaryType, beneficiary_id: beneficiaryId },
+      newValue: { new_sponsor_id: newSponsorId, monthly_amount: monthlyAmount },
     });
 
     return rows[0];
@@ -227,9 +221,11 @@ const transferSponsorship = async ({
   }
 };
 
-    return rows[0];
-  } catch (err) {
-    await query('ROLLBACK');
-    throw err;
-  }
+module.exports = {
+  createSponsor,
+  getAllSponsors,
+  getSponsorById,
+  getSponsorshipsBySponsorId,
+  createSponsorship,
+  transferSponsorship,
 };

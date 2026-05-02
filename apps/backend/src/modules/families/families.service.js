@@ -148,7 +148,8 @@ const updateFamily = async (id, { familyName, headOfFamily, memberCount, governo
        head_of_family = COALESCE($2, head_of_family),
        member_count   = COALESCE($3, member_count),
        governorate_id = COALESCE($4, governorate_id),
-       notes          = COALESCE($5, notes)
+       notes          = COALESCE($5, notes),
+       status         = 'under_review'
      WHERE id = $6
      RETURNING *`,
     [familyName, headOfFamily, memberCount, governorateId, notes, id]
