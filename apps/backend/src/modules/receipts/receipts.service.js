@@ -167,4 +167,38 @@ const getAgentReceiptSummary = async (agentId, listId) => {
   return rows[0];
 };
 
-module.exports = { uploadBiometricReceipt, getReceipts, getAgentReceiptSummary };
+/**
+ * Confirm that all receipts for a batch have been submitted.
+ */
+const batchConfirm = async (agentId, listId, notes = null) => {
+  const summary = await getAgentReceiptSummary(agentId, listId);
+  
+  if (parseInt(summary.total_items, 10) === 0) {
+    throw Object.assign(new Error('لا يوجد مستفيدين في هذا الكشف'), { status: 400 });
+  }
+  if (!summary.all_confirmed) {
+    throw Object.assign(new Error(`لم يتم تسجيل بصمات جميع المستفيدين (متبقي ${summary.pending_items})`), { status: 400 });
+  }
+
+  const { rows } = await query(
+    `INSERT INTO agent_batch_confirmations (list_id, agent_id, notes)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (list_id, agent_id) DO NOTHING
+     RETURNING *`,
+    [listId, agentId, notes]
+  );
+
+  if (rows.length > 0) {
+    await logAudit({
+      userId:     agentId,
+      action:     'agent_batch_confirmed',
+      entityType: 'agent_batch_confirmation',
+      entityId:   listId,
+      newValue:   { list_id: listId, agent_id: agentId, notes },
+    });
+  }
+
+  return rows[0] || { list_id: listId, agent_id: agentId, already_confirmed: true };
+};
+
+module.exports = { uploadBiometricReceipt, getReceipts, getAgentReceiptSummary, batchConfirm };

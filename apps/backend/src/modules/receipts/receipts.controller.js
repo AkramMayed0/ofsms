@@ -45,7 +45,9 @@ const getReceipts = async (req, res, next) => {
       return res.status(422).json({ errors: errors.array() });
     }
 
-    const { agentId, listId } = req.query;
+    const listId = req.query.listId || req.query.list_id;
+    const agentId = req.query.agentId || req.query.agent_id;
+    
     const receipts = await service.getReceipts({ agentId, listId });
 
     return res.json({ receipts, total: receipts.length });
@@ -62,7 +64,7 @@ const getAgentReceiptSummary = async (req, res, next) => {
     // Agents see their own summary; supervisors/GM can pass agentId via query
     const agentId = req.user.role === 'agent'
       ? req.user.id
-      : req.query.agentId;
+      : (req.query.agentId || req.query.agent_id);
 
     if (!agentId) {
       return res.status(400).json({ error: 'agentId مطلوب لأدوار المشرف والمدير العام' });
@@ -75,4 +77,27 @@ const getAgentReceiptSummary = async (req, res, next) => {
   }
 };
 
-module.exports = { uploadBiometricReceipt, getReceipts, getAgentReceiptSummary };
+/**
+ * POST /api/receipts/batch-confirm
+ */
+const batchConfirm = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    const { listId, notes } = req.body;
+    const confirmation = await service.batchConfirm(req.user.id, listId, notes);
+
+    return res.status(201).json({
+      message: 'تم تأكيد الكشف بنجاح',
+      confirmation,
+    });
+  } catch (err) {
+    if (err.status) return res.status(err.status).json({ error: err.message });
+    next(err);
+  }
+};
+
+module.exports = { uploadBiometricReceipt, getReceipts, getAgentReceiptSummary, batchConfirm };

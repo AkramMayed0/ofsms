@@ -59,4 +59,21 @@ router.get(
   controller.getAgentReceiptSummary
 );
 
+// ── POST /api/receipts/batch-confirm ──────────────────────────────────────────
+// Agent: confirms that all orphans in their batch have been paid for a list
+router.post(
+  '/batch-confirm',
+  authenticate,
+  authorize('agent', 'gm'),
+  [
+    body('listId')
+      .isUUID()
+      .withMessage('معرّف كشف الصرف غير صحيح'),
+    body('notes')
+      .optional()
+      .trim(),
+  ],
+  controller.batchConfirm
+);
+
 module.exports = router;
