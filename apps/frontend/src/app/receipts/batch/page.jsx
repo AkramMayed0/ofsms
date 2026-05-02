@@ -118,6 +118,28 @@ export default function AgentReceiptsBatchPage() {
 
   return (
     <div className="receipts-page" dir="rtl">
+      <button
+        type="button"
+        onClick={() => router.back()}
+        style={{
+          alignSelf: 'flex-start',
+          marginBottom: '1rem',
+          background: '#f1f5f9',
+          border: 'none',
+          borderRadius: '0.5rem',
+          padding: '0.5rem 1.2rem',
+          fontWeight: 700,
+          color: '#0d3d5c',
+          cursor: 'pointer',
+          fontSize: '1rem',
+          display: 'flex',
+          gap: '0.5rem',
+          alignItems: 'center',
+        }}
+        aria-label="عودة"
+      >
+        <span aria-hidden="true">←</span> عودة
+      </button>
       <div className="header-row">
         <h1 className="page-title">رفع بصمات المستفيدين</h1>
         <div className="batch-badge">
