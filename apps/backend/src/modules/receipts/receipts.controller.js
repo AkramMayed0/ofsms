@@ -116,4 +116,22 @@ const getMyBatch = async (req, res, next) => {
   }
 };
 
-module.exports = { uploadBiometricReceipt, getReceipts, getAgentReceiptSummary, batchConfirm, getMyBatch };
+/**
+ * GET /api/receipts/supervisor-log/:listId
+ * Fetch the supervisor log for a specific list.
+ */
+const getSupervisorLog = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    const log = await service.getSupervisorLog(req.params.listId);
+    return res.json(log);
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { uploadBiometricReceipt, getReceipts, getAgentReceiptSummary, batchConfirm, getMyBatch, getSupervisorLog };

@@ -85,4 +85,16 @@ router.get(
   controller.getMyBatch
 );
 
+// ── GET /api/receipts/supervisor-log/:listId ──────────────────────────────────
+// Supervisor: get completion log per agent
+router.get(
+  '/supervisor-log/:listId',
+  authenticate,
+  authorize('supervisor', 'finance', 'gm'),
+  [
+    param('listId').isUUID().withMessage('listId غير صحيح'),
+  ],
+  controller.getSupervisorLog
+);
+
 module.exports = router;
