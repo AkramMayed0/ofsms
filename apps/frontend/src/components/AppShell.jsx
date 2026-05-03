@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import useAuthStore from '../store/useAuthStore';
 import api from '../lib/api';
-
+import NotificationBell from './NotificationBell';
 // ── Nav items per role ────────────────────────────────────────────────────────
 const NAV_ITEMS = {
   gm: [
@@ -97,13 +97,7 @@ export default function AppShell({ children }) {
               نظام إدارة<br />الأيتام والأسر
             </span>
           )}
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition"
-            aria-label="تبديل القائمة"
-          >
-            {sidebarOpen ? '◀' : '▶'}
-          </button>
+          <NotificationBell />
         </div>
 
         {/* Nav items */}
