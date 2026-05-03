@@ -17,12 +17,9 @@ let app;
 
 const initFirebase = () => {
   if (admin.apps.length > 0) {
-    // Already initialized — return the existing app
     return admin.apps[0];
   }
 
-  // Option A: GOOGLE_APPLICATION_CREDENTIALS env var points to service account JSON
-  // Option B: Inline service account fields via individual env vars
   const useInlineCredentials =
     process.env.FIREBASE_PROJECT_ID &&
     process.env.FIREBASE_PRIVATE_KEY &&
@@ -37,7 +34,6 @@ const initFirebase = () => {
       }),
     });
   } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-    // Let the SDK auto-load from the file path
     app = admin.initializeApp({
       credential: admin.credential.applicationDefault(),
     });
@@ -53,7 +49,6 @@ const initFirebase = () => {
   return app;
 };
 
-// Initialize immediately when this module is required
 initFirebase();
 
 module.exports = {
