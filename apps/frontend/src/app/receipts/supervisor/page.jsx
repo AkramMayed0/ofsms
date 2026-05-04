@@ -12,7 +12,7 @@ export default function SupervisorBiometricLogPage() {
   const [selectedAgentId, setSelectedAgentId] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
+ //i w
   // 1. Fetch available lists
   useEffect(() => {
     api.get('/disbursements')
@@ -55,14 +55,36 @@ export default function SupervisorBiometricLogPage() {
 
   const activeAgent = logData?.agents?.find(a => a.agent_id === selectedAgentId);
 
+
   return (
     <div className="supervisor-log-page" dir="rtl">
+      <button
+        type="button"
+        onClick={() => router.back()}
+        style={{
+          alignSelf: 'flex-start',
+          marginBottom: '1rem',
+          background: '#f1f5f9',
+          border: 'none',
+          borderRadius: '0.5rem',
+          padding: '0.5rem 1.2rem',
+          fontWeight: 700,
+          color: '#0d3d5c',
+          cursor: 'pointer',
+          fontSize: '1rem',
+          display: 'flex',
+          gap: '0.5rem',
+          alignItems: 'center',
+        }}
+        aria-label="عودة"
+      >
+        <span aria-hidden="true">←</span> عودة
+      </button>
       <div className="header-row">
         <div>
           <h1 className="page-title">متابعة بصمات الصرف</h1>
           <p className="page-sub">عرض تقرير إنجاز المندوبين لتسليم مبالغ الصرف</p>
         </div>
-        
         {lists.length > 0 && (
           <select 
             className="list-select" 
