@@ -99,14 +99,17 @@ function AssignModal({ selected, sponsors, onClose, onSuccess }) {
 
       // Step 2: assign each selected beneficiary
       for (const item of selected) {
-        await api.post(`/sponsors/${finalSponsorId}/sponsorships`, {
-          beneficiaryType: item.type,
-          beneficiaryId: item.id,
-          agentId: item.agent_id,
-          intermediary: shared.intermediary.trim() || undefined,
-          startDate: shared.startDate,
-          monthlyAmount: parseFloat(shared.monthlyAmount),
-        });
+if (!item.agent_id) {
+  throw new Error(`لم يتم العثور على مندوب للمستفيد: ${item.name}`);
+}
+await api.post(`/sponsors/${finalSponsorId}/sponsorships`, {
+  beneficiaryType: item.type,
+  beneficiaryId: item.id,
+  agentId: item.agent_id,
+  intermediary: shared.intermediary.trim() || undefined,
+  startDate: shared.startDate,
+  monthlyAmount: parseFloat(shared.monthlyAmount),
+});
       }
 
       onSuccess(selected.length);
@@ -342,17 +345,17 @@ export default function MarketingPoolPage() {
         addedAt: o.created_at,
       }));
 
-      const families = (familiesRes.data.families || []).map(f => ({
-        id: f.id,
-        type: 'family',
-        name: f.family_name,
-        age: `${f.member_count || '—'} فرد`,
-        governorate: f.governorate_ar || '—',
-        agent: f.agent_name || '—',
-        agent_id: f.agent_id,
-        isGifted: false,
-        addedAt: f.created_at,
-      }));
+const families = (familiesRes.data.families || []).map(f => ({
+  id: f.id,
+  type: 'family',
+  name: f.family_name,
+  age: `${f.member_count || '—'} فرد`,
+  governorate: f.governorate_ar || '—',
+  agent: f.agent_name || '—',
+  agent_id: f.agent_id,   // ← this was undefined before the backend fix
+  isGifted: false,
+  addedAt: f.created_at,
+}));
 
       setItems([...orphans, ...families].sort((a, b) => new Date(a.addedAt) - new Date(b.addedAt)));
       setSponsors(sponsorsRes.data.sponsors || []);

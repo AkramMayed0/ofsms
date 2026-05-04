@@ -165,6 +165,7 @@ const getFamiliesUnderMarketing = async () => {
     `SELECT
        f.id, f.family_name, f.head_of_family, f.member_count,
        f.created_at,
+       f.agent_id,
        g.name_ar AS governorate_ar,
        u.full_name AS agent_name
      FROM families f
