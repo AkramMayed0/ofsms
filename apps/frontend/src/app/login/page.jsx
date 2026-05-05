@@ -35,11 +35,11 @@ const validate = ({ email, password }) => {
 };
 
 export default function LoginPage() {
-  const router   = useRouter();
-  const setAuth  = useAuthStore((s) => s.setAuth);
+  const router = useRouter();
+  const setAuth = useAuthStore((s) => s.setAuth);
 
-  const [form, setForm]       = useState({ email: '', password: '' });
-  const [errors, setErrors]   = useState({});
+  const [form, setForm] = useState({ email: '', password: '' });
+  const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
@@ -65,7 +65,7 @@ export default function LoginPage() {
 
     try {
       const { data } = await api.post('/auth/login', {
-        email:    form.email.trim().toLowerCase(),
+        email: form.email.trim().toLowerCase(),
         password: form.password,
       });
 
@@ -87,17 +87,12 @@ export default function LoginPage() {
 
       {/* ── Right panel: brand ─────────────────────────────────────────── */}
       <aside className="brand-panel" aria-hidden="true">
-        <BrandPattern />
         <div className="brand-content">
-          <div className="brand-logo">
-            <OrgIcon />
-          </div>
-          <h1 className="brand-title">نظام إدارة<br />الأيتام والأسر</h1>
-          <p className="brand-subtitle">
-            Orphan &amp; Family Sponsorship<br />Management System
-          </p>
-          <div className="brand-divider" />
-          <p className="brand-tagline">شفافية · كفاءة · رعاية</p>
+          <img
+            src="/ikram-logo.png"
+            alt="مؤسسة إكرام النعمة الخيرية"
+            className="brand-logo-img"
+          />
         </div>
       </aside>
 
@@ -207,7 +202,7 @@ export default function LoginPage() {
           </form>
 
           <p className="form-footer">
-            مؤسسة الأرض الطيبة · نظام كفالة الأيتام
+            مؤسسة إكرام النعمة الخيرية · نظام كفالة الأيتام
           </p>
         </div>
       </main>
@@ -239,49 +234,17 @@ export default function LoginPage() {
           position: relative;
           z-index: 2;
           text-align: center;
-          color: #fff;
           padding: 2rem;
-        }
-
-        .brand-logo {
           display: flex;
+          flex-direction: column;
+          align-items: center;
           justify-content: center;
-          margin-bottom: 1.5rem;
         }
 
-        .brand-title {
-          font-size: 2rem;
-          font-weight: 700;
-          line-height: 1.3;
-          letter-spacing: -0.01em;
-          margin: 0 0 0.5rem;
-          text-shadow: 0 2px 16px rgba(0,0,0,0.18);
-        }
-
-        .brand-subtitle {
-          font-size: 0.78rem;
-          font-weight: 400;
-          color: rgba(255,255,255,0.65);
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          margin: 0 0 1.5rem;
-          line-height: 1.8;
-        }
-
-        .brand-divider {
-          width: 40px;
-          height: 2px;
-          background: rgba(255,255,255,0.35);
-          margin: 0 auto 1.2rem;
-          border-radius: 1px;
-        }
-
-        .brand-tagline {
-          font-size: 0.9rem;
-          font-weight: 500;
-          color: rgba(255,255,255,0.8);
-          letter-spacing: 0.15em;
-          margin: 0;
+        .brand-logo-img {
+          max-width: 500px;
+          width: 100%;
+          height: auto;
         }
 
         /* ── Form panel ──────────────────────────────────────────────── */
@@ -530,11 +493,10 @@ export default function LoginPage() {
           .brand-panel {
             width: 100%;
             min-height: 180px;
-            padding: 2rem 1rem;
+            padding: 1.5rem 1rem;
           }
 
-          .brand-title  { font-size: 1.3rem; }
-          .brand-subtitle { display: none; }
+          .brand-logo-img { max-width: 200px; padding: 1rem; }
 
           .form-panel {
             padding: 1.5rem 1rem;
