@@ -2,33 +2,26 @@
  * reports.routes.js
  * Mounted at: /api/reports
  *
- * GET /api/reports/governorate/:id?format=pdf|excel
- *   GM only — export all orphans in a governorate as PDF or Excel.
- *
- * GET /api/reports/sponsor/:id?format=pdf|excel
- *   GM only — export all sponsorships for a single sponsor.
- *
- * Covers: SADD FR-053, FR-054, FR-055
- *
- * Place this file at:
- *   apps/backend/src/modules/reports/reports.routes.js
- *
- * Then add this line to apps/backend/src/index.js (after the governorates line):
- *   app.use('/api/reports', require('./modules/reports/reports.routes'));
- *
- * Also uncomment this line in index.js while you're there:
- *   app.use('/api/announcements', require('./modules/announcements/announcements.routes'));
+ * GET /api/reports/disbursement/:id/pdf    → PDF of a disbursement list
+ * GET /api/reports/disbursement/:id/excel  → Excel of a disbursement list
+ * GET /api/reports/governorate/:id/pdf     → PDF of all orphans in a governorate
+ * GET /api/reports/governorate/:id/excel   → Excel of all orphans in a governorate
  */
 
 const { Router } = require('express');
+const PDFDocument = require('pdfkit');
+const ExcelJS    = require('exceljs');
 const { authenticate, authorize } = require('../../middleware/rbac');
 const { query } = require('../../config/db');
-const PDFDocument = require('pdfkit');
-const ExcelJS = require('exceljs');
 
 const router = Router();
 
-// ── Arabic label maps ─────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const ARABIC_MONTHS = [
+  '', 'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+  'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
+];
+
 const STATUS_AR = {
   under_review:      'قيد المراجعة',
   under_marketing:   'تحت التسويق',
@@ -37,843 +30,403 @@ const STATUS_AR = {
   inactive:          'غير نشط',
 };
 
-const GENDER_AR = { male: 'ذكر', female: 'أنثى' };
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
 const calcAge = (dob) => {
   if (!dob) return '—';
-  return Math.floor(
-    (Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000)
-  );
+  return `${Math.floor((Date.now() - new Date(dob)) / (365.25 * 24 * 60 * 60 * 1000))} سنة`;
 };
 
-const fmtDate = (d) =>
-  d ? new Date(d).toLocaleDateString('en-GB') : '—'; // DD/MM/YYYY — safe for PDF
+const formatDate = (d) => {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' });
+};
 
-// ── Shared DB query: all orphans in a governorate ─────────────────────────────
-const fetchGovernorateOrphans = async (govId) => {
+// ── Fetch helpers ─────────────────────────────────────────────────────────────
+const getDisbursementData = async (id) => {
+  const { rows: listRows } = await query(
+    `SELECT dl.*, u.full_name AS created_by_name
+     FROM disbursement_lists dl
+     LEFT JOIN users u ON u.id = dl.created_by
+     WHERE dl.id = $1`, [id]
+  );
+  if (!listRows[0]) return null;
+
+  const { rows: items } = await query(
+    `SELECT
+       di.amount, di.included, di.exclusion_reason,
+       COALESCE(o.full_name, f.family_name)  AS beneficiary_name,
+       COALESCE(go.name_ar, gf.name_ar)      AS governorate_ar,
+       COALESCE(uo.full_name, uf.full_name)  AS agent_name,
+       so.full_name                          AS sponsor_name
+     FROM disbursement_items di
+     LEFT JOIN orphans      o  ON o.id  = di.orphan_id
+     LEFT JOIN families     f  ON f.id  = di.family_id
+     LEFT JOIN governorates go ON go.id = o.governorate_id
+     LEFT JOIN governorates gf ON gf.id = f.governorate_id
+     LEFT JOIN users        uo ON uo.id = o.agent_id
+     LEFT JOIN users        uf ON uf.id = f.agent_id
+     LEFT JOIN sponsorships sp ON sp.beneficiary_id = COALESCE(di.orphan_id, di.family_id)
+                               AND sp.is_active = TRUE
+     LEFT JOIN sponsors     so ON so.id = sp.sponsor_id
+     WHERE di.list_id = $1
+     ORDER BY di.created_at ASC`, [id]
+  );
+  return { list: listRows[0], items };
+};
+
+const getGovernorateData = async (id) => {
   const { rows: govRows } = await query(
-    'SELECT id, name_ar, name_en FROM governorates WHERE id = $1',
-    [govId]
+    'SELECT id, name_ar, name_en FROM governorates WHERE id = $1', [id]
   );
   if (!govRows[0]) return null;
 
   const { rows: orphans } = await query(
     `SELECT
-       o.full_name,
-       o.gender,
-       o.date_of_birth,
-       o.status,
-       o.is_gifted,
-       o.guardian_name,
-       o.created_at,
-       u.full_name          AS agent_name,
-       s.full_name          AS sponsor_name,
-       sp.monthly_amount,
-       sp.start_date        AS sponsorship_start
+       o.full_name, o.date_of_birth, o.gender, o.status, o.is_gifted, o.created_at,
+       u.full_name  AS agent_name,
+       s.full_name  AS sponsor_name
      FROM orphans o
-     LEFT JOIN users u
-            ON u.id = o.agent_id
+     LEFT JOIN users u       ON u.id  = o.agent_id
      LEFT JOIN sponsorships sp
-            ON sp.beneficiary_id   = o.id
-           AND sp.beneficiary_type = 'orphan'
-           AND sp.is_active        = TRUE
-     LEFT JOIN sponsors s
-            ON s.id = sp.sponsor_id
+       ON sp.beneficiary_id   = o.id
+      AND sp.beneficiary_type = 'orphan'
+      AND sp.is_active        = TRUE
+     LEFT JOIN sponsors s    ON s.id  = sp.sponsor_id
      WHERE o.governorate_id = $1
-     ORDER BY o.status ASC, o.created_at DESC`,
-    [govId]
+       AND o.status != 'inactive'
+     ORDER BY o.created_at DESC`, [id]
   );
-
   return { governorate: govRows[0], orphans };
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// GET /api/reports/governorate/:id?format=pdf|excel
-// ─────────────────────────────────────────────────────────────────────────────
-router.get(
-  '/governorate/:id',
-  authenticate,
-  authorize('gm'),
-  async (req, res, next) => {
-    try {
-      const govId = parseInt(req.params.id, 10);
-      if (isNaN(govId)) {
-        return res.status(400).json({ error: 'معرّف المحافظة غير صحيح' });
-      }
+// ── PDF helpers ───────────────────────────────────────────────────────────────
 
-      const result = await fetchGovernorateOrphans(govId);
-      if (!result) {
-        return res.status(404).json({ error: 'المحافظة غير موجودة' });
-      }
+/**
+ * Creates a simple but clean PDF using pdfkit.
+ * NOTE: pdfkit does not support Arabic shaping natively — text is written
+ * LTR. For production, consider using a library like pdfkit-table or
+ * serving pre-rendered HTML via Puppeteer. For now this gives a readable
+ * English/numeric export with Arabic fields as-is.
+ */
+const buildPDF = (res, filename, buildFn) => {
+  const doc = new PDFDocument({ margin: 40, size: 'A4' });
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}.pdf"`);
+  doc.pipe(res);
+  buildFn(doc);
+  doc.end();
+};
 
-      const { governorate, orphans } = result;
-      const format    = req.query.format === 'excel' ? 'excel' : 'pdf';
-      const timestamp = new Date().toISOString().split('T')[0];
-      const filename  = `governorate-${governorate.name_en}-${timestamp}`;
-
-      // ── EXCEL ───────────────────────────────────────────────────────────────
-      if (format === 'excel') {
-        const workbook = new ExcelJS.Workbook();
-        workbook.creator  = 'OFSMS';
-        workbook.created  = new Date();
-
-        const sheet = workbook.addWorksheet(governorate.name_ar, {
-          views: [{ rightToLeft: true }],
-        });
-
-        sheet.columns = [
-          { header: 'الاسم الكامل',    key: 'full_name',         width: 25 },
-          { header: 'الجنس',           key: 'gender',            width: 8  },
-          { header: 'العمر',           key: 'age',               width: 8  },
-          { header: 'الحالة',          key: 'status',            width: 18 },
-          { header: 'موهوب',           key: 'is_gifted',         width: 8  },
-          { header: 'الوصي',           key: 'guardian_name',     width: 20 },
-          { header: 'الكافل',          key: 'sponsor_name',      width: 20 },
-          { header: 'المبلغ الشهري',   key: 'monthly_amount',    width: 14 },
-          { header: 'تاريخ الكفالة',   key: 'sponsorship_start', width: 14 },
-          { header: 'المندوب',         key: 'agent_name',        width: 20 },
-          { header: 'تاريخ التسجيل',  key: 'created_at',        width: 14 },
-        ];
-
-        // Style header row
-        const headerRow = sheet.getRow(1);
-        headerRow.fill = {
-          type: 'pattern', pattern: 'solid',
-          fgColor: { argb: 'FF1B5E8C' },
-        };
-        headerRow.font      = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
-        headerRow.alignment = { horizontal: 'center' };
-
-        // Data rows
-        orphans.forEach((o) => {
-          const row = sheet.addRow({
-            full_name:         o.full_name,
-            gender:            GENDER_AR[o.gender]   || o.gender,
-            age:               calcAge(o.date_of_birth),
-            status:            STATUS_AR[o.status]   || o.status,
-            is_gifted:         o.is_gifted ? 'نعم' : 'لا',
-            guardian_name:     o.guardian_name       || '—',
-            sponsor_name:      o.sponsor_name        || '—',
-            monthly_amount:    o.monthly_amount
-              ? `${Number(o.monthly_amount).toLocaleString()} ر.ي`
-              : '—',
-            sponsorship_start: fmtDate(o.sponsorship_start),
-            agent_name:        o.agent_name          || '—',
-            created_at:        fmtDate(o.created_at),
-          });
-          row.alignment = { horizontal: 'right' };
-        });
-
-        // Summary row
-        const totalMonthly = orphans.reduce(
-          (sum, o) => sum + Number(o.monthly_amount || 0), 0
-        );
-        sheet.addRow([]);
-        const summaryRow = sheet.addRow({
-          full_name:      `الإجمالي: ${orphans.length} يتيم`,
-          monthly_amount: `${totalMonthly.toLocaleString()} ر.ي`,
-        });
-        summaryRow.font = { bold: true };
-
-        // Freeze header row
-        sheet.views = [{ state: 'frozen', ySplit: 1, rightToLeft: true }];
-
-        res.setHeader(
-          'Content-Type',
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        );
-        res.setHeader(
-          'Content-Disposition',
-          `attachment; filename="${filename}.xlsx"`
-        );
-        res.setHeader('X-Report-Date',        timestamp);
-        res.setHeader('X-Report-Total',       String(orphans.length));
-        res.setHeader('X-Report-Governorate', governorate.name_en);
-
-        await workbook.xlsx.write(res);
-        return res.end();
-      }
-
-      // ── PDF ─────────────────────────────────────────────────────────────────
-      const doc = new PDFDocument({
-        size:    'A4',
-        layout:  'landscape',
-        margins: { top: 40, bottom: 40, left: 40, right: 40 },
-        info: {
-          Title:        `Governorate Report - ${governorate.name_en}`,
-          Author:       'OFSMS',
-          CreationDate: new Date(),
-        },
-      });
-
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader(
-        'Content-Disposition',
-        `attachment; filename="${filename}.pdf"`
-      );
-      res.setHeader('X-Report-Date',        timestamp);
-      res.setHeader('X-Report-Total',       String(orphans.length));
-      res.setHeader('X-Report-Governorate', governorate.name_en);
-      doc.pipe(res);
-
-      // Title block
-      doc
-        .fontSize(16)
-        .text('OFSMS - Orphan & Family Sponsorship Management System', { align: 'center' })
-        .moveDown(0.3)
-        .fontSize(13)
-        .text(
-          `Governorate Report: ${governorate.name_ar} (${governorate.name_en})`,
-          { align: 'center' }
-        )
-        .moveDown(0.3)
-        .fontSize(9)
-        .fillColor('#555555')
-        .text(
-          `Export Date: ${timestamp}   |   Total Orphans: ${orphans.length}`,
-          { align: 'center' }
-        )
-        .fillColor('#000000')
-        .moveDown(1);
-
-      // Table setup
-      const tableTop   = doc.y;
-      const pageWidth  = doc.page.width - 80;
-      const colWidths  = [130, 40, 35, 90, 40, 115, 110, 75, 80];
-      const headers    = [
-        'Full Name', 'Gender', 'Age', 'Status',
-        'Gifted', 'Sponsor', 'Agent', 'Amount', 'Registered',
-      ];
-      const rowHeight  = 18;
-      const fontSize   = 7;
-
-      // Header row background
-      doc.rect(40, tableTop, pageWidth, rowHeight).fill('#1B5E8C');
-      let hx = 40;
-      headers.forEach((h, i) => {
-        doc
-          .fillColor('#FFFFFF')
-          .fontSize(fontSize)
-          .text(h, hx + 2, tableTop + 5, {
-            width:    colWidths[i] - 4,
-            align:    'center',
-            lineBreak: false,
-          });
-        hx += colWidths[i];
-      });
-
-      // Data rows
-      orphans.forEach((o, idx) => {
-        const rowY = tableTop + rowHeight + idx * rowHeight;
-
-        // Alternate stripe
-        if (idx % 2 === 0) {
-          doc.rect(40, rowY, pageWidth, rowHeight).fill('#F0F4F8');
-        }
-
-        const cells = [
-          o.full_name                       || '—',
-          GENDER_AR[o.gender]               || o.gender,
-          String(calcAge(o.date_of_birth)),
-          STATUS_AR[o.status]               || o.status,
-          o.is_gifted ? 'Yes' : 'No',
-          o.sponsor_name                    || '—',
-          o.agent_name                      || '—',
-          o.monthly_amount
-            ? `${Number(o.monthly_amount).toLocaleString()}`
-            : '—',
-          fmtDate(o.created_at),
-        ];
-
-        let cx = 40;
-        doc.fillColor('#000000');
-        cells.forEach((cell, i) => {
-          doc.fontSize(fontSize).text(String(cell), cx + 2, rowY + 5, {
-            width:    colWidths[i] - 4,
-            align:    'center',
-            lineBreak: false,
-          });
-          cx += colWidths[i];
-        });
-
-        // New page guard
-        if (rowY + rowHeight > doc.page.height - 60) {
-          doc.addPage();
-        }
-      });
-
-      // Summary footer
-      const totalMonthly = orphans.reduce(
-        (sum, o) => sum + Number(o.monthly_amount || 0), 0
-      );
-      doc
-        .moveDown(2)
-        .fontSize(9)
-        .fillColor('#333333')
-        .text(
-          `Total Monthly: ${totalMonthly.toLocaleString()} YER   |   ` +
-          `Under Sponsorship: ${orphans.filter(o => o.status === 'under_sponsorship').length}   |   ` +
-          `Gifted: ${orphans.filter(o => o.is_gifted).length}`,
-          { align: 'center' }
-        )
-        .moveDown(0.5)
-        .fontSize(7)
-        .fillColor('#999999')
-        .text(
-          `Exported by OFSMS — ${new Date().toLocaleString()}`,
-          { align: 'center' }
-        );
-
-      doc.end();
-    } catch (err) {
-      next(err);
-    }
-  }
-);
-
-// ─────────────────────────────────────────────────────────────────────────────
-// GET /api/reports/sponsor/:id?format=pdf|excel
-// ─────────────────────────────────────────────────────────────────────────────
-router.get(
-  '/sponsor/:id',
-  authenticate,
-  authorize('gm'),
-  async (req, res, next) => {
-    try {
-      const { rows: sponsorRows } = await query(
-        'SELECT id, full_name, phone, email FROM sponsors WHERE id = $1',
-        [req.params.id]
-      );
-      if (!sponsorRows[0]) {
-        return res.status(404).json({ error: 'الكافل غير موجود' });
-      }
-      const sponsor = sponsorRows[0];
-
-      const { rows: sponsorships } = await query(
-        `SELECT
-           COALESCE(o.full_name, f.family_name)          AS beneficiary_name,
-           CASE
-             WHEN sp.beneficiary_type = 'orphan' THEN 'يتيم'
-             ELSE 'أسرة'
-           END                                           AS type_ar,
-           COALESCE(go.name_ar, gf.name_ar)              AS governorate_ar,
-           COALESCE(uo.full_name, uf.full_name)          AS agent_name,
-           sp.monthly_amount,
-           sp.start_date,
-           sp.end_date,
-           sp.is_active
-         FROM sponsorships sp
-         LEFT JOIN orphans      o  ON o.id  = sp.beneficiary_id
-                                  AND sp.beneficiary_type = 'orphan'
-         LEFT JOIN families     f  ON f.id  = sp.beneficiary_id
-                                  AND sp.beneficiary_type = 'family'
-         LEFT JOIN governorates go ON go.id = o.governorate_id
-         LEFT JOIN governorates gf ON gf.id = f.governorate_id
-         LEFT JOIN users        uo ON uo.id = o.agent_id
-         LEFT JOIN users        uf ON uf.id = f.agent_id
-         WHERE sp.sponsor_id = $1
-         ORDER BY sp.is_active DESC, sp.start_date DESC`,
-        [req.params.id]
-      );
-
-      const format       = req.query.format === 'excel' ? 'excel' : 'pdf';
-      const timestamp    = new Date().toISOString().split('T')[0];
-      const filename     = `sponsor-${req.params.id.slice(0, 8)}-${timestamp}`;
-      const activeTotal  = sponsorships
-        .filter(s => s.is_active)
-        .reduce((sum, s) => sum + Number(s.monthly_amount || 0), 0);
-
-      // ── EXCEL ─────────────────────────────────────────────────────────────
-      if (format === 'excel') {
-        const workbook = new ExcelJS.Workbook();
-        workbook.creator = 'OFSMS';
-        workbook.created = new Date();
-
-        const sheet = workbook.addWorksheet('Sponsorships', {
-          views: [{ rightToLeft: true }],
-        });
-
-        sheet.columns = [
-          { header: 'المستفيد',        key: 'name',       width: 25 },
-          { header: 'النوع',           key: 'type_ar',    width: 8  },
-          { header: 'المحافظة',        key: 'gov',        width: 18 },
-          { header: 'المندوب',         key: 'agent',      width: 20 },
-          { header: 'المبلغ الشهري',  key: 'amount',     width: 14 },
-          { header: 'تاريخ البداية',  key: 'start',      width: 14 },
-          { header: 'تاريخ الانتهاء', key: 'end',        width: 14 },
-          { header: 'نشطة',           key: 'active',     width: 8  },
-        ];
-
-        const headerRow = sheet.getRow(1);
-        headerRow.fill = {
-          type: 'pattern', pattern: 'solid',
-          fgColor: { argb: 'FF1B5E8C' },
-        };
-        headerRow.font      = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
-        headerRow.alignment = { horizontal: 'center' };
-
-        sponsorships.forEach((s) => {
-          const row = sheet.addRow({
-            name:   s.beneficiary_name || '—',
-            type_ar: s.type_ar,
-            gov:    s.governorate_ar   || '—',
-            agent:  s.agent_name       || '—',
-            amount: s.monthly_amount
-              ? `${Number(s.monthly_amount).toLocaleString()} ر.ي`
-              : '—',
-            start:  fmtDate(s.start_date),
-            end:    s.end_date ? fmtDate(s.end_date) : '—',
-            active: s.is_active ? 'نعم' : 'لا',
-          });
-          row.alignment = { horizontal: 'right' };
-        });
-
-        sheet.addRow([]);
-        const sumRow = sheet.addRow({
-          name:   `إجمالي الكفالات النشطة: ${sponsorships.filter(s => s.is_active).length}`,
-          amount: `${activeTotal.toLocaleString()} ر.ي`,
-        });
-        sumRow.font = { bold: true };
-
-        sheet.views = [{ state: 'frozen', ySplit: 1, rightToLeft: true }];
-
-        res.setHeader(
-          'Content-Type',
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        );
-        res.setHeader(
-          'Content-Disposition',
-          `attachment; filename="${filename}.xlsx"`
-        );
-        res.setHeader('X-Report-Date',    timestamp);
-        res.setHeader('X-Report-Sponsor', sponsor.full_name);
-
-        await workbook.xlsx.write(res);
-        return res.end();
-      }
-
-      // ── PDF ───────────────────────────────────────────────────────────────
-      const doc = new PDFDocument({
-        size:    'A4',
-        layout:  'landscape',
-        margins: { top: 40, bottom: 40, left: 40, right: 40 },
-        info: {
-          Title:        `Sponsor Report - ${sponsor.full_name}`,
-          Author:       'OFSMS',
-          CreationDate: new Date(),
-        },
-      });
-
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader(
-        'Content-Disposition',
-        `attachment; filename="${filename}.pdf"`
-      );
-      res.setHeader('X-Report-Date',    timestamp);
-      res.setHeader('X-Report-Sponsor', sponsor.full_name);
-      doc.pipe(res);
-
-      doc
-        .fontSize(16)
-        .text('OFSMS - Orphan & Family Sponsorship Management System', { align: 'center' })
-        .moveDown(0.3)
-        .fontSize(13)
-        .text(`Sponsor Portfolio: ${sponsor.full_name}`, { align: 'center' })
-        .moveDown(0.3)
-        .fontSize(9)
-        .fillColor('#555555')
-        .text(
-          `${sponsor.email || ''}${sponsor.phone ? '   ' + sponsor.phone : ''}   |   ` +
-          `Export Date: ${timestamp}   |   Total Records: ${sponsorships.length}`,
-          { align: 'center' }
-        )
-        .fillColor('#000000')
-        .moveDown(1);
-
-      const tTop      = doc.y;
-      const pWidth    = doc.page.width - 80;
-      const cols      = [140, 55, 115, 125, 85, 85, 85, 50];
-      const hdrs      = ['Beneficiary', 'Type', 'Governorate', 'Agent', 'Amount/Mo', 'Start', 'End', 'Active'];
-      const rh        = 18;
-      const fs        = 7;
-
-      doc.rect(40, tTop, pWidth, rh).fill('#1B5E8C');
-      let hx = 40;
-      hdrs.forEach((h, i) => {
-        doc.fillColor('#FFFFFF').fontSize(fs).text(h, hx + 2, tTop + 5, {
-          width:    cols[i] - 4,
-          align:    'center',
-          lineBreak: false,
-        });
-        hx += cols[i];
-      });
-
-      sponsorships.forEach((s, idx) => {
-        const ry = tTop + rh + idx * rh;
-        if (idx % 2 === 0) {
-          doc.rect(40, ry, pWidth, rh).fill('#F0F4F8');
-        }
-        const cells = [
-          s.beneficiary_name || '—',
-          s.type_ar,
-          s.governorate_ar   || '—',
-          s.agent_name       || '—',
-          s.monthly_amount
-            ? `${Number(s.monthly_amount).toLocaleString()}`
-            : '—',
-          fmtDate(s.start_date),
-          s.end_date ? fmtDate(s.end_date) : '—',
-          s.is_active ? 'Yes' : 'No',
-        ];
-        let cx = 40;
-        doc.fillColor('#000000');
-        cells.forEach((cell, i) => {
-          doc.fontSize(fs).text(String(cell), cx + 2, ry + 5, {
-            width:    cols[i] - 4,
-            align:    'center',
-            lineBreak: false,
-          });
-          cx += cols[i];
-        });
-        if (ry + rh > doc.page.height - 60) doc.addPage();
-      });
-
-      doc
-        .moveDown(2)
-        .fontSize(9)
-        .fillColor('#333333')
-        .text(
-          `Active Monthly Total: ${activeTotal.toLocaleString()} YER   |   ` +
-          `Active: ${sponsorships.filter(s => s.is_active).length}   |   ` +
-          `Historical: ${sponsorships.filter(s => !s.is_active).length}`,
-          { align: 'center' }
-        )
-        .moveDown(0.5)
-        .fontSize(7)
-        .fillColor('#999999')
-        .text(`Exported by OFSMS — ${new Date().toLocaleString()}`, { align: 'center' });
-
-      doc.end();
-    } catch (err) {
-      next(err);
-    }
-  }
-);
-
-// ─────────────────────────────────────────────────────────────────────────────
-// GET /api/reports/disbursement/:id/pdf
-// ─────────────────────────────────────────────────────────────────────────────
+// ── GET /api/reports/disbursement/:id/pdf ─────────────────────────────────────
 router.get(
   '/disbursement/:id/pdf',
   authenticate,
-  authorize('supervisor', 'finance', 'gm'),
+  authorize('gm', 'supervisor', 'finance'),
   async (req, res, next) => {
     try {
-      const listId = req.params.id;
+      const data = await getDisbursementData(req.params.id);
+      if (!data) return res.status(404).json({ error: 'الكشف غير موجود' });
 
-      // 1. Fetch the disbursement list details
-      const { rows: lists } = await query(
-        'SELECT id, month, year FROM disbursement_lists WHERE id = $1',
-        [listId]
-      );
-      if (!lists[0]) {
-        return res.status(404).json({ error: 'الكشف غير موجود' });
-      }
-      const list = lists[0];
+      const { list, items } = data;
+      const monthName = ARABIC_MONTHS[list.month] || list.month;
+      const total = items.filter(i => i.included).reduce((s, i) => s + parseFloat(i.amount), 0);
 
-      // 2. Fetch the disbursement items
-      const { rows: items } = await query(
-        `SELECT
-           COALESCE(o.full_name, f.family_name) AS beneficiary_name,
-           CASE
-             WHEN di.orphan_id IS NOT NULL THEN 'يتيم'
-             ELSE 'أسرة'
-           END AS type_ar,
-           COALESCE(go.name_ar, gf.name_ar) AS governorate_ar,
-           COALESCE(uo.full_name, uf.full_name) AS agent_name,
-           s.full_name AS sponsor_name,
-           di.amount
-         FROM disbursement_items di
-         LEFT JOIN orphans o ON o.id = di.orphan_id
-         LEFT JOIN families f ON f.id = di.family_id
-         LEFT JOIN governorates go ON go.id = o.governorate_id
-         LEFT JOIN governorates gf ON gf.id = f.governorate_id
-         LEFT JOIN users uo ON uo.id = o.agent_id
-         LEFT JOIN users uf ON uf.id = f.agent_id
-         LEFT JOIN sponsorships sp ON sp.beneficiary_id = COALESCE(o.id, f.id)
-               AND sp.beneficiary_type = CASE WHEN di.orphan_id IS NOT NULL THEN 'orphan' ELSE 'family' END
-               AND sp.is_active = TRUE
-         LEFT JOIN sponsors s ON s.id = sp.sponsor_id
-         WHERE di.list_id = $1 AND di.included = TRUE
-         ORDER BY governorate_ar ASC, agent_name ASC, beneficiary_name ASC`,
-        [listId]
-      );
+      buildPDF(res, `كشف-صرف-${monthName}-${list.year}`, (doc) => {
+        // Header
+        doc.fontSize(18).font('Helvetica-Bold')
+           .text(`Disbursement List — ${monthName} ${list.year}`, { align: 'center' });
+        doc.moveDown(0.4);
+        doc.fontSize(10).font('Helvetica')
+           .text(`Status: ${list.status}   |   Created by: ${list.created_by_name || '—'}   |   Generated: ${new Date().toLocaleDateString('en-GB')}`, { align: 'center' });
+        doc.moveDown(0.8);
 
-      const timestamp = new Date().toISOString().split('T')[0];
-      const filename  = `disbursement-${list.month}-${list.year}-${timestamp}`;
-      const totalAmount = items.reduce((sum, i) => sum + Number(i.amount || 0), 0);
+        // Summary box
+        doc.rect(40, doc.y, doc.page.width - 80, 36).fill('#f0f4f8').stroke('#e5eaf0');
+        const boxY = doc.y - 34;
+        doc.fill('#0d3d5c').fontSize(10).font('Helvetica-Bold')
+           .text(`Total beneficiaries: ${items.filter(i => i.included).length}`, 55, boxY + 10);
+        doc.text(`Total amount: ${total.toLocaleString()} YER`, 250, boxY + 10);
+        doc.moveDown(1.5);
 
-      // ── PDF GENERATION ────────────────────────────────────────────────────────
-      const doc = new PDFDocument({
-        size:    'A4',
-        layout:  'landscape',
-        margins: { top: 40, bottom: 60, left: 40, right: 40 },
-        info: {
-          Title:        `Disbursement Report - ${list.month}/${list.year}`,
-          Author:       'OFSMS',
-          CreationDate: new Date(),
-        },
-      });
-
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader(
-        'Content-Disposition',
-        `attachment; filename="${filename}.pdf"`
-      );
-      res.setHeader('X-Report-Date', timestamp);
-      res.setHeader('X-Report-Total', String(items.length));
-      doc.pipe(res);
-
-      let totalPages = 1;
-      doc.on('pageAdded', () => { totalPages++; });
-
-      // Title block
-      doc
-        .fontSize(16)
-        .text('OFSMS - Orphan & Family Sponsorship Management System', { align: 'center' })
-        .moveDown(0.3)
-        .fontSize(13)
-        .text(`Disbursement List: Month ${list.month} / Year ${list.year}`, { align: 'center' })
-        .moveDown(0.3)
-        .fontSize(9)
-        .fillColor('#555555')
-        .text(
-          `Export Date: ${timestamp}   |   Total Items: ${items.length}`,
-          { align: 'center' }
-        )
-        .fillColor('#000000')
-        .moveDown(1);
-
-      const tTop      = doc.y;
-      const pWidth    = doc.page.width - 80;
-      const cols      = [150, 50, 110, 140, 140, 100];
-      const hdrs      = ['Beneficiary', 'Type', 'Governorate', 'Sponsor', 'Agent', 'Amount (YER)'];
-      const rh        = 18;
-      const fs        = 8;
-
-      // Draw Headers
-      doc.rect(40, tTop, pWidth, rh).fill('#1B5E8C');
-      let hx = 40;
-      hdrs.forEach((h, i) => {
-        doc.fillColor('#FFFFFF').fontSize(fs).text(h, hx + 2, tTop + 5, {
-          width:    cols[i] - 4,
-          align:    'center',
-          lineBreak: false,
+        // Table header
+        const colX = [40, 180, 310, 390, 470];
+        const headers = ['Beneficiary', 'Governorate', 'Sponsor', 'Agent', 'Amount'];
+        doc.fill('#1B5E8C').rect(40, doc.y, doc.page.width - 80, 20).fill();
+        headers.forEach((h, i) => {
+          doc.fill('#ffffff').fontSize(9).font('Helvetica-Bold')
+             .text(h, colX[i], doc.y - 15, { width: colX[i + 1] ? colX[i + 1] - colX[i] - 4 : 80 });
         });
-        hx += cols[i];
-      });
+        doc.moveDown(0.3);
 
-      // Data rows
-      let rowY = tTop + rh;
-      items.forEach((item, idx) => {
-        if (rowY + rh > doc.page.height - 80) {
-          doc.addPage();
-          rowY = 40; // Reset Y for new page
-          
-          // Re-draw Headers
-          doc.rect(40, rowY, pWidth, rh).fill('#1B5E8C');
-          let cx = 40;
-          hdrs.forEach((h, i) => {
-            doc.fillColor('#FFFFFF').fontSize(fs).text(h, cx + 2, rowY + 5, {
-              width:    cols[i] - 4,
-              align:    'center',
-              lineBreak: false,
-            });
-            cx += cols[i];
+        // Table rows
+        items.filter(i => i.included).forEach((item, idx) => {
+          if (doc.y > doc.page.height - 80) doc.addPage();
+          const rowY = doc.y;
+          if (idx % 2 === 0) {
+            doc.rect(40, rowY, doc.page.width - 80, 18).fill('#fafafa').stroke('#f0f4f8');
+          }
+          const vals = [
+            item.beneficiary_name || '—',
+            item.governorate_ar   || '—',
+            item.sponsor_name     || '—',
+            item.agent_name       || '—',
+            `${parseFloat(item.amount).toLocaleString()}`,
+          ];
+          doc.fill('#1f2937').font('Helvetica').fontSize(8);
+          vals.forEach((v, i) => {
+            doc.text(v, colX[i], rowY + 4, { width: colX[i + 1] ? colX[i + 1] - colX[i] - 4 : 80, ellipsis: true });
           });
-          rowY += rh;
-        }
-
-        if (idx % 2 === 0) {
-          doc.rect(40, rowY, pWidth, rh).fill('#F0F4F8');
-        }
-
-        const cells = [
-          item.beneficiary_name || '—',
-          item.type_ar,
-          item.governorate_ar   || '—',
-          item.sponsor_name     || '—',
-          item.agent_name       || '—',
-          item.amount
-            ? `${Number(item.amount).toLocaleString()}`
-            : '—'
-        ];
-
-        let cx = 40;
-        doc.fillColor('#000000');
-        cells.forEach((cell, i) => {
-          doc.fontSize(fs).text(String(cell), cx + 2, rowY + 5, {
-            width:    cols[i] - 4,
-            align:    'center',
-            lineBreak: false,
-          });
-          cx += cols[i];
+          doc.moveDown(0.55);
         });
 
-        rowY += rh;
+        // Footer
+        doc.moveDown(1);
+        doc.fontSize(8).fill('#9ca3af')
+           .text(`OFSMS — Orphan & Family Sponsorship Management System`, { align: 'center' });
       });
-
-      // Summary footer
-      doc
-        .x = 40;
-      doc.y = Math.max(rowY + 20, doc.y);
-      
-      doc
-        .fontSize(10)
-        .fillColor('#333333')
-        .text(
-          `Total Disbursement Amount: ${totalAmount.toLocaleString()} YER`,
-          { align: 'center' }
-        );
-
-      // Add Page Numbers
-      const range = doc.bufferedPageRange(); 
-      for (let i = 0; i < totalPages; i++) {
-        doc.switchToPage(i);
-        doc
-          .fontSize(8)
-          .fillColor('#999999')
-          .text(
-            `Page ${i + 1} of ${totalPages}  |  Generated by OFSMS on ${new Date().toLocaleString()}`,
-            40,
-            doc.page.height - 40,
-            { align: 'center', width: doc.page.width - 80 }
-          );
-      }
-
-      doc.end();
     } catch (err) {
       next(err);
     }
   }
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
-// GET /api/reports/disbursement/:id/excel
-// ─────────────────────────────────────────────────────────────────────────────
+// ── GET /api/reports/disbursement/:id/excel ───────────────────────────────────
 router.get(
   '/disbursement/:id/excel',
   authenticate,
-  authorize('supervisor', 'finance', 'gm'),
+  authorize('gm', 'supervisor', 'finance'),
   async (req, res, next) => {
     try {
-      const listId = req.params.id;
+      const data = await getDisbursementData(req.params.id);
+      if (!data) return res.status(404).json({ error: 'الكشف غير موجود' });
 
-      // 1. Fetch the disbursement list details
-      const { rows: lists } = await query(
-        'SELECT id, month, year FROM disbursement_lists WHERE id = $1',
-        [listId]
-      );
-      if (!lists[0]) {
-        return res.status(404).json({ error: 'الكشف غير موجود' });
-      }
-      const list = lists[0];
+      const { list, items } = data;
+      const monthName = ARABIC_MONTHS[list.month] || list.month;
 
-      // 2. Fetch the disbursement items
-      const { rows: items } = await query(
-        `SELECT
-           COALESCE(o.full_name, f.family_name) AS beneficiary_name,
-           CASE
-             WHEN di.orphan_id IS NOT NULL THEN 'يتيم'
-             ELSE 'أسرة'
-           END AS type_ar,
-           COALESCE(go.name_ar, gf.name_ar) AS governorate_ar,
-           COALESCE(uo.full_name, uf.full_name) AS agent_name,
-           s.full_name AS sponsor_name,
-           di.amount
-         FROM disbursement_items di
-         LEFT JOIN orphans o ON o.id = di.orphan_id
-         LEFT JOIN families f ON f.id = di.family_id
-         LEFT JOIN governorates go ON go.id = o.governorate_id
-         LEFT JOIN governorates gf ON gf.id = f.governorate_id
-         LEFT JOIN users uo ON uo.id = o.agent_id
-         LEFT JOIN users uf ON uf.id = f.agent_id
-         LEFT JOIN sponsorships sp ON sp.beneficiary_id = COALESCE(o.id, f.id)
-               AND sp.beneficiary_type = CASE WHEN di.orphan_id IS NOT NULL THEN 'orphan' ELSE 'family' END
-               AND sp.is_active = TRUE
-         LEFT JOIN sponsors s ON s.id = sp.sponsor_id
-         WHERE di.list_id = $1 AND di.included = TRUE
-         ORDER BY governorate_ar ASC, agent_name ASC, beneficiary_name ASC`,
-        [listId]
-      );
+      const wb = new ExcelJS.Workbook();
+      wb.creator = 'OFSMS';
+      const ws = wb.addWorksheet(`كشف ${monthName} ${list.year}`);
 
-      const timestamp = new Date().toISOString().split('T')[0];
-      const filename  = `disbursement-${list.month}-${list.year}-${timestamp}`;
-      const totalAmount = items.reduce((sum, i) => sum + Number(i.amount || 0), 0);
-
-      // ── EXCEL GENERATION ────────────────────────────────────────────────────
-      const workbook = new ExcelJS.Workbook();
-      workbook.creator = 'OFSMS';
-      workbook.created = new Date();
-
-      const sheet = workbook.addWorksheet(`Month ${list.month} - Year ${list.year}`, {
-        views: [{ rightToLeft: true }],
-      });
-
-      sheet.columns = [
-        { header: 'المستفيد',        key: 'name',       width: 25 },
-        { header: 'النوع',           key: 'type_ar',    width: 10 },
-        { header: 'المحافظة',        key: 'gov',        width: 18 },
-        { header: 'الكافل',          key: 'sponsor',    width: 25 },
-        { header: 'المندوب',         key: 'agent',      width: 25 },
-        { header: 'المبلغ (ريال)',   key: 'amount',     width: 18 },
+      // Column widths + headers
+      ws.columns = [
+        { header: 'المستفيد',   key: 'name',        width: 28 },
+        { header: 'المحافظة',   key: 'governorate',  width: 18 },
+        { header: 'الكافل',     key: 'sponsor',      width: 22 },
+        { header: 'المندوب',    key: 'agent',        width: 20 },
+        { header: 'المبلغ',     key: 'amount',       width: 14 },
+        { header: 'مُدرَج',     key: 'included',     width: 10 },
+        { header: 'سبب الاستثناء', key: 'exclusion', width: 25 },
       ];
 
-      const headerRow = sheet.getRow(1);
-      headerRow.fill = {
-        type: 'pattern', pattern: 'solid',
-        fgColor: { argb: 'FF1B5E8C' },
-      };
-      headerRow.font      = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
-      headerRow.alignment = { horizontal: 'center' };
+      // Style header row
+      ws.getRow(1).eachCell(cell => {
+        cell.fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1B5E8C' } };
+        cell.font   = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+        cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+        cell.border = {
+          bottom: { style: 'thin', color: { argb: 'FF93C5FD' } },
+        };
+      });
+      ws.getRow(1).height = 24;
 
-      items.forEach((item) => {
-        const row = sheet.addRow({
-          name:    item.beneficiary_name || '—',
-          type_ar: item.type_ar,
-          gov:     item.governorate_ar   || '—',
-          sponsor: item.sponsor_name     || '—',
-          agent:   item.agent_name       || '—',
-          amount:  item.amount
-            ? `${Number(item.amount).toLocaleString()}`
-            : '—',
+      // Data rows
+      items.forEach((item, idx) => {
+        const row = ws.addRow({
+          name:       item.beneficiary_name || '—',
+          governorate:item.governorate_ar   || '—',
+          sponsor:    item.sponsor_name     || '—',
+          agent:      item.agent_name       || '—',
+          amount:     parseFloat(item.amount),
+          included:   item.included ? 'نعم' : 'لا',
+          exclusion:  item.exclusion_reason || '',
         });
-        row.alignment = { horizontal: 'right' };
+
+        // Alternate row bg
+        const bg = idx % 2 === 0 ? 'FFFAFAFA' : 'FFFFFFFF';
+        row.eachCell(cell => {
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
+          cell.alignment = { vertical: 'middle', wrapText: true };
+        });
+
+        // Highlight excluded rows
+        if (!item.included) {
+          row.getCell('included').font = { color: { argb: 'FFDC2626' }, bold: true };
+        }
+
+        // Format amount as number
+        const amountCell = row.getCell('amount');
+        amountCell.numFmt = '#,##0';
+        amountCell.alignment = { horizontal: 'right', vertical: 'middle' };
       });
 
-      sheet.addRow([]);
-      const sumRow = sheet.addRow({
-        agent:  `الإجمالي (${items.length} مستفيد):`,
-        amount: `${totalAmount.toLocaleString()} ر.ي`,
+      // Summary row
+      const totalRow = ws.addRow({
+        name: 'الإجمالي',
+        amount: items.filter(i => i.included).reduce((s, i) => s + parseFloat(i.amount), 0),
+        included: `${items.filter(i => i.included).length} مستفيد`,
       });
-      sumRow.font = { bold: true };
+      totalRow.eachCell(cell => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0F2FE' } };
+        cell.font = { bold: true };
+      });
 
-      sheet.views = [{ state: 'frozen', ySplit: 1, rightToLeft: true }];
+      // Freeze header + RTL view
+      ws.views = [{ state: 'frozen', ySplit: 1, rightToLeft: true }];
 
-      res.setHeader(
-        'Content-Type',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      );
-      res.setHeader(
-        'Content-Disposition',
-        `attachment; filename="${filename}.xlsx"`
-      );
-      res.setHeader('X-Report-Date', timestamp);
-      res.setHeader('X-Report-Total', String(items.length));
+      const filename = `كشف-صرف-${monthName}-${list.year}`;
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}.xlsx"`);
+      await wb.xlsx.write(res);
+      res.end();
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 
-      await workbook.xlsx.write(res);
-      return res.end();
+// ── GET /api/reports/governorate/:id/pdf ──────────────────────────────────────
+router.get(
+  '/governorate/:id/pdf',
+  authenticate,
+  authorize('gm'),
+  async (req, res, next) => {
+    try {
+      const data = await getGovernorateData(req.params.id);
+      if (!data) return res.status(404).json({ error: 'المحافظة غير موجودة' });
+
+      const { governorate, orphans } = data;
+
+      buildPDF(res, `أيتام-${governorate.name_ar}`, (doc) => {
+        // Header
+        doc.fontSize(18).font('Helvetica-Bold')
+           .text(`Orphans Report — ${governorate.name_en}`, { align: 'center' });
+        doc.moveDown(0.4);
+        doc.fontSize(10).font('Helvetica')
+           .text(`Total: ${orphans.length} orphans   |   Generated: ${new Date().toLocaleDateString('en-GB')}`, { align: 'center' });
+        doc.moveDown(0.8);
+
+        // Table header
+        const colX  = [40, 170, 220, 290, 380, 470];
+        const heads = ['Name', 'Age', 'Status', 'Sponsor', 'Agent', 'Registered'];
+        doc.fill('#1B5E8C').rect(40, doc.y, doc.page.width - 80, 20).fill();
+        heads.forEach((h, i) => {
+          doc.fill('#ffffff').fontSize(9).font('Helvetica-Bold')
+             .text(h, colX[i], doc.y - 15, { width: colX[i + 1] ? colX[i + 1] - colX[i] - 4 : 80 });
+        });
+        doc.moveDown(0.3);
+
+        orphans.forEach((o, idx) => {
+          if (doc.y > doc.page.height - 80) doc.addPage();
+          const rowY = doc.y;
+          if (idx % 2 === 0) {
+            doc.rect(40, rowY, doc.page.width - 80, 18).fill('#fafafa').stroke('#f0f4f8');
+          }
+          const vals = [
+            o.full_name                 || '—',
+            calcAge(o.date_of_birth),
+            STATUS_AR[o.status]         || o.status,
+            o.sponsor_name              || 'No sponsor',
+            o.agent_name                || '—',
+            formatDate(o.created_at),
+          ];
+          doc.fill('#1f2937').font('Helvetica').fontSize(8);
+          vals.forEach((v, i) => {
+            doc.text(v, colX[i], rowY + 4, { width: colX[i + 1] ? colX[i + 1] - colX[i] - 4 : 80, ellipsis: true });
+          });
+          doc.moveDown(0.55);
+        });
+
+        doc.moveDown(1);
+        doc.fontSize(8).fill('#9ca3af')
+           .text('OFSMS — Orphan & Family Sponsorship Management System', { align: 'center' });
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// ── GET /api/reports/governorate/:id/excel ────────────────────────────────────
+router.get(
+  '/governorate/:id/excel',
+  authenticate,
+  authorize('gm'),
+  async (req, res, next) => {
+    try {
+      const data = await getGovernorateData(req.params.id);
+      if (!data) return res.status(404).json({ error: 'المحافظة غير موجودة' });
+
+      const { governorate, orphans } = data;
+
+      const wb = new ExcelJS.Workbook();
+      wb.creator = 'OFSMS';
+      const ws = wb.addWorksheet(`أيتام ${governorate.name_ar}`);
+
+      ws.columns = [
+        { header: 'الاسم الكامل',    key: 'name',       width: 28 },
+        { header: 'الجنس',           key: 'gender',     width: 10 },
+        { header: 'العمر',           key: 'age',        width: 12 },
+        { header: 'الحالة',          key: 'status',     width: 18 },
+        { header: 'موهوب',           key: 'gifted',     width: 10 },
+        { header: 'الكافل',          key: 'sponsor',    width: 24 },
+        { header: 'المندوب',         key: 'agent',      width: 20 },
+        { header: 'تاريخ التسجيل',   key: 'registered', width: 18 },
+      ];
+
+      // Header row style
+      ws.getRow(1).eachCell(cell => {
+        cell.fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1B5E8C' } };
+        cell.font   = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      });
+      ws.getRow(1).height = 24;
+
+      // Data
+      orphans.forEach((o, idx) => {
+        const row = ws.addRow({
+          name:       o.full_name,
+          gender:     o.gender === 'female' ? 'أنثى' : 'ذكر',
+          age:        calcAge(o.date_of_birth),
+          status:     STATUS_AR[o.status] || o.status,
+          gifted:     o.is_gifted ? 'نعم ⭐' : 'لا',
+          sponsor:    o.sponsor_name || 'بدون كافل',
+          agent:      o.agent_name   || '—',
+          registered: o.created_at ? new Date(o.created_at).toLocaleDateString('ar-EG') : '—',
+        });
+
+        const bg = idx % 2 === 0 ? 'FFFAFAFA' : 'FFFFFFFF';
+        row.eachCell(cell => {
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
+          cell.alignment = { vertical: 'middle' };
+        });
+
+        // Color-code status
+        const statusCell = row.getCell('status');
+        const statusColors = {
+          'تحت الكفالة':  '22c55e',
+          'تحت التسويق':  '3b82f6',
+          'قيد المراجعة': 'f59e0b',
+          'مرفوض':        'ef4444',
+        };
+        const col = statusColors[STATUS_AR[o.status]];
+        if (col) statusCell.font = { color: { argb: `FF${col}` }, bold: true };
+
+        // No sponsor → grey
+        if (!o.sponsor_name) {
+          row.getCell('sponsor').font = { color: { argb: 'FF9CA3AF' }, italic: true };
+        }
+      });
+
+      // Freeze + RTL
+      ws.views = [{ state: 'frozen', ySplit: 1, rightToLeft: true }];
+
+      // Auto-filter
+      ws.autoFilter = { from: 'A1', to: `H1` };
+
+      const filename = `أيتام-${governorate.name_ar}`;
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}.xlsx"`);
+      await wb.xlsx.write(res);
+      res.end();
     } catch (err) {
       next(err);
     }

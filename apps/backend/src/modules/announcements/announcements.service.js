@@ -1,3 +1,5 @@
+// In announcements.service.js
+const { sendBulkNotification } = require('../notifications/notifications.service');
 const { query } = require('../../config/db');
 
 const createAnnouncement = async ({ title, body, createdBy }) => {
@@ -7,9 +9,27 @@ const createAnnouncement = async ({ title, body, createdBy }) => {
      RETURNING *`,
     [title, body, createdBy]
   );
-  return rows[0];
-};
+  const announcement = rows[0];
 
+  // NEW: Notify all active staff users
+  const { rows: users } = await query(
+    `SELECT id FROM users WHERE is_active = TRUE AND id != $1`,
+    [createdBy]
+  );
+  const userIds = users.map(u => u.id);
+
+  if (userIds.length > 0) {
+    await sendBulkNotification(
+      userIds,
+      `📢 إعلان جديد: ${title}`,
+      body,
+      { link: '/announcements', announcementId: announcement.id },
+      'announcement'
+    );
+  }
+
+  return announcement;
+};
 const getActiveAnnouncements = async () => {
   const { rows } = await query(
     `SELECT a.id, a.title, a.body, a.published_at, a.is_active,

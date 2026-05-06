@@ -172,7 +172,7 @@ export default function AppShell({ children }) {
           <div className="flex items-center gap-3">
             {/* Notification bell placeholder */}
             <button className="relative p-2 rounded-xl hover:bg-gray-100 transition text-gray-500">
-              🔔
+              🔔             
             </button>
             <div className="text-sm text-gray-500">
               {new Date().toLocaleDateString('ar-YE', { dateStyle: 'medium' })}
