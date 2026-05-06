@@ -13,45 +13,46 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import useAuthStore from '../store/useAuthStore';
 import api from '../lib/api';
+import NotificationBell from './NotificationBell';
 
 // ── Nav items per role ────────────────────────────────────────────────────────
 const NAV_ITEMS = {
   gm: [
-    { label: 'لوحة التحكم',     href: '/dashboard',          icon: '📊' },
-    { label: 'الأيتام',          href: '/orphans',             icon: '👦' },
-    { label: 'الأسر',            href: '/families',            icon: '👨‍👩‍👧' },
-    { label: 'مجمع التسويق',    href: '/marketing-pool',      icon: '🏷️' },
-    { label: 'الكفلاء',          href: '/sponsors',            icon: '🤝' },
-    { label: 'الأيتام الموهوبون', href: '/orphans/gifted',             icon: '🌟' },
-    { label: 'تحليلات المحافظات', href: '/governorates',       icon: '🗺️' },
-    { label: 'إدارة المستخدمين', href: '/users',               icon: '👥' },
-    { label: 'الإعلانات',        href: '/announcements',       icon: '📢' },
-    { label: 'إعدادات الحفظ',   href: '/quran-thresholds',    icon: '📖' },
-    { label: 'التقارير',         href: '/reports',             icon: '📄' },
+    { label: 'لوحة التحكم',      href: '/dashboard',        icon: '📊' },
+    { label: 'الأيتام',           href: '/orphans',           icon: '👦' },
+    { label: 'الأسر',             href: '/families',          icon: '👨‍👩‍👧' },
+    { label: 'مجمع التسويق',     href: '/marketing-pool',    icon: '🏷️' },
+    { label: 'الكفلاء',           href: '/sponsors',          icon: '🤝' },
+    { label: 'الأيتام الموهوبون', href: '/orphans/gifted',    icon: '🌟' },
+    { label: 'تحليلات المحافظات', href: '/governorates',      icon: '🗺️' },
+    { label: 'إدارة المستخدمين', href: '/users',              icon: '👥' },
+    { label: 'الإعلانات',         href: '/announcements',     icon: '📢' },
+    { label: 'إعدادات الحفظ',    href: '/quran-thresholds',  icon: '📖' },
+    { label: 'التقارير',          href: '/reports',           icon: '📄' },
   ],
   supervisor: [
-    { label: 'لوحة التحكم', href: '/dashboard', icon: '📊' },    
-    { label: 'طلبات التسجيل',   href: '/registrations',       icon: '📋' },
-    { label: 'تقارير الحفظ',    href: '/quran-reports',       icon: '📖' },
-    { label: 'كشف الصرف',       href: '/disbursements',       icon: '💰' },
-    { label: 'التقارير',         href: '/reports',             icon: '📄' },
+    { label: 'لوحة التحكم',    href: '/dashboard',      icon: '📊' },
+    { label: 'طلبات التسجيل',  href: '/registrations',  icon: '📋' },
+    { label: 'تقارير الحفظ',   href: '/quran-reports',  icon: '📖' },
+    { label: 'كشف الصرف',      href: '/disbursements/',  icon: '💰' },
+    { label: 'التقارير',        href: '/reports',        icon: '📄' },
   ],
   agent: [
-    { label: 'لوحة التحكم',     href: '/dashboard',           icon: '📊' },
-    { label: 'أيتامي',           href: '/my-orphans',          icon: '👦' },
-    { label: 'تسجيل يتيم',      href: '/orphans/new',         icon: '➕' },
-    { label: 'تسجيل أسرة',      href: '/families/new',        icon: '➕' },
-    { label: 'رفع تقرير الحفظ', href: '/quran-reports/new',   icon: '📖' },
+    { label: 'لوحة التحكم',     href: '/dashboard',         icon: '📊' },
+    { label: 'أيتامي',           href: '/my-orphans',        icon: '👦' },
+    { label: 'تسجيل يتيم',      href: '/orphans/new',       icon: '➕' },
+    { label: 'تسجيل أسرة',      href: '/families/new',      icon: '➕' },
+    { label: 'رفع تقرير الحفظ', href: '/quran-reports/new', icon: '📖' },
   ],
   finance: [
-    { label: 'لوحة التحكم',     href: '/dashboard',           icon: '📊' },
-    { label: 'كشف الصرف',       href: '/disbursements',       icon: '💰' },
-    { label: 'سجل الإصدارات',   href: '/disbursements/history', icon: '🗂️' },
-    { label: 'التقارير',         href: '/reports',             icon: '📄' },
+    { label: 'لوحة التحكم',   href: '/dashboard',             icon: '📊' },
+    { label: 'كشف الصرف',     href: '/disbursements',         icon: '💰' },
+    { label: 'سجل الإصدارات', href: '/disbursements/history', icon: '🗂️' },
+    { label: 'التقارير',       href: '/reports',               icon: '📄' },
   ],
 };
 
-// ── Role labels in Arabic ────────────────────────────────────────────────────
+// ── Role labels in Arabic ─────────────────────────────────────────────────────
 const ROLE_LABELS = {
   gm:         'المدير العام',
   supervisor: 'مشرف الأيتام',
@@ -170,10 +171,9 @@ export default function AppShell({ children }) {
             {navItems.find((i) => i.href === pathname)?.label || 'نظام إدارة الأيتام والأسر'}
           </h1>
           <div className="flex items-center gap-3">
-            {/* Notification bell placeholder */}
-            <button className="relative p-2 rounded-xl hover:bg-gray-100 transition text-gray-500">
-              🔔             
-            </button>
+            {/* ── Real notification bell ── */}
+            <NotificationBell />
+
             <div className="text-sm text-gray-500">
               {new Date().toLocaleDateString('ar-YE', { dateStyle: 'medium' })}
             </div>

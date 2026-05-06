@@ -1,7 +1,4 @@
-/**
- * disbursements.routes.js
- * Mounted at: /api/disbursements
- */
+// apps/backend/src/modules/disbursements/disbursements.routes.js
 
 const { Router } = require('express');
 const { body } = require('express-validator');
@@ -10,7 +7,7 @@ const controller = require('./disbursements.controller');
 
 const router = Router();
 
-// ── GET /api/disbursements — list all disbursement lists
+// GET /api/disbursements
 router.get(
   '/',
   authenticate,
@@ -18,7 +15,7 @@ router.get(
   controller.getDisbursementLists
 );
 
-// ── POST /api/disbursements/generate — generate current month list (GM/Supervisor)
+// POST /api/disbursements/generate
 router.post(
   '/generate',
   authenticate,
@@ -26,7 +23,7 @@ router.post(
   controller.generateDisbursementList
 );
 
-// ── GET /api/disbursements/:id — get single list with items
+// GET /api/disbursements/:id
 router.get(
   '/:id',
   authenticate,
@@ -34,7 +31,7 @@ router.get(
   controller.getDisbursementById
 );
 
-// ── PATCH /api/disbursements/:id/approve — supervisor approves list
+// PATCH /api/disbursements/:id/approve (original)
 router.patch(
   '/:id/approve',
   authenticate,
@@ -42,7 +39,15 @@ router.patch(
   controller.supervisorApprove
 );
 
-// ── PATCH /api/disbursements/:id/reject — supervisor rejects list
+// PATCH /api/disbursements/:id/supervisor-approve (alias used by frontend)
+router.patch(
+  '/:id/supervisor-approve',
+  authenticate,
+  authorize('supervisor', 'gm'),
+  controller.supervisorApprove
+);
+
+// PATCH /api/disbursements/:id/reject (original)
 router.patch(
   '/:id/reject',
   authenticate,
@@ -51,7 +56,16 @@ router.patch(
   controller.supervisorReject
 );
 
-// ── PATCH /api/disbursements/:id/finance-approve — finance approves
+// PATCH /api/disbursements/:id/supervisor-reject (alias used by frontend)
+router.patch(
+  '/:id/supervisor-reject',
+  authenticate,
+  authorize('supervisor', 'gm'),
+  [body('notes').notEmpty().withMessage('ملاحظات الرفض مطلوبة')],
+  controller.supervisorReject
+);
+
+// PATCH /api/disbursements/:id/finance-approve
 router.patch(
   '/:id/finance-approve',
   authenticate,
@@ -59,7 +73,7 @@ router.patch(
   controller.financeApprove
 );
 
-// ── PATCH /api/disbursements/:id/finance-reject — finance rejects
+// PATCH /api/disbursements/:id/finance-reject
 router.patch(
   '/:id/finance-reject',
   authenticate,
@@ -68,9 +82,17 @@ router.patch(
   controller.financeReject
 );
 
-// ── PATCH /api/disbursements/:id/release — GM releases funds
+// PATCH /api/disbursements/:id/release
 router.patch(
   '/:id/release',
+  authenticate,
+  authorize('gm'),
+  controller.gmRelease
+);
+
+// PATCH /api/disbursements/:id/gm-release (alias used by frontend)
+router.patch(
+  '/:id/gm-release',
   authenticate,
   authorize('gm'),
   controller.gmRelease

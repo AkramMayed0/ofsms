@@ -1,384 +1,571 @@
 'use client';
 
 /**
- * page.jsx
- * Route:  /reports  (GM only)
- * Task:   feature/ui-export-buttons
+ * Route: /reports  (GM + Supervisor + Finance)
  *
- * FIX: api.baseURL = http://localhost:4000/api
- * So paths must NOT include /api prefix:
- *   WRONG: api.get('/api/reports/...') → .../api/api/reports → 404
- *   RIGHT: api.get('/reports/...')     → .../api/reports    → 200
+ * Tabs:
+ *   1. كشوف الصرف  — select one or more → export PDF / Excel
+ *   2. المحافظات   — select one → export orphan list PDF / Excel
+ *
+ * All styles are inline JS objects to avoid styled-jsx cross-component issues.
+ * Fully responsive (stacks on mobile).
  */
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
 
+// ── Status labels ─────────────────────────────────────────────────────────────
+const DISB_STATUS = {
+  draft:               { label: 'مسودة',        color: '#92400E', bg: '#FEF3C7' },
+  supervisor_approved: { label: 'اعتمد المشرف', color: '#1E40AF', bg: '#EFF6FF' },
+  finance_approved:    { label: 'اعتمد المالي', color: '#5B21B6', bg: '#F5F3FF' },
+  released:            { label: 'مُصدَر',        color: '#065F46', bg: '#ECFDF5' },
+  rejected:            { label: 'مرفوض',         color: '#991B1B', bg: '#FEF2F2' },
+};
+
+const ARABIC_MONTHS = [
+  '', 'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+  'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
+];
+
 // ── Download helper ───────────────────────────────────────────────────────────
-const downloadBlob = async (path, filename) => {
-  const response = await api.get(path, { responseType: 'blob' });
-  const contentType = response.headers['content-type'] || 'application/octet-stream';
-  const blob = new Blob([response.data], { type: contentType });
-  const href = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = href;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(href), 1000);
+const downloadFile = async (url, filename, ext) => {
+  const res  = await api.get(url, { responseType: 'blob' });
+  const blob = new Blob([res.data], {
+    type: ext === 'pdf'
+      ? 'application/pdf'
+      : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+  const link    = document.createElement('a');
+  link.href     = URL.createObjectURL(blob);
+  link.download = `${filename}.${ext}`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
 };
 
-const extractError = async (err) => {
-  if (err.response?.data instanceof Blob) {
-    try {
-      const text = await err.response.data.text();
-      return JSON.parse(text).error;
-    } catch { /* ignore */ }
-  }
-  return err.response?.data?.error || err.message || 'فشل التنزيل';
-};
-
-// ── Format Picker ─────────────────────────────────────────────────────────────
-function FormatPicker({ value, onChange }) {
+// ── Reusable Export Action Bar ────────────────────────────────────────────────
+function ExportBar({ selectedCount, onExportPdf, onExportExcel, pdfLoading, excelLoading, label }) {
+  const busy = pdfLoading || excelLoading;
   return (
-    <div className="format-row">
-      {[
-        { val: 'excel', icon: '📊', label: 'Excel (.xlsx)', hint: 'موصى به' },
-        { val: 'pdf',   icon: '📄', label: 'PDF',           hint: 'للطباعة'  },
-      ].map(({ val, icon, label, hint }) => (
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      flexWrap: 'wrap', gap: '.75rem',
+      padding: '.75rem 1.1rem',
+      background: selectedCount > 0 ? 'linear-gradient(90deg,#f0f7ff,#e8f4ff)' : '#f8fafc',
+      borderBottom: '1px solid #e5eaf0', transition: 'background .2s',
+    }}>
+      <span style={{ fontSize: '.83rem', fontWeight: 700, color: selectedCount > 0 ? '#1B5E8C' : '#9ca3af' }}>
+        {selectedCount > 0
+          ? `✓ تم تحديد ${selectedCount} ${label}`
+          : `اختر ${label} للتصدير`}
+      </span>
+      <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+        {selectedCount > 1 && (
+          <span style={{ fontSize: '.72rem', color: '#9ca3af', background: '#fff', border: '1px solid #e5eaf0', borderRadius: '.5rem', padding: '.2rem .6rem' }}>
+            سيتم تنزيل {selectedCount} ملفات
+          </span>
+        )}
         <button
-          key={val}
-          type="button"
-          className={`format-btn ${value === val ? 'format-btn-active' : ''}`}
-          onClick={() => onChange(val)}
+          onClick={onExportExcel}
+          disabled={selectedCount === 0 || busy}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: '.35rem',
+            padding: '.5rem 1rem', fontSize: '.82rem', fontWeight: 700,
+            border: '1.5px solid #86efac', borderRadius: '.625rem',
+            background: selectedCount === 0 ? '#f9fafb' : '#f0fdf4',
+            color: selectedCount === 0 ? '#9ca3af' : '#16a34a',
+            cursor: selectedCount === 0 || busy ? 'not-allowed' : 'pointer',
+            fontFamily: 'Cairo,sans-serif', transition: 'all .15s',
+            opacity: busy && !excelLoading ? .5 : 1,
+          }}
         >
-          <span className="fmt-icon">{icon}</span>
-          <span className="fmt-label">{label}</span>
-          <span className="fmt-hint">{hint}</span>
+          {excelLoading ? <MiniSpinner color="#16a34a" /> : '📊'}
+          {excelLoading ? 'جارٍ التصدير…' : 'Excel'}
         </button>
+        <button
+          onClick={onExportPdf}
+          disabled={selectedCount === 0 || busy}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: '.35rem',
+            padding: '.5rem 1rem', fontSize: '.82rem', fontWeight: 700,
+            border: '1.5px solid #fca5a5', borderRadius: '.625rem',
+            background: selectedCount === 0 ? '#f9fafb' : '#fef2f2',
+            color: selectedCount === 0 ? '#9ca3af' : '#dc2626',
+            cursor: selectedCount === 0 || busy ? 'not-allowed' : 'pointer',
+            fontFamily: 'Cairo,sans-serif', transition: 'all .15s',
+            opacity: busy && !pdfLoading ? .5 : 1,
+          }}
+        >
+          {pdfLoading ? <MiniSpinner color="#dc2626" /> : '📄'}
+          {pdfLoading ? 'جارٍ التصدير…' : 'PDF'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── MiniSpinner ───────────────────────────────────────────────────────────────
+function MiniSpinner({ color = '#1B5E8C' }) {
+  return (
+    <span style={{
+      display: 'inline-block', width: 13, height: 13, flexShrink: 0,
+      border: `2px solid ${color}30`, borderTopColor: color,
+      borderRadius: '50%', animation: 'rp-spin .7s linear infinite',
+    }} />
+  );
+}
+
+// ── Skeleton row ──────────────────────────────────────────────────────────────
+function SkeletonRows({ count = 5 }) {
+  return (
+    <>
+      {Array.from({ length: count }).map((_, i) => (
+        <tr key={i}>
+          {Array.from({ length: 5 }).map((__, j) => (
+            <td key={j} style={{ padding: '.75rem 1rem', borderBottom: '1px solid #f8fafc' }}>
+              <div style={{ height: 14, borderRadius: 4, background: 'linear-gradient(90deg,#f3f4f6 25%,#e5e7eb 50%,#f3f4f6 75%)', backgroundSize: '200% 100%', animation: 'rp-spin 1.4s infinite', width: `${60 + (i + j) * 7}%` }} />
+            </td>
+          ))}
+        </tr>
       ))}
+    </>
+  );
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function Toast({ msg, type = 'error', onClose }) {
+  const colors = type === 'success'
+    ? { bg: '#ecfdf5', border: '#6ee7b7', text: '#065f46' }
+    : { bg: '#fef2f2', border: '#fecaca', text: '#b91c1c' };
+  return (
+    <div style={{
+      position: 'fixed', top: '1.5rem', left: '50%', transform: 'translateX(-50%)',
+      zIndex: 2000, background: colors.bg, border: `1px solid ${colors.border}`,
+      color: colors.text, borderRadius: '.75rem', padding: '.8rem 1.5rem',
+      fontWeight: 600, fontSize: '.85rem', boxShadow: '0 4px 20px rgba(0,0,0,.12)',
+      display: 'flex', alignItems: 'center', gap: '.75rem', animation: 'rp-fadein .25s ease',
+      fontFamily: 'Cairo,sans-serif',
+    }}>
+      {msg}
+      <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.text, fontWeight: 800, padding: 0, fontSize: '1rem', lineHeight: 1 }}>✕</button>
     </div>
   );
 }
 
-// ── Governorate Report Card ───────────────────────────────────────────────────
-function GovernorateReportCard({ governorates, loading }) {
-  const [govId,   setGovId]   = useState('');
-  const [format,  setFormat]  = useState('excel');
-  const [busy,    setBusy]    = useState(false);
-  const [error,   setError]   = useState('');
-  const [success, setSuccess] = useState('');
+// ── Tab: Disbursements ────────────────────────────────────────────────────────
+function DisbursementsTab() {
+  const [lists, setLists]       = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [selected, setSelected] = useState(new Set());
+  const [search, setSearch]     = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [pdfLoading, setPdfLoading]     = useState(false);
+  const [excelLoading, setExcelLoading] = useState(false);
+  const [toast, setToast]               = useState(null);
 
-  const selectedGov = governorates.find(g => String(g.id) === String(govId));
+  useEffect(() => {
+    api.get('/disbursements')
+      .then(({ data }) => setLists(data.lists || []))
+      .catch(() => setToast({ msg: 'تعذّر تحميل كشوف الصرف', type: 'error' }))
+      .finally(() => setLoading(false));
+  }, []);
 
-  const handleExport = async () => {
-    if (!govId) { setError('يرجى اختيار المحافظة أولاً'); return; }
-    setBusy(true); setError(''); setSuccess('');
+  const filtered = lists.filter(l => {
+    const monthName = ARABIC_MONTHS[l.month] || '';
+    const matchSearch = !search ||
+      monthName.includes(search) ||
+      String(l.year).includes(search) ||
+      (l.created_by_name || '').includes(search);
+    const matchStatus = statusFilter === 'all' || l.status === statusFilter;
+    return matchSearch && matchStatus;
+  });
+
+  const toggleAll = () => {
+    if (selected.size === filtered.length && filtered.length > 0) setSelected(new Set());
+    else setSelected(new Set(filtered.map(l => l.id)));
+  };
+
+  const toggle = (id) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const selectedLists = lists.filter(l => selected.has(l.id));
+
+  const doExport = async (ext, setLoading) => {
+    setLoading(true);
     try {
-      const ext  = format === 'excel' ? 'xlsx' : 'pdf';
-      const slug = selectedGov?.name_en?.replace(/\s+/g, '-') || `gov-${govId}`;
-      const date = new Date().toISOString().split('T')[0];
-      // ✅ correct path — no /api prefix
-      await downloadBlob(`/reports/governorate/${govId}?format=${format}`, `governorate-${slug}-${date}.${ext}`);
-      setSuccess('✅ تم تنزيل التقرير بنجاح');
-      setTimeout(() => setSuccess(''), 4000);
-    } catch (err) {
-      setError(await extractError(err));
-    } finally { setBusy(false); }
+      for (const list of selectedLists) {
+        const monthName = ARABIC_MONTHS[list.month] || list.month;
+        await downloadFile(
+          `/reports/disbursement/${list.id}/${ext}`,
+          `كشف-صرف-${monthName}-${list.year}`,
+          ext
+        );
+        // Small delay between multiple downloads
+        if (selectedLists.length > 1) await new Promise(r => setTimeout(r, 600));
+      }
+      setToast({ msg: `✅ تم تصدير ${selectedLists.length} ملف بنجاح`, type: 'success' });
+    } catch {
+      setToast({ msg: 'فشل التصدير — تأكد من صلاحياتك وحاول مجدداً', type: 'error' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="report-card">
-      <div className="card-header">
-        <div className="card-icon">🗺️</div>
-        <div>
-          <h2 className="card-title">تقرير المحافظة</h2>
-          <p className="card-sub">بيانات الأيتام مع معلومات الكفالة والمندوبين</p>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+      {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
+
+      {/* Toolbar */}
+      <div style={{ display: 'flex', gap: '.65rem', flexWrap: 'wrap', alignItems: 'center', padding: '1rem', borderBottom: '1px solid #f0f4f8' }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: 180 }}>
+          <span style={{ position: 'absolute', right: '.75rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>🔍</span>
+          <input
+            style={{ width: '100%', border: '1.5px solid #d1d5db', borderRadius: '.625rem', padding: '.55rem .85rem .55rem 2rem', paddingRight: '2.2rem', fontSize: '.83rem', fontFamily: 'Cairo,sans-serif', background: '#fafafa', outline: 'none', boxSizing: 'border-box' }}
+            placeholder="ابحث بالشهر أو السنة أو المُنشئ…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+          {search && (
+            <button onClick={() => setSearch('')} style={{ position: 'absolute', left: '.6rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af' }}>✕</button>
+          )}
+        </div>
+        <div style={{ display: 'flex', gap: '.35rem', flexWrap: 'wrap' }}>
+          {[{ key: 'all', label: 'الكل' }, ...Object.entries(DISB_STATUS).map(([k, v]) => ({ key: k, label: v.label }))].map(({ key, label }) => (
+            <button key={key}
+              onClick={() => setStatusFilter(key)}
+              style={{ padding: '.35rem .75rem', border: `1.5px solid ${statusFilter === key ? '#1B5E8C' : '#e5eaf0'}`, borderRadius: '2rem', fontSize: '.73rem', fontWeight: 600, color: statusFilter === key ? '#fff' : '#6b7280', background: statusFilter === key ? '#1B5E8C' : '#fff', cursor: 'pointer', fontFamily: 'Cairo,sans-serif', transition: 'all .15s' }}>
+              {label}
+            </button>
+          ))}
         </div>
       </div>
-      <div className="card-body">
-        <div className="field-group">
-          <label className="lbl">اختر المحافظة <span className="req">*</span></label>
-          {loading ? <div className="skel-inp" /> : (
-            <select className={`inp sel ${!govId && error ? 'inp-err' : ''}`} value={govId}
-              onChange={e => { setGovId(e.target.value); setError(''); setSuccess(''); }}>
-              <option value="">-- اختر المحافظة --</option>
-              {governorates.map(g => (
-                <option key={g.id} value={g.id}>{g.name_ar} ({g.name_en})</option>
+
+      {/* Export bar */}
+      <ExportBar
+        selectedCount={selected.size}
+        label="كشف صرف"
+        pdfLoading={pdfLoading}
+        excelLoading={excelLoading}
+        onExportPdf={() => doExport('pdf', setPdfLoading)}
+        onExportExcel={() => doExport('xlsx', setExcelLoading)}
+      />
+
+      {/* Table */}
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.82rem' }}>
+          <thead>
+            <tr style={{ background: '#f8fafc', position: 'sticky', top: 0, zIndex: 1 }}>
+              <th style={{ width: 44, padding: '.75rem 1rem', textAlign: 'center', borderBottom: '2px solid #e5eaf0' }}>
+                <input type="checkbox" style={{ width: 16, height: 16, accentColor: '#1B5E8C', cursor: 'pointer' }}
+                  checked={selected.size === filtered.length && filtered.length > 0}
+                  ref={el => { if (el) el.indeterminate = selected.size > 0 && selected.size < filtered.length; }}
+                  onChange={toggleAll} />
+              </th>
+              {['الفترة', 'الحالة', 'المستفيدون', 'الإجمالي', 'أنشأه', 'تاريخ الإنشاء'].map(h => (
+                <th key={h} style={{ padding: '.75rem 1rem', textAlign: 'right', fontSize: '.73rem', fontWeight: 700, color: '#6b7a8d', whiteSpace: 'nowrap', borderBottom: '2px solid #e5eaf0' }}>{h}</th>
               ))}
-            </select>
-          )}
-        </div>
-
-        {selectedGov && (
-          <div className="preview">
-            <span>🗺️</span>
-            <strong>{selectedGov.name_ar}</strong>
-            <span className="sep">·</span>
-            <span>{selectedGov.name_en}</span>
-          </div>
-        )}
-
-        <div className="field-group">
-          <label className="lbl">تنسيق الملف</label>
-          <FormatPicker value={format} onChange={setFormat} />
-        </div>
-
-        <div className="info-box">
-          <span>ℹ</span>
-          <span>يشمل: الاسم، الجنس، العمر، الحالة، الوصي، الكافل، المبلغ الشهري، المندوب، تاريخ التسجيل</span>
-        </div>
-
-        {error   && <div className="err-banner">⚠ {error}</div>}
-        {success && <div className="ok-banner">{success}</div>}
-
-        <button className="btn-export" onClick={handleExport} disabled={busy || loading || !govId}>
-          {busy ? <><span className="spin" /> جارٍ إنشاء التقرير…</> : format === 'pdf' ? <>📄 تنزيل PDF</> : <>📊 تنزيل Excel</>}
-        </button>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? <SkeletonRows count={5} /> :
+             filtered.length === 0 ? (
+              <tr><td colSpan={7} style={{ padding: '3rem', textAlign: 'center', color: '#9ca3af', fontSize: '.85rem' }}>
+                {lists.length === 0 ? '📭 لا توجد كشوف صرف بعد' : '🔍 لا توجد نتائج مطابقة'}
+              </td></tr>
+            ) : filtered.map((list, idx) => {
+              const cfg  = DISB_STATUS[list.status] || DISB_STATUS.draft;
+              const isSel = selected.has(list.id);
+              return (
+                <tr key={list.id}
+                  onClick={() => toggle(list.id)}
+                  style={{ background: isSel ? '#f0f7ff' : idx % 2 === 0 ? '#fff' : '#fafafa', cursor: 'pointer', transition: 'background .1s' }}
+                  onMouseEnter={e => { if (!isSel) e.currentTarget.style.background = '#f8fbff'; }}
+                  onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = idx % 2 === 0 ? '#fff' : '#fafafa'; }}
+                >
+                  <td style={{ textAlign: 'center', padding: '.75rem 1rem', borderBottom: '1px solid #f0f4f8' }}
+                    onClick={e => e.stopPropagation()}>
+                    <input type="checkbox" style={{ width: 16, height: 16, accentColor: '#1B5E8C', cursor: 'pointer' }}
+                      checked={isSel} onChange={() => toggle(list.id)} />
+                  </td>
+                  <td style={{ padding: '.75rem 1rem', borderBottom: '1px solid #f0f4f8' }}>
+                    <div style={{ fontWeight: 700, color: '#0d3d5c', fontSize: '.87rem' }}>
+                      {ARABIC_MONTHS[list.month]} {list.year}
+                    </div>
+                  </td>
+                  <td style={{ padding: '.75rem 1rem', borderBottom: '1px solid #f0f4f8' }}>
+                    <span style={{ fontSize: '.72rem', fontWeight: 700, padding: '.2rem .65rem', borderRadius: '2rem', background: cfg.bg, color: cfg.color, whiteSpace: 'nowrap' }}>
+                      {cfg.label}
+                    </span>
+                  </td>
+                  <td style={{ padding: '.75rem 1rem', borderBottom: '1px solid #f0f4f8', color: '#6b7280', fontSize: '.82rem' }}>
+                    {parseInt(list.total_items || 0)} مستفيد
+                  </td>
+                  <td style={{ padding: '.75rem 1rem', borderBottom: '1px solid #f0f4f8', fontWeight: 700, color: '#1B5E8C', fontSize: '.82rem' }}>
+                    {parseFloat(list.total_amount || 0).toLocaleString('ar-YE')} ر.ي
+                  </td>
+                  <td style={{ padding: '.75rem 1rem', borderBottom: '1px solid #f0f4f8', color: '#6b7280', fontSize: '.8rem' }}>
+                    {list.created_by_name || '—'}
+                  </td>
+                  <td style={{ padding: '.75rem 1rem', borderBottom: '1px solid #f0f4f8', color: '#9ca3af', fontSize: '.77rem', whiteSpace: 'nowrap' }}>
+                    {list.created_at ? new Date(list.created_at).toLocaleDateString('ar-YE', { dateStyle: 'medium' }) : '—'}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
+
+      {/* Footer count */}
+      {!loading && (
+        <div style={{ padding: '.6rem 1rem', fontSize: '.75rem', color: '#9ca3af', borderTop: '1px solid #f0f4f8', background: '#fafafa', flexShrink: 0 }}>
+          {filtered.length} كشف{selected.size > 0 ? ` · ${selected.size} مختار` : ''}
+        </div>
+      )}
     </div>
   );
 }
 
-// ── Sponsor Report Card ───────────────────────────────────────────────────────
-function SponsorReportCard({ sponsors, loading }) {
-  const [sponsorId, setSponsorId] = useState('');
-  const [format,    setFormat]    = useState('excel');
-  const [busy,      setBusy]      = useState(false);
-  const [error,     setError]     = useState('');
-  const [success,   setSuccess]   = useState('');
-  const [search,    setSearch]    = useState('');
+// ── Tab: Governorates ─────────────────────────────────────────────────────────
+function GovernoratesTab() {
+  const [govs, setGovs]         = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [selected, setSelected] = useState(new Set());
+  const [search, setSearch]     = useState('');
+  const [pdfLoading, setPdfLoading]     = useState(false);
+  const [excelLoading, setExcelLoading] = useState(false);
+  const [toast, setToast]               = useState(null);
 
-  const filtered = sponsors.filter(s =>
-    !search || s.full_name?.includes(search) || (s.email || '').toLowerCase().includes(search.toLowerCase())
+  useEffect(() => {
+    Promise.all([api.get('/governorates'), api.get('/dashboard/gm')])
+      .then(([govsRes, dashRes]) => {
+        const stats = dashRes.data.orphans_per_governorate || [];
+        const merged = (govsRes.data.data || []).map(g => {
+          const stat = stats.find(s => s.governorate_ar === g.name_ar);
+          return { id: g.id, name_ar: g.name_ar, name_en: g.name_en, count: stat ? parseInt(stat.count) : 0 };
+        }).sort((a, b) => b.count - a.count);
+        setGovs(merged);
+      })
+      .catch(() => setToast({ msg: 'تعذّر تحميل المحافظات', type: 'error' }))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = govs.filter(g =>
+    !search || g.name_ar.includes(search) || g.name_en?.toLowerCase().includes(search.toLowerCase())
   );
-  const selected = sponsors.find(s => s.id === sponsorId);
 
-  const handleExport = async () => {
-    if (!sponsorId) { setError('يرجى اختيار الكافل أولاً'); return; }
-    setBusy(true); setError(''); setSuccess('');
+  const toggle = (id) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    const withOrphans = filtered.filter(g => g.count > 0);
+    if (selected.size === withOrphans.length && withOrphans.length > 0) setSelected(new Set());
+    else setSelected(new Set(withOrphans.map(g => g.id)));
+  };
+
+  const selectedGovs = govs.filter(g => selected.has(g.id));
+  const withOrphans  = filtered.filter(g => g.count > 0);
+  const maxCount     = Math.max(...govs.map(g => g.count), 1);
+
+  const doExport = async (ext, setLoading) => {
+    setLoading(true);
     try {
-      const ext  = format === 'excel' ? 'xlsx' : 'pdf';
-      const slug = selected?.full_name?.replace(/\s+/g, '-') || sponsorId.slice(0, 8);
-      const date = new Date().toISOString().split('T')[0];
-      // ✅ correct path — no /api prefix
-      await downloadBlob(`/reports/sponsor/${sponsorId}?format=${format}`, `sponsor-${slug}-${date}.${ext}`);
-      setSuccess('✅ تم تنزيل ملف الكافل بنجاح');
-      setTimeout(() => setSuccess(''), 4000);
-    } catch (err) {
-      setError(await extractError(err));
-    } finally { setBusy(false); }
+      for (const gov of selectedGovs) {
+        await downloadFile(
+          `/reports/governorate/${gov.id}/${ext}`,
+          `أيتام-${gov.name_ar}`,
+          ext
+        );
+        if (selectedGovs.length > 1) await new Promise(r => setTimeout(r, 600));
+      }
+      setToast({ msg: `✅ تم تصدير ${selectedGovs.length} تقرير بنجاح`, type: 'success' });
+    } catch {
+      setToast({ msg: 'فشل التصدير — تأكد من صلاحياتك وحاول مجدداً', type: 'error' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="report-card">
-      <div className="card-header">
-        <div className="card-icon">🤝</div>
-        <div>
-          <h2 className="card-title">تقرير الكافل</h2>
-          <p className="card-sub">محفظة الكفالات النشطة والتاريخية مع كامل التفاصيل</p>
-        </div>
-      </div>
-      <div className="card-body">
-        <div className="field-group">
-          <label className="lbl">اختر الكافل <span className="req">*</span></label>
-          {loading ? <div className="skel-inp" /> : (
-            <>
-              <input className="inp" placeholder="🔍 ابحث بالاسم أو البريد…" value={search}
-                onChange={e => { setSearch(e.target.value); setSponsorId(''); setError(''); }} />
-              <div className="sponsor-list">
-                {filtered.length === 0
-                  ? <p className="sponsor-empty">{sponsors.length === 0 ? 'لا يوجد كفلاء مسجّلون بعد' : 'لا توجد نتائج'}</p>
-                  : filtered.map(s => (
-                    <div key={s.id}
-                      className={`sponsor-row ${sponsorId === s.id ? 'sponsor-active' : ''}`}
-                      onClick={() => { setSponsorId(s.id); setError(''); setSuccess(''); }}>
-                      <div className="s-av">{s.full_name?.charAt(0) || '؟'}</div>
-                      <div className="s-info">
-                        <span className="s-name">{s.full_name}</span>
-                        {s.email && <span className="s-email">{s.email}</span>}
-                      </div>
-                      <span className="s-count">{s.active_sponsorships || 0} كفالة</span>
-                      {sponsorId === s.id && <span className="s-check">✓</span>}
-                    </div>
-                  ))}
-              </div>
-            </>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+      {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
+
+      {/* Toolbar */}
+      <div style={{ padding: '1rem', borderBottom: '1px solid #f0f4f8' }}>
+        <div style={{ position: 'relative', maxWidth: 340 }}>
+          <span style={{ position: 'absolute', right: '.75rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>🔍</span>
+          <input
+            style={{ width: '100%', border: '1.5px solid #d1d5db', borderRadius: '.625rem', padding: '.55rem .85rem .55rem 2rem', paddingRight: '2.2rem', fontSize: '.83rem', fontFamily: 'Cairo,sans-serif', background: '#fafafa', outline: 'none', boxSizing: 'border-box' }}
+            placeholder="ابحث باسم المحافظة…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+          {search && (
+            <button onClick={() => setSearch('')} style={{ position: 'absolute', left: '.6rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af' }}>✕</button>
           )}
         </div>
-
-        {selected && (
-          <div className="preview">
-            <span>🤝</span>
-            <strong>{selected.full_name}</strong>
-            <span className="sep">·</span>
-            <span>{selected.active_sponsorships || 0} كفالة نشطة</span>
-          </div>
-        )}
-
-        <div className="field-group">
-          <label className="lbl">تنسيق الملف</label>
-          <FormatPicker value={format} onChange={setFormat} />
-        </div>
-
-        <div className="info-box">
-          <span>ℹ</span>
-          <span>يشمل: الكفالات النشطة والتاريخية، نوع المستفيد، المحافظة، المندوب، المبلغ الشهري، تواريخ البداية والنهاية</span>
-        </div>
-
-        {error   && <div className="err-banner">⚠ {error}</div>}
-        {success && <div className="ok-banner">{success}</div>}
-
-        <button className="btn-export" onClick={handleExport} disabled={busy || loading || !sponsorId}>
-          {busy ? <><span className="spin" /> جارٍ إنشاء التقرير…</> : format === 'pdf' ? <>📄 تنزيل PDF</> : <>📊 تنزيل Excel</>}
-        </button>
       </div>
+
+      {/* Export bar */}
+      <ExportBar
+        selectedCount={selected.size}
+        label="محافظة"
+        pdfLoading={pdfLoading}
+        excelLoading={excelLoading}
+        onExportPdf={() => doExport('pdf', setPdfLoading)}
+        onExportExcel={() => doExport('xlsx', setExcelLoading)}
+      />
+
+      {/* Table */}
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.82rem' }}>
+          <thead>
+            <tr style={{ background: '#f8fafc', position: 'sticky', top: 0, zIndex: 1 }}>
+              <th style={{ width: 44, padding: '.75rem 1rem', textAlign: 'center', borderBottom: '2px solid #e5eaf0' }}>
+                <input type="checkbox" style={{ width: 16, height: 16, accentColor: '#1B5E8C', cursor: 'pointer' }}
+                  checked={selected.size === withOrphans.length && withOrphans.length > 0}
+                  ref={el => { if (el) el.indeterminate = selected.size > 0 && selected.size < withOrphans.length; }}
+                  onChange={toggleAll} />
+              </th>
+              {['المحافظة', 'بالإنجليزية', 'عدد الأيتام', 'النسبة'].map(h => (
+                <th key={h} style={{ padding: '.75rem 1rem', textAlign: 'right', fontSize: '.73rem', fontWeight: 700, color: '#6b7a8d', whiteSpace: 'nowrap', borderBottom: '2px solid #e5eaf0' }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? <SkeletonRows count={8} /> :
+             filtered.length === 0 ? (
+              <tr><td colSpan={5} style={{ padding: '3rem', textAlign: 'center', color: '#9ca3af' }}>🔍 لا توجد نتائج</td></tr>
+            ) : filtered.map((gov, idx) => {
+              const isSel     = selected.has(gov.id);
+              const hasOrphans = gov.count > 0;
+              const pct       = Math.round((gov.count / maxCount) * 100);
+              return (
+                <tr key={gov.id}
+                  onClick={() => hasOrphans && toggle(gov.id)}
+                  style={{ background: isSel ? '#f0f7ff' : idx % 2 === 0 ? '#fff' : '#fafafa', cursor: hasOrphans ? 'pointer' : 'default', opacity: hasOrphans ? 1 : 0.45, transition: 'background .1s' }}
+                  onMouseEnter={e => { if (!isSel && hasOrphans) e.currentTarget.style.background = '#f8fbff'; }}
+                  onMouseLeave={e => { if (!isSel && hasOrphans) e.currentTarget.style.background = idx % 2 === 0 ? '#fff' : '#fafafa'; }}
+                >
+                  <td style={{ textAlign: 'center', padding: '.75rem 1rem', borderBottom: '1px solid #f0f4f8' }}
+                    onClick={e => e.stopPropagation()}>
+                    <input type="checkbox" style={{ width: 16, height: 16, accentColor: '#1B5E8C', cursor: hasOrphans ? 'pointer' : 'not-allowed' }}
+                      checked={isSel} disabled={!hasOrphans} onChange={() => hasOrphans && toggle(gov.id)} />
+                  </td>
+                  <td style={{ padding: '.75rem 1rem', borderBottom: '1px solid #f0f4f8', fontWeight: 700, color: '#0d3d5c' }}>
+                    {gov.name_ar}
+                  </td>
+                  <td style={{ padding: '.75rem 1rem', borderBottom: '1px solid #f0f4f8', color: '#9ca3af', fontSize: '.78rem', direction: 'ltr', textAlign: 'left' }}>
+                    {gov.name_en}
+                  </td>
+                  <td style={{ padding: '.75rem 1rem', borderBottom: '1px solid #f0f4f8' }}>
+                    <span style={{ fontWeight: 800, color: hasOrphans ? '#1B5E8C' : '#9ca3af', fontSize: '.9rem' }}>
+                      {gov.count}
+                    </span>
+                    {!hasOrphans && <span style={{ fontSize: '.7rem', color: '#9ca3af', marginRight: '.35rem' }}>— لا يوجد أيتام</span>}
+                  </td>
+                  <td style={{ padding: '.75rem 1rem', borderBottom: '1px solid #f0f4f8', minWidth: 140 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem' }}>
+                      <div style={{ flex: 1, height: 7, background: '#f0f4f8', borderRadius: '999px', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${pct}%`, background: isSel ? '#1B5E8C' : 'linear-gradient(90deg,#93c5fd,#60a5fa)', borderRadius: '999px', transition: 'width .4s ease' }} />
+                      </div>
+                      <span style={{ fontSize: '.7rem', color: '#9ca3af', minWidth: 28, textAlign: 'left' }}>{pct}%</span>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Footer */}
+      {!loading && (
+        <div style={{ padding: '.6rem 1rem', fontSize: '.75rem', color: '#9ca3af', borderTop: '1px solid #f0f4f8', background: '#fafafa', flexShrink: 0 }}>
+          {filtered.length} محافظة{selected.size > 0 ? ` · ${selected.size} مختارة` : ''}
+        </div>
+      )}
     </div>
   );
 }
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function ReportsPage() {
-  const [governorates, setGovernorates] = useState([]);
-  const [sponsors,     setSponsors]     = useState([]);
-  const [loading,      setLoading]      = useState(true);
-  const [error,        setError]        = useState('');
+  const [tab, setTab] = useState('disbursements');
 
-  useEffect(() => {
-    Promise.all([api.get('/governorates'), api.get('/sponsors')])
-      .then(([g, s]) => { setGovernorates(g.data.data || []); setSponsors(s.data.sponsors || []); })
-      .catch(() => setError('تعذّر تحميل البيانات. يرجى تحديث الصفحة.'))
-      .finally(() => setLoading(false));
-  }, []);
+  const tabs = [
+    { key: 'disbursements', label: 'كشوف الصرف',  icon: '💰', desc: 'تصدير كشوف الصرف الشهرية' },
+    { key: 'governorates',  label: 'المحافظات',    icon: '📍', desc: 'تصدير تقارير الأيتام بالمحافظة' },
+  ];
 
   return (
     <AppShell>
-      <div className="page" dir="rtl">
+      <div dir="rtl" style={{ fontFamily: "'Cairo','Tajawal',sans-serif", height: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
-        <div className="page-top">
+        {/* Keyframes */}
+        <style>{`
+          @keyframes rp-spin   { to   { transform: rotate(360deg); } }
+          @keyframes rp-fadein { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+        `}</style>
+
+        {/* Page header */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '.75rem' }}>
           <div>
-            <h1 className="page-title">📄 التقارير والتصدير</h1>
-            <p className="page-sub">قم بتصدير بيانات النظام كملفات PDF أو Excel</p>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0d3d5c', margin: '0 0 .2rem' }}>التقارير والتصدير</h1>
+            <p style={{ fontSize: '.83rem', color: '#6b7a8d', margin: 0 }}>اختر البيانات من الجدول ثم صدّرها بتنسيق PDF أو Excel</p>
+          </div>
+          {/* How-to tip */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '.625rem', padding: '.5rem .85rem', fontSize: '.75rem', color: '#1d4ed8', fontWeight: 600 }}>
+            <span>💡</span>
+            <span>حدد صفاً أو أكثر ثم اضغط PDF أو Excel</span>
           </div>
         </div>
 
-        {!loading && !error && (
-          <div className="stats-bar">
-            <div className="stat"><span className="stat-num">{governorates.length}</span><span className="stat-lbl">محافظة</span></div>
-            <div className="stat-div" />
-            <div className="stat"><span className="stat-num">{sponsors.length}</span><span className="stat-lbl">كافل مسجّل</span></div>
-            <div className="stat-div" />
-            <div className="stat"><span className="stat-num">2</span><span className="stat-lbl">صيغ تصدير</span></div>
-          </div>
-        )}
-
-        {error && <div className="err-banner">⚠ {error}</div>}
-
-        <div className="cards-grid">
-          <GovernorateReportCard governorates={governorates} loading={loading} />
-          <SponsorReportCard     sponsors={sponsors}         loading={loading} />
-        </div>
-
-        <div className="help-card">
-          <h3 className="help-title">💡 نصائح حول التصدير</h3>
-          <div className="help-grid">
-            {[
-              { icon: '📊', title: 'Excel (موصى به)', text: 'يدعم الفرز والتصفية وعمليات البيانات. النص العربي يُعرض بشكل صحيح مع دعم RTL.' },
-              { icon: '📄', title: 'PDF',              text: 'مناسب للطباعة والمشاركة. قد يظهر النص العربي بخطوط محدودة.' },
-              { icon: '🔒', title: 'الصلاحيات',       text: 'هذه التقارير متاحة للمدير العام فقط. جميع البيانات مباشرة من قاعدة البيانات.' },
-              { icon: '⚡', title: 'بيانات حديثة',    text: 'لا يوجد كاش — يتم توليد التقرير لحظياً عند الضغط على زر التنزيل.' },
-            ].map(({ icon, title, text }) => (
-              <div key={title} className="help-item">
-                <span className="help-icon">{icon}</span>
-                <div><strong>{title}</strong><p>{text}</p></div>
+        {/* Tab nav */}
+        <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap' }}>
+          {tabs.map(t => (
+            <button key={t.key}
+              onClick={() => setTab(t.key)}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '.5rem',
+                padding: '.65rem 1.25rem',
+                border: `2px solid ${tab === t.key ? '#1B5E8C' : '#e5eaf0'}`,
+                borderRadius: '.875rem', fontFamily: 'Cairo,sans-serif', fontSize: '.85rem',
+                fontWeight: 700, color: tab === t.key ? '#fff' : '#6b7280',
+                background: tab === t.key ? '#1B5E8C' : '#fff',
+                cursor: 'pointer', transition: 'all .15s',
+                boxShadow: tab === t.key ? '0 2px 8px rgba(27,94,140,.2)' : 'none',
+              }}
+            >
+              <span style={{ fontSize: '1rem' }}>{t.icon}</span>
+              <div style={{ textAlign: 'right' }}>
+                <div>{t.label}</div>
+                <div style={{ fontSize: '.68rem', fontWeight: 400, opacity: .8 }}>{t.desc}</div>
               </div>
-            ))}
-          </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Table card */}
+        <div style={{ flex: 1, background: '#fff', border: '1.5px solid #e5eaf0', borderRadius: '1rem', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
+          {tab === 'disbursements' && <DisbursementsTab />}
+          {tab === 'governorates'  && <GovernoratesTab />}
         </div>
 
       </div>
-
-      <style jsx>{`
-        .page { max-width:1100px; margin:0 auto; padding-bottom:4rem; font-family:'Cairo','Tajawal',sans-serif; display:flex; flex-direction:column; gap:1.5rem; }
-        .page-top { display:flex; align-items:flex-start; }
-        .page-title { font-size:1.65rem; font-weight:800; color:#0d3d5c; margin:0 0 .2rem; }
-        .page-sub { font-size:.85rem; color:#6b7a8d; margin:0; }
-
-        .stats-bar { display:flex; align-items:center; gap:2rem; flex-wrap:wrap; background:linear-gradient(135deg,#0d3d5c,#1B5E8C); border-radius:1rem; padding:1.25rem 2rem; }
-        .stat { display:flex; flex-direction:column; align-items:center; gap:.2rem; flex:1; }
-        .stat-num { font-size:1.75rem; font-weight:800; color:#fff; }
-        .stat-lbl { font-size:.75rem; color:rgba(255,255,255,.7); white-space:nowrap; }
-        .stat-div { width:1px; align-self:stretch; background:rgba(255,255,255,.2); }
-
-        .cards-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; align-items:start; }
-        @media(max-width:820px){ .cards-grid{ grid-template-columns:1fr; } }
-
-        .report-card { background:#fff; border:1px solid #e5eaf0; border-radius:1.25rem; overflow:hidden; box-shadow:0 2px 12px rgba(27,94,140,.07); }
-        .card-header { display:flex; align-items:center; gap:.85rem; padding:1.25rem 1.5rem; background:#f8fafc; border-bottom:1px solid #e5eaf0; }
-        .card-icon { width:46px; height:46px; border-radius:.75rem; background:#1B5E8C; display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0; }
-        .card-title { font-size:1rem; font-weight:800; color:#0d3d5c; margin:0 0 .15rem; }
-        .card-sub { font-size:.78rem; color:#6b7a8d; margin:0; }
-        .card-body { padding:1.5rem; display:flex; flex-direction:column; gap:1.1rem; }
-
-        .field-group { display:flex; flex-direction:column; gap:.4rem; }
-        .lbl { font-size:.82rem; font-weight:600; color:#374151; }
-        .req { color:#dc2626; }
-        .inp { border:1.5px solid #d1d5db; border-radius:.625rem; padding:.65rem .9rem; font-size:.88rem; font-family:'Cairo',sans-serif; color:#1f2937; background:#fafafa; outline:none; width:100%; box-sizing:border-box; transition:border-color .15s,box-shadow .15s; }
-        .inp:focus { border-color:#1B5E8C; background:#fff; box-shadow:0 0 0 3px rgba(27,94,140,.1); }
-        .inp-err { border-color:#dc2626!important; }
-        .sel { appearance:none; cursor:pointer; }
-        .skel-inp { height:42px; border-radius:.625rem; background:linear-gradient(90deg,#f0f4f8 25%,#e5eaf0 50%,#f0f4f8 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; }
-
-        .sponsor-list { border:1.5px solid #e5eaf0; border-radius:.625rem; max-height:200px; overflow-y:auto; background:#fafafa; margin-top:.35rem; }
-        .sponsor-empty { font-size:.82rem; color:#9ca3af; text-align:center; padding:1.25rem; margin:0; }
-        .sponsor-row { display:flex; align-items:center; gap:.65rem; padding:.6rem .85rem; cursor:pointer; border-bottom:1px solid #f0f4f8; transition:background .12s; }
-        .sponsor-row:last-child { border-bottom:none; }
-        .sponsor-row:hover { background:#f0f7ff; }
-        .sponsor-active { background:#eff6ff; }
-        .s-av { width:32px; height:32px; border-radius:50%; flex-shrink:0; background:linear-gradient(135deg,#1B5E8C,#0d3d5c); color:#fff; display:flex; align-items:center; justify-content:center; font-size:.85rem; font-weight:700; }
-        .s-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:.1rem; }
-        .s-name { font-size:.85rem; font-weight:600; color:#1f2937; }
-        .s-email { font-size:.72rem; color:#9ca3af; direction:ltr; text-align:left; }
-        .s-count { font-size:.75rem; font-weight:700; color:#1B5E8C; white-space:nowrap; flex-shrink:0; }
-        .s-check { color:#1B5E8C; font-weight:800; }
-
-        .preview { display:inline-flex; align-items:center; gap:.5rem; background:#f0f7ff; border:1px solid #bfdbfe; border-radius:.5rem; padding:.45rem .85rem; font-size:.82rem; color:#1d4ed8; }
-        .sep { color:#93c5fd; }
-
-        .format-row { display:flex; gap:.65rem; }
-        .format-btn { flex:1; display:flex; flex-direction:column; align-items:center; gap:.2rem; padding:.75rem; border:1.5px solid #e5eaf0; border-radius:.75rem; font-family:'Cairo',sans-serif; background:#fafafa; cursor:pointer; transition:all .15s; }
-        .format-btn:hover { border-color:#1B5E8C; background:#f0f7ff; }
-        .format-btn-active { border-color:#1B5E8C; background:#1B5E8C; }
-        .fmt-icon { font-size:1.4rem; }
-        .fmt-label { font-size:.82rem; font-weight:700; color:#374151; }
-        .format-btn-active .fmt-label { color:#fff; }
-        .fmt-hint { font-size:.7rem; color:#9ca3af; }
-        .format-btn-active .fmt-hint { color:rgba(255,255,255,.7); }
-
-        .info-box { display:flex; align-items:flex-start; gap:.6rem; background:#eff6ff; border:1px solid #bfdbfe; border-radius:.625rem; padding:.75rem .9rem; font-size:.78rem; color:#1d4ed8; line-height:1.65; }
-
-        .err-banner { background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; padding:.65rem .9rem; border-radius:.625rem; font-size:.82rem; font-weight:500; }
-        .ok-banner  { background:#ecfdf5; border:1px solid #6ee7b7; color:#065f46; padding:.65rem .9rem; border-radius:.625rem; font-size:.82rem; font-weight:600; }
-
-        .btn-export { display:flex; align-items:center; justify-content:center; gap:.5rem; width:100%; padding:.9rem; background:linear-gradient(135deg,#1B5E8C,#134569); color:#fff; font-family:'Cairo',sans-serif; font-size:.95rem; font-weight:700; border:none; border-radius:.75rem; cursor:pointer; box-shadow:0 2px 8px rgba(27,94,140,.25); transition:all .15s; }
-        .btn-export:hover:not(:disabled) { background:linear-gradient(135deg,#2E7EB8,#1B5E8C); transform:translateY(-1px); box-shadow:0 4px 14px rgba(27,94,140,.35); }
-        .btn-export:disabled { opacity:.5; cursor:not-allowed; transform:none; }
-
-        .help-card { background:#f9fafb; border:1px solid #e5eaf0; border-radius:1.125rem; padding:1.5rem 1.75rem; }
-        .help-title { font-size:.92rem; font-weight:800; color:#374151; margin:0 0 1.1rem; }
-        .help-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
-        @media(max-width:600px){ .help-grid{ grid-template-columns:1fr; } }
-        .help-item { display:flex; align-items:flex-start; gap:.75rem; }
-        .help-icon { font-size:1.3rem; flex-shrink:0; }
-        .help-item strong { display:block; font-size:.85rem; font-weight:700; color:#1f2937; margin-bottom:.2rem; }
-        .help-item p { font-size:.78rem; color:#6b7280; margin:0; line-height:1.6; }
-
-        .spin { display:inline-block; width:15px; height:15px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; flex-shrink:0; }
-        @keyframes spin { to { transform:rotate(360deg); } }
-        @keyframes shimmer { to { background-position:-200% 0; } }
-      `}</style>
     </AppShell>
   );
 }
