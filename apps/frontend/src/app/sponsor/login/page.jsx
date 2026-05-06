@@ -15,15 +15,15 @@ import axios from 'axios';
 import useSponsorStore from '../useSponsorStore';
 
 export default function SponsorLoginPage() {
-  const router       = useRouter();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const setSponsorAuth = useSponsorStore((s) => s.setSponsorAuth);
 
   const [portalToken, setPortalToken] = useState('');
-  const [password, setPassword]       = useState('');
-  const [showPass, setShowPass]       = useState(false);
-  const [loading, setLoading]         = useState(false);
-  const [error, setError]             = useState('');
+  const [password, setPassword] = useState('');
+  const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   // Pre-fill token from URL ?token=xxx
   useEffect(() => {
@@ -58,18 +58,12 @@ export default function SponsorLoginPage() {
       {/* Decorative side */}
       <aside className="brand">
         <div className="brand-inner">
-          <div className="brand-emblem">
-            <ShieldIcon />
-          </div>
-          <h1 className="brand-title">بوابة الكافل</h1>
-          <p className="brand-sub">Sponsor Portal</p>
-          <div className="brand-divider" />
-          <p className="brand-quote">
-            «كافل اليتيم له ولي في الجنة كهاتين»
-          </p>
-          <p className="brand-org">مؤسسة الأرض الطيبة</p>
+          <img
+            src="/ikram-logo.png"
+            alt="مؤسسة إكرام النعمة الخيرية"
+            className="brand-logo"
+          />
         </div>
-        <SvgPattern />
       </aside>
 
       {/* Login form */}
@@ -144,13 +138,8 @@ export default function SponsorLoginPage() {
 
         /* Brand side */
         .brand { position:relative; width:42%; background:linear-gradient(160deg,#1a4a2e 0%,#2d7a4a 55%,#1B5E8C 100%); display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; }
-        .brand-inner { position:relative; z-index:2; text-align:center; color:#fff; padding:2.5rem 2rem; }
-        .brand-emblem { display:flex; justify-content:center; margin-bottom:1.5rem; }
-        .brand-title { font-size:2.2rem; font-weight:800; margin:0 0 .3rem; text-shadow:0 2px 16px rgba(0,0,0,.2); }
-        .brand-sub { font-size:.8rem; letter-spacing:.2em; text-transform:uppercase; color:rgba(255,255,255,.6); margin:0 0 1.5rem; }
-        .brand-divider { width:40px; height:2px; background:rgba(255,255,255,.3); margin:0 auto 1.5rem; border-radius:1px; }
-        .brand-quote { font-size:.95rem; font-style:italic; color:rgba(255,255,255,.85); line-height:1.8; margin:0 0 1rem; padding:0 1rem; }
-        .brand-org { font-size:.78rem; color:rgba(255,255,255,.55); letter-spacing:.05em; margin:0; }
+        .brand-inner { position:relative; z-index:2; text-align:center; padding:2.5rem 2rem; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+        .brand-logo { max-width:300px; width:80%; height:auto; object-fit:contain; background:#fff; border-radius:1.5rem; padding:2rem; box-shadow:0 8px 32px rgba(0,0,0,.18); }
 
         /* Form side */
         .form-side { flex:1; display:flex; align-items:center; justify-content:center; padding:2rem 1.5rem; }
@@ -185,8 +174,8 @@ export default function SponsorLoginPage() {
 
         @media(max-width:768px) {
           .root { flex-direction:column; }
-          .brand { width:100%; min-height:200px; padding:2rem 1rem; }
-          .brand-quote { display:none; }
+          .brand { width:100%; min-height:180px; padding:1.5rem 1rem; }
+          .brand-logo { max-width:200px; padding:1rem; }
           .form-side { padding:1.5rem 1rem; align-items:flex-start; }
           .form-card { box-shadow:none; border:none; background:transparent; }
         }
@@ -211,7 +200,7 @@ function ShieldIcon({ small }) {
 
 function SvgPattern() {
   return (
-    <svg aria-hidden="true" style={{ position:'absolute', inset:0, width:'100%', height:'100%', opacity:.06, pointerEvents:'none' }} xmlns="http://www.w3.org/2000/svg">
+    <svg aria-hidden="true" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: .06, pointerEvents: 'none' }} xmlns="http://www.w3.org/2000/svg">
       <defs>
         <pattern id="geo2" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
           <polygon points="30,2 58,17 58,43 30,58 2,43 2,17" fill="none" stroke="white" strokeWidth="1" />

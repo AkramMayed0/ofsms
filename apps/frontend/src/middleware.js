@@ -20,12 +20,13 @@ const PUBLIC_PATHS = ['/login', '/sponsor/portal'];
 export function middleware(request) {
   const { pathname } = request.nextUrl;
 
-  // Allow public paths and Next.js internals
+  // Allow public paths, Next.js internals, and static assets
   if (
     PUBLIC_PATHS.some((p) => pathname.startsWith(p)) ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon') ||
-    pathname.startsWith('/api')
+    pathname.startsWith('/api') ||
+    /\.(png|jpg|jpeg|svg|ico|webp|gif|css|js|woff2?|ttf|eot)$/i.test(pathname)
   ) {
     return NextResponse.next();
   }
