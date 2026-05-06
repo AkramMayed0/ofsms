@@ -9,7 +9,7 @@ import api from '@/lib/api';
 export default function AgentReceiptsBatchPage() {
   const router = useRouter();
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!id);
   const [error, setError] = useState('');
   const [uploading, setUploading] = useState({});
   const [confirming, setConfirming] = useState(false);
