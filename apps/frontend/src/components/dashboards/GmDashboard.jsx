@@ -11,6 +11,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
+import SendNotificationModal from '../SendNotificationModal';
 
 const formatDate = (iso) => {
   if (!iso) return '—';
@@ -63,6 +64,7 @@ export default function GmDashboard() {
   const [data,    setData]    = useState(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState('');
+  const [showNotifModal, setShowNotifModal] = useState(false);
 
   useEffect(() => {
     api.get('/dashboard/gm')
@@ -91,6 +93,9 @@ export default function GmDashboard() {
           <h1 className="greeting-title">لوحة تحكم المدير العام</h1>
           <p className="greeting-sub">{today}</p>
         </div>
+        <button className="btn-notif" onClick={() => setShowNotifModal(true)}>
+      📣 إرسال إشعار
+        </button>
       </div>
 
       {error && <div className="err-banner">⚠ {error}</div>}
@@ -267,6 +272,17 @@ export default function GmDashboard() {
         .greeting-title { font-size:1.6rem; font-weight:800; color:#0d3d5c; margin:0 0 .2rem; }
         .greeting-sub { font-size:.82rem; color:#94a3b8; margin:0; }
         .err-banner { background:#fef2f2; border:1px solid #fecaca; border-radius:.75rem; padding:.85rem 1rem; font-size:.85rem; color:#b91c1c; font-weight:500; }
+        //new styles for notification button and other elements are added below
+        .btn-notif {
+          display: inline-flex; align-items: center; gap: .4rem;
+          padding: .65rem 1.25rem;
+          background: linear-gradient(135deg, #F0A500, #d97706);
+          color: #fff; font-family: 'Cairo',sans-serif;
+          font-size: .88rem; font-weight: 700; border: none;
+          border-radius: .75rem; cursor: pointer; transition: all .15s;
+          box-shadow: 0 2px 8px rgba(240,165,0,.3); white-space: nowrap;
+        }
+        .btn-notif:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(240,165,0,.4); }
 
         .stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; }
         .stat-card { background:#fff; border:1px solid #e5eaf0; border-radius:1rem; padding:1.25rem; display:flex; align-items:flex-start; gap:.85rem; box-shadow:0 1px 4px rgba(27,94,140,.05); transition:box-shadow .15s,transform .15s; }
@@ -333,6 +349,12 @@ export default function GmDashboard() {
           .finance-grid { grid-template-columns:1fr; }
         }
       `}</style>
+      {showNotifModal && (
+        <SendNotificationModal
+          onClose={() => setShowNotifModal(false)}
+          onSent={() => setShowNotifModal(false)}
+        />
+      )}
     </div>
   );
 }
