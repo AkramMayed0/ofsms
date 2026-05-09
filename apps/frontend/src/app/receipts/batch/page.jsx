@@ -1,281 +1,218 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import api from '@/lib/api';
+import AppShell from '@/components/AppShell';
 
-// ── Components ────────────────────────────────────────────────────────────────
+const formatAmount = (n) =>
+  n != null ? `${Number(n).toLocaleString('ar-YE')} ر.ي` : '—';
 
-export default function AgentReceiptsBatchPage() {
-  const router = useRouter();
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(!id);
-  const [error, setError] = useState('');
-  const [uploading, setUploading] = useState({});
-  const [confirming, setConfirming] = useState(false);
-  const [notes, setNotes] = useState('');
-
-  const fetchBatch = () => {
-    setLoading(true);
-    api.get('/receipts/my-batch')
-      .then(({ data: res }) => setData(res))
-      .catch((err) => setError(err.response?.data?.error || 'تعذّر تحميل بيانات الكشف.'))
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    fetchBatch();
-  }, []);
-
-  // ── Handlers ────────────────────────────────────────────────────────────────
-
-  const handleFileUpload = async (itemId, e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    // Convert file to Base64
+const fileToBase64 = (file) =>
+  new Promise((resolve, reject) => {
     const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
     reader.readAsDataURL(file);
-    reader.onload = async () => {
-      const base64String = reader.result.split(',')[1];
-      const mimeType = file.type;
+  });
 
-      try {
-        setUploading(prev => ({ ...prev, [itemId]: true }));
-        await api.post('/receipts/biometric', {
-          itemId,
-          fingerprintBase64: base64String,
-          mimeType,
-        });
-        // Refresh batch to get the new receipt_id
-        fetchBatch();
-      } catch (err) {
-        alert(err.response?.data?.error || 'فشل رفع البصمة');
-      } finally {
-        setUploading(prev => ({ ...prev, [itemId]: false }));
-      }
-    };
-  };
+function FingerprintUploader({ item, onUploaded }) {
+  const inputRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleConfirmBatch = async () => {
-    if (!data?.list_id) return;
-    if (!confirm('هل أنت متأكد من تأكيد الكشف؟ لا يمكن التراجع عن هذه الخطوة.')) return;
-
-    setConfirming(true);
+  const handleFile = async (file) => {
+    if (!file) return;
+    if (!['image/png', 'image/jpeg'].includes(file.type)) {
+      setError('يُقبل فقط PNG أو JPEG');
+      return;
+    }
+    setUploading(true);
+    setError('');
     try {
-      await api.post('/receipts/batch-confirm', {
-        listId: data.list_id,
-        notes: notes.trim() || undefined,
+      const base64 = await fileToBase64(file);
+      await api.post('/receipts/biometric', {
+        itemId: item.id,
+        fingerprintBase64: base64,
+        mimeType: file.type,
       });
-      alert('تم تأكيد الكشف بنجاح!');
-      router.push('/dashboard');
+      onUploaded(item.id);
     } catch (err) {
-      alert(err.response?.data?.error || 'فشل تأكيد الكشف');
+      setError(err.response?.data?.error || 'فشل رفع البصمة');
     } finally {
-      setConfirming(false);
+      setUploading(false);
     }
   };
 
-  // ── Render ──────────────────────────────────────────────────────────────────
-
-  if (loading && !data) {
+  if (item.biometric_confirmed_at) {
     return (
-      <div className="receipts-page" dir="rtl">
-        <h1 className="page-title">رفع بصمات المستفيدين</h1>
-        <div className="skeleton-box" style={{ height: 200, marginTop: '2rem' }} />
-      </div>
+      <span style={{ color: '#059669', fontWeight: 700, fontSize: '.82rem' }}>
+        ✅ تم التأكيد
+      </span>
     );
   }
-
-  if (error) {
-    return (
-      <div className="receipts-page" dir="rtl">
-        <h1 className="page-title">رفع بصمات المستفيدين</h1>
-        <div className="err-banner">⚠ {error}</div>
-      </div>
-    );
-  }
-
-  if (!data?.items || data.items.length === 0) {
-    return (
-      <div className="receipts-page" dir="rtl">
-        <h1 className="page-title">رفع بصمات المستفيدين</h1>
-        <div className="empty-state">
-          <div style={{ fontSize: '3rem' }}>✅</div>
-          <h2>لا يوجد مستفيدين حالياً</h2>
-          <p>ليس لديك أي مستفيدين في كشف الصرف الفعّال حالياً، أو لم يتم إصدار الكشف بعد.</p>
-          <button className="btn-secondary" onClick={() => router.push('/dashboard')}>العودة للرئيسية</button>
-        </div>
-      </div>
-    );
-  }
-
-  const { items, month, year, batch_confirmed_at } = data;
-  const totalItems = items.length;
-  const confirmedItems = items.filter(i => i.receipt_id).length;
-  const isAllConfirmed = confirmedItems === totalItems;
-  const progressPct = Math.round((confirmedItems / totalItems) * 100);
 
   return (
-    <div className="receipts-page" dir="rtl">
+    <div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/png,image/jpeg"
+        style={{ display: 'none' }}
+        onChange={(e) => handleFile(e.target.files?.[0])}
+      />
       <button
-        type="button"
-        onClick={() => router.back()}
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
         style={{
-          alignSelf: 'flex-start',
-          marginBottom: '1rem',
-          background: '#f1f5f9',
-          border: 'none',
-          borderRadius: '0.5rem',
-          padding: '0.5rem 1.2rem',
-          fontWeight: 700,
-          color: '#0d3d5c',
-          cursor: 'pointer',
-          fontSize: '1rem',
-          display: 'flex',
-          gap: '0.5rem',
-          alignItems: 'center',
+          padding: '.5rem 1rem', background: '#1B5E8C', color: '#fff',
+          border: 'none', borderRadius: '.5rem', cursor: 'pointer',
+          fontFamily: 'Cairo', fontSize: '.82rem', fontWeight: 700,
+          opacity: uploading ? .6 : 1,
         }}
-        aria-label="عودة"
       >
-        <span aria-hidden="true">←</span> عودة
+        {uploading ? 'جارٍ الرفع…' : '📷 رفع البصمة'}
       </button>
-      <div className="header-row">
-        <h1 className="page-title">رفع بصمات المستفيدين</h1>
-        <div className="batch-badge">
-          كشف شهر {month} لعام {year}
-        </div>
-      </div>
+      {error && <p style={{ color: '#dc2626', fontSize: '.75rem', margin: '.25rem 0 0' }}>{error}</p>}
+    </div>
+  );
+}
 
-      {batch_confirmed_at && (
-        <div className="success-banner">
-          ✅ تم تأكيد استلام هذا الكشف في {new Date(batch_confirmed_at).toLocaleDateString('ar-YE')}
-        </div>
-      )}
+export default function AgentReceiptsBatchPage() {
+  const router = useRouter();
+  // ✅ THE FIX: read listId from the URL query string, not a route param
+  const searchParams = useSearchParams();
+  const listId = searchParams.get('listId');
 
-      {/* Progress Card */}
-      <div className="progress-card">
-        <div className="progress-top">
-          <span className="progress-lbl">الإنجاز ({confirmedItems} من {totalItems})</span>
-          <span className="progress-val">{progressPct}%</span>
-        </div>
-        <div className="bar-bg">
-          <div className="bar-fill" style={{ width: `${progressPct}%`, background: isAllConfirmed ? '#10b981' : '#1B5E8C' }} />
-        </div>
-      </div>
+  const [listDetail, setListDetail] = useState(null);
+  const [summary, setSummary] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-      {/* List of Beneficiaries */}
-      <div className="items-list">
-        {items.map((item) => (
-          <div key={item.item_id} className={`item-card ${item.receipt_id ? 'confirmed' : ''}`}>
-            <div className="item-info">
-              <div className="item-name">{item.beneficiary_name}</div>
-              <div className="item-sub">
-                <span className="item-type">{item.beneficiary_type === 'orphan' ? 'يتيم' : 'أسرة'}</span>
-                <span className="item-amount">المبلغ: <strong>{item.amount}</strong> د.ي</span>
-              </div>
-            </div>
+  const fetchData = useCallback(async () => {
+    if (!listId) return;
+    setLoading(true);
+    try {
+      const [detailRes, summaryRes] = await Promise.all([
+        api.get(`/disbursements/${listId}`),
+        api.get(`/receipts/summary/${listId}`),
+      ]);
+      setListDetail(detailRes.data);
+      setSummary(summaryRes.data.summary);
+    } catch {
+      setError('تعذّر تحميل بيانات الكشف');
+    } finally {
+      setLoading(false);
+    }
+  }, [listId]);
 
-            <div className="item-action">
-              {item.receipt_id ? (
-                <div className="status-ok">
-                  <span>✅</span> تم رفع البصمة
-                </div>
-              ) : uploading[item.item_id] ? (
-                <div className="status-loading">جاري الرفع...</div>
-              ) : (
-                <label className="btn-upload">
-                  رفع البصمة
-                  <input 
-                    type="file" 
-                    accept="image/png, image/jpeg" 
-                    onChange={(e) => handleFileUpload(item.item_id, e)} 
-                    style={{ display: 'none' }}
-                  />
-                </label>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-      {/* Confirmation Section */}
-      {!batch_confirmed_at && (
-        <div className="confirm-section">
-          <h3 className="confirm-title">تأكيد الكشف</h3>
-          <p className="confirm-desc">
-            بعد رفع بصمات جميع المستفيدين بنجاح، يجب تأكيد الكشف لإرساله للمشرف.
+  if (!listId) {
+    return (
+      <AppShell>
+        <div dir="rtl" style={{ textAlign: 'center', padding: '4rem', fontFamily: 'Cairo' }}>
+          <p style={{ fontSize: '1.1rem', color: '#374151', fontWeight: 700 }}>
+            لم يتم تحديد كشف الصرف
           </p>
-          <textarea
-            className="notes-input"
-            placeholder="أضف ملاحظات (اختياري)..."
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-          />
-          <button 
-            className="btn-confirm" 
-            disabled={!isAllConfirmed || confirming}
-            onClick={handleConfirmBatch}
-          >
-            {confirming ? 'جاري التأكيد...' : 'تأكيد إرسال الكشف'}
+          <button onClick={() => router.push('/disbursements')}
+            style={{ marginTop: '1rem', padding: '.7rem 1.5rem', background: '#1B5E8C', color: '#fff', border: 'none', borderRadius: '.75rem', cursor: 'pointer', fontFamily: 'Cairo', fontWeight: 700 }}>
+            ← العودة لكشوف الصرف
           </button>
         </div>
-      )}
+      </AppShell>
+    );
+  }
 
-      <style jsx>{`
-        .receipts-page { display:flex; flex-direction:column; gap:1.75rem; font-family:'Cairo','Tajawal',sans-serif; max-width:800px; margin:0 auto; padding-bottom: 3rem; }
-        .header-row { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; }
-        .page-title { font-size:1.6rem; font-weight:800; color:#0d3d5c; margin:0; }
-        .batch-badge { background:#e0e7ff; color:#3730a3; padding:.4rem 1rem; border-radius:2rem; font-weight:700; font-size:.85rem; }
+  const items = (listDetail?.items || []).filter((i) => i.included);
+  const confirmed = Number(summary?.confirmed_items ?? 0);
+  const total = Number(summary?.total_items ?? items.length);
+  const pct = total > 0 ? Math.round((confirmed / total) * 100) : 0;
+
+  const handleUploaded = (itemId) => {
+    setListDetail((prev) => prev ? {
+      ...prev,
+      items: prev.items.map((i) =>
+        i.id === itemId ? { ...i, biometric_confirmed_at: new Date().toISOString() } : i
+      ),
+    } : prev);
+    setSummary((prev) => prev ? {
+      ...prev,
+      confirmed_items: Number(prev.confirmed_items) + 1,
+      pending_items: Number(prev.pending_items) - 1,
+    } : prev);
+  };
+
+  return (
+    <AppShell>
+      <div dir="rtl" style={{ maxWidth: 720, margin: '0 auto', fontFamily: 'Cairo, Tajawal, sans-serif', display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingBottom: '3rem' }}>
         
-        .err-banner { background:#fef2f2; border:1px solid #fecaca; border-radius:.75rem; padding:.85rem 1rem; font-size:.85rem; color:#b91c1c; font-weight:700; }
-        .success-banner { background:#ecfdf5; border:1px solid #a7f3d0; border-radius:.75rem; padding:.85rem 1rem; font-size:.85rem; color:#065f46; font-weight:700; }
-        
-        .skeleton-box { background:linear-gradient(90deg,#f0f4f8 25%,#e5eaf0 50%,#f0f4f8 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:1rem; }
-        @keyframes shimmer { to { background-position:-200% 0; } }
+        <div>
+          <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: '#1B5E8C', fontFamily: 'Cairo', fontWeight: 600, cursor: 'pointer', marginBottom: '.5rem' }}>
+            ← رجوع
+          </button>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0d3d5c', margin: 0 }}>
+            رفع بصمات الاستلام — {listDetail?.month}/{listDetail?.year}
+          </h1>
+          <p style={{ color: '#6b7a8d', fontSize: '.83rem', margin: '.25rem 0 0' }}>
+            التقط بصمة كل مستفيد بعد تسليم المبلغ يدوياً
+          </p>
+        </div>
 
-        .empty-state { text-align:center; padding:4rem 2rem; background:#fff; border:1px solid #e5eaf0; border-radius:1rem; display:flex; flex-direction:column; align-items:center; gap:1rem; }
-        .empty-state h2 { margin:0; color:#1f2937; }
-        .empty-state p { color:#6b7a8d; margin:0; max-width:400px; line-height:1.6; }
+        {error && (
+          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '.75rem', padding: '.85rem 1rem', color: '#b91c1c', fontSize: '.85rem' }}>
+            ⚠ {error}
+          </div>
+        )}
 
-        .progress-card { background:#fff; border:1px solid #e5eaf0; border-radius:1rem; padding:1.25rem 1.5rem; display:flex; flex-direction:column; gap:.75rem; box-shadow:0 1px 4px rgba(27,94,140,.05); }
-        .progress-top { display:flex; justify-content:space-between; align-items:flex-end; }
-        .progress-lbl { font-size:.9rem; font-weight:700; color:#374151; }
-        .progress-val { font-size:1.1rem; font-weight:800; color:#1B5E8C; }
-        .bar-bg { height:8px; background:#f0f4f8; border-radius:4px; overflow:hidden; }
-        .bar-fill { height:100%; border-radius:4px; transition:width .4s ease, background-color .4s ease; }
+        {/* Progress */}
+        {!loading && total > 0 && (
+          <div style={{ background: '#fff', border: '1px solid #e5eaf0', borderRadius: '1rem', padding: '1.25rem 1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '.5rem' }}>
+              <span style={{ fontWeight: 700, fontSize: '.88rem', color: '#374151' }}>
+                {pct === 100 ? '🎉 اكتملت جميع البصمات!' : `${confirmed} من ${total} مستفيد`}
+              </span>
+              <span style={{ fontWeight: 800, color: pct === 100 ? '#10b981' : '#1B5E8C' }}>{pct}%</span>
+            </div>
+            <div style={{ height: 10, background: '#f0f4f8', borderRadius: 5, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${pct}%`, background: pct === 100 ? '#10b981' : '#1B5E8C', borderRadius: 5, transition: 'width .4s' }} />
+            </div>
+          </div>
+        )}
 
-        .items-list { display:flex; flex-direction:column; gap:.85rem; }
-        .item-card { background:#fff; border:1px solid #e5eaf0; border-radius:1rem; padding:1.25rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; transition:border-color .2s; }
-        .item-card.confirmed { border-color:#a7f3d0; background:#f0fdf4; }
-        .item-info { display:flex; flex-direction:column; gap:.25rem; }
-        .item-name { font-size:1rem; font-weight:700; color:#1f2937; }
-        .item-sub { display:flex; align-items:center; gap:.75rem; font-size:.8rem; color:#6b7a8d; }
-        .item-type { background:#f3f4f6; padding:.15rem .5rem; border-radius:1rem; font-weight:700; color:#4b5563; }
-        
-        .item-action { flex-shrink:0; }
-        .btn-upload { display:inline-block; background:#1B5E8C; color:#fff; padding:.5rem 1rem; border-radius:.5rem; font-size:.85rem; font-weight:700; cursor:pointer; transition:background .15s; text-align:center; }
-        .btn-upload:hover { background:#134569; }
-        .status-ok { color:#059669; font-weight:700; font-size:.85rem; display:flex; align-items:center; gap:.35rem; }
-        .status-loading { color:#f59e0b; font-weight:700; font-size:.85rem; }
-
-        .confirm-section { margin-top:2rem; background:#fff; border:1px solid #e5eaf0; border-radius:1rem; padding:1.5rem; display:flex; flex-direction:column; gap:1rem; }
-        .confirm-title { margin:0; color:#1f2937; font-size:1.1rem; }
-        .confirm-desc { margin:0; color:#6b7a8d; font-size:.85rem; }
-        .notes-input { width:100%; padding:.75rem; border:1px solid #d1d5db; border-radius:.5rem; font-family:inherit; min-height:80px; resize:vertical; outline:none; }
-        .notes-input:focus { border-color:#1B5E8C; box-shadow:0 0 0 3px rgba(27,94,140,0.1); }
-        .btn-confirm { padding:.8rem; background:#10b981; color:#fff; border:none; border-radius:.5rem; font-family:inherit; font-weight:700; font-size:1rem; cursor:pointer; transition:opacity .2s; }
-        .btn-confirm:hover:not(:disabled) { background:#059669; }
-        .btn-confirm:disabled { background:#9ca3af; cursor:not-allowed; opacity:0.7; }
-        .btn-secondary { padding:.6rem 1.2rem; background:#f3f4f6; color:#374151; border:none; border-radius:.5rem; font-weight:700; cursor:pointer; transition:background .2s; }
-        .btn-secondary:hover { background:#e5e7eb; }
-
-        @media (max-width: 600px) {
-          .item-card { flex-direction:column; align-items:flex-start; }
-          .item-action { width:100%; }
-          .btn-upload { width:100%; }
-        }
-      `}</style>
-    </div>
+        {/* Items */}
+        {loading ? (
+          <p style={{ color: '#9ca3af', textAlign: 'center' }}>جارٍ التحميل…</p>
+        ) : items.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af', fontWeight: 600 }}>
+            لا توجد بنود مشمولة في هذا الكشف
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
+            {items.map((item) => (
+              <div key={item.id} style={{
+                background: item.biometric_confirmed_at ? '#f0fdf4' : '#fff',
+                border: `1px solid ${item.biometric_confirmed_at ? '#a7f3d0' : '#e5eaf0'}`,
+                borderRadius: '1rem', padding: '1rem 1.25rem',
+                display: 'flex', alignItems: 'center', gap: '1rem',
+              }}>
+                <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#f0f4f8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', flexShrink: 0 }}>
+                  {item.beneficiary_type === 'orphan' ? '👦' : '👨‍👩‍👧'}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, color: '#1f2937', fontSize: '.9rem' }}>
+                    {item.beneficiary_name}
+                  </div>
+                  <div style={{ fontSize: '.75rem', color: '#6b7a8d', marginTop: '.2rem' }}>
+                    {item.governorate_ar} · <span style={{ fontWeight: 700, color: '#1B5E8C' }}>{formatAmount(item.amount)}</span>
+                  </div>
+                </div>
+                <FingerprintUploader item={item} onUploaded={handleUploaded} />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </AppShell>
   );
 }

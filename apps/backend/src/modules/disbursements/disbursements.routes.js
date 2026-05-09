@@ -14,7 +14,21 @@ router.get(
   authorize('supervisor', 'finance', 'gm'),
   controller.getDisbursementLists
 );
+// GET /api/disbursements/history — MUST be before /:id
+router.get(
+  '/history',
+  authenticate,
+  authorize('supervisor', 'finance', 'gm'),
+  controller.getDisbursementLists
+);
 
+// GET /api/disbursements/:id
+router.get(
+  '/:id',
+  authenticate,
+  authorize('supervisor', 'finance', 'gm'),
+  controller.getDisbursementById
+);
 // POST /api/disbursements/generate
 router.post(
   '/generate',
