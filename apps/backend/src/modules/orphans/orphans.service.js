@@ -23,14 +23,15 @@ const createOrphan = async ({
   agentId,
   isGifted = false,
   notes,
+  profile = {},
 }) => {
   const { rows } = await query(
     `INSERT INTO orphans
        (full_name, date_of_birth, gender, governorate_id,
-        guardian_name, guardian_relation, agent_id, is_gifted, notes)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        guardian_name, guardian_relation, agent_id, is_gifted, notes, profile)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
      RETURNING *`,
-    [fullName, dateOfBirth, gender, governorateId, guardianName, guardianRelation, agentId, isGifted, notes || null]
+    [fullName, dateOfBirth, gender, governorateId, guardianName, guardianRelation, agentId, isGifted, notes || null, JSON.stringify(profile)]
   );
   return rows[0];
 };
