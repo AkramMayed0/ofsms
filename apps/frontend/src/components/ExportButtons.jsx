@@ -21,6 +21,7 @@
 
 import { useState } from 'react';
 import api from '../lib/api';
+import { Download, FileText, FileSpreadsheet, AlertTriangle } from 'lucide-react';
 
 export default function ExportButtons({
   pdfUrl,
@@ -79,7 +80,7 @@ export default function ExportButtons({
             opacity: isBusy ? .65 : 1,
           }}
         >
-          {isBusy ? <MiniSpinner /> : '📥'}
+          {isBusy ? <MiniSpinner /> : <Download size={15}/>}
           تصدير
           <span style={{ fontSize: '.65rem', color: '#9ca3af' }}>▼</span>
         </button>
@@ -98,7 +99,7 @@ export default function ExportButtons({
             }}>
               {pdfUrl && (
                 <MenuRow
-                  icon="📄"
+                  icon={<FileText size={18}/>}
                   label="تصدير PDF"
                   sub="ملف جاهز للطباعة"
                   loading={pdfLoading}
@@ -107,7 +108,7 @@ export default function ExportButtons({
               )}
               {excelUrl && (
                 <MenuRow
-                  icon="📊"
+                  icon={<FileSpreadsheet size={18}/>}
                   label="تصدير Excel"
                   sub="جدول بيانات"
                   loading={excelLoading}
@@ -141,7 +142,7 @@ export default function ExportButtons({
           }}
           title="تصدير PDF"
         >
-          {pdfLoading ? <MiniSpinner color="#dc2626" /> : '📄'}
+          {pdfLoading ? <MiniSpinner color="#dc2626" /> : <FileText size={15}/>}
           {size !== 'sm' && (pdfLoading ? 'جارٍ التصدير…' : 'PDF')}
         </button>
       )}
@@ -160,7 +161,7 @@ export default function ExportButtons({
           }}
           title="تصدير Excel"
         >
-          {excelLoading ? <MiniSpinner color="#16a34a" /> : '📊'}
+          {excelLoading ? <MiniSpinner color="#16a34a" /> : <FileSpreadsheet size={15}/>}
           {size !== 'sm' && (excelLoading ? 'جارٍ التصدير…' : 'Excel')}
         </button>
       )}
@@ -188,7 +189,7 @@ function MenuRow({ icon, label, sub, loading, onClick, last }) {
       onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
       onMouseLeave={e => e.currentTarget.style.background = 'none'}
     >
-      <span style={{ fontSize: '1.1rem' }}>{loading ? '⏳' : icon}</span>
+      <span style={{ fontSize: '1.1rem', display:'flex' }}>{icon}</span>
       <div>
         <div style={{ fontSize: '.83rem', fontWeight: 700, color: '#374151' }}>{label}</div>
         <div style={{ fontSize: '.7rem', color: '#9ca3af' }}>{sub}</div>
@@ -220,7 +221,7 @@ function ErrorToast({ msg, onClose }) {
       boxShadow: '0 4px 12px rgba(0,0,0,.1)',
       display: 'flex', alignItems: 'center', gap: '.5rem',
     }}>
-      ⚠ {msg}
+      <AlertTriangle size={13}/> {msg}
       <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#b91c1c', fontWeight: 700, padding: 0 }}>✕</button>
     </div>
   );

@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__claude_ai_Notion__notion-get-users",
+      "mcp__claude_ai_Notion__notion-fetch",
+      "Bash(grep -E '\\\\.\\(ts|tsx|js|jsx\\)$')",
+      "Bash(xargs ls *)",
+      "Bash(node -e \"console.log\\('JWT_SECRET=' + require\\('crypto'\\).randomBytes\\(64\\).toString\\('hex'\\)\\); console.log\\('JWT_REFRESH_SECRET=' + require\\('crypto'\\).randomBytes\\(64\\).toString\\('hex'\\)\\)\")",
+      "mcp__claude_ai_Supabase__list_projects",
+      "mcp__claude_ai_Supabase__execute_sql",
+      "Bash(node -e \"const bcrypt = require\\('bcryptjs'\\); bcrypt.hash\\('Admin1234', 10\\).then\\(h => console.log\\(h\\)\\)\")",
+      "Bash(del \"d:\\\\NawaDev\\\\ofsms\\\\apps\\\\frontend\\\\src\\\\app\\\\announcements\\\\page.jsx\")"
+    ]
+  }
+}

@@ -12,6 +12,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import SendNotificationModal from '../SendNotificationModal';
+import { Users, CheckCircle, ClipboardList, BookOpen, Banknote, Clock, Megaphone, Star, AlertTriangle } from 'lucide-react';
 
 const formatDate = (iso) => {
   if (!iso) return '—';
@@ -44,13 +45,40 @@ function StatusBadge({ status }) {
 
 function StatCard({ icon, label, value, sub, color = '#1B5E8C', onClick }) {
   return (
-    <div className="stat-card" onClick={onClick} style={{ cursor: onClick ? 'pointer' : 'default' }}>
-      <div className="stat-icon" style={{ background: `${color}15`, color }}>{icon}</div>
-      <div>
-        <div className="stat-value" style={{ color }}>{value ?? '—'}</div>
-        <div className="stat-label">{label}</div>
-        {sub && <div className="stat-sub">{sub}</div>}
+    <div
+      onClick={onClick}
+      style={{
+        position: 'relative',
+        background: '#fff',
+        border: '1px solid #edf0f5',
+        borderRadius: '1.1rem',
+        padding: '1.3rem 1.3rem 1.1rem',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '.35rem',
+        boxShadow: '0 2px 8px rgba(27,94,140,.06)',
+        overflow: 'hidden',
+        cursor: onClick ? 'pointer' : 'default',
+        transition: 'box-shadow .18s, transform .18s',
+        fontFamily: "'Cairo','Tajawal',sans-serif",
+      }}
+      onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 8px 24px rgba(27,94,140,.13)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+      onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 2px 8px rgba(27,94,140,.06)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+    >
+      {/* Icon + Value row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '.25rem' }}>
+        <div style={{ width: 46, height: 46, borderRadius: '.875rem', background: `${color}18`, color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          {icon}
+        </div>
+        <div style={{ fontSize: '2rem', fontWeight: 800, color, lineHeight: 1, fontFamily: "'Cairo',sans-serif" }}>
+          {value ?? '—'}
+        </div>
       </div>
+      {/* Label */}
+      <div style={{ fontSize: '.82rem', fontWeight: 600, color: '#4b5563' }}>{label}</div>
+      {sub && <div style={{ fontSize: '.71rem', color: '#b0bac8' }}>{sub}</div>}
+      {/* Bottom accent bar */}
+      <div style={{ position: 'absolute', bottom: 0, right: 0, left: 0, height: 3, background: color, borderRadius: '0 0 1.1rem 1.1rem' }} />
     </div>
   );
 }
@@ -94,11 +122,11 @@ export default function GmDashboard() {
           <p className="greeting-sub">{today}</p>
         </div>
         <button className="btn-notif" onClick={() => setShowNotifModal(true)}>
-      📣 إرسال إشعار
+          <Megaphone size={16} /> إرسال إشعار
         </button>
       </div>
 
-      {error && <div className="err-banner">⚠ {error}</div>}
+      {error && <div className="err-banner"><AlertTriangle size={15} /> {error}</div>}
 
       {/* Stat cards */}
       <div className="stats-grid">
@@ -114,12 +142,12 @@ export default function GmDashboard() {
           ))
         ) : (
           <>
-            <StatCard icon="👦" label="إجمالي الأيتام"      value={data?.total_orphans}        color="#1B5E8C" onClick={() => router.push('/orphans')} />
-            <StatCard icon="✅" label="تحت الكفالة"         value={data?.total_orphans != null ? (data.total_orphans - (pending.registrations || 0)) : '—'} color="#10b981" />
-            <StatCard icon="📋" label="تسجيلات معلّقة"      value={pending.registrations}       color="#f59e0b" onClick={() => router.push('/registrations')} />
-            <StatCard icon="📖" label="تقارير حفظ معلّقة"   value={pending.quran_reports}       color="#8b5cf6" />
-            <StatCard icon="💰" label="صرف الشهر الحالي"    value={finance.total != null ? `${Number(finance.total).toLocaleString()} ر.ي` : '—'} color="#059669" />
-            <StatCard icon="⏳" label="كشوف صرف معلّقة"     value={pending.disbursements}       color="#ef4444" onClick={() => router.push('/disbursements')} />
+            <StatCard icon={<Users size={20}/>}         label="إجمالي الأيتام"      value={data?.total_orphans}        color="#1B5E8C" onClick={() => router.push('/orphans')} />
+            <StatCard icon={<CheckCircle size={20}/>}   label="تحت الكفالة"         value={data?.total_orphans != null ? (data.total_orphans - (pending.registrations || 0)) : '—'} color="#10b981" />
+            <StatCard icon={<ClipboardList size={20}/>} label="تسجيلات معلّقة"      value={pending.registrations}       color="#f59e0b" onClick={() => router.push('/registrations')} />
+            <StatCard icon={<BookOpen size={20}/>}      label="تقارير حفظ معلّقة"   value={pending.quran_reports}       color="#8b5cf6" />
+            <StatCard icon={<Banknote size={20}/>}      label="صرف الشهر الحالي"    value={finance.total != null ? `${Number(finance.total).toLocaleString()} ر.ي` : '—'} color="#059669" />
+            <StatCard icon={<Clock size={20}/>}         label="كشوف صرف معلّقة"     value={pending.disbursements}       color="#ef4444" onClick={() => router.push('/disbursements')} />
           </>
         )}
       </div>
@@ -217,7 +245,7 @@ export default function GmDashboard() {
                       <div className="avatar">{o.full_name?.charAt(0) || '؟'}</div>
                       <div>
                         <div style={{ fontWeight: 700, color: '#1f2937', fontSize: '.85rem' }}>{o.full_name}</div>
-                        {o.is_gifted && <span className="gifted">🌟 موهوب</span>}
+                        {o.is_gifted && <span className="gifted"><Star size={10} style={{display:'inline',verticalAlign:'middle'}}/> موهوب</span>}
                       </div>
                     </div>
                   </td>
@@ -285,12 +313,21 @@ export default function GmDashboard() {
         .btn-notif:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(240,165,0,.4); }
 
         .stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; }
-        .stat-card { background:#fff; border:1px solid #e5eaf0; border-radius:1rem; padding:1.25rem; display:flex; align-items:flex-start; gap:.85rem; box-shadow:0 1px 4px rgba(27,94,140,.05); transition:box-shadow .15s,transform .15s; }
-        .stat-card:hover { box-shadow:0 4px 16px rgba(27,94,140,.1); transform:translateY(-1px); }
-        .stat-icon { width:44px; height:44px; border-radius:.75rem; display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0; }
-        .stat-value { font-size:1.6rem; font-weight:800; line-height:1; margin-bottom:.2rem; font-family:'Cairo',sans-serif; }
-        .stat-label { font-size:.78rem; font-weight:700; color:#374151; }
-        .stat-sub { font-size:.72rem; color:#94a3b8; margin-top:.15rem; }
+        .stat-card {
+          position:relative; background:#fff; border:1px solid #edf0f5;
+          border-radius:1.1rem; padding:1.3rem 1.3rem 1.1rem;
+          display:flex; flex-direction:column; gap:.35rem;
+          box-shadow:0 2px 8px rgba(27,94,140,.06);
+          transition:box-shadow .18s, transform .18s;
+          overflow:hidden;
+        }
+        .stat-card:hover { box-shadow:0 8px 24px rgba(27,94,140,.13); transform:translateY(-2px); }
+        .stat-card-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:.3rem; }
+        .stat-icon { width:46px; height:46px; border-radius:.875rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .stat-value { font-size:1.9rem; font-weight:800; line-height:1; font-family:'Cairo',sans-serif; }
+        .stat-label { font-size:.8rem; font-weight:600; color:#6b7a8d; }
+        .stat-sub { font-size:.71rem; color:#b0bac8; margin-top:.05rem; }
+        .stat-bar { position:absolute; bottom:0; right:0; left:0; height:3px; border-radius:0 0 1.1rem 1.1rem; }
 
         .two-col { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; }
         .card { background:#fff; border:1px solid #e5eaf0; border-radius:1rem; padding:1.5rem; box-shadow:0 1px 4px rgba(27,94,140,.05); }

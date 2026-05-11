@@ -79,10 +79,10 @@ router.post('/login', async (req, res, next) => {
     return res.json({
       accessToken,
       user: {
-        id:   user.id,
-        name: user.full_name,
+        id:    user.id,
+        name:  user.full_name,
         email: user.email,
-        role: user.role,
+        role:  user.role,
       },
     });
   } catch (err) {

@@ -14,41 +14,45 @@ import { usePathname, useRouter } from 'next/navigation';
 import useAuthStore from '../store/useAuthStore';
 import api from '../lib/api';
 import NotificationBell from './NotificationBell';
+import {
+  LayoutDashboard, Users, Home, Tag, Handshake, Star,
+  Map, UserCog, BookOpen, FileText, ClipboardList,
+  Plus, DollarSign, Archive, LogOut, ChevronRight, ChevronLeft,
+} from 'lucide-react';
 
 // ── Nav items per role ────────────────────────────────────────────────────────
 const NAV_ITEMS = {
   gm: [
-    { label: 'لوحة التحكم',      href: '/dashboard',        icon: '📊' },
-    { label: 'الأيتام',           href: '/orphans',           icon: '👦' },
-    { label: 'الأسر',             href: '/families',          icon: '👨‍👩‍👧' },
-    { label: 'مجمع التسويق',     href: '/marketing-pool',    icon: '🏷️' },
-    { label: 'الكفلاء',           href: '/sponsors',          icon: '🤝' },
-    { label: 'الأيتام الموهوبون', href: '/orphans/gifted',    icon: '🌟' },
-    { label: 'تحليلات المحافظات', href: '/governorates',      icon: '🗺️' },
-    { label: 'إدارة المستخدمين', href: '/users',              icon: '👥' },
-    { label: 'الإعلانات',         href: '/announcements',     icon: '📢' },
-    { label: 'إعدادات الحفظ',    href: '/quran-thresholds',  icon: '📖' },
-    { label: 'التقارير',          href: '/reports',           icon: '📄' },
+    { label: 'لوحة التحكم',      href: '/dashboard',        icon: LayoutDashboard },
+    { label: 'الأيتام',           href: '/orphans',           icon: Users },
+    { label: 'الأسر',             href: '/families',          icon: Home },
+    { label: 'مجمع التسويق',     href: '/marketing-pool',    icon: Tag },
+    { label: 'الكفلاء',           href: '/sponsors',          icon: Handshake },
+    { label: 'الأيتام الموهوبون', href: '/orphans/gifted',    icon: Star },
+    { label: 'تحليلات المحافظات', href: '/governorates',      icon: Map },
+    { label: 'إدارة المستخدمين', href: '/users',              icon: UserCog },
+    { label: 'إعدادات الحفظ',    href: '/quran-thresholds',  icon: BookOpen },
+    { label: 'التقارير',          href: '/reports',           icon: FileText },
   ],
   supervisor: [
-    { label: 'لوحة التحكم',    href: '/dashboard',      icon: '📊' },
-    { label: 'طلبات التسجيل',  href: '/registrations',  icon: '📋' },
-    { label: 'تقارير الحفظ',   href: '/quran-reports',  icon: '📖' },
-    { label: 'كشف الصرف',      href: '/disbursements/',  icon: '💰' },
-    { label: 'التقارير',        href: '/reports',        icon: '📄' },
+    { label: 'لوحة التحكم',    href: '/dashboard',      icon: LayoutDashboard },
+    { label: 'طلبات التسجيل',  href: '/registrations',  icon: ClipboardList },
+    { label: 'تقارير الحفظ',   href: '/quran-reports',  icon: BookOpen },
+    { label: 'كشف الصرف',      href: '/disbursements/', icon: DollarSign },
+    { label: 'التقارير',        href: '/reports',        icon: FileText },
   ],
   agent: [
-    { label: 'لوحة التحكم',     href: '/dashboard',         icon: '📊' },
-    { label: 'أيتامي',           href: '/my-orphans',        icon: '👦' },
-    { label: 'تسجيل يتيم',      href: '/orphans/new',       icon: '➕' },
-    { label: 'تسجيل أسرة',      href: '/families/new',      icon: '➕' },
-    { label: 'رفع تقرير الحفظ', href: '/quran-reports/new', icon: '📖' },
+    { label: 'لوحة التحكم',     href: '/dashboard',         icon: LayoutDashboard },
+    { label: 'أيتامي',           href: '/my-orphans',        icon: Users },
+    { label: 'تسجيل يتيم',      href: '/orphans/new',       icon: Plus },
+    { label: 'تسجيل أسرة',      href: '/families/new',      icon: Plus },
+    { label: 'رفع تقرير الحفظ', href: '/quran-reports/new', icon: BookOpen },
   ],
   finance: [
-    { label: 'لوحة التحكم',   href: '/dashboard',             icon: '📊' },
-    { label: 'كشف الصرف',     href: '/disbursements',         icon: '💰' },
-    { label: 'سجل الإصدارات', href: '/disbursements/history', icon: '🗂️' },
-    { label: 'التقارير',       href: '/reports',               icon: '📄' },
+    { label: 'لوحة التحكم',   href: '/dashboard',             icon: LayoutDashboard },
+    { label: 'كشف الصرف',     href: '/disbursements',         icon: DollarSign },
+    { label: 'سجل الإصدارات', href: '/disbursements/history', icon: Archive },
+    { label: 'التقارير',       href: '/reports',               icon: FileText },
   ],
 };
 
@@ -103,7 +107,7 @@ export default function AppShell({ children }) {
             className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition"
             aria-label="تبديل القائمة"
           >
-            {sidebarOpen ? '◀' : '▶'}
+            {sidebarOpen ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
           </button>
         </div>
 
@@ -124,7 +128,7 @@ export default function AppShell({ children }) {
                   }
                 `}
               >
-                <span className="text-lg flex-shrink-0">{item.icon}</span>
+                <item.icon size={18} className="flex-shrink-0" />
                 {sidebarOpen && <span>{item.label}</span>}
               </Link>
             );
@@ -152,7 +156,7 @@ export default function AppShell({ children }) {
               className="w-full flex justify-center text-danger hover:bg-red-50 p-2 rounded-lg transition"
               title="تسجيل الخروج"
             >
-              🚪
+              <LogOut size={18} />
             </button>
           )}
         </div>

@@ -69,7 +69,7 @@ const IconTransfer = () => (
 );
 
 const IconPlus = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
     strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
   </svg>
@@ -139,16 +139,30 @@ function SkeletonRow() {
 }
 
 // ── Stat pill ─────────────────────────────────────────────────────────────────
-function StatPill({ label, count, color, onClick, active }) {
+function StatPill({ label, count, color }) {
   return (
-    <button
-      className={`stat-pill ${active ? 'stat-pill-active' : ''}`}
-      style={{ '--pill-color': color }}
-      onClick={onClick}
+    <div
+      style={{
+        display: 'inline-flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '2px',
+        padding: '.6rem 1.1rem',
+        background: '#fff',
+        border: '1.5px solid #e5e7eb',
+        borderRadius: '12px',
+        fontFamily: "'Cairo', sans-serif",
+        minWidth: '80px',
+        boxShadow: '0 1px 3px rgba(0,0,0,.04)',
+      }}
     >
-      <span className="pill-count">{count}</span>
-      <span className="pill-label">{label}</span>
-    </button>
+      <span style={{ fontSize: '1.35rem', fontWeight: 800, lineHeight: 1, color }}>
+        {count}
+      </span>
+      <span style={{ fontSize: '.72rem', fontWeight: 600, color: '#6b7280', whiteSpace: 'nowrap' }}>
+        {label}
+      </span>
+    </div>
   );
 }
 
@@ -183,12 +197,11 @@ export default function OrphansListPage() {
     under_sponsorship: orphans.filter(o => o.status === 'under_sponsorship').length,
   };
 
-  // Load data
+  // Load data — statusFilter is applied client-side so stats always reflect full counts
   const fetchData = useCallback(() => {
     setLoading(true);
     setError('');
     const params = new URLSearchParams();
-    if (statusFilter) params.append('status', statusFilter);
     if (govFilter)    params.append('governorateId', govFilter);
     if (giftedFilter) params.append('isGifted', giftedFilter);
 
@@ -202,26 +215,25 @@ export default function OrphansListPage() {
       })
       .catch(() => setError('تعذّر تحميل بيانات الأيتام'))
       .finally(() => setLoading(false));
-  }, [statusFilter, govFilter, giftedFilter]);
+  }, [govFilter, giftedFilter]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // Client-side search filter
+  // Client-side search + status filter
   useEffect(() => {
-    if (!search.trim()) {
-      setFiltered(orphans);
-      return;
-    }
-    const q = search.toLowerCase();
-    setFiltered(
-      orphans.filter(
+    let result = orphans;
+    if (statusFilter) result = result.filter(o => o.status === statusFilter);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter(
         (o) =>
           o.full_name?.toLowerCase().includes(q) ||
           o.guardian_name?.toLowerCase().includes(q) ||
           o.governorate_ar?.toLowerCase().includes(q)
-      )
-    );
-  }, [search, orphans]);
+      );
+    }
+    setFiltered(result);
+  }, [search, statusFilter, orphans]);
 
   const handleRowClick = (orphan) => {
     router.push(`/orphans/${orphan.id}`);
@@ -267,7 +279,17 @@ export default function OrphansListPage() {
               <IconRefresh />
             </button>
             {(isAgent || isGM) && (
-              <Link href="/orphans/new" className="btn-add">
+              <Link
+                href="/orphans/new"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white no-underline hover:-translate-y-0.5 active:translate-y-0"
+                style={{
+                  background: 'linear-gradient(135deg, #1B5E8C 0%, #0f3a57 100%)',
+                  boxShadow: '0 4px 12px rgba(27,94,140,.35), 0 1px 3px rgba(0,0,0,.15)',
+                  border: '1.5px solid rgba(255,255,255,.15)',
+                  transition: 'all .18s ease',
+                  whiteSpace: 'nowrap',
+                }}
+              >
                 <IconPlus /> تسجيل يتيم جديد
               </Link>
             )}
@@ -276,60 +298,79 @@ export default function OrphansListPage() {
 
         {/* ── Stat pills ──────────────────────────────────────────── */}
         <div className="stat-pills">
-          <StatPill
-            label="الإجمالي"
-            count={stats.total}
-            color="#1B5E8C"
-            active={!statusFilter}
-            onClick={() => setStatus('')}
-          />
-          <StatPill
-            label="قيد المراجعة"
-            count={stats.under_review}
-            color="#F59E0B"
-            active={statusFilter === 'under_review'}
-            onClick={() => setStatus(s => s === 'under_review' ? '' : 'under_review')}
-          />
-          <StatPill
-            label="تحت التسويق"
-            count={stats.under_marketing}
-            color="#3B82F6"
-            active={statusFilter === 'under_marketing'}
-            onClick={() => setStatus(s => s === 'under_marketing' ? '' : 'under_marketing')}
-          />
-          <StatPill
-            label="تحت الكفالة"
-            count={stats.under_sponsorship}
-            color="#10B981"
-            active={statusFilter === 'under_sponsorship'}
-            onClick={() => setStatus(s => s === 'under_sponsorship' ? '' : 'under_sponsorship')}
-          />
+          <StatPill label="الإجمالي"       count={stats.total}              color="#1B5E8C" />
+          <StatPill label="قيد المراجعة"   count={stats.under_review}       color="#F59E0B" />
+          <StatPill label="تحت التسويق"    count={stats.under_marketing}    color="#3B82F6" />
+          <StatPill label="تحت الكفالة"    count={stats.under_sponsorship}    color="#10B981" />
         </div>
 
         {/* ── Filters bar ─────────────────────────────────────────── */}
-        <div className="filters-bar">
+        <div style={{
+          display: 'flex', gap: '0.65rem', flexWrap: 'wrap', alignItems: 'center',
+          background: '#fff', border: '1px solid #e5eaf0', borderRadius: '0.875rem',
+          padding: '0.875rem 1rem',
+          boxShadow: '0 1px 3px rgba(0,0,0,.04)',
+        }}>
           {/* Search */}
-          <div className="search-wrap">
-            <span className="search-icon"><IconSearch /></span>
+          <div style={{ position: 'relative', flex: 1, minWidth: '200px' }}>
+            <span style={{
+              position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)',
+              color: '#9ca3af', display: 'flex', pointerEvents: 'none',
+            }}>
+              <IconSearch />
+            </span>
             <input
               type="text"
-              className="search-inp"
               placeholder="ابحث بالاسم أو اسم الوصي أو المحافظة…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              style={{
+                width: '100%', boxSizing: 'border-box',
+                padding: '0.55rem 2.25rem 0.55rem 2rem',
+                border: '1.5px solid #e5e7eb', borderRadius: '0.625rem',
+                fontFamily: "'Cairo', sans-serif", fontSize: '0.875rem', color: '#1f2937',
+                background: '#fafafa', outline: 'none', direction: 'rtl',
+                transition: 'border-color .15s, box-shadow .15s',
+              }}
+              onFocus={e => { e.target.style.borderColor = '#1B5E8C'; e.target.style.boxShadow = '0 0 0 3px rgba(27,94,140,.1)'; e.target.style.background = '#fff'; }}
+              onBlur={e  => { e.target.style.borderColor = '#e5e7eb'; e.target.style.boxShadow = 'none';                           e.target.style.background = '#fafafa'; }}
             />
             {search && (
-              <button className="search-clear" onClick={() => setSearch('')}>✕</button>
+              <button
+                onClick={() => setSearch('')}
+                style={{
+                  position: 'absolute', left: '0.6rem', top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer',
+                  fontSize: '0.8rem', padding: '0.2rem', lineHeight: 1,
+                }}
+              >✕</button>
             )}
           </div>
 
           {/* Status filter */}
-          <div className="filter-select-wrap">
-            <span className="filter-icon"><IconFilter /></span>
+          <div style={{ position: 'relative' }}>
+            <span style={{
+              position: 'absolute', right: '0.65rem', top: '50%', transform: 'translateY(-50%)',
+              color: '#9ca3af', display: 'flex', pointerEvents: 'none', zIndex: 1,
+            }}>
+              <IconFilter />
+            </span>
             <select
-              className="filter-select"
               value={statusFilter}
               onChange={(e) => setStatus(e.target.value)}
+              style={{
+                padding: '0.55rem 2.1rem 0.55rem 1.75rem',
+                border: '1.5px solid #e5e7eb', borderRadius: '0.625rem',
+                fontFamily: "'Cairo', sans-serif", fontSize: '0.82rem', color: '#374151',
+                background: '#fafafa', outline: 'none', cursor: 'pointer',
+                appearance: 'none',
+                backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")",
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'left 0.6rem center',
+                transition: 'border-color .15s',
+              }}
+              onFocus={e => e.target.style.borderColor = '#1B5E8C'}
+              onBlur={e  => e.target.style.borderColor = '#e5e7eb'}
             >
               {ALL_STATUSES.map((s) => (
                 <option key={s.value} value={s.value}>{s.label}</option>
@@ -338,37 +379,68 @@ export default function OrphansListPage() {
           </div>
 
           {/* Governorate filter */}
-          <div className="filter-select-wrap">
-            <select
-              className="filter-select"
-              value={govFilter}
-              onChange={(e) => setGov(e.target.value)}
-            >
-              <option value="">جميع المحافظات</option>
-              {governorates.map((g) => (
-                <option key={g.id} value={g.id}>{g.name_ar}</option>
-              ))}
-            </select>
-          </div>
+          <select
+            value={govFilter}
+            onChange={(e) => setGov(e.target.value)}
+            style={{
+              padding: '0.55rem 0.875rem 0.55rem 1.75rem',
+              border: '1.5px solid #e5e7eb', borderRadius: '0.625rem',
+              fontFamily: "'Cairo', sans-serif", fontSize: '0.82rem', color: '#374151',
+              background: '#fafafa', outline: 'none', cursor: 'pointer',
+              appearance: 'none',
+              backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")",
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'left 0.6rem center',
+              transition: 'border-color .15s',
+            }}
+            onFocus={e => e.target.style.borderColor = '#1B5E8C'}
+            onBlur={e  => e.target.style.borderColor = '#e5e7eb'}
+          >
+            <option value="">جميع المحافظات</option>
+            {governorates.map((g) => (
+              <option key={g.id} value={g.id}>{g.name_ar}</option>
+            ))}
+          </select>
 
           {/* Gifted filter — GM/supervisor only */}
           {(isGM || isSupervisor) && (
-            <div className="filter-select-wrap">
-              <select
-                className="filter-select"
-                value={giftedFilter}
-                onChange={(e) => setGifted(e.target.value)}
-              >
-                <option value="">الكل (موهوب + عادي)</option>
-                <option value="true">الموهوبون فقط ⭐</option>
-                <option value="false">غير الموهوبين</option>
-              </select>
-            </div>
+            <select
+              value={giftedFilter}
+              onChange={(e) => setGifted(e.target.value)}
+              style={{
+                padding: '0.55rem 0.875rem 0.55rem 1.75rem',
+                border: '1.5px solid #e5e7eb', borderRadius: '0.625rem',
+                fontFamily: "'Cairo', sans-serif", fontSize: '0.82rem', color: '#374151',
+                background: '#fafafa', outline: 'none', cursor: 'pointer',
+                appearance: 'none',
+                backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")",
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'left 0.6rem center',
+                transition: 'border-color .15s',
+              }}
+              onFocus={e => e.target.style.borderColor = '#1B5E8C'}
+              onBlur={e  => e.target.style.borderColor = '#e5e7eb'}
+            >
+              <option value="">الكل (موهوب + عادي)</option>
+              <option value="true">الموهوبون فقط ⭐</option>
+              <option value="false">غير الموهوبين</option>
+            </select>
           )}
 
           {/* Clear filters */}
           {hasActiveFilters && (
-            <button className="btn-clear-filters" onClick={clearFilters}>
+            <button
+              onClick={clearFilters}
+              style={{
+                padding: '0.5rem 0.875rem',
+                background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '0.625rem',
+                color: '#B91C1C', fontFamily: "'Cairo', sans-serif", fontSize: '0.78rem',
+                fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
+                transition: 'background .12s',
+              }}
+              onMouseEnter={e => e.target.style.background = '#FEE2E2'}
+              onMouseLeave={e => e.target.style.background = '#FEF2F2'}
+            >
               مسح الفلاتر ✕
             </button>
           )}
@@ -512,13 +584,6 @@ export default function OrphansListPage() {
                               <span>نقل</span>
                             </button>
                           )}
-                          <button
-                            className="btn-view-row"
-                            onClick={() => handleRowClick(orphan)}
-                            title="عرض التفاصيل"
-                          >
-                            <IconChevron />
-                          </button>
                         </div>
                       </td>
                     </tr>
@@ -580,16 +645,6 @@ export default function OrphansListPage() {
         }
         .btn-refresh:hover { border-color: #1B5E8C; color: #1B5E8C; background: #f0f7ff; }
 
-        .btn-add {
-          display: inline-flex; align-items: center; gap: .4rem;
-          padding: .65rem 1.25rem;
-          background: linear-gradient(135deg, #1B5E8C, #134569);
-          color: #fff; border-radius: .75rem; text-decoration: none;
-          font-size: .875rem; font-weight: 700;
-          box-shadow: 0 2px 8px rgba(27,94,140,.25);
-          transition: all .15s;
-        }
-        .btn-add:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(27,94,140,.35); }
 
         /* ── Stat pills ─────────────────────────────────────────── */
         .stat-pills { display: flex; gap: .6rem; flex-wrap: wrap; }

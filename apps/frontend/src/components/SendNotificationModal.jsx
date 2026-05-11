@@ -14,14 +14,15 @@
 
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
+import { UserRound, Eye, Banknote, Building2, Megaphone, Users, Search, CheckCircle, AlertTriangle } from 'lucide-react';
 
 // ── Role target options ────────────────────────────────────────────────────────
 const ROLE_TARGETS = [
-  { value: 'agent',      label: 'جميع المناديب',    icon: '👤', color: '#3b82f6' },
-  { value: 'supervisor', label: 'جميع المشرفين',    icon: '👁',  color: '#8b5cf6' },
-  { value: 'finance',    label: 'القسم المالي',      icon: '💰', color: '#059669' },
-  { value: 'gm',         label: 'المديرون العامون', icon: '🏢', color: '#f59e0b' },
-  { value: 'all',        label: 'الجميع',            icon: '📢', color: '#ef4444' },
+  { value: 'agent',      label: 'جميع المناديب',    icon: <UserRound size={18}/>, color: '#3b82f6' },
+  { value: 'supervisor', label: 'جميع المشرفين',    icon: <Eye size={18}/>,       color: '#8b5cf6' },
+  { value: 'finance',    label: 'القسم المالي',      icon: <Banknote size={18}/>,  color: '#059669' },
+  { value: 'gm',         label: 'المديرون العامون', icon: <Building2 size={18}/>, color: '#f59e0b' },
+  { value: 'all',        label: 'الجميع',            icon: <Megaphone size={18}/>, color: '#ef4444' },
 ];
 
 // ── Character counter color ────────────────────────────────────────────────────
@@ -120,7 +121,7 @@ export default function SendNotificationModal({ onClose, onSent }) {
         <div className="backdrop" onClick={onClose} />
         <div className="modal" dir="rtl">
           <div className="success-wrap">
-            <div className="success-icon">✅</div>
+            <div className="success-icon"><CheckCircle size={48} color="#10b981"/></div>
             <h3 className="success-title">تم الإرسال بنجاح</h3>
             <p className="success-body">
               تم إرسال الإشعار إلى{' '}
@@ -149,7 +150,7 @@ export default function SendNotificationModal({ onClose, onSent }) {
         {/* Header */}
         <div className="modal-head">
           <div className="modal-head-left">
-            <span className="modal-head-icon">📣</span>
+            <span className="modal-head-icon"><Megaphone size={22} color="#fff"/></span>
             <div>
               <h2 className="modal-title">إرسال إشعار</h2>
               <p className="modal-sub">أرسل رسالة مباشرة للمناديب والمشرفين</p>
@@ -215,13 +216,13 @@ export default function SendNotificationModal({ onClose, onSent }) {
               className={`mode-tab ${mode === 'roles' ? 'mode-tab-active' : ''}`}
               onClick={() => { setMode('roles'); setError(''); }}
             >
-              👥 إرسال حسب الدور
+              <Users size={15} style={{display:'inline',verticalAlign:'middle',marginLeft:4}}/> إرسال حسب الدور
             </button>
             <button
               className={`mode-tab ${mode === 'users' ? 'mode-tab-active' : ''}`}
               onClick={() => { setMode('users'); setError(''); }}
             >
-              👤 إرسال لأفراد محددين
+              <UserRound size={15} style={{display:'inline',verticalAlign:'middle',marginLeft:4}}/> إرسال لأفراد محددين
             </button>
           </div>
 
@@ -259,7 +260,7 @@ export default function SendNotificationModal({ onClose, onSent }) {
           {mode === 'users' && (
             <div className="users-section">
               <div className="search-wrap">
-                <span className="search-icon">🔍</span>
+                <Search size={15} style={{position:'absolute',right:'.85rem',pointerEvents:'none',color:'#9ca3af'}}/>
                 <input
                   className="search-inp"
                   placeholder="ابحث بالاسم أو البريد…"
@@ -328,7 +329,7 @@ export default function SendNotificationModal({ onClose, onSent }) {
           {/* Error */}
           {error && (
             <div className="error-banner">
-              <span>⚠</span> {error}
+              <AlertTriangle size={15}/> {error}
             </div>
           )}
         </div>
@@ -348,7 +349,7 @@ export default function SendNotificationModal({ onClose, onSent }) {
               <><span className="spin" aria-hidden />جارٍ الإرسال…</>
             ) : (
               <>
-                📣 إرسال
+                <Megaphone size={16}/> إرسال
                 {mode === 'roles' && selectedRoles.length > 0 && (
                   <span className="send-count">
                     ({selectedRoles.includes('all') ? 'للجميع' : selectedRoles.length + ' أدوار'})

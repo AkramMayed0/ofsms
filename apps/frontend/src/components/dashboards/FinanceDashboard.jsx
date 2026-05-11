@@ -12,6 +12,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
+import { Clock, Banknote, CheckCircle, Calendar, Bell, CheckSquare, Folder, Archive, FileText, BarChart3, AlertTriangle } from 'lucide-react';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -45,19 +46,27 @@ const DISBURSE_STATUS = {
 function StatCard({ icon, label, value, sub, color = '#1B5E8C', onClick, urgent }) {
   return (
     <div
-      className="stat-card"
       onClick={onClick}
-      style={{ cursor: onClick ? 'pointer' : 'default', '--c': color,
-        borderColor: urgent ? color : undefined,
-        boxShadow: urgent ? `0 0 0 3px ${color}20` : undefined,
+      style={{
+        position: 'relative', background: '#fff',
+        border: `1px solid ${urgent ? color : '#edf0f5'}`,
+        borderRadius: '1.1rem', padding: '1.3rem 1.3rem 1.1rem',
+        display: 'flex', flexDirection: 'column', gap: '.35rem',
+        boxShadow: urgent ? `0 0 0 3px ${color}20` : '0 2px 8px rgba(27,94,140,.06)',
+        overflow: 'hidden', cursor: onClick ? 'pointer' : 'default',
+        transition: 'box-shadow .18s, transform .18s',
+        fontFamily: "'Cairo','Tajawal',sans-serif",
       }}
+      onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 8px 24px rgba(27,94,140,.13)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+      onMouseLeave={e => { e.currentTarget.style.boxShadow = urgent ? `0 0 0 3px ${color}20` : '0 2px 8px rgba(27,94,140,.06)'; e.currentTarget.style.transform = 'translateY(0)'; }}
     >
-      <div className="stat-icon" style={{ background: `${color}15`, color }}>{icon}</div>
-      <div>
-        <div className="stat-value" style={{ color }}>{value ?? '—'}</div>
-        <div className="stat-label">{label}</div>
-        {sub && <div className="stat-sub">{sub}</div>}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '.25rem' }}>
+        <div style={{ width: 46, height: 46, borderRadius: '.875rem', background: `${color}18`, color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{icon}</div>
+        <div style={{ fontSize: '1.8rem', fontWeight: 800, color, lineHeight: 1, fontFamily: "'Cairo',sans-serif" }}>{value ?? '—'}</div>
       </div>
+      <div style={{ fontSize: '.82rem', fontWeight: 600, color: '#4b5563' }}>{label}</div>
+      {sub && <div style={{ fontSize: '.71rem', color: '#b0bac8' }}>{sub}</div>}
+      <div style={{ position: 'absolute', bottom: 0, right: 0, left: 0, height: 3, background: color, borderRadius: '0 0 1.1rem 1.1rem' }} />
     </div>
   );
 }
@@ -121,7 +130,7 @@ export default function FinanceDashboard() {
         </button>
       </div>
 
-      {error && <div className="err-banner">⚠ {error}</div>}
+      {error && <div className="err-banner"><AlertTriangle size={15}/> {error}</div>}
 
       {/* Stat cards */}
       <div className="stats-grid">
@@ -138,7 +147,7 @@ export default function FinanceDashboard() {
         ) : (
           <>
             <StatCard
-              icon="⏳" label="بانتظار تصديقك"
+              icon={<Clock size={20}/>} label="بانتظار تصديقك"
               value={awaitingAuth.length}
               sub="كشوف صرف اعتمدها المشرف"
               color="#f59e0b"
@@ -146,19 +155,19 @@ export default function FinanceDashboard() {
               onClick={() => router.push('/disbursements')}
             />
             <StatCard
-              icon="💰" label="إجمالي الشهر الحالي"
+              icon={<Banknote size={20}/>} label="إجمالي الشهر الحالي"
               value={formatAmount(summary.current_month_total)}
               sub={`${summary.current_month_count || 0} مستفيد`}
               color="#1B5E8C"
             />
             <StatCard
-              icon="✅" label="تم صرفه هذا الشهر"
+              icon={<CheckCircle size={20}/>} label="تم صرفه هذا الشهر"
               value={formatAmount(summary.released_this_month)}
               sub="مُحرَّر ومُوزَّع"
               color="#10b981"
             />
             <StatCard
-              icon="📅" label="موعد الصرف القادم"
+              icon={<Calendar size={20}/>} label="موعد الصرف القادم"
               value={daysLeft !== null ? `${daysLeft} يوم` : '—'}
               sub={disbDate ? formatDate(disbDate) : ''}
               color={daysLeft !== null && daysLeft <= 3 ? '#ef4444' : '#059669'}
@@ -171,7 +180,7 @@ export default function FinanceDashboard() {
       {/* Urgent authorization banner */}
       {!loading && awaitingAuth.length > 0 && (
         <div className="urgent-banner">
-          <div className="urgent-icon">🔔</div>
+          <div className="urgent-icon"><Bell size={24}/></div>
           <div className="urgent-body">
             <strong>لديك {awaitingAuth.length} {awaitingAuth.length === 1 ? 'كشف صرف' : 'كشوف صرف'} بانتظار تصديقك</strong>
             <p>هذه الكشوف اعتمدها المشرف وتحتاج مصادقتك النهائية قبل إصدارها للمناديب.</p>
@@ -204,7 +213,7 @@ export default function FinanceDashboard() {
           </div>
         ) : awaitingAuth.length === 0 ? (
           <div className="empty-state">
-            <span style={{ fontSize: '2.5rem' }}>✅</span>
+            <CheckSquare size={40} color="#10b981"/>
             <p>لا توجد كشوف بانتظار تصديقك</p>
           </div>
         ) : (
@@ -318,7 +327,7 @@ export default function FinanceDashboard() {
             </div>
           ) : recentHistory.length === 0 ? (
             <div className="empty-state">
-              <span style={{ fontSize: '2rem' }}>📂</span>
+              <Folder size={32} color="#9ca3af"/>
               <p>لا يوجد سجل إصدارات بعد</p>
             </div>
           ) : (
@@ -345,10 +354,10 @@ export default function FinanceDashboard() {
         <h2 className="card-title">إجراءات سريعة</h2>
         <div className="actions-grid">
           {[
-            { icon: '💰', label: 'مراجعة كشوف الصرف',   href: '/disbursements',          color: '#f59e0b' },
-            { icon: '🗂️', label: 'سجل الإصدارات',        href: '/disbursements/history',  color: '#3b82f6' },
-            { icon: '📄', label: 'تصدير التقارير',        href: '/reports',                color: '#059669' },
-            { icon: '📊', label: 'التحليل المالي',        href: '/reports',                color: '#8b5cf6' },
+            { icon: <Banknote size={20}/>,  label: 'مراجعة كشوف الصرف', href: '/disbursements',         color: '#f59e0b' },
+            { icon: <Archive size={20}/>,   label: 'سجل الإصدارات',      href: '/disbursements/history', color: '#3b82f6' },
+            { icon: <FileText size={20}/>,  label: 'تصدير التقارير',      href: '/reports',               color: '#059669' },
+            { icon: <BarChart3 size={20}/>, label: 'التحليل المالي',      href: '/reports',               color: '#8b5cf6' },
           ].map(({ icon, label, href, color }) => (
             <button
               key={`${href}-${label}`}
@@ -372,12 +381,14 @@ export default function FinanceDashboard() {
         .err-banner { background:#fef2f2; border:1px solid #fecaca; border-radius:.75rem; padding:.85rem 1rem; font-size:.85rem; color:#b91c1c; }
 
         .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; }
-        .stat-card { background:#fff; border:1.5px solid #e5eaf0; border-radius:1rem; padding:1.25rem; display:flex; align-items:flex-start; gap:.85rem; box-shadow:0 1px 4px rgba(27,94,140,.05); transition:all .15s; }
-        .stat-card:hover { box-shadow:0 4px 16px rgba(27,94,140,.1); transform:translateY(-1px); }
-        .stat-icon { width:44px; height:44px; border-radius:.75rem; display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0; }
-        .stat-value { font-size:1.4rem; font-weight:800; line-height:1.1; margin-bottom:.2rem; font-family:'Cairo',sans-serif; }
-        .stat-label { font-size:.78rem; font-weight:700; color:#374151; }
-        .stat-sub { font-size:.72rem; color:#94a3b8; margin-top:.15rem; }
+        .stat-card { position:relative; background:#fff; border:1px solid #edf0f5; border-radius:1.1rem; padding:1.3rem 1.3rem 1.1rem; display:flex; flex-direction:column; gap:.35rem; box-shadow:0 2px 8px rgba(27,94,140,.06); transition:all .18s; overflow:hidden; }
+        .stat-card:hover { box-shadow:0 8px 24px rgba(27,94,140,.13); transform:translateY(-2px); }
+        .stat-card-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:.3rem; }
+        .stat-icon { width:46px; height:46px; border-radius:.875rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .stat-value { font-size:1.7rem; font-weight:800; line-height:1; font-family:'Cairo',sans-serif; }
+        .stat-label { font-size:.8rem; font-weight:600; color:#6b7a8d; }
+        .stat-sub { font-size:.71rem; color:#b0bac8; margin-top:.05rem; }
+        .stat-bar { position:absolute; bottom:0; right:0; left:0; height:3px; border-radius:0 0 1.1rem 1.1rem; }
 
         .urgent-banner { display:flex; align-items:center; gap:1rem; background:#fffbeb; border:1.5px solid #fde68a; border-radius:1rem; padding:1.1rem 1.5rem; }
         .urgent-icon { font-size:1.5rem; flex-shrink:0; }

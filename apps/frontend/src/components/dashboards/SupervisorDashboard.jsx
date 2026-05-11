@@ -9,6 +9,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
+import { ClipboardList, BookOpen, Banknote, Calendar, Siren, AlarmClock, CheckCircle, AlertTriangle, FileText, Fingerprint } from 'lucide-react';
 
 const formatDate = (iso) => {
   if (!iso) return '—';
@@ -23,16 +24,27 @@ const daysUntil = (iso) => {
 function StatCard({ icon, label, value, sub, color = '#1B5E8C', onClick, urgent }) {
   return (
     <div
-      className={`stat-card ${urgent ? 'stat-urgent' : ''}`}
       onClick={onClick}
-      style={{ cursor: onClick ? 'pointer' : 'default', '--c': color }}
+      style={{
+        position: 'relative', background: '#fff',
+        border: `1px solid ${urgent ? color : '#edf0f5'}`,
+        borderRadius: '1.1rem', padding: '1.3rem 1.3rem 1.1rem',
+        display: 'flex', flexDirection: 'column', gap: '.35rem',
+        boxShadow: urgent ? `0 0 0 3px ${color}20` : '0 2px 8px rgba(27,94,140,.06)',
+        overflow: 'hidden', cursor: onClick ? 'pointer' : 'default',
+        transition: 'box-shadow .18s, transform .18s',
+        fontFamily: "'Cairo','Tajawal',sans-serif",
+      }}
+      onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 8px 24px rgba(27,94,140,.13)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+      onMouseLeave={e => { e.currentTarget.style.boxShadow = urgent ? `0 0 0 3px ${color}20` : '0 2px 8px rgba(27,94,140,.06)'; e.currentTarget.style.transform = 'translateY(0)'; }}
     >
-      <div className="stat-icon" style={{ background: `${color}15`, color }}>{icon}</div>
-      <div>
-        <div className="stat-value" style={{ color }}>{value ?? '—'}</div>
-        <div className="stat-label">{label}</div>
-        {sub && <div className="stat-sub">{sub}</div>}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '.25rem' }}>
+        <div style={{ width: 46, height: 46, borderRadius: '.875rem', background: `${color}18`, color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{icon}</div>
+        <div style={{ fontSize: '2rem', fontWeight: 800, color, lineHeight: 1, fontFamily: "'Cairo',sans-serif" }}>{value ?? '—'}</div>
       </div>
+      <div style={{ fontSize: '.82rem', fontWeight: 600, color: '#4b5563' }}>{label}</div>
+      {sub && <div style={{ fontSize: '.71rem', color: '#b0bac8' }}>{sub}</div>}
+      <div style={{ position: 'absolute', bottom: 0, right: 0, left: 0, height: 3, background: color, borderRadius: '0 0 1.1rem 1.1rem' }} />
     </div>
   );
 }
@@ -103,7 +115,7 @@ export default function SupervisorDashboard() {
         </button>
       </div>
 
-      {error && <div className="err-banner">⚠ {error}</div>}
+      {error && <div className="err-banner"><AlertTriangle size={15}/> {error}</div>}
 
       {/* Stat cards */}
       <div className="stats-grid">
@@ -120,7 +132,7 @@ export default function SupervisorDashboard() {
         ) : (
           <>
             <StatCard
-              icon="📋" label="طلبات تسجيل معلّقة"
+              icon={<ClipboardList size={20}/>} label="طلبات تسجيل معلّقة"
               value={counts.total_registrations}
               sub={`${counts.orphans || 0} يتيم · ${counts.families || 0} أسرة`}
               color="#f59e0b"
@@ -128,7 +140,7 @@ export default function SupervisorDashboard() {
               onClick={() => router.push('/registrations')}
             />
             <StatCard
-              icon="📖" label="تقارير حفظ معلّقة"
+              icon={<BookOpen size={20}/>} label="تقارير حفظ معلّقة"
               value={counts.quran_reports}
               sub="بانتظار المراجعة والاعتماد"
               color="#8b5cf6"
@@ -136,7 +148,7 @@ export default function SupervisorDashboard() {
               onClick={() => router.push('/quran-reports')}
             />
             <StatCard
-              icon="💰" label="كشوف صرف معلّقة"
+              icon={<Banknote size={20}/>} label="كشوف صرف معلّقة"
               value={counts.disbursements}
               sub="تحتاج اعتمادك"
               color="#ef4444"
@@ -144,7 +156,7 @@ export default function SupervisorDashboard() {
               onClick={() => router.push('/disbursements')}
             />
             <StatCard
-              icon="📅" label="موعد الصرف القادم"
+              icon={<Calendar size={20}/>} label="موعد الصرف القادم"
               value={daysLeft !== null ? `${daysLeft} يوم` : '—'}
               sub={disbDate ? formatDate(disbDate) : ''}
               color={daysLeft !== null && daysLeft <= 3 ? '#ef4444' : '#10b981'}
@@ -160,7 +172,7 @@ export default function SupervisorDashboard() {
           borderColor: daysLeft <= 2 ? '#fca5a5' : '#fed7aa',
           background:  daysLeft <= 2 ? '#fef2f2' : '#fff7ed',
         }}>
-          <div className="countdown-icon">{daysLeft <= 2 ? '🚨' : '⏰'}</div>
+          <div className="countdown-icon">{daysLeft <= 2 ? <Siren size={24}/> : <AlarmClock size={24}/>}</div>
           <div>
             <strong style={{ color: daysLeft <= 2 ? '#b91c1c' : '#9a3412' }}>
               {daysLeft === 0 ? 'موعد الصرف اليوم!' : `${daysLeft} ${daysLeft === 1 ? 'يوم' : 'أيام'} على موعد الصرف`}
@@ -201,7 +213,7 @@ export default function SupervisorDashboard() {
             </div>
           ) : allPending.length === 0 ? (
             <div className="empty-state">
-              <span style={{ fontSize: '2rem' }}>✅</span>
+              <CheckCircle size={32} color="#10b981"/>
               <p>لا توجد طلبات معلّقة</p>
             </div>
           ) : (
@@ -240,7 +252,7 @@ export default function SupervisorDashboard() {
             </div>
           ) : quranReports.length === 0 ? (
             <div className="empty-state">
-              <span style={{ fontSize: '2rem' }}>✅</span>
+              <CheckCircle size={32} color="#10b981"/>
               <p>لا توجد تقارير معلّقة</p>
             </div>
           ) : (
@@ -272,11 +284,11 @@ export default function SupervisorDashboard() {
         <h2 className="card-title">إجراءات سريعة</h2>
         <div className="actions-grid">
           {[
-            { icon: '📋', label: 'مراجعة التسجيلات',    href: '/registrations',  color: '#f59e0b' },
-            { icon: '📖', label: 'مراجعة تقارير الحفظ', href: '/quran-reports',  color: '#8b5cf6' },
-            { icon: '💰', label: 'مراجعة كشف الصرف',    href: '/disbursements',  color: '#ef4444' },
-            { icon: '👆', label: 'متابعة البصمات',      href: '/receipts/supervisor', color: '#db2777' },
-            { icon: '📄', label: 'التقارير والتصدير',    href: '/reports',        color: '#059669' },
+            { icon: <ClipboardList size={20}/>, label: 'مراجعة التسجيلات',    href: '/registrations',       color: '#f59e0b' },
+            { icon: <BookOpen size={20}/>,     label: 'مراجعة تقارير الحفظ', href: '/quran-reports',       color: '#8b5cf6' },
+            { icon: <Banknote size={20}/>,     label: 'مراجعة كشف الصرف',    href: '/disbursements',       color: '#ef4444' },
+            { icon: <Fingerprint size={20}/>,  label: 'متابعة البصمات',       href: '/receipts/supervisor', color: '#db2777' },
+            { icon: <FileText size={20}/>,     label: 'التقارير والتصدير',    href: '/reports',             color: '#059669' },
           ].map(({ icon, label, href, color }) => (
             <button
               key={href}
@@ -300,13 +312,15 @@ export default function SupervisorDashboard() {
         .err-banner { background:#fef2f2; border:1px solid #fecaca; border-radius:.75rem; padding:.85rem 1rem; font-size:.85rem; color:#b91c1c; }
 
         .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; }
-        .stat-card { background:#fff; border:1.5px solid #e5eaf0; border-radius:1rem; padding:1.25rem; display:flex; align-items:flex-start; gap:.85rem; box-shadow:0 1px 4px rgba(27,94,140,.05); transition:all .15s; }
-        .stat-card:hover { box-shadow:0 4px 16px rgba(27,94,140,.1); transform:translateY(-1px); }
+        .stat-card { position:relative; background:#fff; border:1px solid #edf0f5; border-radius:1.1rem; padding:1.3rem 1.3rem 1.1rem; display:flex; flex-direction:column; gap:.35rem; box-shadow:0 2px 8px rgba(27,94,140,.06); transition:all .18s; overflow:hidden; }
+        .stat-card:hover { box-shadow:0 8px 24px rgba(27,94,140,.13); transform:translateY(-2px); }
         .stat-urgent { border-color:var(--c) !important; box-shadow:0 0 0 3px color-mix(in srgb, var(--c) 12%, transparent) !important; }
-        .stat-icon { width:44px; height:44px; border-radius:.75rem; display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0; }
-        .stat-value { font-size:1.75rem; font-weight:800; line-height:1; margin-bottom:.2rem; font-family:'Cairo',sans-serif; }
-        .stat-label { font-size:.78rem; font-weight:700; color:#374151; }
-        .stat-sub { font-size:.72rem; color:#94a3b8; margin-top:.15rem; }
+        .stat-card-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:.3rem; }
+        .stat-icon { width:46px; height:46px; border-radius:.875rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .stat-value { font-size:1.9rem; font-weight:800; line-height:1; font-family:'Cairo',sans-serif; }
+        .stat-label { font-size:.8rem; font-weight:600; color:#6b7a8d; }
+        .stat-sub { font-size:.71rem; color:#b0bac8; margin-top:.05rem; }
+        .stat-bar { position:absolute; bottom:0; right:0; left:0; height:3px; border-radius:0 0 1.1rem 1.1rem; }
 
         .countdown-banner { display:flex; align-items:center; gap:1rem; border:1.5px solid; border-radius:1rem; padding:1.1rem 1.5rem; }
         .countdown-icon { font-size:1.5rem; flex-shrink:0; }

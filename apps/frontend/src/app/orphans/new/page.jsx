@@ -19,6 +19,15 @@ import AppShell from '@/components/AppShell';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
+const TALENT_CATEGORIES = [
+  { key: 'creativity', label: 'الإبداع والكتابة',   options: ['كتابة قصص', 'شعر', 'رسم', 'تصميم'] },
+  { key: 'sports',     label: 'الرياضة',             options: ['كرة قدم', 'سباحة', 'كاراتيه', 'أخرى'] },
+  { key: 'arts',       label: 'الفنون والأداء',      options: ['إنشاد', 'تمثيل', 'إلقاء'] },
+  { key: 'tech',       label: 'المهارات التقنية',    options: ['استخدام الحاسب', 'تصميم', 'برمجة', 'صيانة أجهزة'] },
+  { key: 'social',     label: 'المهارات الاجتماعية', options: ['قيادة', 'تعاون', 'خدمة مجتمعية'] },
+  { key: 'life',       label: 'المهارات الحياتية',   options: ['الطبخ', 'الخياطة', 'البستنة', 'حرف يدوية'] },
+];
+
 const GUARDIAN_RELATIONS = [
   { value: 'uncle',          label: 'عم' },
   { value: 'maternal_uncle', label: 'خال' },
@@ -141,6 +150,31 @@ export default function OrphanRegistrationPage() {
   const [submitState,  setSubmitState]  = useState('idle'); // idle | loading | success | error
   const [apiError,     setApiError]     = useState('');
 
+  const [repeatedYear,    setRepeatedYear]    = useState('');
+  const [ownershipType,   setOwnershipType]   = useState('');
+  const [buildingType,    setBuildingType]    = useState('');
+  const [hasChronicDisease,    setHasChronicDisease]    = useState('');
+  const [hasRegularTreatment,  setHasRegularTreatment]  = useState('');
+  const [hasHealthInsurance,   setHasHealthInsurance]   = useState('');
+  const [incomeSource,         setIncomeSource]         = useState('');
+  const [hasCharitySupport,    setHasCharitySupport]    = useState('');
+  const [selectedTalents,      setSelectedTalents]      = useState(new Set());
+  const [familyRelations,      setFamilyRelations]      = useState('');
+  const [communityRelation,    setCommunityRelation]    = useState('');
+  const [schoolRelation,       setSchoolRelation]       = useState('');
+  const [socialBehavior,       setSocialBehavior]       = useState('');
+  const [needsSocialSupport,   setNeedsSocialSupport]   = useState('');
+  const [quranLevel,           setQuranLevel]           = useState('');
+  const [prayerCommitment,     setPrayerCommitment]     = useState('');
+  const [moralBehavior,        setMoralBehavior]        = useState('');
+  const [generalAppearance,    setGeneralAppearance]    = useState('');
+  const [selfExpression,       setSelfExpression]       = useState('');
+  const [psychFamilyRelations, setPsychFamilyRelations] = useState('');
+  const [peerRelations,        setPeerRelations]        = useState('');
+  const [sleepAppetite,        setSleepAppetite]        = useState('');
+  const [psychSigns,           setPsychSigns]           = useState('');
+  const [needsPsychSupport,    setNeedsPsychSupport]    = useState('');
+
   const [deathCertFile,   setDeathCertFile]   = useState(null);
   const [birthCertFile,   setBirthCertFile]   = useState(null);
   const [additionalFiles, setAdditionalFiles] = useState([]);
@@ -155,7 +189,24 @@ export default function OrphanRegistrationPage() {
   } = useForm({
     defaultValues: {
       fullName: '', dateOfBirth: '', gender: '',
-      governorateId: '', guardianName: '', guardianRelation: '', notes: '',
+      governorateId: '', motherGovernorate: '',
+      birthPlace: '', residence: '',
+      phone1: '', phone1Relation: '',
+      phone2: '', phone2Relation: '', address: '',
+      schoolGrade: '', sectorType: '', directorate: '', schoolOrg: '',
+      favoriteSubject: '', difficultySubject: '', generalLevel: '',
+      repeatedYearReason: '', gradeDetail: '', generalGrade: '',
+      lastResultAvg: '', highestGrade: '', lowestGrade: '',
+      eduResponsible: '', eduResponsiblePhone: '', eduLevel: '',
+      guardianName: '', guardianRelation: '',
+      guardianAge: '', guardianEduLevel: '', guardianJob: '', guardianHealth: '',
+      familyMaleCount: '', familyFemaleCount: '', familyProblems: '',
+      floorsCount: '', roomsCount: '', water: '', electricity: '', rentAmount: '', housingDetails: '',
+      chronicDiseaseDetails: '',
+      monthlyIncome: '', charitySupportDetails: '',
+      talentsOther: '',
+      recommendations: '',
+      notes: '',
     },
   });
 
@@ -208,13 +259,82 @@ export default function OrphanRegistrationPage() {
 
     // ── [Fix 3c] Build FormData — always send strings, never undefined ────────
     const fd = new FormData();
-    fd.append('fullName',         (data.fullName        || '').trim());
-    fd.append('dateOfBirth',      data.dateOfBirth      || '');
-    fd.append('gender',           data.gender           || '');
-    fd.append('governorateId',    data.governorateId    || '');
-    fd.append('guardianName',     (data.guardianName    || '').trim());
-    fd.append('guardianRelation', data.guardianRelation || '');
-    if (data.notes?.trim()) fd.append('notes', data.notes.trim());
+    fd.append('fullName',          (data.fullName         || '').trim());
+    fd.append('dateOfBirth',       data.dateOfBirth       || '');
+    fd.append('gender',            data.gender            || '');
+    fd.append('governorateId',     data.governorateId     || '');
+    fd.append('guardianName',      (data.guardianName     || '').trim());
+    fd.append('guardianRelation',  data.guardianRelation  || '');
+    if (data.birthPlace?.trim())        fd.append('birthPlace',        data.birthPlace.trim());
+    if (data.residence?.trim())         fd.append('residence',         data.residence.trim());
+    if (data.motherGovernorate)         fd.append('motherGovernorate', data.motherGovernorate);
+    if (data.phone1?.trim())            fd.append('phone1',            data.phone1.trim());
+    if (data.phone1Relation?.trim())    fd.append('phone1Relation',    data.phone1Relation.trim());
+    if (data.phone2?.trim())            fd.append('phone2',            data.phone2.trim());
+    if (data.phone2Relation?.trim())    fd.append('phone2Relation',    data.phone2Relation.trim());
+    if (data.address?.trim())            fd.append('address',              data.address.trim());
+    if (data.schoolGrade?.trim())        fd.append('schoolGrade',          data.schoolGrade.trim());
+    if (data.sectorType)                 fd.append('sectorType',           data.sectorType);
+    if (data.directorate?.trim())        fd.append('directorate',          data.directorate.trim());
+    if (data.schoolOrg?.trim())          fd.append('schoolOrg',            data.schoolOrg.trim());
+    if (data.favoriteSubject?.trim())    fd.append('favoriteSubject',      data.favoriteSubject.trim());
+    if (data.difficultySubject?.trim())  fd.append('difficultySubject',    data.difficultySubject.trim());
+    if (data.generalLevel?.trim())       fd.append('generalLevel',         data.generalLevel.trim());
+    if (repeatedYear)                    fd.append('repeatedYear',         repeatedYear);
+    if (data.repeatedYearReason?.trim()) fd.append('repeatedYearReason',   data.repeatedYearReason.trim());
+    if (data.gradeDetail?.trim())        fd.append('gradeDetail',          data.gradeDetail.trim());
+    if (data.generalGrade?.trim())       fd.append('generalGrade',         data.generalGrade.trim());
+    if (data.lastResultAvg?.trim())      fd.append('lastResultAvg',        data.lastResultAvg.trim());
+    if (data.highestGrade?.trim())       fd.append('highestGrade',         data.highestGrade.trim());
+    if (data.lowestGrade?.trim())        fd.append('lowestGrade',          data.lowestGrade.trim());
+    if (data.eduResponsible?.trim())     fd.append('eduResponsible',       data.eduResponsible.trim());
+    if (data.eduResponsiblePhone?.trim()) fd.append('eduResponsiblePhone', data.eduResponsiblePhone.trim());
+    if (data.eduLevel?.trim())            fd.append('eduLevel',             data.eduLevel.trim());
+    if (data.guardianAge?.trim())         fd.append('guardianAge',          data.guardianAge.trim());
+    if (data.guardianEduLevel?.trim())    fd.append('guardianEduLevel',     data.guardianEduLevel.trim());
+    if (data.guardianJob?.trim())         fd.append('guardianJob',          data.guardianJob.trim());
+    if (data.guardianHealth?.trim())      fd.append('guardianHealth',       data.guardianHealth.trim());
+    if (data.familyMaleCount?.trim())     fd.append('familyMaleCount',      data.familyMaleCount.trim());
+    if (data.familyFemaleCount?.trim())   fd.append('familyFemaleCount',    data.familyFemaleCount.trim());
+    if (data.familyProblems?.trim())      fd.append('familyProblems',    data.familyProblems.trim());
+    if (ownershipType)                    fd.append('ownershipType',     ownershipType);
+    if (buildingType)                     fd.append('buildingType',      buildingType);
+    if (data.floorsCount?.trim())         fd.append('floorsCount',       data.floorsCount.trim());
+    if (data.roomsCount?.trim())          fd.append('roomsCount',        data.roomsCount.trim());
+    if (data.water?.trim())               fd.append('water',             data.water.trim());
+    if (data.electricity?.trim())         fd.append('electricity',       data.electricity.trim());
+    if (data.rentAmount?.trim())          fd.append('rentAmount',        data.rentAmount.trim());
+    if (data.housingDetails?.trim())           fd.append('housingDetails',        data.housingDetails.trim());
+    if (hasChronicDisease)                     fd.append('hasChronicDisease',     hasChronicDisease);
+    if (data.chronicDiseaseDetails?.trim())    fd.append('chronicDiseaseDetails', data.chronicDiseaseDetails.trim());
+    if (hasRegularTreatment)                   fd.append('hasRegularTreatment',   hasRegularTreatment);
+    if (hasHealthInsurance)                        fd.append('hasHealthInsurance',    hasHealthInsurance);
+    if (incomeSource)                              fd.append('incomeSource',          incomeSource);
+    if (data.monthlyIncome?.trim())                fd.append('monthlyIncome',         data.monthlyIncome.trim());
+    if (hasCharitySupport)                         fd.append('hasCharitySupport',     hasCharitySupport);
+    if (data.charitySupportDetails?.trim())        fd.append('charitySupportDetails', data.charitySupportDetails.trim());
+    if (selectedTalents.size > 0) {
+      fd.append('isGifted', 'true');
+      fd.append('talents', JSON.stringify([...selectedTalents]));
+    }
+    if (data.talentsOther?.trim())    fd.append('talentsOther',        data.talentsOther.trim());
+    if (familyRelations)              fd.append('familyRelations',     familyRelations);
+    if (communityRelation)            fd.append('communityRelation',   communityRelation);
+    if (schoolRelation)               fd.append('schoolRelation',      schoolRelation);
+    if (socialBehavior)               fd.append('socialBehavior',      socialBehavior);
+    if (needsSocialSupport)           fd.append('needsSocialSupport',  needsSocialSupport);
+    if (quranLevel)                   fd.append('quranLevel',          quranLevel);
+    if (prayerCommitment)             fd.append('prayerCommitment',    prayerCommitment);
+    if (moralBehavior)                fd.append('moralBehavior',        moralBehavior);
+    if (generalAppearance)            fd.append('generalAppearance',    generalAppearance);
+    if (selfExpression)               fd.append('selfExpression',       selfExpression);
+    if (psychFamilyRelations)         fd.append('psychFamilyRelations', psychFamilyRelations);
+    if (peerRelations)                fd.append('peerRelations',        peerRelations);
+    if (sleepAppetite)                fd.append('sleepAppetite',        sleepAppetite);
+    if (psychSigns)                   fd.append('psychSigns',           psychSigns);
+    if (needsPsychSupport)                fd.append('needsPsychSupport',  needsPsychSupport);
+    if (data.recommendations?.trim())     fd.append('recommendations',    data.recommendations.trim());
+    if (data.notes?.trim())               fd.append('notes',              data.notes.trim());
 
     fd.append('deathCert', deathCertFile);
     fd.append('birthCert', birthCertFile);
@@ -378,6 +498,50 @@ export default function OrphanRegistrationPage() {
                 {errors.governorateId && <p className="ferr">{errors.governorateId.message}</p>}
               </div>
 
+              {/* Birth place */}
+              <div className="fg">
+                <label className="lbl" htmlFor="birthPlace">
+                  محل الميلاد <span className="opt">(اختياري)</span>
+                </label>
+                <input
+                  id="birthPlace"
+                  className="inp"
+                  placeholder="المدينة أو المنطقة"
+                  {...register('birthPlace')}
+                />
+              </div>
+
+              {/* Residence */}
+              <div className="fg">
+                <label className="lbl" htmlFor="residence">
+                  مكان السكن <span className="opt">(اختياري)</span>
+                </label>
+                <input
+                  id="residence"
+                  className="inp"
+                  placeholder="العنوان الحالي"
+                  {...register('residence')}
+                />
+              </div>
+
+              {/* Mother's governorate */}
+              <div className="fg">
+                <label className="lbl" htmlFor="motherGovernorate">
+                  المحافظة الأم <span className="opt">(اختياري)</span>
+                </label>
+                <select
+                  id="motherGovernorate"
+                  className="inp sel"
+                  disabled={govLoading}
+                  {...register('motherGovernorate')}
+                >
+                  <option value="">{govLoading ? 'جارٍ التحميل…' : 'اختر المحافظة'}</option>
+                  {governorates.map((g) => (
+                    <option key={g.id} value={g.id}>{g.name_ar}</option>
+                  ))}
+                </select>
+              </div>
+
               {/* Notes */}
               <div className="fg span2">
                 <label className="lbl" htmlFor="notes">
@@ -394,20 +558,93 @@ export default function OrphanRegistrationPage() {
             </div>
           </div>
 
-          {/* ── Section 2: Guardian ───────────────────────────────────────── */}
+          {/* ── Section 2: Contact Info ──────────────────────────────────── */}
           <div className="card">
-            <SectionHeader number="٢" title="بيانات الوصي" subtitle="معلومات الشخص المسؤول عن رعاية اليتيم" />
+            <SectionHeader number="٢" title="معلومات التواصل" subtitle="أرقام التواصل والعنوان" />
+            <div className="grid">
+
+              {/* Phone 1 */}
+              <div className="fg">
+                <label className="lbl" htmlFor="phone1">
+                  الرقم الأول <span className="opt">(اختياري)</span>
+                </label>
+                <input
+                  id="phone1"
+                  className="inp ltr"
+                  placeholder="07XXXXXXXX"
+                  {...register('phone1')}
+                />
+              </div>
+
+              {/* Phone 1 relation */}
+              <div className="fg">
+                <label className="lbl" htmlFor="phone1Relation">
+                  صلة القرابة <span className="opt">(اختياري)</span>
+                </label>
+                <input
+                  id="phone1Relation"
+                  className="inp"
+                  placeholder="مثال: عم، خال، جد"
+                  {...register('phone1Relation')}
+                />
+              </div>
+
+              {/* Phone 2 */}
+              <div className="fg">
+                <label className="lbl" htmlFor="phone2">
+                  الرقم الثاني <span className="opt">(اختياري)</span>
+                </label>
+                <input
+                  id="phone2"
+                  className="inp ltr"
+                  placeholder="07XXXXXXXX"
+                  {...register('phone2')}
+                />
+              </div>
+
+              {/* Phone 2 relation */}
+              <div className="fg">
+                <label className="lbl" htmlFor="phone2Relation">
+                  صلة القرابة <span className="opt">(اختياري)</span>
+                </label>
+                <input
+                  id="phone2Relation"
+                  className="inp"
+                  placeholder="مثال: عم، خال، جد"
+                  {...register('phone2Relation')}
+                />
+              </div>
+
+              {/* Address */}
+              <div className="fg span2">
+                <label className="lbl" htmlFor="address">
+                  العنوان <span className="opt">(اختياري)</span>
+                </label>
+                <input
+                  id="address"
+                  className="inp"
+                  placeholder="الحي، الشارع، رقم المنزل…"
+                  {...register('address')}
+                />
+              </div>
+
+            </div>
+          </div>
+
+          {/* ── Section 3: Guardian + Family ─────────────────────────────── */}
+          <div className="card">
+            <SectionHeader number="٣" title="معلومات الأسرة" subtitle="بيانات ولي الأمر وأفراد الأسرة" />
             <div className="grid">
 
               {/* Guardian name */}
               <div className="fg span2">
                 <label className="lbl" htmlFor="guardianName">
-                  اسم الوصي <span className="req">*</span>
+                  اسم ولي الأمر <span className="req">*</span>
                 </label>
                 <input
                   id="guardianName"
                   className={`inp ${errors.guardianName ? 'inp-err' : ''}`}
-                  placeholder="الاسم الكامل للوصي"
+                  placeholder="الأم / الجد / العم / غيره"
                   {...register('guardianName', { required: 'اسم الوصي مطلوب' })}
                 />
                 {errors.guardianName && <p className="ferr">{errors.guardianName.message}</p>}
@@ -415,35 +652,709 @@ export default function OrphanRegistrationPage() {
 
               {/* Guardian relation */}
               <div className="fg span2">
-                <label className="lbl">
-                  صلة الوصي باليتيم <span className="req">*</span>
-                </label>
+                <label className="lbl">صلة القرابة باليتيم <span className="req">*</span></label>
                 <div className="rel-row">
                   {GUARDIAN_RELATIONS.map(({ value, label }) => (
-                    <label
-                      key={value}
-                      className={`rel-chip ${errors.guardianRelation ? 'rc-err' : ''}`}
-                    >
-                      <input
-                        type="radio"
-                        value={value}
-                        {...register('guardianRelation', { required: 'يرجى اختيار صلة الوصي' })}
-                      />
+                    <label key={value} className={`rel-chip ${errors.guardianRelation ? 'rc-err' : ''}`}>
+                      <input type="radio" value={value}
+                        {...register('guardianRelation', { required: 'يرجى اختيار صلة الوصي' })} />
                       <span>{label}</span>
                     </label>
                   ))}
                 </div>
-                {errors.guardianRelation && (
-                  <p className="ferr">{errors.guardianRelation.message}</p>
-                )}
+                {errors.guardianRelation && <p className="ferr">{errors.guardianRelation.message}</p>}
+              </div>
+
+              {/* Guardian age */}
+              <div className="fg">
+                <label className="lbl" htmlFor="guardianAge">عمر ولي الأمر <span className="opt">(اختياري)</span></label>
+                <input id="guardianAge" className="inp ltr" placeholder="مثال: 45" {...register('guardianAge')} />
+              </div>
+
+              {/* Guardian education level */}
+              <div className="fg">
+                <label className="lbl" htmlFor="guardianEduLevel">المستوى التعليمي <span className="opt">(اختياري)</span></label>
+                <input id="guardianEduLevel" className="inp" placeholder="مثال: ثانوية، جامعي" {...register('guardianEduLevel')} />
+              </div>
+
+              {/* Guardian job */}
+              <div className="fg">
+                <label className="lbl" htmlFor="guardianJob">المهنة <span className="opt">(اختياري)</span></label>
+                <input id="guardianJob" className="inp" placeholder="مثال: موظف، تاجر" {...register('guardianJob')} />
+              </div>
+
+              {/* Guardian health */}
+              <div className="fg">
+                <label className="lbl" htmlFor="guardianHealth">الحالة الصحية <span className="opt">(اختياري)</span></label>
+                <input id="guardianHealth" className="inp" placeholder="مثال: جيدة، مريض" {...register('guardianHealth')} />
+              </div>
+
+              {/* Family members count */}
+              <div className="fg">
+                <label className="lbl" htmlFor="familyMaleCount">عدد الذكور في الأسرة <span className="opt">(اختياري)</span></label>
+                <input id="familyMaleCount" className="inp ltr" type="number" min="0" placeholder="0" {...register('familyMaleCount')} />
+              </div>
+
+              <div className="fg">
+                <label className="lbl" htmlFor="familyFemaleCount">عدد الإناث في الأسرة <span className="opt">(اختياري)</span></label>
+                <input id="familyFemaleCount" className="inp ltr" type="number" min="0" placeholder="0" {...register('familyFemaleCount')} />
+              </div>
+
+              {/* Family problems */}
+              <div className="fg span2">
+                <label className="lbl" htmlFor="familyProblems">أهم المشاكل التي تواجهها الأسرة <span className="opt">(اختياري)</span></label>
+                <textarea id="familyProblems" className="inp ta" rows={3}
+                  placeholder="اذكر أبرز المشاكل والتحديات…" {...register('familyProblems')} />
+              </div>
+
+            </div>
+          </div>
+
+          {/* ── Section 4: Educational Data ──────────────────────────────── */}
+          <div className="card">
+            <SectionHeader number="٤" title="البيانات الدراسية" subtitle="معلومات عن المستوى التعليمي للأيتام" />
+            <div className="grid">
+
+              {/* Grade */}
+              <div className="fg">
+                <label className="lbl" htmlFor="schoolGrade">الصف <span className="opt">(اختياري)</span></label>
+                <input id="schoolGrade" className="inp" placeholder="مثال: السادس الابتدائي" {...register('schoolGrade')} />
+              </div>
+
+              {/* Sector type */}
+              <div className="fg">
+                <label className="lbl">نوع القطاع <span className="opt">(اختياري)</span></label>
+                <div className="radio-row">
+                  {[['government', 'حكومي'], ['private', 'خاص']].map(([val, lbl]) => (
+                    <label key={val} className="radio-card">
+                      <input type="radio" value={val} {...register('sectorType')} />
+                      <span>{lbl}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Directorate */}
+              <div className="fg">
+                <label className="lbl" htmlFor="directorate">المديرية <span className="opt">(اختياري)</span></label>
+                <input id="directorate" className="inp" placeholder="اسم المديرية" {...register('directorate')} />
+              </div>
+
+              {/* Organization */}
+              <div className="fg">
+                <label className="lbl" htmlFor="schoolOrg">الجهة <span className="opt">(اختياري)</span></label>
+                <input id="schoolOrg" className="inp" placeholder="اسم المدرسة أو الجهة" {...register('schoolOrg')} />
+              </div>
+
+              {/* Favorite subject */}
+              <div className="fg">
+                <label className="lbl" htmlFor="favoriteSubject">المادة المفضلة <span className="opt">(اختياري)</span></label>
+                <input id="favoriteSubject" className="inp" placeholder="مثال: الرياضيات" {...register('favoriteSubject')} />
+              </div>
+
+              {/* Difficulty subject */}
+              <div className="fg">
+                <label className="lbl" htmlFor="difficultySubject">يواجه صعوبة في <span className="opt">(اختياري)</span></label>
+                <input id="difficultySubject" className="inp" placeholder="مثال: اللغة الإنجليزية" {...register('difficultySubject')} />
+              </div>
+
+              {/* General level */}
+              <div className="fg">
+                <label className="lbl" htmlFor="generalLevel">المستوى العام <span className="opt">(اختياري)</span></label>
+                <input id="generalLevel" className="inp" placeholder="مثال: جيد، متوسط، ضعيف" {...register('generalLevel')} />
+              </div>
+
+              {/* General grade */}
+              <div className="fg">
+                <label className="lbl" htmlFor="generalGrade">التقدير العام <span className="opt">(اختياري)</span></label>
+                <input id="generalGrade" className="inp" placeholder="مثال: جيد جداً" {...register('generalGrade')} />
+              </div>
+
+              {/* Repeated year */}
+              <div className="fg span2">
+                <label className="lbl">هل أعاد سنة مسبقة؟ <span className="opt">(اختياري)</span></label>
+                <div className="radio-row" style={{ maxWidth: '200px' }}>
+                  {[['yes', 'نعم'], ['no', 'لا']].map(([val, lbl]) => (
+                    <label key={val} className="radio-card">
+                      <input type="radio" value={val} checked={repeatedYear === val}
+                        onChange={() => setRepeatedYear(val)} />
+                      <span>{lbl}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Reason — only if repeated */}
+              {repeatedYear === 'yes' && (
+                <div className="fg span2">
+                  <label className="lbl" htmlFor="repeatedYearReason">السبب</label>
+                  <input id="repeatedYearReason" className="inp" placeholder="سبب الإعادة" {...register('repeatedYearReason')} />
+                </div>
+              )}
+
+              {/* Last result average */}
+              <div className="fg">
+                <label className="lbl" htmlFor="lastResultAvg">معدل آخر نتيجة <span className="opt">(اختياري)</span></label>
+                <input id="lastResultAvg" className="inp ltr" placeholder="مثال: 85%" {...register('lastResultAvg')} />
+              </div>
+
+              {/* Grade detail */}
+              <div className="fg">
+                <label className="lbl" htmlFor="gradeDetail">التفصيل <span className="opt">(اختياري)</span></label>
+                <input id="gradeDetail" className="inp" placeholder="تفاصيل النتيجة" {...register('gradeDetail')} />
+              </div>
+
+              {/* Highest grade */}
+              <div className="fg">
+                <label className="lbl" htmlFor="highestGrade">أعلى درجة في مادة <span className="opt">(اختياري)</span></label>
+                <input id="highestGrade" className="inp" placeholder="المادة والدرجة" {...register('highestGrade')} />
+              </div>
+
+              {/* Lowest grade */}
+              <div className="fg">
+                <label className="lbl" htmlFor="lowestGrade">أدنى درجة في مادة <span className="opt">(اختياري)</span></label>
+                <input id="lowestGrade" className="inp" placeholder="المادة والدرجة" {...register('lowestGrade')} />
+              </div>
+
+              {/* Edu responsible */}
+              <div className="fg">
+                <label className="lbl" htmlFor="eduResponsible">المسؤول تعليمياً <span className="opt">(اختياري)</span></label>
+                <input id="eduResponsible" className="inp" placeholder="الاسم" {...register('eduResponsible')} />
+              </div>
+
+              {/* Edu responsible phone */}
+              <div className="fg">
+                <label className="lbl" htmlFor="eduResponsiblePhone">رقم هاتفه <span className="opt">(اختياري)</span></label>
+                <input id="eduResponsiblePhone" className="inp ltr" placeholder="07XXXXXXXX" {...register('eduResponsiblePhone')} />
+              </div>
+
+              {/* Edu level */}
+              <div className="fg span2">
+                <label className="lbl" htmlFor="eduLevel">المستوى التعليمي للمسؤول <span className="opt">(اختياري)</span></label>
+                <input id="eduLevel" className="inp" placeholder="مثال: ثانوية، جامعي" {...register('eduLevel')} />
+              </div>
+
+            </div>
+          </div>
+
+          {/* ── Section 5: Housing ───────────────────────────────────────── */}
+          <div className="card">
+            <SectionHeader number="٥" title="الوضع السكني" subtitle="معلومات عن السكن والمرافق" />
+            <div className="grid">
+
+              {/* Ownership type */}
+              <div className="fg span2">
+                <label className="lbl">نوع السكن <span className="opt">(اختياري)</span></label>
+                <div className="rel-row">
+                  {[['owned', 'ملك'], ['rented', 'إيجار'], ['free', 'سكن مجاني']].map(([val, lbl]) => (
+                    <label key={val} className="rel-chip">
+                      <input type="radio" value={val} checked={ownershipType === val}
+                        onChange={() => setOwnershipType(val)} />
+                      <span>{lbl}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Building type */}
+              <div className="fg span2">
+                <label className="lbl">نوع البناء <span className="opt">(اختياري)</span></label>
+                <div className="rel-row">
+                  {[['popular', 'شعبي'], ['reinforced', 'مسلح'], ['other', 'آخر']].map(([val, lbl]) => (
+                    <label key={val} className="rel-chip">
+                      <input type="radio" value={val} checked={buildingType === val}
+                        onChange={() => setBuildingType(val)} />
+                      <span>{lbl}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Floors */}
+              <div className="fg">
+                <label className="lbl" htmlFor="floorsCount">عدد الطوابق <span className="opt">(اختياري)</span></label>
+                <input id="floorsCount" className="inp ltr" type="number" min="1" placeholder="1" {...register('floorsCount')} />
+              </div>
+
+              {/* Rooms */}
+              <div className="fg">
+                <label className="lbl" htmlFor="roomsCount">عدد الغرف <span className="opt">(اختياري)</span></label>
+                <input id="roomsCount" className="inp ltr" type="number" min="1" placeholder="1" {...register('roomsCount')} />
+              </div>
+
+              {/* Water */}
+              <div className="fg">
+                <label className="lbl" htmlFor="water">الماء <span className="opt">(اختياري)</span></label>
+                <input id="water" className="inp" placeholder="مثال: شبكة عامة، خزان" {...register('water')} />
+              </div>
+
+              {/* Electricity */}
+              <div className="fg">
+                <label className="lbl" htmlFor="electricity">الكهرباء <span className="opt">(اختياري)</span></label>
+                <input id="electricity" className="inp" placeholder="مثال: متصل، مولد" {...register('electricity')} />
+              </div>
+
+              {/* Rent amount — only if rented */}
+              {ownershipType === 'rented' && (
+                <div className="fg">
+                  <label className="lbl" htmlFor="rentAmount">مقدار الإيجار <span className="opt">(اختياري)</span></label>
+                  <input id="rentAmount" className="inp ltr" placeholder="بالريال" {...register('rentAmount')} />
+                </div>
+              )}
+
+              {/* Other details */}
+              <div className={`fg ${ownershipType === 'rented' ? '' : 'span2'}`}>
+                <label className="lbl" htmlFor="housingDetails">تفاصيل أخرى <span className="opt">(اختياري)</span></label>
+                <input id="housingDetails" className="inp" placeholder="أي تفاصيل إضافية" {...register('housingDetails')} />
+              </div>
+
+            </div>
+          </div>
+
+          {/* ── Section 6: Health ────────────────────────────────────────── */}
+          <div className="card">
+            <SectionHeader number="٦" title="الحالة الصحية" subtitle="معلومات عن الوضع الصحي لليتيم" />
+            <div className="grid">
+
+              {/* Chronic disease */}
+              <div className="fg span2">
+                <label className="lbl">هل يعاني من أمراض مزمنة؟ <span className="opt">(اختياري)</span></label>
+                <div className="radio-row" style={{ maxWidth: '200px' }}>
+                  {[['yes', 'نعم'], ['no', 'لا']].map(([val, lbl]) => (
+                    <label key={val} className="radio-card">
+                      <input type="radio" value={val} checked={hasChronicDisease === val}
+                        onChange={() => setHasChronicDisease(val)} />
+                      <span>{lbl}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Disease details — only if yes */}
+              {hasChronicDisease === 'yes' && (
+                <div className="fg span2">
+                  <label className="lbl" htmlFor="chronicDiseaseDetails">التفاصيل</label>
+                  <input id="chronicDiseaseDetails" className="inp"
+                    placeholder="اذكر الأمراض المزمنة…" {...register('chronicDiseaseDetails')} />
+                </div>
+              )}
+
+              {/* Regular treatment */}
+              <div className="fg">
+                <label className="lbl">هل يتلقى علاجاً منتظماً؟ <span className="opt">(اختياري)</span></label>
+                <div className="radio-row">
+                  {[['yes', 'نعم'], ['no', 'لا']].map(([val, lbl]) => (
+                    <label key={val} className="radio-card">
+                      <input type="radio" value={val} checked={hasRegularTreatment === val}
+                        onChange={() => setHasRegularTreatment(val)} />
+                      <span>{lbl}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Health insurance */}
+              <div className="fg">
+                <label className="lbl">هل يتوفر تأمين صحي؟ <span className="opt">(اختياري)</span></label>
+                <div className="radio-row">
+                  {[['yes', 'نعم'], ['no', 'لا']].map(([val, lbl]) => (
+                    <label key={val} className="radio-card">
+                      <input type="radio" value={val} checked={hasHealthInsurance === val}
+                        onChange={() => setHasHealthInsurance(val)} />
+                      <span>{lbl}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          {/* ── Section 7: Economic ──────────────────────────────────────── */}
+          <div className="card">
+            <SectionHeader number="٧" title="الوضع الاقتصادي" subtitle="مصادر الدخل والدعم المالي للأسرة" />
+            <div className="grid">
+
+              {/* Income source */}
+              <div className="fg span2">
+                <label className="lbl">مصدر الدخل الرئيسي <span className="opt">(اختياري)</span></label>
+                <div className="rel-row">
+                  {[
+                    ['salary',    'راتب شهري'],
+                    ['assistance','مساعدات'],
+                    ['freelance', 'أعمال حرة'],
+                    ['none',      'لا يوجد'],
+                  ].map(([val, lbl]) => (
+                    <label key={val} className="rel-chip">
+                      <input type="radio" value={val} checked={incomeSource === val}
+                        onChange={() => setIncomeSource(val)} />
+                      <span>{lbl}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Monthly income */}
+              <div className="fg">
+                <label className="lbl" htmlFor="monthlyIncome">
+                  متوسط الدخل الشهري <span className="opt">(اختياري)</span>
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input id="monthlyIncome" className="inp ltr"
+                    placeholder="0" {...register('monthlyIncome')}
+                    style={{ paddingLeft: '3rem' }} />
+                  <span style={{
+                    position: 'absolute', left: '0.75rem', top: '50%',
+                    transform: 'translateY(-50%)', fontSize: '0.8rem',
+                    color: '#9ca3af', pointerEvents: 'none',
+                  }}>ريال</span>
+                </div>
+              </div>
+
+              {/* Charity support */}
+              <div className="fg">
+                <label className="lbl">
+                  هل تتلقى الأسرة دعماً من جهة خيرية؟ <span className="opt">(اختياري)</span>
+                </label>
+                <div className="radio-row">
+                  {[['yes', 'نعم'], ['no', 'لا']].map(([val, lbl]) => (
+                    <label key={val} className="radio-card">
+                      <input type="radio" value={val} checked={hasCharitySupport === val}
+                        onChange={() => setHasCharitySupport(val)} />
+                      <span>{lbl}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Support details — only if yes */}
+              {hasCharitySupport === 'yes' && (
+                <div className="fg span2">
+                  <label className="lbl" htmlFor="charitySupportDetails">تفصيل الدعم</label>
+                  <textarea id="charitySupportDetails" className="inp ta" rows={2}
+                    placeholder="اذكر الجهة ومقدار الدعم…"
+                    {...register('charitySupportDetails')} />
+                </div>
+              )}
+
+            </div>
+          </div>
+
+          {/* ── Section 8: Skills & Talents ──────────────────────────────── */}
+          <div className="card">
+            <SectionHeader
+              number="٨"
+              title="المهارات والمواهب"
+              subtitle={
+                selectedTalents.size > 0
+                  ? `✓ سيتم تصنيف اليتيم كموهوب تلقائياً (${selectedTalents.size} موهبة)`
+                  : 'اختر المهارات والمواهب — أي اختيار يصنّف اليتيم كموهوب تلقائياً'
+              }
+            />
+
+            {selectedTalents.size > 0 && (
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                background: '#ECFDF5', border: '1px solid #6EE7B7',
+                borderRadius: '0.625rem', padding: '0.6rem 1rem',
+                marginBottom: '1.25rem', fontSize: '0.85rem',
+                color: '#065F46', fontWeight: 600,
+              }}>
+                <span>⭐</span>
+                <span>سيتم تصنيف هذا اليتيم كموهوب بناءً على المهارات المختارة</span>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+              {TALENT_CATEGORIES.map(({ key, label, options }) => (
+                <div key={key}>
+                  <p style={{ fontSize: '0.82rem', fontWeight: 700, color: '#374151', margin: '0 0 0.5rem' }}>
+                    {label}
+                  </p>
+                  <div className="rel-row">
+                    {options.map((opt) => {
+                      const id = `${key}__${opt}`;
+                      const checked = selectedTalents.has(id);
+                      return (
+                        <label key={id} style={{
+                          display: 'flex', alignItems: 'center', padding: '0.45rem 0.9rem',
+                          border: `1.5px solid ${checked ? '#1B5E8C' : '#d1d5db'}`,
+                          borderRadius: '2rem', fontSize: '0.82rem', fontWeight: 600,
+                          color: checked ? '#fff' : '#6b7280',
+                          background: checked ? '#1B5E8C' : '#fafafa',
+                          cursor: 'pointer', transition: 'all .15s', userSelect: 'none',
+                        }}>
+                          <input
+                            type="checkbox"
+                            style={{ display: 'none' }}
+                            checked={checked}
+                            onChange={() => {
+                              setSelectedTalents(prev => {
+                                const next = new Set(prev);
+                                next.has(id) ? next.delete(id) : next.add(id);
+                                return next;
+                              });
+                            }}
+                          />
+                          {opt}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+
+              {/* Other talents */}
+              <div className="fg">
+                <label className="lbl" htmlFor="talentsOther">
+                  أخرى يود تعلمها أو تطويرها <span className="opt">(اختياري)</span>
+                </label>
+                <input id="talentsOther" className="inp"
+                  placeholder="مثال: العزف، الطيران…"
+                  {...register('talentsOther')} />
               </div>
             </div>
           </div>
 
-          {/* ── Section 3: Documents ─────────────────────────────────────── */}
+          {/* ── Section 9a: Social Aspect ────────────────────────────────── */}
+          <div className="card">
+            <SectionHeader number="٩" title="الجانب الاجتماعي" subtitle="العلاقات الاجتماعية والسلوك" />
+            <div className="grid">
+
+              <div className="fg span2">
+                <label className="lbl">العلاقات داخل الأسرة <span className="opt">(اختياري)</span></label>
+                <div className="rel-row">
+                  {[['connected','مترابطة'],['tense','متوترة بعض الشيء'],['fragmented','مفككة']].map(([val,lbl]) => (
+                    <label key={val} className="rel-chip">
+                      <input type="radio" checked={familyRelations===val} onChange={()=>setFamilyRelations(val)} />
+                      <span>{lbl}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="fg span2">
+                <label className="lbl">العلاقة مع المجتمع <span className="opt">(اختياري)</span></label>
+                <div className="rel-row">
+                  {[['active','يشارك في أنشطة'],['shy','خجول ومنعزل'],['needs_push','يحتاج تشجيعاً على الاندماج']].map(([val,lbl]) => (
+                    <label key={val} className="rel-chip">
+                      <input type="radio" checked={communityRelation===val} onChange={()=>setCommunityRelation(val)} />
+                      <span>{lbl}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="fg span2">
+                <label className="lbl">العلاقة بالمدرسة والمعلمين <span className="opt">(اختياري)</span></label>
+                <div className="rel-row">
+                  {[['positive','إيجابية'],['average','متوسطة'],['weak','ضعيفة أو فيها مشكلات']].map(([val,lbl]) => (
+                    <label key={val} className="rel-chip">
+                      <input type="radio" checked={schoolRelation===val} onChange={()=>setSchoolRelation(val)} />
+                      <span>{lbl}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="fg span2">
+                <label className="lbl">سلوكيات اجتماعية ملحوظة <span className="opt">(اختياري)</span></label>
+                <div className="rel-row">
+                  {[['cooperative','متعاون'],['introverted','انطوائي'],['aggressive','عدواني'],['leader','قيادي']].map(([val,lbl]) => (
+                    <label key={val} className="rel-chip">
+                      <input type="radio" checked={socialBehavior===val} onChange={()=>setSocialBehavior(val)} />
+                      <span>{lbl}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="fg span2">
+                <label className="lbl">يحتاج إلى دعم اجتماعي إضافي؟ <span className="opt">(اختياري)</span></label>
+                <div className="rel-row">
+                  {[['yes','نعم'],['no','لا'],['pending','قيد المتابعة']].map(([val,lbl]) => (
+                    <label key={val} className="rel-chip">
+                      <input type="radio" checked={needsSocialSupport===val} onChange={()=>setNeedsSocialSupport(val)} />
+                      <span>{lbl}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          {/* ── Section 9b: Religious/Spiritual ──────────────────────────── */}
+          <div className="card">
+            <SectionHeader number="١٠" title="الجانب الروحي الديني" subtitle="مستوى الالتزام الديني والأخلاقي" />
+            <div className="grid">
+
+              <div className="fg span2">
+                <label className="lbl">حفظ القرآن الكريم <span className="opt">(اختياري)</span></label>
+                <div className="rel-row">
+                  {[
+                    ['none',      'لا يحفظ'],
+                    ['few_suras', 'يحفظ سور قليلة'],
+                    ['few_parts', 'يحفظ أجزاء قليلة'],
+                    ['half',      'يحفظ نصف القرآن'],
+                    ['full',      'يحفظ كامل'],
+                  ].map(([val, lbl]) => (
+                    <label key={val} className="rel-chip">
+                      <input type="radio" checked={quranLevel === val} onChange={() => setQuranLevel(val)} />
+                      <span>{lbl}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="fg span2">
+                <label className="lbl">الالتزام بالصلاة <span className="opt">(اختياري)</span></label>
+                <div className="rel-row">
+                  {[
+                    ['always',    'دائم الالتزام'],
+                    ['sometimes', 'أحياناً'],
+                    ['rarely',    'نادراً'],
+                  ].map(([val, lbl]) => (
+                    <label key={val} className="rel-chip">
+                      <input type="radio" checked={prayerCommitment === val} onChange={() => setPrayerCommitment(val)} />
+                      <span>{lbl}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="fg span2">
+                <label className="lbl">السلوك والأخلاق <span className="opt">(اختياري)</span></label>
+                <div className="rel-row">
+                  {[
+                    ['good',         'مهذب ومتعاون'],
+                    ['needs_follow', 'يحتاج متابعة بسيطة'],
+                    ['needs_guide',  'لديه سلوكيات تحتاج توجيه'],
+                  ].map(([val, lbl]) => (
+                    <label key={val} className="rel-chip">
+                      <input type="radio" checked={moralBehavior === val} onChange={() => setMoralBehavior(val)} />
+                      <span>{lbl}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          {/* ── Section 9c: Psychological ────────────────────────────────── */}
+          <div className="card">
+            <SectionHeader number="١١" title="الجانب النفسي" subtitle="الحالة النفسية والعاطفية لليتيم" />
+            <div className="grid">
+
+              <div className="fg span2">
+                <label className="lbl">المظهر العام والتفاعل <span className="opt">(اختياري)</span></label>
+                <div className="rel-row">
+                  {[['smiling','مبتسم ومتفاعل'],['shy','خجول'],['introverted','منطوٍ'],['aggressive','عدواني بعض الشيء']].map(([val,lbl]) => (
+                    <label key={val} className="rel-chip">
+                      <input type="radio" checked={generalAppearance===val} onChange={()=>setGeneralAppearance(val)} />
+                      <span>{lbl}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="fg span2">
+                <label className="lbl">التعبير عن الذات <span className="opt">(اختياري)</span></label>
+                <div className="rel-row">
+                  {[['confident','يتحدث بثقة'],['hesitant','يتردد في الكلام'],['silent','صامت أغلب الوقت']].map(([val,lbl]) => (
+                    <label key={val} className="rel-chip">
+                      <input type="radio" checked={selfExpression===val} onChange={()=>setSelfExpression(val)} />
+                      <span>{lbl}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="fg span2">
+                <label className="lbl">العلاقات الأسرية <span className="opt">(اختياري)</span></label>
+                <div className="rel-row">
+                  {[['stable','جيدة ومستقرة'],['tense','متوترة قليلاً'],['troubled','مضطربة وتحتاج تدخل']].map(([val,lbl]) => (
+                    <label key={val} className="rel-chip">
+                      <input type="radio" checked={psychFamilyRelations===val} onChange={()=>setPsychFamilyRelations(val)} />
+                      <span>{lbl}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="fg span2">
+                <label className="lbl">العلاقة مع الزملاء والأصدقاء <span className="opt">(اختياري)</span></label>
+                <div className="rel-row">
+                  {[['positive','إيجابية'],['limited','محدودة'],['none','لا يملك أصدقاء']].map(([val,lbl]) => (
+                    <label key={val} className="rel-chip">
+                      <input type="radio" checked={peerRelations===val} onChange={()=>setPeerRelations(val)} />
+                      <span>{lbl}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="fg span2">
+                <label className="lbl">النوم والشهية <span className="opt">(اختياري)</span></label>
+                <div className="rel-row">
+                  {[['normal','طبيعية'],['poor_sleep','قلة نوم'],['poor_appetite','فقدان شهية'],['anxiety','قلق أو أحلام مزعجة']].map(([val,lbl]) => (
+                    <label key={val} className="rel-chip">
+                      <input type="radio" checked={sleepAppetite===val} onChange={()=>setSleepAppetite(val)} />
+                      <span>{lbl}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="fg span2">
+                <label className="lbl">علامات نفسية ظاهرة <span className="opt">(اختياري)</span></label>
+                <div className="rel-row">
+                  {[['none','لا يوجد'],['sadness','حزن / بكاء متكرر'],['fear','خوف / قلق'],['aggression','عدوانية / غضب']].map(([val,lbl]) => (
+                    <label key={val} className="rel-chip">
+                      <input type="radio" checked={psychSigns===val} onChange={()=>setPsychSigns(val)} />
+                      <span>{lbl}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="fg span2">
+                <label className="lbl">يحتاج إلى متابعة نفسية متخصصة؟ <span className="opt">(اختياري)</span></label>
+                <div className="rel-row">
+                  {[['yes','نعم'],['no','لا'],['pending','قيد الملاحظة']].map(([val,lbl]) => (
+                    <label key={val} className="rel-chip">
+                      <input type="radio" checked={needsPsychSupport===val} onChange={()=>setNeedsPsychSupport(val)} />
+                      <span>{lbl}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          {/* ── Section 9d: Recommendations ──────────────────────────────── */}
+          <div className="card">
+            <SectionHeader number="١٢" title="التوصيات" subtitle="ملاحظات وتوصيات الأخصائية" />
+            <div className="fg">
+              <label className="lbl" htmlFor="recommendations">
+                التوصيات <span className="opt">(اختياري)</span>
+              </label>
+              <textarea
+                id="recommendations"
+                className="inp ta"
+                rows={5}
+                placeholder="اكتب توصياتك وملاحظاتك هنا…"
+                {...register('recommendations')}
+              />
+            </div>
+          </div>
+
+          {/* ── Section 13: Documents ────────────────────────────────────── */}
           <div className="card">
             <SectionHeader
-              number="٣"
+              number="١٣"
               title="المستندات المطلوبة"
               subtitle="يُقبل: PDF، JPG، PNG — الحد الأقصى 5 ميغابايت لكل ملف"
             />

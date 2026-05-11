@@ -14,17 +14,18 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '../lib/api';
+import { CheckCircle, XCircle, BookOpen, Banknote, Bell } from 'lucide-react';
 
 // ── Type → Arabic label + color ──────────────────────────────────────────────
 
 const TYPE_CONFIG = {
-  registration_approved:  { label: 'اعتماد تسجيل',    color: '#10b981', icon: '✅' },
-  registration_rejected:  { label: 'رفض تسجيل',       color: '#ef4444', icon: '❌' },
-  quran_report_reminder:  { label: 'تذكير تقرير',      color: '#f59e0b', icon: '📖' },
-  disbursement_reminder:  { label: 'تذكير الصرف',      color: '#3b82f6', icon: '💰' },
-  disbursement_approved:  { label: 'اعتماد الصرف',     color: '#10b981', icon: '✔' },
-  disbursement_rejected:  { label: 'رفض الصرف',        color: '#ef4444', icon: '✗' },
-  general:                { label: 'إشعار',             color: '#6b7280', icon: '🔔' },
+  registration_approved:  { label: 'اعتماد تسجيل',    color: '#10b981', icon: <CheckCircle size={16}/> },
+  registration_rejected:  { label: 'رفض تسجيل',       color: '#ef4444', icon: <XCircle size={16}/> },
+  quran_report_reminder:  { label: 'تذكير تقرير',      color: '#f59e0b', icon: <BookOpen size={16}/> },
+  disbursement_reminder:  { label: 'تذكير الصرف',      color: '#3b82f6', icon: <Banknote size={16}/> },
+  disbursement_approved:  { label: 'اعتماد الصرف',     color: '#10b981', icon: <CheckCircle size={16}/> },
+  disbursement_rejected:  { label: 'رفض الصرف',        color: '#ef4444', icon: <XCircle size={16}/> },
+  general:                { label: 'إشعار',             color: '#6b7280', icon: <Bell size={16}/> },
 };
 
 // ── Relative time helper ───────────────────────────────────────────────────────
@@ -212,7 +213,7 @@ export default function NotificationBell() {
             ) : notifications.length === 0 ? (
               /* Empty */
               <div className="notif-empty">
-                <span className="notif-empty-icon">🔔</span>
+                <Bell size={32} style={{ opacity: 0.5, color: '#9ca3af' }} />
                 <p>لا توجد إشعارات</p>
               </div>
             ) : (
