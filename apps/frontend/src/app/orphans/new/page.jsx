@@ -150,6 +150,8 @@ export default function OrphanRegistrationPage() {
   const [submitState,  setSubmitState]  = useState('idle'); // idle | loading | success | error
   const [apiError,     setApiError]     = useState('');
 
+  const [currentPage,     setCurrentPage]     = useState(1);
+
   const [repeatedYear,    setRepeatedYear]    = useState('');
   const [ownershipType,   setOwnershipType]   = useState('');
   const [buildingType,    setBuildingType]    = useState('');
@@ -404,24 +406,34 @@ export default function OrphanRegistrationPage() {
           </button>
         </div>
 
-        {/* [Fix 3a] Progress bar — Fragment with key, separators inside Fragment */}
+        {/* Progress bar — 5 steps */}
         <div className="progress">
-          {[['١', 'البيانات الأساسية'], ['٢', 'بيانات الوصي'], ['٣', 'المستندات']].map(
-            ([n, lbl], i) => (
+          {[
+            ['١', 'البيانات الأساسية'],
+            ['٢', 'الأسرة والتعليم'],
+            ['٣', 'السكن والصحة'],
+            ['٤', 'المواهب والجوانب'],
+            ['٥', 'المستندات'],
+          ].map(([n, lbl], i) => {
+            const stepNum = i + 1;
+            const done    = stepNum < currentPage;
+            const active  = stepNum === currentPage;
+            return (
               <Fragment key={n}>
-                <div className="p-step">
-                  <span className="p-num">{n}</span>
+                <div className={`p-step ${active ? 'p-active' : ''} ${done ? 'p-done' : ''}`}>
+                  <span className="p-num">{done ? '✓' : n}</span>
                   <span className="p-lbl">{lbl}</span>
                 </div>
-                {i < 2 && <div className="p-sep" />}
+                {i < 4 && <div className="p-sep" />}
               </Fragment>
-            )
-          )}
+            );
+          })}
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="form">
 
-          {/* ── Section 1: Basic Info ─────────────────────────────────────── */}
+          {/* ══ PAGE 1: البيانات الأساسية والتواصل ══ */}
+          {currentPage === 1 && <Fragment>
           <div className="card">
             <SectionHeader number="١" title="البيانات الأساسية" subtitle="معلومات اليتيم الشخصية" />
             <div className="grid">
@@ -630,7 +642,10 @@ export default function OrphanRegistrationPage() {
 
             </div>
           </div>
+          </Fragment>}
 
+          {/* ══ PAGE 2: الأسرة والتعليم ══ */}
+          {currentPage === 2 && <Fragment>
           {/* ── Section 3: Guardian + Family ─────────────────────────────── */}
           <div className="card">
             <SectionHeader number="٣" title="معلومات الأسرة" subtitle="بيانات ولي الأمر وأفراد الأسرة" />
@@ -836,7 +851,10 @@ export default function OrphanRegistrationPage() {
 
             </div>
           </div>
+          </Fragment>}
 
+          {/* ══ PAGE 3: السكن والصحة والاقتصاد ══ */}
+          {currentPage === 3 && <Fragment>
           {/* ── Section 5: Housing ───────────────────────────────────────── */}
           <div className="card">
             <SectionHeader number="٥" title="الوضع السكني" subtitle="معلومات عن السكن والمرافق" />
@@ -1039,7 +1057,10 @@ export default function OrphanRegistrationPage() {
 
             </div>
           </div>
+          </Fragment>}
 
+          {/* ══ PAGE 4: المواهب والجوانب الشخصية ══ */}
+          {currentPage === 4 && <Fragment>
           {/* ── Section 8: Skills & Talents ──────────────────────────────── */}
           <div className="card">
             <SectionHeader
@@ -1350,9 +1371,10 @@ export default function OrphanRegistrationPage() {
               />
             </div>
           </div>
+          </Fragment>}
 
-          {/* ── Section 13: Documents ────────────────────────────────────── */}
-          <div className="card">
+          {/* ══ PAGE 5: المستندات ══ */}
+          {currentPage === 5 && <div className="card">
             <SectionHeader
               number="١٣"
               title="المستندات المطلوبة"
@@ -1410,7 +1432,7 @@ export default function OrphanRegistrationPage() {
                 />
               </div>
             </div>
-          </div>
+          </div>}
 
           {/* API error banner */}
           {submitState === 'error' && apiError && (
@@ -1423,21 +1445,40 @@ export default function OrphanRegistrationPage() {
             </div>
           )}
 
-          {/* Submit row */}
+          {/* Navigation row */}
           <div className="submit-row">
-            <button type="button" className="btn-ghost" onClick={() => router.back()}>
-              إلغاء
-            </button>
-            <button
-              type="submit"
-              className="btn-primary"
-              disabled={submitState === 'loading'}
-              aria-busy={submitState === 'loading'}
-            >
-              {submitState === 'loading'
-                ? <><span className="spin" aria-hidden />جارٍ الإرسال…</>
-                : 'إرسال للمراجعة ←'}
-            </button>
+            {/* Left side: Cancel (page 1) or Back */}
+            {currentPage === 1 ? (
+              <button type="button" className="btn-ghost" onClick={() => router.back()}>
+                إلغاء
+              </button>
+            ) : (
+              <button type="button" className="btn-ghost" onClick={() => setCurrentPage(p => p - 1)}>
+                ← رجوع
+              </button>
+            )}
+
+            {/* Right side: Next or Submit */}
+            {currentPage < 5 ? (
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => setCurrentPage(p => p + 1)}
+              >
+                التالي ←
+              </button>
+            ) : (
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={submitState === 'loading'}
+                aria-busy={submitState === 'loading'}
+              >
+                {submitState === 'loading'
+                  ? <><span className="spin" aria-hidden />جارٍ الإرسال…</>
+                  : 'إرسال للمراجعة ←'}
+              </button>
+            )}
           </div>
 
         </form>
@@ -1452,8 +1493,12 @@ export default function OrphanRegistrationPage() {
 
         /* ── Progress ─────────────────────────────────────────────────── */
         .progress { display:flex; align-items:center; gap:.5rem; padding:.85rem 1.25rem; background:#fff; border:1px solid #e5eaf0; border-radius:.875rem; margin-bottom:1.75rem; font-size:.8rem; font-weight:600; }
-        .p-step { display:flex; align-items:center; gap:.4rem; color:#1B5E8C; }
-        .p-num { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#1B5E8C; color:#fff; font-size:.72rem; font-weight:700; }
+        .p-step { display:flex; align-items:center; gap:.4rem; color:#94a3b8; }
+        .p-active { color:#1B5E8C; }
+        .p-done { color:#16a34a; }
+        .p-num { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#d1d5db; color:#fff; font-size:.72rem; font-weight:700; }
+        .p-active .p-num { background:#1B5E8C; }
+        .p-done .p-num { background:#16a34a; }
         .p-lbl { white-space:nowrap; }
         .p-sep { flex:1; border-top:1.5px dashed #dde2e8; margin:0 .25rem; }
 
