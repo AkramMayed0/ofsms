@@ -762,7 +762,8 @@ export default function RegistrationsPage() {
         .detail-rows { display: flex; flex-direction: column; gap: 0.35rem; }
         .detail-row {
           display: flex;
-          align-items: baseline;
+          flex-wrap: wrap;
+          align-items: flex-start;
           gap: 0.5rem;
           padding: 0.3rem 0;
           border-bottom: 1px solid #f3f4f6;
@@ -779,6 +780,10 @@ export default function RegistrationsPage() {
           font-size: 0.85rem;
           color: #1f2937;
           font-weight: 500;
+          flex: 1;
+          min-width: 0;
+          overflow-wrap: anywhere;
+          word-break: break-word;
         }
         .detail-notes {
           font-size: 0.83rem;

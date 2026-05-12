@@ -572,20 +572,7 @@ export default function OrphansListPage() {
                       )}
 
                       {/* Actions */}
-                      <td onClick={(e) => e.stopPropagation()}>
-                        <div className="actions-cell">
-                          {isGM && orphan.status === 'under_sponsorship' && (
-                            <button
-                              className="btn-transfer-row"
-                              onClick={(e) => handleTransferClick(e, orphan)}
-                              title="نقل الكفالة"
-                            >
-                              <IconTransfer />
-                              <span>نقل</span>
-                            </button>
-                          )}
-                        </div>
-                      </td>
+                      <td />
                     </tr>
                   ))
                 )}

@@ -214,9 +214,9 @@ function DetailDrawer({ orphan, onClose }) {
 
 function InfoRow({ label, value, highlight }) {
   return (
-    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'.35rem 0', borderBottom:'1px solid #f8fafc' }}>
-      <span style={{ fontSize:'.8rem', color:'#6b7a8d', fontWeight:500 }}>{label}</span>
-      <span style={{ fontSize:'.83rem', color: highlight ? '#10b981' : '#1f2937', fontWeight: highlight ? 700 : 600 }}>{value}</span>
+    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap: '.75rem', padding:'.35rem 0', borderBottom:'1px solid #f8fafc', minWidth: 0 }}>
+      <span style={{ fontSize:'.8rem', color:'#6b7a8d', fontWeight:500, minWidth: 0 }}>{label}</span>
+      <span style={{ fontSize:'.83rem', color: highlight ? '#10b981' : '#1f2937', fontWeight: highlight ? 700 : 600, minWidth: 0, overflowWrap: 'anywhere', wordBreak: 'break-word', textAlign: 'left' }}>{value}</span>
     </div>
   );
 }

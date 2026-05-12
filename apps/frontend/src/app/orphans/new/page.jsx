@@ -11,9 +11,10 @@
  *  [Fix 3c] All fd.append calls use || '' fallback — never sends undefined/null
  */
 
-import { useState, useEffect, useRef, Fragment } from 'react';  // [Fix 3a] Fragment imported
+import { useState, useEffect, useRef, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
+import { Upload, FileText, Image, X, Plus, AlertCircle, CheckCircle2, File } from 'lucide-react';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 
@@ -54,13 +55,19 @@ const validateFile = (file) => {
   return null;
 };
 
-const fileIcon = (type) => (type === 'application/pdf' ? '📄' : '🖼️');
+const FileTypeIcon = ({ type, size = 18 }) =>
+  type === 'application/pdf'
+    ? <FileText size={size} strokeWidth={1.8} />
+    : type?.startsWith('image/')
+      ? <Image size={size} strokeWidth={1.8} />
+      : <File size={size} strokeWidth={1.8} />;
 
 // ── FileDropZone ───────────────────────────────────────────────────────────────
 
 function FileDropZone({ label, hint, accept, multiple = false, onChange, error, value }) {
   const inputRef = useRef(null);
   const [dragging, setDragging] = useState(false);
+  const [btnHover, setBtnHover] = useState(false);
 
   const handleFiles = (files) => {
     const arr = Array.from(files);
@@ -75,18 +82,15 @@ function FileDropZone({ label, hint, accept, multiple = false, onChange, error, 
   };
 
   const files = multiple ? (value || []) : value ? [value] : [];
+  const hasFiles = files.length > 0;
 
   return (
     <div className="dz-wrapper">
       <div
-        className={`dz ${dragging ? 'dz-drag' : ''} ${error ? 'dz-err' : ''} ${files.length ? 'dz-filled' : ''}`}
-        onClick={() => !files.length && inputRef.current?.click()}
+        className={`dz ${dragging ? 'dz-drag' : ''} ${error ? 'dz-err' : ''} ${hasFiles ? 'dz-filled' : ''}`}
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
         onDrop={(e) => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files); }}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => e.key === 'Enter' && inputRef.current?.click()}
         aria-label={label}
       >
         <input
@@ -98,31 +102,82 @@ function FileDropZone({ label, hint, accept, multiple = false, onChange, error, 
           onChange={(e) => handleFiles(e.target.files)}
         />
 
-        {files.length === 0 ? (
+        {!hasFiles ? (
           <div className="dz-empty">
-            <span className="dz-ico">📁</span>
-            <span className="dz-cta">اضغط أو اسحب الملف هنا</span>
-            <span className="dz-hint">{hint}</span>
+            <p className="dz-cta">اسحب الملف هنا</p>
+            <p className="dz-hint">{hint}</p>
+            <button
+              type="button"
+              onMouseEnter={() => setBtnHover(true)}
+              onMouseLeave={() => setBtnHover(false)}
+              onClick={() => inputRef.current?.click()}
+              style={{
+                display: 'inline-flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: '0.4rem',
+                marginTop: '0.85rem',
+                padding: '0.55rem 1.25rem',
+                background: btnHover
+                  ? 'linear-gradient(135deg,#2E7EB8,#1B5E8C)'
+                  : 'linear-gradient(135deg,#1B5E8C,#134569)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '0.75rem',
+                fontSize: '0.83rem',
+                fontWeight: 700,
+                fontFamily: "'Cairo', sans-serif",
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                boxShadow: btnHover
+                  ? '0 4px 14px rgba(27,94,140,.35)'
+                  : '0 2px 8px rgba(27,94,140,.2)',
+                transform: btnHover ? 'translateY(-1px)' : 'none',
+                transition: 'all .15s',
+              }}
+            >
+              <Upload size={15} strokeWidth={2} />
+              اختر ملفاً
+            </button>
           </div>
         ) : (
           <div className="dz-files" onClick={(e) => e.stopPropagation()}>
             {files.map((f, i) => (
               <div key={`${f.name}-${i}`} className="chip">
-                <span className="chip-ico">{fileIcon(f.type)}</span>
-                <span className="chip-name" title={f.name}>{f.name}</span>
-                <span className="chip-size">{formatBytes(f.size)}</span>
-                <button type="button" className="chip-rm" onClick={() => removeFile(i)} aria-label="حذف">✕</button>
+                <span className="chip-ico"><FileTypeIcon type={f.type} /></span>
+                <div className="chip-info">
+                  <span className="chip-name" title={f.name}>{f.name}</span>
+                  <span className="chip-size">{formatBytes(f.size)}</span>
+                </div>
+                <button
+                  type="button"
+                  className="chip-rm"
+                  onClick={() => removeFile(i)}
+                  aria-label="حذف الملف"
+                >
+                  <X size={13} strokeWidth={2.5} />
+                </button>
               </div>
             ))}
             {multiple && files.length < 5 && (
-              <button type="button" className="add-more" onClick={() => inputRef.current?.click()}>
-                + إضافة ملف آخر
+              <button
+                type="button"
+                className="add-more"
+                onClick={() => inputRef.current?.click()}
+              >
+                <Plus size={14} strokeWidth={2.5} />
+                إضافة ملف آخر
               </button>
             )}
           </div>
         )}
       </div>
-      {error && <p className="ferr">{error}</p>}
+      {error && (
+        <p className="ferr">
+          <AlertCircle size={13} strokeWidth={2} style={{ flexShrink: 0 }} />
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -176,6 +231,8 @@ export default function OrphanRegistrationPage() {
   const [sleepAppetite,        setSleepAppetite]        = useState('');
   const [psychSigns,           setPsychSigns]           = useState('');
   const [needsPsychSupport,    setNeedsPsychSupport]    = useState('');
+
+  const [stateErrors,      setStateErrors]      = useState({});
 
   const [deathCertFile,   setDeathCertFile]   = useState(null);
   const [birthCertFile,   setBirthCertFile]   = useState(null);
@@ -253,6 +310,34 @@ export default function OrphanRegistrationPage() {
 
     if (hasRadioError) return;
 
+    // Validate custom state fields
+    const sErr = {};
+    if (!repeatedYear)            sErr.repeatedYear            = 'يرجى الإجابة على هذا السؤال';
+    if (!ownershipType)           sErr.ownershipType           = 'نوع السكن مطلوب';
+    if (!buildingType)            sErr.buildingType            = 'نوع البناء مطلوب';
+    if (!hasChronicDisease)       sErr.hasChronicDisease       = 'يرجى الإجابة على هذا السؤال';
+    if (!hasRegularTreatment)     sErr.hasRegularTreatment     = 'يرجى الإجابة على هذا السؤال';
+    if (!hasHealthInsurance)      sErr.hasHealthInsurance      = 'يرجى الإجابة على هذا السؤال';
+    if (!incomeSource)            sErr.incomeSource            = 'مصدر الدخل مطلوب';
+    if (!hasCharitySupport)       sErr.hasCharitySupport       = 'يرجى الإجابة على هذا السؤال';
+    if (!familyRelations)         sErr.familyRelations         = 'يرجى الاختيار';
+    if (!communityRelation)       sErr.communityRelation       = 'يرجى الاختيار';
+    if (!schoolRelation)          sErr.schoolRelation          = 'يرجى الاختيار';
+    if (!socialBehavior)          sErr.socialBehavior          = 'يرجى الاختيار';
+    if (!needsSocialSupport)      sErr.needsSocialSupport      = 'يرجى الاختيار';
+    if (!quranLevel)              sErr.quranLevel              = 'يرجى الاختيار';
+    if (!prayerCommitment)        sErr.prayerCommitment        = 'يرجى الاختيار';
+    if (!moralBehavior)           sErr.moralBehavior           = 'يرجى الاختيار';
+    if (!generalAppearance)       sErr.generalAppearance       = 'يرجى الاختيار';
+    if (!selfExpression)          sErr.selfExpression          = 'يرجى الاختيار';
+    if (!psychFamilyRelations)    sErr.psychFamilyRelations    = 'يرجى الاختيار';
+    if (!peerRelations)           sErr.peerRelations           = 'يرجى الاختيار';
+    if (!sleepAppetite)           sErr.sleepAppetite           = 'يرجى الاختيار';
+    if (!psychSigns)              sErr.psychSigns              = 'يرجى الاختيار';
+    if (!needsPsychSupport)       sErr.needsPsychSupport       = 'يرجى الاختيار';
+    setStateErrors(sErr);
+    if (Object.keys(sErr).length > 0) return;
+
     // Validate file uploads
     if (!validateFiles()) return;
 
@@ -267,76 +352,76 @@ export default function OrphanRegistrationPage() {
     fd.append('governorateId',     data.governorateId     || '');
     fd.append('guardianName',      (data.guardianName     || '').trim());
     fd.append('guardianRelation',  data.guardianRelation  || '');
-    if (data.birthPlace?.trim())        fd.append('birthPlace',        data.birthPlace.trim());
-    if (data.residence?.trim())         fd.append('residence',         data.residence.trim());
-    if (data.motherGovernorate)         fd.append('motherGovernorate', data.motherGovernorate);
-    if (data.phone1?.trim())            fd.append('phone1',            data.phone1.trim());
-    if (data.phone1Relation?.trim())    fd.append('phone1Relation',    data.phone1Relation.trim());
-    if (data.phone2?.trim())            fd.append('phone2',            data.phone2.trim());
-    if (data.phone2Relation?.trim())    fd.append('phone2Relation',    data.phone2Relation.trim());
-    if (data.address?.trim())            fd.append('address',              data.address.trim());
-    if (data.schoolGrade?.trim())        fd.append('schoolGrade',          data.schoolGrade.trim());
-    if (data.sectorType)                 fd.append('sectorType',           data.sectorType);
-    if (data.directorate?.trim())        fd.append('directorate',          data.directorate.trim());
-    if (data.schoolOrg?.trim())          fd.append('schoolOrg',            data.schoolOrg.trim());
-    if (data.favoriteSubject?.trim())    fd.append('favoriteSubject',      data.favoriteSubject.trim());
-    if (data.difficultySubject?.trim())  fd.append('difficultySubject',    data.difficultySubject.trim());
-    if (data.generalLevel?.trim())       fd.append('generalLevel',         data.generalLevel.trim());
-    if (repeatedYear)                    fd.append('repeatedYear',         repeatedYear);
-    if (data.repeatedYearReason?.trim()) fd.append('repeatedYearReason',   data.repeatedYearReason.trim());
-    if (data.gradeDetail?.trim())        fd.append('gradeDetail',          data.gradeDetail.trim());
-    if (data.generalGrade?.trim())       fd.append('generalGrade',         data.generalGrade.trim());
-    if (data.lastResultAvg?.trim())      fd.append('lastResultAvg',        data.lastResultAvg.trim());
-    if (data.highestGrade?.trim())       fd.append('highestGrade',         data.highestGrade.trim());
-    if (data.lowestGrade?.trim())        fd.append('lowestGrade',          data.lowestGrade.trim());
-    if (data.eduResponsible?.trim())     fd.append('eduResponsible',       data.eduResponsible.trim());
-    if (data.eduResponsiblePhone?.trim()) fd.append('eduResponsiblePhone', data.eduResponsiblePhone.trim());
-    if (data.eduLevel?.trim())            fd.append('eduLevel',             data.eduLevel.trim());
-    if (data.guardianAge?.trim())         fd.append('guardianAge',          data.guardianAge.trim());
-    if (data.guardianEduLevel?.trim())    fd.append('guardianEduLevel',     data.guardianEduLevel.trim());
-    if (data.guardianJob?.trim())         fd.append('guardianJob',          data.guardianJob.trim());
-    if (data.guardianHealth?.trim())      fd.append('guardianHealth',       data.guardianHealth.trim());
-    if (data.familyMaleCount?.trim())     fd.append('familyMaleCount',      data.familyMaleCount.trim());
-    if (data.familyFemaleCount?.trim())   fd.append('familyFemaleCount',    data.familyFemaleCount.trim());
-    if (data.familyProblems?.trim())      fd.append('familyProblems',    data.familyProblems.trim());
-    if (ownershipType)                    fd.append('ownershipType',     ownershipType);
-    if (buildingType)                     fd.append('buildingType',      buildingType);
-    if (data.floorsCount?.trim())         fd.append('floorsCount',       data.floorsCount.trim());
-    if (data.roomsCount?.trim())          fd.append('roomsCount',        data.roomsCount.trim());
-    if (data.water?.trim())               fd.append('water',             data.water.trim());
-    if (data.electricity?.trim())         fd.append('electricity',       data.electricity.trim());
-    if (data.rentAmount?.trim())          fd.append('rentAmount',        data.rentAmount.trim());
-    if (data.housingDetails?.trim())           fd.append('housingDetails',        data.housingDetails.trim());
-    if (hasChronicDisease)                     fd.append('hasChronicDisease',     hasChronicDisease);
-    if (data.chronicDiseaseDetails?.trim())    fd.append('chronicDiseaseDetails', data.chronicDiseaseDetails.trim());
-    if (hasRegularTreatment)                   fd.append('hasRegularTreatment',   hasRegularTreatment);
-    if (hasHealthInsurance)                        fd.append('hasHealthInsurance',    hasHealthInsurance);
-    if (incomeSource)                              fd.append('incomeSource',          incomeSource);
-    if (data.monthlyIncome?.trim())                fd.append('monthlyIncome',         data.monthlyIncome.trim());
-    if (hasCharitySupport)                         fd.append('hasCharitySupport',     hasCharitySupport);
-    if (data.charitySupportDetails?.trim())        fd.append('charitySupportDetails', data.charitySupportDetails.trim());
+    fd.append('birthPlace',        data.birthPlace.trim());
+    fd.append('residence',         data.residence.trim());
+    fd.append('motherGovernorate', data.motherGovernorate);
+    fd.append('phone1',            data.phone1.trim());
+    fd.append('phone1Relation',    data.phone1Relation.trim());
+    fd.append('phone2',            data.phone2.trim());
+    fd.append('phone2Relation',    data.phone2Relation.trim());
+    fd.append('address',           data.address.trim());
+    fd.append('schoolGrade',          data.schoolGrade.trim());
+    fd.append('sectorType',           data.sectorType);
+    fd.append('directorate',          data.directorate.trim());
+    fd.append('schoolOrg',            data.schoolOrg.trim());
+    fd.append('favoriteSubject',      data.favoriteSubject.trim());
+    fd.append('difficultySubject',    data.difficultySubject.trim());
+    fd.append('generalLevel',         data.generalLevel.trim());
+    fd.append('repeatedYear',         repeatedYear);
+    if (data.repeatedYearReason?.trim()) fd.append('repeatedYearReason', data.repeatedYearReason.trim());
+    fd.append('gradeDetail',          data.gradeDetail.trim());
+    fd.append('generalGrade',         data.generalGrade.trim());
+    fd.append('lastResultAvg',        data.lastResultAvg.trim());
+    fd.append('highestGrade',         data.highestGrade.trim());
+    fd.append('lowestGrade',          data.lowestGrade.trim());
+    fd.append('eduResponsible',       data.eduResponsible.trim());
+    fd.append('eduResponsiblePhone',  data.eduResponsiblePhone.trim());
+    fd.append('eduLevel',             data.eduLevel.trim());
+    fd.append('guardianAge',          data.guardianAge.trim());
+    fd.append('guardianEduLevel',     data.guardianEduLevel.trim());
+    fd.append('guardianJob',          data.guardianJob.trim());
+    fd.append('guardianHealth',       data.guardianHealth.trim());
+    fd.append('familyMaleCount',      data.familyMaleCount.trim());
+    fd.append('familyFemaleCount',    data.familyFemaleCount.trim());
+    fd.append('familyProblems',       data.familyProblems.trim());
+    fd.append('ownershipType',     ownershipType);
+    fd.append('buildingType',      buildingType);
+    fd.append('floorsCount',       data.floorsCount.trim());
+    fd.append('roomsCount',        data.roomsCount.trim());
+    fd.append('water',             data.water.trim());
+    fd.append('electricity',       data.electricity.trim());
+    if (data.rentAmount?.trim())          fd.append('rentAmount',           data.rentAmount.trim());
+    if (data.housingDetails?.trim())      fd.append('housingDetails',       data.housingDetails.trim());
+    fd.append('hasChronicDisease',     hasChronicDisease);
+    if (data.chronicDiseaseDetails?.trim()) fd.append('chronicDiseaseDetails', data.chronicDiseaseDetails.trim());
+    fd.append('hasRegularTreatment',   hasRegularTreatment);
+    fd.append('hasHealthInsurance',    hasHealthInsurance);
+    fd.append('incomeSource',          incomeSource);
+    fd.append('monthlyIncome',         data.monthlyIncome.trim());
+    fd.append('hasCharitySupport',     hasCharitySupport);
+    if (data.charitySupportDetails?.trim()) fd.append('charitySupportDetails', data.charitySupportDetails.trim());
     if (selectedTalents.size > 0) {
       fd.append('isGifted', 'true');
       fd.append('talents', JSON.stringify([...selectedTalents]));
     }
     if (data.talentsOther?.trim())    fd.append('talentsOther',        data.talentsOther.trim());
-    if (familyRelations)              fd.append('familyRelations',     familyRelations);
-    if (communityRelation)            fd.append('communityRelation',   communityRelation);
-    if (schoolRelation)               fd.append('schoolRelation',      schoolRelation);
-    if (socialBehavior)               fd.append('socialBehavior',      socialBehavior);
-    if (needsSocialSupport)           fd.append('needsSocialSupport',  needsSocialSupport);
-    if (quranLevel)                   fd.append('quranLevel',          quranLevel);
-    if (prayerCommitment)             fd.append('prayerCommitment',    prayerCommitment);
-    if (moralBehavior)                fd.append('moralBehavior',        moralBehavior);
-    if (generalAppearance)            fd.append('generalAppearance',    generalAppearance);
-    if (selfExpression)               fd.append('selfExpression',       selfExpression);
-    if (psychFamilyRelations)         fd.append('psychFamilyRelations', psychFamilyRelations);
-    if (peerRelations)                fd.append('peerRelations',        peerRelations);
-    if (sleepAppetite)                fd.append('sleepAppetite',        sleepAppetite);
-    if (psychSigns)                   fd.append('psychSigns',           psychSigns);
-    if (needsPsychSupport)                fd.append('needsPsychSupport',  needsPsychSupport);
-    if (data.recommendations?.trim())     fd.append('recommendations',    data.recommendations.trim());
-    if (data.notes?.trim())               fd.append('notes',              data.notes.trim());
+    fd.append('familyRelations',     familyRelations);
+    fd.append('communityRelation',   communityRelation);
+    fd.append('schoolRelation',      schoolRelation);
+    fd.append('socialBehavior',      socialBehavior);
+    fd.append('needsSocialSupport',  needsSocialSupport);
+    fd.append('quranLevel',          quranLevel);
+    fd.append('prayerCommitment',    prayerCommitment);
+    fd.append('moralBehavior',       moralBehavior);
+    fd.append('generalAppearance',   generalAppearance);
+    fd.append('selfExpression',      selfExpression);
+    fd.append('psychFamilyRelations',psychFamilyRelations);
+    fd.append('peerRelations',       peerRelations);
+    fd.append('sleepAppetite',       sleepAppetite);
+    fd.append('psychSigns',          psychSigns);
+    fd.append('needsPsychSupport',   needsPsychSupport);
+    fd.append('recommendations',     data.recommendations.trim());
+    if (data.notes?.trim())          fd.append('notes', data.notes.trim());
 
     fd.append('deathCert', deathCertFile);
     fd.append('birthCert', birthCertFile);
@@ -513,45 +598,48 @@ export default function OrphanRegistrationPage() {
               {/* Birth place */}
               <div className="fg">
                 <label className="lbl" htmlFor="birthPlace">
-                  محل الميلاد <span className="opt">(اختياري)</span>
+                  محل الميلاد <span className="req">*</span>
                 </label>
                 <input
                   id="birthPlace"
-                  className="inp"
+                  className={`inp ${errors.birthPlace ? 'inp-err' : ''}`}
                   placeholder="المدينة أو المنطقة"
-                  {...register('birthPlace')}
+                  {...register('birthPlace', { required: 'محل الميلاد مطلوب' })}
                 />
+                {errors.birthPlace && <p className="ferr">{errors.birthPlace.message}</p>}
               </div>
 
               {/* Residence */}
               <div className="fg">
                 <label className="lbl" htmlFor="residence">
-                  مكان السكن <span className="opt">(اختياري)</span>
+                  مكان السكن <span className="req">*</span>
                 </label>
                 <input
                   id="residence"
-                  className="inp"
+                  className={`inp ${errors.residence ? 'inp-err' : ''}`}
                   placeholder="العنوان الحالي"
-                  {...register('residence')}
+                  {...register('residence', { required: 'مكان السكن مطلوب' })}
                 />
+                {errors.residence && <p className="ferr">{errors.residence.message}</p>}
               </div>
 
               {/* Mother's governorate */}
               <div className="fg">
                 <label className="lbl" htmlFor="motherGovernorate">
-                  المحافظة الأم <span className="opt">(اختياري)</span>
+                  المحافظة الأم <span className="req">*</span>
                 </label>
                 <select
                   id="motherGovernorate"
-                  className="inp sel"
+                  className={`inp sel ${errors.motherGovernorate ? 'inp-err' : ''}`}
                   disabled={govLoading}
-                  {...register('motherGovernorate')}
+                  {...register('motherGovernorate', { required: 'المحافظة الأم مطلوبة' })}
                 >
                   <option value="">{govLoading ? 'جارٍ التحميل…' : 'اختر المحافظة'}</option>
                   {governorates.map((g) => (
                     <option key={g.id} value={g.id}>{g.name_ar}</option>
                   ))}
                 </select>
+                {errors.motherGovernorate && <p className="ferr">{errors.motherGovernorate.message}</p>}
               </div>
 
               {/* Notes */}
@@ -578,66 +666,71 @@ export default function OrphanRegistrationPage() {
               {/* Phone 1 */}
               <div className="fg">
                 <label className="lbl" htmlFor="phone1">
-                  الرقم الأول <span className="opt">(اختياري)</span>
+                  الرقم الأول <span className="req">*</span>
                 </label>
                 <input
                   id="phone1"
-                  className="inp ltr"
+                  className={`inp ltr ${errors.phone1 ? 'inp-err' : ''}`}
                   placeholder="07XXXXXXXX"
-                  {...register('phone1')}
+                  {...register('phone1', { required: 'الرقم الأول مطلوب' })}
                 />
+                {errors.phone1 && <p className="ferr">{errors.phone1.message}</p>}
               </div>
 
               {/* Phone 1 relation */}
               <div className="fg">
                 <label className="lbl" htmlFor="phone1Relation">
-                  صلة القرابة <span className="opt">(اختياري)</span>
+                  صلة القرابة <span className="req">*</span>
                 </label>
                 <input
                   id="phone1Relation"
-                  className="inp"
+                  className={`inp ${errors.phone1Relation ? 'inp-err' : ''}`}
                   placeholder="مثال: عم، خال، جد"
-                  {...register('phone1Relation')}
+                  {...register('phone1Relation', { required: 'صلة القرابة مطلوبة' })}
                 />
+                {errors.phone1Relation && <p className="ferr">{errors.phone1Relation.message}</p>}
               </div>
 
               {/* Phone 2 */}
               <div className="fg">
                 <label className="lbl" htmlFor="phone2">
-                  الرقم الثاني <span className="opt">(اختياري)</span>
+                  الرقم الثاني <span className="req">*</span>
                 </label>
                 <input
                   id="phone2"
-                  className="inp ltr"
+                  className={`inp ltr ${errors.phone2 ? 'inp-err' : ''}`}
                   placeholder="07XXXXXXXX"
-                  {...register('phone2')}
+                  {...register('phone2', { required: 'الرقم الثاني مطلوب' })}
                 />
+                {errors.phone2 && <p className="ferr">{errors.phone2.message}</p>}
               </div>
 
               {/* Phone 2 relation */}
               <div className="fg">
                 <label className="lbl" htmlFor="phone2Relation">
-                  صلة القرابة <span className="opt">(اختياري)</span>
+                  صلة القرابة <span className="req">*</span>
                 </label>
                 <input
                   id="phone2Relation"
-                  className="inp"
+                  className={`inp ${errors.phone2Relation ? 'inp-err' : ''}`}
                   placeholder="مثال: عم، خال، جد"
-                  {...register('phone2Relation')}
+                  {...register('phone2Relation', { required: 'صلة القرابة مطلوبة' })}
                 />
+                {errors.phone2Relation && <p className="ferr">{errors.phone2Relation.message}</p>}
               </div>
 
               {/* Address */}
               <div className="fg span2">
                 <label className="lbl" htmlFor="address">
-                  العنوان <span className="opt">(اختياري)</span>
+                  العنوان <span className="req">*</span>
                 </label>
                 <input
                   id="address"
-                  className="inp"
+                  className={`inp ${errors.address ? 'inp-err' : ''}`}
                   placeholder="الحي، الشارع، رقم المنزل…"
-                  {...register('address')}
+                  {...register('address', { required: 'العنوان مطلوب' })}
                 />
+                {errors.address && <p className="ferr">{errors.address.message}</p>}
               </div>
 
             </div>
@@ -682,44 +775,51 @@ export default function OrphanRegistrationPage() {
 
               {/* Guardian age */}
               <div className="fg">
-                <label className="lbl" htmlFor="guardianAge">عمر ولي الأمر <span className="opt">(اختياري)</span></label>
-                <input id="guardianAge" className="inp ltr" placeholder="مثال: 45" {...register('guardianAge')} />
+                <label className="lbl" htmlFor="guardianAge">عمر ولي الأمر <span className="req">*</span></label>
+                <input id="guardianAge" className={`inp ltr ${errors.guardianAge ? 'inp-err' : ''}`} placeholder="مثال: 45" {...register('guardianAge', { required: 'عمر ولي الأمر مطلوب' })} />
+                {errors.guardianAge && <p className="ferr">{errors.guardianAge.message}</p>}
               </div>
 
               {/* Guardian education level */}
               <div className="fg">
-                <label className="lbl" htmlFor="guardianEduLevel">المستوى التعليمي <span className="opt">(اختياري)</span></label>
-                <input id="guardianEduLevel" className="inp" placeholder="مثال: ثانوية، جامعي" {...register('guardianEduLevel')} />
+                <label className="lbl" htmlFor="guardianEduLevel">المستوى التعليمي <span className="req">*</span></label>
+                <input id="guardianEduLevel" className={`inp ${errors.guardianEduLevel ? 'inp-err' : ''}`} placeholder="مثال: ثانوية، جامعي" {...register('guardianEduLevel', { required: 'المستوى التعليمي مطلوب' })} />
+                {errors.guardianEduLevel && <p className="ferr">{errors.guardianEduLevel.message}</p>}
               </div>
 
               {/* Guardian job */}
               <div className="fg">
-                <label className="lbl" htmlFor="guardianJob">المهنة <span className="opt">(اختياري)</span></label>
-                <input id="guardianJob" className="inp" placeholder="مثال: موظف، تاجر" {...register('guardianJob')} />
+                <label className="lbl" htmlFor="guardianJob">المهنة <span className="req">*</span></label>
+                <input id="guardianJob" className={`inp ${errors.guardianJob ? 'inp-err' : ''}`} placeholder="مثال: موظف، تاجر" {...register('guardianJob', { required: 'المهنة مطلوبة' })} />
+                {errors.guardianJob && <p className="ferr">{errors.guardianJob.message}</p>}
               </div>
 
               {/* Guardian health */}
               <div className="fg">
-                <label className="lbl" htmlFor="guardianHealth">الحالة الصحية <span className="opt">(اختياري)</span></label>
-                <input id="guardianHealth" className="inp" placeholder="مثال: جيدة، مريض" {...register('guardianHealth')} />
+                <label className="lbl" htmlFor="guardianHealth">الحالة الصحية <span className="req">*</span></label>
+                <input id="guardianHealth" className={`inp ${errors.guardianHealth ? 'inp-err' : ''}`} placeholder="مثال: جيدة، مريض" {...register('guardianHealth', { required: 'الحالة الصحية مطلوبة' })} />
+                {errors.guardianHealth && <p className="ferr">{errors.guardianHealth.message}</p>}
               </div>
 
               {/* Family members count */}
               <div className="fg">
-                <label className="lbl" htmlFor="familyMaleCount">عدد الذكور في الأسرة <span className="opt">(اختياري)</span></label>
-                <input id="familyMaleCount" className="inp ltr" type="number" min="0" placeholder="0" {...register('familyMaleCount')} />
+                <label className="lbl" htmlFor="familyMaleCount">عدد الذكور في الأسرة <span className="req">*</span></label>
+                <input id="familyMaleCount" className={`inp ltr ${errors.familyMaleCount ? 'inp-err' : ''}`} type="number" min="0" placeholder="0" {...register('familyMaleCount', { required: 'عدد الذكور مطلوب' })} />
+                {errors.familyMaleCount && <p className="ferr">{errors.familyMaleCount.message}</p>}
               </div>
 
               <div className="fg">
-                <label className="lbl" htmlFor="familyFemaleCount">عدد الإناث في الأسرة <span className="opt">(اختياري)</span></label>
-                <input id="familyFemaleCount" className="inp ltr" type="number" min="0" placeholder="0" {...register('familyFemaleCount')} />
+                <label className="lbl" htmlFor="familyFemaleCount">عدد الإناث في الأسرة <span className="req">*</span></label>
+                <input id="familyFemaleCount" className={`inp ltr ${errors.familyFemaleCount ? 'inp-err' : ''}`} type="number" min="0" placeholder="0" {...register('familyFemaleCount', { required: 'عدد الإناث مطلوب' })} />
+                {errors.familyFemaleCount && <p className="ferr">{errors.familyFemaleCount.message}</p>}
               </div>
 
               {/* Family problems */}
               <div className="fg span2">
-                <label className="lbl" htmlFor="familyProblems">أهم المشاكل التي تواجهها الأسرة <span className="opt">(اختياري)</span></label>
-                <textarea id="familyProblems" className="inp ta" rows={3}
-                  placeholder="اذكر أبرز المشاكل والتحديات…" {...register('familyProblems')} />
+                <label className="lbl" htmlFor="familyProblems">أهم المشاكل التي تواجهها الأسرة <span className="req">*</span></label>
+                <textarea id="familyProblems" className={`inp ta ${errors.familyProblems ? 'inp-err' : ''}`} rows={3}
+                  placeholder="اذكر أبرز المشاكل والتحديات…" {...register('familyProblems', { required: 'هذا الحقل مطلوب' })} />
+                {errors.familyProblems && <p className="ferr">{errors.familyProblems.message}</p>}
               </div>
 
             </div>
@@ -732,62 +832,70 @@ export default function OrphanRegistrationPage() {
 
               {/* Grade */}
               <div className="fg">
-                <label className="lbl" htmlFor="schoolGrade">الصف <span className="opt">(اختياري)</span></label>
-                <input id="schoolGrade" className="inp" placeholder="مثال: السادس الابتدائي" {...register('schoolGrade')} />
+                <label className="lbl" htmlFor="schoolGrade">الصف <span className="req">*</span></label>
+                <input id="schoolGrade" className={`inp ${errors.schoolGrade ? 'inp-err' : ''}`} placeholder="مثال: السادس الابتدائي" {...register('schoolGrade', { required: 'الصف مطلوب' })} />
+                {errors.schoolGrade && <p className="ferr">{errors.schoolGrade.message}</p>}
               </div>
 
               {/* Sector type */}
               <div className="fg">
-                <label className="lbl">نوع القطاع <span className="opt">(اختياري)</span></label>
+                <label className="lbl">نوع القطاع <span className="req">*</span></label>
                 <div className="radio-row">
                   {[['government', 'حكومي'], ['private', 'خاص']].map(([val, lbl]) => (
-                    <label key={val} className="radio-card">
-                      <input type="radio" value={val} {...register('sectorType')} />
+                    <label key={val} className={`radio-card ${errors.sectorType ? 'rc-err' : ''}`}>
+                      <input type="radio" value={val} {...register('sectorType', { required: 'نوع القطاع مطلوب' })} />
                       <span>{lbl}</span>
                     </label>
                   ))}
                 </div>
+                {errors.sectorType && <p className="ferr">{errors.sectorType.message}</p>}
               </div>
 
               {/* Directorate */}
               <div className="fg">
-                <label className="lbl" htmlFor="directorate">المديرية <span className="opt">(اختياري)</span></label>
-                <input id="directorate" className="inp" placeholder="اسم المديرية" {...register('directorate')} />
+                <label className="lbl" htmlFor="directorate">المديرية <span className="req">*</span></label>
+                <input id="directorate" className={`inp ${errors.directorate ? 'inp-err' : ''}`} placeholder="اسم المديرية" {...register('directorate', { required: 'المديرية مطلوبة' })} />
+                {errors.directorate && <p className="ferr">{errors.directorate.message}</p>}
               </div>
 
               {/* Organization */}
               <div className="fg">
-                <label className="lbl" htmlFor="schoolOrg">الجهة <span className="opt">(اختياري)</span></label>
-                <input id="schoolOrg" className="inp" placeholder="اسم المدرسة أو الجهة" {...register('schoolOrg')} />
+                <label className="lbl" htmlFor="schoolOrg">الجهة <span className="req">*</span></label>
+                <input id="schoolOrg" className={`inp ${errors.schoolOrg ? 'inp-err' : ''}`} placeholder="اسم المدرسة أو الجهة" {...register('schoolOrg', { required: 'الجهة مطلوبة' })} />
+                {errors.schoolOrg && <p className="ferr">{errors.schoolOrg.message}</p>}
               </div>
 
               {/* Favorite subject */}
               <div className="fg">
-                <label className="lbl" htmlFor="favoriteSubject">المادة المفضلة <span className="opt">(اختياري)</span></label>
-                <input id="favoriteSubject" className="inp" placeholder="مثال: الرياضيات" {...register('favoriteSubject')} />
+                <label className="lbl" htmlFor="favoriteSubject">المادة المفضلة <span className="req">*</span></label>
+                <input id="favoriteSubject" className={`inp ${errors.favoriteSubject ? 'inp-err' : ''}`} placeholder="مثال: الرياضيات" {...register('favoriteSubject', { required: 'المادة المفضلة مطلوبة' })} />
+                {errors.favoriteSubject && <p className="ferr">{errors.favoriteSubject.message}</p>}
               </div>
 
               {/* Difficulty subject */}
               <div className="fg">
-                <label className="lbl" htmlFor="difficultySubject">يواجه صعوبة في <span className="opt">(اختياري)</span></label>
-                <input id="difficultySubject" className="inp" placeholder="مثال: اللغة الإنجليزية" {...register('difficultySubject')} />
+                <label className="lbl" htmlFor="difficultySubject">يواجه صعوبة في <span className="req">*</span></label>
+                <input id="difficultySubject" className={`inp ${errors.difficultySubject ? 'inp-err' : ''}`} placeholder="مثال: اللغة الإنجليزية" {...register('difficultySubject', { required: 'هذا الحقل مطلوب' })} />
+                {errors.difficultySubject && <p className="ferr">{errors.difficultySubject.message}</p>}
               </div>
 
               {/* General level */}
               <div className="fg">
-                <label className="lbl" htmlFor="generalLevel">المستوى العام <span className="opt">(اختياري)</span></label>
-                <input id="generalLevel" className="inp" placeholder="مثال: جيد، متوسط، ضعيف" {...register('generalLevel')} />
+                <label className="lbl" htmlFor="generalLevel">المستوى العام <span className="req">*</span></label>
+                <input id="generalLevel" className={`inp ${errors.generalLevel ? 'inp-err' : ''}`} placeholder="مثال: جيد، متوسط، ضعيف" {...register('generalLevel', { required: 'المستوى العام مطلوب' })} />
+                {errors.generalLevel && <p className="ferr">{errors.generalLevel.message}</p>}
               </div>
 
               {/* General grade */}
               <div className="fg">
-                <label className="lbl" htmlFor="generalGrade">التقدير العام <span className="opt">(اختياري)</span></label>
-                <input id="generalGrade" className="inp" placeholder="مثال: جيد جداً" {...register('generalGrade')} />
+                <label className="lbl" htmlFor="generalGrade">التقدير العام <span className="req">*</span></label>
+                <input id="generalGrade" className={`inp ${errors.generalGrade ? 'inp-err' : ''}`} placeholder="مثال: جيد جداً" {...register('generalGrade', { required: 'التقدير العام مطلوب' })} />
+                {errors.generalGrade && <p className="ferr">{errors.generalGrade.message}</p>}
               </div>
 
               {/* Repeated year */}
               <div className="fg span2">
-                <label className="lbl">هل أعاد سنة مسبقة؟ <span className="opt">(اختياري)</span></label>
+                <label className="lbl">هل أعاد سنة مسبقة؟ <span className="req">*</span></label>
                 <div className="radio-row" style={{ maxWidth: '200px' }}>
                   {[['yes', 'نعم'], ['no', 'لا']].map(([val, lbl]) => (
                     <label key={val} className="radio-card">
@@ -797,6 +905,7 @@ export default function OrphanRegistrationPage() {
                     </label>
                   ))}
                 </div>
+                {stateErrors.repeatedYear && <p className="ferr">{stateErrors.repeatedYear}</p>}
               </div>
 
               {/* Reason — only if repeated */}
@@ -809,44 +918,51 @@ export default function OrphanRegistrationPage() {
 
               {/* Last result average */}
               <div className="fg">
-                <label className="lbl" htmlFor="lastResultAvg">معدل آخر نتيجة <span className="opt">(اختياري)</span></label>
-                <input id="lastResultAvg" className="inp ltr" placeholder="مثال: 85%" {...register('lastResultAvg')} />
+                <label className="lbl" htmlFor="lastResultAvg">معدل آخر نتيجة <span className="req">*</span></label>
+                <input id="lastResultAvg" className={`inp ltr ${errors.lastResultAvg ? 'inp-err' : ''}`} placeholder="مثال: 85%" {...register('lastResultAvg', { required: 'معدل آخر نتيجة مطلوب' })} />
+                {errors.lastResultAvg && <p className="ferr">{errors.lastResultAvg.message}</p>}
               </div>
 
               {/* Grade detail */}
               <div className="fg">
-                <label className="lbl" htmlFor="gradeDetail">التفصيل <span className="opt">(اختياري)</span></label>
-                <input id="gradeDetail" className="inp" placeholder="تفاصيل النتيجة" {...register('gradeDetail')} />
+                <label className="lbl" htmlFor="gradeDetail">التفصيل <span className="req">*</span></label>
+                <input id="gradeDetail" className={`inp ${errors.gradeDetail ? 'inp-err' : ''}`} placeholder="تفاصيل النتيجة" {...register('gradeDetail', { required: 'التفصيل مطلوب' })} />
+                {errors.gradeDetail && <p className="ferr">{errors.gradeDetail.message}</p>}
               </div>
 
               {/* Highest grade */}
               <div className="fg">
-                <label className="lbl" htmlFor="highestGrade">أعلى درجة في مادة <span className="opt">(اختياري)</span></label>
-                <input id="highestGrade" className="inp" placeholder="المادة والدرجة" {...register('highestGrade')} />
+                <label className="lbl" htmlFor="highestGrade">أعلى درجة في مادة <span className="req">*</span></label>
+                <input id="highestGrade" className={`inp ${errors.highestGrade ? 'inp-err' : ''}`} placeholder="المادة والدرجة" {...register('highestGrade', { required: 'هذا الحقل مطلوب' })} />
+                {errors.highestGrade && <p className="ferr">{errors.highestGrade.message}</p>}
               </div>
 
               {/* Lowest grade */}
               <div className="fg">
-                <label className="lbl" htmlFor="lowestGrade">أدنى درجة في مادة <span className="opt">(اختياري)</span></label>
-                <input id="lowestGrade" className="inp" placeholder="المادة والدرجة" {...register('lowestGrade')} />
+                <label className="lbl" htmlFor="lowestGrade">أدنى درجة في مادة <span className="req">*</span></label>
+                <input id="lowestGrade" className={`inp ${errors.lowestGrade ? 'inp-err' : ''}`} placeholder="المادة والدرجة" {...register('lowestGrade', { required: 'هذا الحقل مطلوب' })} />
+                {errors.lowestGrade && <p className="ferr">{errors.lowestGrade.message}</p>}
               </div>
 
               {/* Edu responsible */}
               <div className="fg">
-                <label className="lbl" htmlFor="eduResponsible">المسؤول تعليمياً <span className="opt">(اختياري)</span></label>
-                <input id="eduResponsible" className="inp" placeholder="الاسم" {...register('eduResponsible')} />
+                <label className="lbl" htmlFor="eduResponsible">المسؤول تعليمياً <span className="req">*</span></label>
+                <input id="eduResponsible" className={`inp ${errors.eduResponsible ? 'inp-err' : ''}`} placeholder="الاسم" {...register('eduResponsible', { required: 'المسؤول التعليمي مطلوب' })} />
+                {errors.eduResponsible && <p className="ferr">{errors.eduResponsible.message}</p>}
               </div>
 
               {/* Edu responsible phone */}
               <div className="fg">
-                <label className="lbl" htmlFor="eduResponsiblePhone">رقم هاتفه <span className="opt">(اختياري)</span></label>
-                <input id="eduResponsiblePhone" className="inp ltr" placeholder="07XXXXXXXX" {...register('eduResponsiblePhone')} />
+                <label className="lbl" htmlFor="eduResponsiblePhone">رقم هاتفه <span className="req">*</span></label>
+                <input id="eduResponsiblePhone" className={`inp ltr ${errors.eduResponsiblePhone ? 'inp-err' : ''}`} placeholder="07XXXXXXXX" {...register('eduResponsiblePhone', { required: 'رقم الهاتف مطلوب' })} />
+                {errors.eduResponsiblePhone && <p className="ferr">{errors.eduResponsiblePhone.message}</p>}
               </div>
 
               {/* Edu level */}
               <div className="fg span2">
-                <label className="lbl" htmlFor="eduLevel">المستوى التعليمي للمسؤول <span className="opt">(اختياري)</span></label>
-                <input id="eduLevel" className="inp" placeholder="مثال: ثانوية، جامعي" {...register('eduLevel')} />
+                <label className="lbl" htmlFor="eduLevel">المستوى التعليمي للمسؤول <span className="req">*</span></label>
+                <input id="eduLevel" className={`inp ${errors.eduLevel ? 'inp-err' : ''}`} placeholder="مثال: ثانوية، جامعي" {...register('eduLevel', { required: 'المستوى التعليمي مطلوب' })} />
+                {errors.eduLevel && <p className="ferr">{errors.eduLevel.message}</p>}
               </div>
 
             </div>
@@ -862,7 +978,7 @@ export default function OrphanRegistrationPage() {
 
               {/* Ownership type */}
               <div className="fg span2">
-                <label className="lbl">نوع السكن <span className="opt">(اختياري)</span></label>
+                <label className="lbl">نوع السكن <span className="req">*</span></label>
                 <div className="rel-row">
                   {[['owned', 'ملك'], ['rented', 'إيجار'], ['free', 'سكن مجاني']].map(([val, lbl]) => (
                     <label key={val} className="rel-chip">
@@ -872,11 +988,12 @@ export default function OrphanRegistrationPage() {
                     </label>
                   ))}
                 </div>
+                {stateErrors.ownershipType && <p className="ferr">{stateErrors.ownershipType}</p>}
               </div>
 
               {/* Building type */}
               <div className="fg span2">
-                <label className="lbl">نوع البناء <span className="opt">(اختياري)</span></label>
+                <label className="lbl">نوع البناء <span className="req">*</span></label>
                 <div className="rel-row">
                   {[['popular', 'شعبي'], ['reinforced', 'مسلح'], ['other', 'آخر']].map(([val, lbl]) => (
                     <label key={val} className="rel-chip">
@@ -886,30 +1003,35 @@ export default function OrphanRegistrationPage() {
                     </label>
                   ))}
                 </div>
+                {stateErrors.buildingType && <p className="ferr">{stateErrors.buildingType}</p>}
               </div>
 
               {/* Floors */}
               <div className="fg">
-                <label className="lbl" htmlFor="floorsCount">عدد الطوابق <span className="opt">(اختياري)</span></label>
-                <input id="floorsCount" className="inp ltr" type="number" min="1" placeholder="1" {...register('floorsCount')} />
+                <label className="lbl" htmlFor="floorsCount">عدد الطوابق <span className="req">*</span></label>
+                <input id="floorsCount" className={`inp ltr ${errors.floorsCount ? 'inp-err' : ''}`} type="number" min="1" placeholder="1" {...register('floorsCount', { required: 'عدد الطوابق مطلوب' })} />
+                {errors.floorsCount && <p className="ferr">{errors.floorsCount.message}</p>}
               </div>
 
               {/* Rooms */}
               <div className="fg">
-                <label className="lbl" htmlFor="roomsCount">عدد الغرف <span className="opt">(اختياري)</span></label>
-                <input id="roomsCount" className="inp ltr" type="number" min="1" placeholder="1" {...register('roomsCount')} />
+                <label className="lbl" htmlFor="roomsCount">عدد الغرف <span className="req">*</span></label>
+                <input id="roomsCount" className={`inp ltr ${errors.roomsCount ? 'inp-err' : ''}`} type="number" min="1" placeholder="1" {...register('roomsCount', { required: 'عدد الغرف مطلوب' })} />
+                {errors.roomsCount && <p className="ferr">{errors.roomsCount.message}</p>}
               </div>
 
               {/* Water */}
               <div className="fg">
-                <label className="lbl" htmlFor="water">الماء <span className="opt">(اختياري)</span></label>
-                <input id="water" className="inp" placeholder="مثال: شبكة عامة، خزان" {...register('water')} />
+                <label className="lbl" htmlFor="water">الماء <span className="req">*</span></label>
+                <input id="water" className={`inp ${errors.water ? 'inp-err' : ''}`} placeholder="مثال: شبكة عامة، خزان" {...register('water', { required: 'مصدر الماء مطلوب' })} />
+                {errors.water && <p className="ferr">{errors.water.message}</p>}
               </div>
 
               {/* Electricity */}
               <div className="fg">
-                <label className="lbl" htmlFor="electricity">الكهرباء <span className="opt">(اختياري)</span></label>
-                <input id="electricity" className="inp" placeholder="مثال: متصل، مولد" {...register('electricity')} />
+                <label className="lbl" htmlFor="electricity">الكهرباء <span className="req">*</span></label>
+                <input id="electricity" className={`inp ${errors.electricity ? 'inp-err' : ''}`} placeholder="مثال: متصل، مولد" {...register('electricity', { required: 'مصدر الكهرباء مطلوب' })} />
+                {errors.electricity && <p className="ferr">{errors.electricity.message}</p>}
               </div>
 
               {/* Rent amount — only if rented */}
@@ -936,7 +1058,7 @@ export default function OrphanRegistrationPage() {
 
               {/* Chronic disease */}
               <div className="fg span2">
-                <label className="lbl">هل يعاني من أمراض مزمنة؟ <span className="opt">(اختياري)</span></label>
+                <label className="lbl">هل يعاني من أمراض مزمنة؟ <span className="req">*</span></label>
                 <div className="radio-row" style={{ maxWidth: '200px' }}>
                   {[['yes', 'نعم'], ['no', 'لا']].map(([val, lbl]) => (
                     <label key={val} className="radio-card">
@@ -946,6 +1068,7 @@ export default function OrphanRegistrationPage() {
                     </label>
                   ))}
                 </div>
+                {stateErrors.hasChronicDisease && <p className="ferr">{stateErrors.hasChronicDisease}</p>}
               </div>
 
               {/* Disease details — only if yes */}
@@ -959,7 +1082,7 @@ export default function OrphanRegistrationPage() {
 
               {/* Regular treatment */}
               <div className="fg">
-                <label className="lbl">هل يتلقى علاجاً منتظماً؟ <span className="opt">(اختياري)</span></label>
+                <label className="lbl">هل يتلقى علاجاً منتظماً؟ <span className="req">*</span></label>
                 <div className="radio-row">
                   {[['yes', 'نعم'], ['no', 'لا']].map(([val, lbl]) => (
                     <label key={val} className="radio-card">
@@ -969,11 +1092,12 @@ export default function OrphanRegistrationPage() {
                     </label>
                   ))}
                 </div>
+                {stateErrors.hasRegularTreatment && <p className="ferr">{stateErrors.hasRegularTreatment}</p>}
               </div>
 
               {/* Health insurance */}
               <div className="fg">
-                <label className="lbl">هل يتوفر تأمين صحي؟ <span className="opt">(اختياري)</span></label>
+                <label className="lbl">هل يتوفر تأمين صحي؟ <span className="req">*</span></label>
                 <div className="radio-row">
                   {[['yes', 'نعم'], ['no', 'لا']].map(([val, lbl]) => (
                     <label key={val} className="radio-card">
@@ -983,6 +1107,7 @@ export default function OrphanRegistrationPage() {
                     </label>
                   ))}
                 </div>
+                {stateErrors.hasHealthInsurance && <p className="ferr">{stateErrors.hasHealthInsurance}</p>}
               </div>
 
             </div>
@@ -995,7 +1120,7 @@ export default function OrphanRegistrationPage() {
 
               {/* Income source */}
               <div className="fg span2">
-                <label className="lbl">مصدر الدخل الرئيسي <span className="opt">(اختياري)</span></label>
+                <label className="lbl">مصدر الدخل الرئيسي <span className="req">*</span></label>
                 <div className="rel-row">
                   {[
                     ['salary',    'راتب شهري'],
@@ -1010,16 +1135,17 @@ export default function OrphanRegistrationPage() {
                     </label>
                   ))}
                 </div>
+                {stateErrors.incomeSource && <p className="ferr">{stateErrors.incomeSource}</p>}
               </div>
 
               {/* Monthly income */}
               <div className="fg">
                 <label className="lbl" htmlFor="monthlyIncome">
-                  متوسط الدخل الشهري <span className="opt">(اختياري)</span>
+                  متوسط الدخل الشهري <span className="req">*</span>
                 </label>
                 <div style={{ position: 'relative' }}>
-                  <input id="monthlyIncome" className="inp ltr"
-                    placeholder="0" {...register('monthlyIncome')}
+                  <input id="monthlyIncome" className={`inp ltr ${errors.monthlyIncome ? 'inp-err' : ''}`}
+                    placeholder="0" {...register('monthlyIncome', { required: 'متوسط الدخل الشهري مطلوب' })}
                     style={{ paddingLeft: '3rem' }} />
                   <span style={{
                     position: 'absolute', left: '0.75rem', top: '50%',
@@ -1027,12 +1153,13 @@ export default function OrphanRegistrationPage() {
                     color: '#9ca3af', pointerEvents: 'none',
                   }}>ريال</span>
                 </div>
+                {errors.monthlyIncome && <p className="ferr">{errors.monthlyIncome.message}</p>}
               </div>
 
               {/* Charity support */}
               <div className="fg">
                 <label className="lbl">
-                  هل تتلقى الأسرة دعماً من جهة خيرية؟ <span className="opt">(اختياري)</span>
+                  هل تتلقى الأسرة دعماً من جهة خيرية؟ <span className="req">*</span>
                 </label>
                 <div className="radio-row">
                   {[['yes', 'نعم'], ['no', 'لا']].map(([val, lbl]) => (
@@ -1043,6 +1170,7 @@ export default function OrphanRegistrationPage() {
                     </label>
                   ))}
                 </div>
+                {stateErrors.hasCharitySupport && <p className="ferr">{stateErrors.hasCharitySupport}</p>}
               </div>
 
               {/* Support details — only if yes */}
@@ -1143,7 +1271,7 @@ export default function OrphanRegistrationPage() {
             <div className="grid">
 
               <div className="fg span2">
-                <label className="lbl">العلاقات داخل الأسرة <span className="opt">(اختياري)</span></label>
+                <label className="lbl">العلاقات داخل الأسرة <span className="req">*</span></label>
                 <div className="rel-row">
                   {[['connected','مترابطة'],['tense','متوترة بعض الشيء'],['fragmented','مفككة']].map(([val,lbl]) => (
                     <label key={val} className="rel-chip">
@@ -1152,10 +1280,11 @@ export default function OrphanRegistrationPage() {
                     </label>
                   ))}
                 </div>
+                {stateErrors.familyRelations && <p className="ferr">{stateErrors.familyRelations}</p>}
               </div>
 
               <div className="fg span2">
-                <label className="lbl">العلاقة مع المجتمع <span className="opt">(اختياري)</span></label>
+                <label className="lbl">العلاقة مع المجتمع <span className="req">*</span></label>
                 <div className="rel-row">
                   {[['active','يشارك في أنشطة'],['shy','خجول ومنعزل'],['needs_push','يحتاج تشجيعاً على الاندماج']].map(([val,lbl]) => (
                     <label key={val} className="rel-chip">
@@ -1164,10 +1293,11 @@ export default function OrphanRegistrationPage() {
                     </label>
                   ))}
                 </div>
+                {stateErrors.communityRelation && <p className="ferr">{stateErrors.communityRelation}</p>}
               </div>
 
               <div className="fg span2">
-                <label className="lbl">العلاقة بالمدرسة والمعلمين <span className="opt">(اختياري)</span></label>
+                <label className="lbl">العلاقة بالمدرسة والمعلمين <span className="req">*</span></label>
                 <div className="rel-row">
                   {[['positive','إيجابية'],['average','متوسطة'],['weak','ضعيفة أو فيها مشكلات']].map(([val,lbl]) => (
                     <label key={val} className="rel-chip">
@@ -1176,10 +1306,11 @@ export default function OrphanRegistrationPage() {
                     </label>
                   ))}
                 </div>
+                {stateErrors.schoolRelation && <p className="ferr">{stateErrors.schoolRelation}</p>}
               </div>
 
               <div className="fg span2">
-                <label className="lbl">سلوكيات اجتماعية ملحوظة <span className="opt">(اختياري)</span></label>
+                <label className="lbl">سلوكيات اجتماعية ملحوظة <span className="req">*</span></label>
                 <div className="rel-row">
                   {[['cooperative','متعاون'],['introverted','انطوائي'],['aggressive','عدواني'],['leader','قيادي']].map(([val,lbl]) => (
                     <label key={val} className="rel-chip">
@@ -1188,10 +1319,11 @@ export default function OrphanRegistrationPage() {
                     </label>
                   ))}
                 </div>
+                {stateErrors.socialBehavior && <p className="ferr">{stateErrors.socialBehavior}</p>}
               </div>
 
               <div className="fg span2">
-                <label className="lbl">يحتاج إلى دعم اجتماعي إضافي؟ <span className="opt">(اختياري)</span></label>
+                <label className="lbl">يحتاج إلى دعم اجتماعي إضافي؟ <span className="req">*</span></label>
                 <div className="rel-row">
                   {[['yes','نعم'],['no','لا'],['pending','قيد المتابعة']].map(([val,lbl]) => (
                     <label key={val} className="rel-chip">
@@ -1200,6 +1332,7 @@ export default function OrphanRegistrationPage() {
                     </label>
                   ))}
                 </div>
+                {stateErrors.needsSocialSupport && <p className="ferr">{stateErrors.needsSocialSupport}</p>}
               </div>
 
             </div>
@@ -1211,7 +1344,7 @@ export default function OrphanRegistrationPage() {
             <div className="grid">
 
               <div className="fg span2">
-                <label className="lbl">حفظ القرآن الكريم <span className="opt">(اختياري)</span></label>
+                <label className="lbl">حفظ القرآن الكريم <span className="req">*</span></label>
                 <div className="rel-row">
                   {[
                     ['none',      'لا يحفظ'],
@@ -1226,10 +1359,11 @@ export default function OrphanRegistrationPage() {
                     </label>
                   ))}
                 </div>
+                {stateErrors.quranLevel && <p className="ferr">{stateErrors.quranLevel}</p>}
               </div>
 
               <div className="fg span2">
-                <label className="lbl">الالتزام بالصلاة <span className="opt">(اختياري)</span></label>
+                <label className="lbl">الالتزام بالصلاة <span className="req">*</span></label>
                 <div className="rel-row">
                   {[
                     ['always',    'دائم الالتزام'],
@@ -1242,10 +1376,11 @@ export default function OrphanRegistrationPage() {
                     </label>
                   ))}
                 </div>
+                {stateErrors.prayerCommitment && <p className="ferr">{stateErrors.prayerCommitment}</p>}
               </div>
 
               <div className="fg span2">
-                <label className="lbl">السلوك والأخلاق <span className="opt">(اختياري)</span></label>
+                <label className="lbl">السلوك والأخلاق <span className="req">*</span></label>
                 <div className="rel-row">
                   {[
                     ['good',         'مهذب ومتعاون'],
@@ -1258,6 +1393,7 @@ export default function OrphanRegistrationPage() {
                     </label>
                   ))}
                 </div>
+                {stateErrors.moralBehavior && <p className="ferr">{stateErrors.moralBehavior}</p>}
               </div>
 
             </div>
@@ -1269,7 +1405,7 @@ export default function OrphanRegistrationPage() {
             <div className="grid">
 
               <div className="fg span2">
-                <label className="lbl">المظهر العام والتفاعل <span className="opt">(اختياري)</span></label>
+                <label className="lbl">المظهر العام والتفاعل <span className="req">*</span></label>
                 <div className="rel-row">
                   {[['smiling','مبتسم ومتفاعل'],['shy','خجول'],['introverted','منطوٍ'],['aggressive','عدواني بعض الشيء']].map(([val,lbl]) => (
                     <label key={val} className="rel-chip">
@@ -1278,10 +1414,11 @@ export default function OrphanRegistrationPage() {
                     </label>
                   ))}
                 </div>
+                {stateErrors.generalAppearance && <p className="ferr">{stateErrors.generalAppearance}</p>}
               </div>
 
               <div className="fg span2">
-                <label className="lbl">التعبير عن الذات <span className="opt">(اختياري)</span></label>
+                <label className="lbl">التعبير عن الذات <span className="req">*</span></label>
                 <div className="rel-row">
                   {[['confident','يتحدث بثقة'],['hesitant','يتردد في الكلام'],['silent','صامت أغلب الوقت']].map(([val,lbl]) => (
                     <label key={val} className="rel-chip">
@@ -1290,10 +1427,11 @@ export default function OrphanRegistrationPage() {
                     </label>
                   ))}
                 </div>
+                {stateErrors.selfExpression && <p className="ferr">{stateErrors.selfExpression}</p>}
               </div>
 
               <div className="fg span2">
-                <label className="lbl">العلاقات الأسرية <span className="opt">(اختياري)</span></label>
+                <label className="lbl">العلاقات الأسرية <span className="req">*</span></label>
                 <div className="rel-row">
                   {[['stable','جيدة ومستقرة'],['tense','متوترة قليلاً'],['troubled','مضطربة وتحتاج تدخل']].map(([val,lbl]) => (
                     <label key={val} className="rel-chip">
@@ -1302,10 +1440,11 @@ export default function OrphanRegistrationPage() {
                     </label>
                   ))}
                 </div>
+                {stateErrors.psychFamilyRelations && <p className="ferr">{stateErrors.psychFamilyRelations}</p>}
               </div>
 
               <div className="fg span2">
-                <label className="lbl">العلاقة مع الزملاء والأصدقاء <span className="opt">(اختياري)</span></label>
+                <label className="lbl">العلاقة مع الزملاء والأصدقاء <span className="req">*</span></label>
                 <div className="rel-row">
                   {[['positive','إيجابية'],['limited','محدودة'],['none','لا يملك أصدقاء']].map(([val,lbl]) => (
                     <label key={val} className="rel-chip">
@@ -1314,10 +1453,11 @@ export default function OrphanRegistrationPage() {
                     </label>
                   ))}
                 </div>
+                {stateErrors.peerRelations && <p className="ferr">{stateErrors.peerRelations}</p>}
               </div>
 
               <div className="fg span2">
-                <label className="lbl">النوم والشهية <span className="opt">(اختياري)</span></label>
+                <label className="lbl">النوم والشهية <span className="req">*</span></label>
                 <div className="rel-row">
                   {[['normal','طبيعية'],['poor_sleep','قلة نوم'],['poor_appetite','فقدان شهية'],['anxiety','قلق أو أحلام مزعجة']].map(([val,lbl]) => (
                     <label key={val} className="rel-chip">
@@ -1326,10 +1466,11 @@ export default function OrphanRegistrationPage() {
                     </label>
                   ))}
                 </div>
+                {stateErrors.sleepAppetite && <p className="ferr">{stateErrors.sleepAppetite}</p>}
               </div>
 
               <div className="fg span2">
-                <label className="lbl">علامات نفسية ظاهرة <span className="opt">(اختياري)</span></label>
+                <label className="lbl">علامات نفسية ظاهرة <span className="req">*</span></label>
                 <div className="rel-row">
                   {[['none','لا يوجد'],['sadness','حزن / بكاء متكرر'],['fear','خوف / قلق'],['aggression','عدوانية / غضب']].map(([val,lbl]) => (
                     <label key={val} className="rel-chip">
@@ -1338,10 +1479,11 @@ export default function OrphanRegistrationPage() {
                     </label>
                   ))}
                 </div>
+                {stateErrors.psychSigns && <p className="ferr">{stateErrors.psychSigns}</p>}
               </div>
 
               <div className="fg span2">
-                <label className="lbl">يحتاج إلى متابعة نفسية متخصصة؟ <span className="opt">(اختياري)</span></label>
+                <label className="lbl">يحتاج إلى متابعة نفسية متخصصة؟ <span className="req">*</span></label>
                 <div className="rel-row">
                   {[['yes','نعم'],['no','لا'],['pending','قيد الملاحظة']].map(([val,lbl]) => (
                     <label key={val} className="rel-chip">
@@ -1350,6 +1492,7 @@ export default function OrphanRegistrationPage() {
                     </label>
                   ))}
                 </div>
+                {stateErrors.needsPsychSupport && <p className="ferr">{stateErrors.needsPsychSupport}</p>}
               </div>
 
             </div>
@@ -1360,15 +1503,16 @@ export default function OrphanRegistrationPage() {
             <SectionHeader number="١٢" title="التوصيات" subtitle="ملاحظات وتوصيات الأخصائية" />
             <div className="fg">
               <label className="lbl" htmlFor="recommendations">
-                التوصيات <span className="opt">(اختياري)</span>
+                التوصيات <span className="req">*</span>
               </label>
               <textarea
                 id="recommendations"
-                className="inp ta"
+                className={`inp ta ${errors.recommendations ? 'inp-err' : ''}`}
                 rows={5}
                 placeholder="اكتب توصياتك وملاحظاتك هنا…"
-                {...register('recommendations')}
+                {...register('recommendations', { required: 'التوصيات مطلوبة' })}
               />
+              {errors.recommendations && <p className="ferr">{errors.recommendations.message}</p>}
             </div>
           </div>
           </Fragment>}
@@ -1378,18 +1522,35 @@ export default function OrphanRegistrationPage() {
             <SectionHeader
               number="١٣"
               title="المستندات المطلوبة"
-              subtitle="يُقبل: PDF، JPG، PNG — الحد الأقصى 5 ميغابايت لكل ملف"
+              subtitle="ارفع المستندات المطلوبة لإتمام التسجيل"
             />
+
+            {/* Format badge strip */}
+            <div className="doc-badges">
+              <span className="doc-badge"><FileText size={13} strokeWidth={2} /> PDF</span>
+              <span className="doc-badge"><Image size={13} strokeWidth={2} /> JPG</span>
+              <span className="doc-badge"><Image size={13} strokeWidth={2} /> PNG</span>
+              <span className="doc-badge-sep" />
+              <span className="doc-badge doc-badge-limit">الحد الأقصى 5 MB لكل ملف</span>
+            </div>
+
             <div className="doc-grid">
 
               {/* Death certificate */}
-              <div className="fg">
-                <label className="lbl">
-                  شهادة وفاة الأب <span className="req">*</span>
-                </label>
+              <div className="doc-card">
+                <div className="doc-card-head">
+                  <div className="doc-card-icon doc-card-icon-red">
+                    <FileText size={20} strokeWidth={1.8} />
+                  </div>
+                  <div>
+                    <p className="doc-card-title">شهادة وفاة الأب <span className="req">*</span></p>
+                    <p className="doc-card-sub">وثيقة رسمية تُثبت وفاة الأب</p>
+                  </div>
+                  {deathCertFile && <CheckCircle2 size={18} color="#16a34a" strokeWidth={2} style={{ marginRight: 'auto' }} />}
+                </div>
                 <FileDropZone
                   label="شهادة وفاة الأب"
-                  hint="PDF أو JPG أو PNG — 5 MB"
+                  hint="PDF أو JPG أو PNG — حتى 5 MB"
                   accept=".pdf,.jpg,.jpeg,.png"
                   value={deathCertFile}
                   onChange={setDeathCertFile}
@@ -1398,13 +1559,20 @@ export default function OrphanRegistrationPage() {
               </div>
 
               {/* Birth certificate */}
-              <div className="fg">
-                <label className="lbl">
-                  شهادة الميلاد <span className="req">*</span>
-                </label>
+              <div className="doc-card">
+                <div className="doc-card-head">
+                  <div className="doc-card-icon doc-card-icon-blue">
+                    <FileText size={20} strokeWidth={1.8} />
+                  </div>
+                  <div>
+                    <p className="doc-card-title">شهادة الميلاد <span className="req">*</span></p>
+                    <p className="doc-card-sub">وثيقة رسمية تُثبت ميلاد اليتيم</p>
+                  </div>
+                  {birthCertFile && <CheckCircle2 size={18} color="#16a34a" strokeWidth={2} style={{ marginRight: 'auto' }} />}
+                </div>
                 <FileDropZone
                   label="شهادة الميلاد"
-                  hint="PDF أو JPG أو PNG — 5 MB"
+                  hint="PDF أو JPG أو PNG — حتى 5 MB"
                   accept=".pdf,.jpg,.jpeg,.png"
                   value={birthCertFile}
                   onChange={setBirthCertFile}
@@ -1413,13 +1581,22 @@ export default function OrphanRegistrationPage() {
               </div>
 
               {/* Additional docs */}
-              <div className="fg span2">
-                <label className="lbl">
-                  مستندات إضافية <span className="opt">(حتى 5 ملفات — اختياري)</span>
-                </label>
+              <div className="doc-card doc-card-full">
+                <div className="doc-card-head">
+                  <div className="doc-card-icon doc-card-icon-gray">
+                    <File size={20} strokeWidth={1.8} />
+                  </div>
+                  <div>
+                    <p className="doc-card-title">مستندات إضافية <span className="opt">(اختياري)</span></p>
+                    <p className="doc-card-sub">أي وثائق داعمة — حتى 5 ملفات</p>
+                  </div>
+                  {additionalFiles.length > 0 && (
+                    <span className="doc-count">{additionalFiles.length} / 5</span>
+                  )}
+                </div>
                 <FileDropZone
                   label="مستندات إضافية"
-                  hint="أضف أي مستندات داعمة — حتى 5 ملفات"
+                  hint="اسحب ملفات متعددة أو اضغط للاختيار — حتى 5 ملفات"
                   accept=".pdf,.jpg,.jpeg,.png"
                   multiple
                   value={additionalFiles}
@@ -1547,25 +1724,48 @@ export default function OrphanRegistrationPage() {
         .rel-chip:has(input:checked) { border-color:#1B5E8C; background:#1B5E8C; color:#fff; }
         .rel-chip:hover:not(:has(input:checked)) { border-color:#1B5E8C; color:#1B5E8C; }
 
+        /* ── Doc badges ───────────────────────────────────────────────── */
+        .doc-badges { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+        .doc-badge { display:inline-flex; align-items:center; gap:.3rem; padding:.3rem .7rem; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:2rem; font-size:.75rem; font-weight:600; color:#475569; }
+        .doc-badge-sep { flex:1; }
+        .doc-badge-limit { background:#fef9ec; border-color:#fcd34d; color:#92400e; }
+
+        /* ── Doc cards ────────────────────────────────────────────────── */
+        .doc-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.1rem; }
+        .doc-card { background:#f8fafc; border:1.5px solid #e5eaf0; border-radius:.875rem; padding:1.1rem; display:flex; flex-direction:column; gap:.9rem; transition:border-color .15s; }
+        .doc-card:focus-within { border-color:#1B5E8C; }
+        .doc-card-full { grid-column:1 / -1; }
+        .doc-card-head { display:flex; align-items:center; gap:.75rem; }
+        .doc-card-icon { width:40px; height:40px; border-radius:.625rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .doc-card-icon-red { background:#fee2e2; color:#dc2626; }
+        .doc-card-icon-blue { background:#dbeafe; color:#2563eb; }
+        .doc-card-icon-gray { background:#f1f5f9; color:#64748b; }
+        .doc-card-title { font-size:.88rem; font-weight:700; color:#1e293b; margin:0 0 .1rem; }
+        .doc-card-sub { font-size:.75rem; color:#94a3b8; margin:0; }
+        .doc-count { margin-right:auto; font-size:.75rem; font-weight:700; color:#1B5E8C; background:#e0f2fe; padding:.2rem .55rem; border-radius:2rem; }
+
         /* ── Dropzone ─────────────────────────────────────────────────── */
-        .dz-wrapper { display:flex; flex-direction:column; gap:.3rem; }
-        .dz { border:2px dashed #d1d5db; border-radius:.75rem; padding:1.25rem; transition:all .15s; background:#fafbfc; min-height:100px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
-        .dz:hover,.dz-drag { border-color:#1B5E8C; background:#f0f7ff; }
-        .dz-filled { border-style:solid; border-color:#93c5fd; background:#f8fbff; cursor:default; }
+        .dz-wrapper { display:flex; flex-direction:column; gap:.4rem; }
+        .dz { border:2px dashed #cbd5e1; border-radius:.75rem; padding:1.25rem; transition:all .15s; background:#fff; min-height:110px; display:flex; align-items:center; justify-content:center; }
+        .dz:hover, .dz-drag { border-color:#1B5E8C; background:#f0f7ff; }
+        .dz-filled { border-style:solid; border-color:#93c5fd; background:#f8fbff; }
         .dz-err { border-color:#dc2626!important; background:#fff8f8!important; }
-        .dz-empty { display:flex; flex-direction:column; align-items:center; gap:.4rem; text-align:center; pointer-events:none; }
-        .dz-ico { font-size:1.8rem; }
-        .dz-cta { font-size:.83rem; font-weight:600; color:#1B5E8C; }
-        .dz-hint { font-size:.73rem; color:#94a3b8; }
-        .dz-files { display:flex; flex-direction:column; gap:.45rem; width:100%; }
-        .chip { display:flex; align-items:center; gap:.5rem; padding:.45rem .65rem; background:#fff; border:1px solid #dde5f0; border-radius:.5rem; font-size:.78rem; }
-        .chip-ico { font-size:1rem; flex-shrink:0; }
-        .chip-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#374151; font-weight:500; direction:ltr; text-align:left; }
-        .chip-size { color:#94a3b8; flex-shrink:0; }
-        .chip-rm { background:none; border:none; cursor:pointer; color:#ef4444; font-size:.75rem; padding:.1rem .25rem; border-radius:4px; transition:background .1s; }
-        .chip-rm:hover { background:#fee2e2; }
-        .add-more { background:none; border:1.5px dashed #93c5fd; border-radius:.5rem; padding:.35rem .75rem; font-size:.78rem; color:#1B5E8C; cursor:pointer; font-family:'Cairo',sans-serif; font-weight:600; transition:all .15s; align-self:flex-start; margin-top:.2rem; }
-        .add-more:hover { background:#eff6ff; }
+        .dz-empty { display:flex; flex-direction:column; align-items:center; gap:.4rem; text-align:center; direction:rtl; }
+        .dz-cta { font-size:.82rem; font-weight:600; color:#334155; margin:0; }
+        .dz-hint { font-size:.72rem; color:#94a3b8; margin:0; }
+        .dz-btn { display:inline-flex; flex-direction:row-reverse; align-items:center; gap:.4rem; margin-top:.35rem; padding:.6rem 1.25rem; background:linear-gradient(135deg,#1B5E8C,#134569); color:#fff; border:none; border-radius:.75rem; font-size:.83rem; font-weight:700; font-family:'Cairo',sans-serif; cursor:pointer; transition:all .15s; white-space:nowrap; line-height:1; box-shadow:0 2px 8px rgba(27,94,140,.2); }
+        .dz-btn:hover { background:linear-gradient(135deg,#2E7EB8,#1B5E8C); box-shadow:0 4px 12px rgba(27,94,140,.3); transform:translateY(-1px); }
+        .dz-files { display:flex; flex-direction:column; gap:.5rem; width:100%; }
+        .chip { display:flex; align-items:center; gap:.6rem; padding:.55rem .75rem; background:#fff; border:1px solid #e2e8f0; border-radius:.625rem; transition:border-color .15s; }
+        .chip:hover { border-color:#93c5fd; }
+        .chip-ico { color:#1B5E8C; flex-shrink:0; display:flex; }
+        .chip-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:.05rem; }
+        .chip-name { font-size:.78rem; font-weight:600; color:#1e293b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; direction:ltr; text-align:left; }
+        .chip-size { font-size:.7rem; color:#94a3b8; }
+        .chip-rm { display:flex; align-items:center; justify-content:center; width:22px; height:22px; background:#f1f5f9; border:none; border-radius:.375rem; cursor:pointer; color:#64748b; transition:all .1s; flex-shrink:0; }
+        .chip-rm:hover { background:#fee2e2; color:#dc2626; }
+        .add-more { display:inline-flex; align-items:center; gap:.35rem; background:none; border:1.5px dashed #93c5fd; border-radius:.5rem; padding:.4rem .85rem; font-size:.78rem; color:#1B5E8C; cursor:pointer; font-family:'Cairo',sans-serif; font-weight:600; transition:all .15s; align-self:flex-start; margin-top:.25rem; }
+        .add-more:hover { background:#eff6ff; border-color:#1B5E8C; }
 
         /* ── Field errors ─────────────────────────────────────────────── */
         .ferr { font-size:.77rem; color:#dc2626; margin:0; display:flex; align-items:center; gap:.2rem; }
@@ -1604,9 +1804,10 @@ export default function OrphanRegistrationPage() {
         /* ── Responsive ───────────────────────────────────────────────── */
         @media (max-width: 640px) {
           .grid, .doc-grid { grid-template-columns:1fr; }
-          .span2 { grid-column:1; }
+          .span2, .doc-card-full { grid-column:1; }
           .page-top { flex-direction:column; }
           .progress { flex-wrap:wrap; font-size:.72rem; }
+          .doc-badge-sep { display:none; }
         }
       `}</style>
     </AppShell>

@@ -627,9 +627,34 @@ export default function OrphansManagementPage() {
         .info-section {}
         .info-title { font-size:.72rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.06em; margin:0 0 .75rem; }
         .info-grid { display:flex; flex-direction:column; gap:.4rem; }
-        .info-row { display:flex; justify-content:space-between; align-items:center; padding:.3rem 0; border-bottom:1px solid #f8fafc; }
-        .info-label { font-size:.78rem; color:#6b7a8d; font-weight:500; }
-        .info-val { font-size:.83rem; color:#1f2937; font-weight:600; }
+        .info-row {
+          display:flex;
+          justify-content:space-between;
+          align-items:flex-start;
+          gap:.75rem;
+          flex-wrap:wrap;
+          padding:.3rem 0;
+          border-bottom:1px solid #f8fafc;
+          min-width:0;
+        }
+        .info-label {
+          font-size:.78rem;
+          color:#6b7a8d;
+          font-weight:500;
+          flex-shrink:0;
+          min-width: 90px;
+        }
+        .info-val {
+          font-size:.83rem;
+          color:#1f2937;
+          font-weight:600;
+          flex:1;
+          min-width:0;
+          overflow-wrap:anywhere;
+          word-break:break-word;
+          white-space:normal;
+          text-align:right;
+        }
         .gifted-val { color:#f59e0b; }
         .muted-text { font-size:.83rem; color:#94a3b8; margin:0; }
         .doc-chip { display:flex; align-items:center; gap:.5rem; padding:.45rem .65rem; background:#f8fafc; border:1px solid #e5eaf0; border-radius:.5rem; font-size:.78rem; }
