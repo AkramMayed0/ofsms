@@ -21,11 +21,11 @@ const createSponsorRules = [
     .isLength({ min: 3 })
     .withMessage('الاسم يجب أن يكون 3 أحرف على الأقل'),
   body('email')
-    .optional({ nullable: true })
+    .optional({ checkFalsy: true })
     .isEmail()
     .withMessage('البريد الإلكتروني غير صحيح'),
   body('phone')
-    .optional({ nullable: true })
+    .optional({ checkFalsy: true })
     .isMobilePhone()
     .withMessage('رقم الهاتف غير صحيح'),
   body('portalPassword')

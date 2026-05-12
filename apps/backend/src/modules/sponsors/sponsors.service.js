@@ -53,12 +53,15 @@ const createSponsor = async ({ fullName, phone, email, portalPasswordHash, creat
 
   const portalToken = generatePortalToken();
 
+  const finalEmail = email ? email : null;
+  const finalPhone = phone ? phone : null;
+
   const { rows } = await query(
     `INSERT INTO sponsors
        (full_name, phone, email, portal_token, portal_password_hash, created_by)
      VALUES ($1, $2, $3, $4, $5, $6)
      RETURNING id, full_name, phone, email, portal_token, created_at`,
-    [fullName, phone, email, portalToken, portalPasswordHash, createdBy]
+    [fullName, finalPhone, finalEmail, portalToken, portalPasswordHash, createdBy]
   );
   return rows[0];
 };
