@@ -20,6 +20,37 @@ const generatePortalToken = () => crypto.randomBytes(32).toString('hex');
  * portal_password_hash must already be bcrypt-hashed by the controller.
  */
 const createSponsor = async ({ fullName, phone, email, portalPasswordHash, createdBy }) => {
+  // Check for duplicate email or phone before inserting
+  if (email || phone) {
+    const conditions = [];
+    const params = [];
+    if (email) {
+      params.push(email);
+      conditions.push(`email = $${params.length}`);
+    }
+    if (phone) {
+      params.push(phone);
+      conditions.push(`phone = $${params.length}`);
+    }
+    const { rows: existing } = await query(
+      `SELECT email, phone FROM sponsors WHERE ${conditions.join(' OR ')}`,
+      params
+    );
+    if (existing.length > 0) {
+      const match = existing[0];
+      if (email && match.email === email) {
+        const err = new Error('البريد الإلكتروني مستخدم بالفعل لكافل آخر');
+        err.status = 409;
+        throw err;
+      }
+      if (phone && match.phone === phone) {
+        const err = new Error('رقم الهاتف مستخدم بالفعل لكافل آخر');
+        err.status = 409;
+        throw err;
+      }
+    }
+  }
+
   const portalToken = generatePortalToken();
 
   const { rows } = await query(
