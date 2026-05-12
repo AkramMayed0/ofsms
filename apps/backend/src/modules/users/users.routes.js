@@ -15,7 +15,10 @@ const { logAudit } = require('../../utils/auditLog');
 // ── Validation rules ───────────────────────────────────────────────────────
 
 const createUserRules = [
-  body('fullName').trim().notEmpty().withMessage('الاسم الكامل مطلوب'),
+  body('fullName')
+    .trim()
+    .notEmpty().withMessage('الاسم الكامل مطلوب')
+    .matches(/^[\p{L}\s'-]+$/u).withMessage('الاسم يجب أن يحتوي على أحرف فقط ولا يمكن أن يحتوي على أرقام'),
   body('email').isEmail().withMessage('البريد الإلكتروني غير صحيح'),
   body('password')
     .isLength({ min: 8 }).withMessage('كلمة المرور يجب أن تكون 8 أحرف على الأقل'),
@@ -26,7 +29,11 @@ const createUserRules = [
 ];
 
 const updateUserRules = [
-  body('fullName').optional().trim().notEmpty().withMessage('الاسم لا يمكن أن يكون فارغاً'),
+  body('fullName')
+    .optional()
+    .trim()
+    .notEmpty().withMessage('الاسم لا يمكن أن يكون فارغاً')
+    .matches(/^[\p{L}\s'-]+$/u).withMessage('الاسم يجب أن يحتوي على أحرف فقط ولا يمكن أن يحتوي على أرقام'),
   body('phone').optional({ nullable: true }).isString(),
   body('role')
     .optional()

@@ -69,7 +69,11 @@ function CreateSponsorModal({ onClose, onCreated }) {
             <label className="lbl">الاسم الكامل <span className="req">*</span></label>
             <input className={`inp ${errors.fullName ? 'inp-err' : ''}`}
               placeholder="اسم الكافل كاملاً"
-              {...register('fullName', { required: 'الاسم مطلوب', minLength: { value: 3, message: 'الاسم يجب أن يكون 3 أحرف على الأقل' } })}
+              {...register('fullName', { 
+                required: 'الاسم مطلوب', 
+                minLength: { value: 3, message: 'الاسم يجب أن يكون 3 أحرف على الأقل' },
+                pattern: { value: /^[\p{L}\s'-]+$/u, message: 'الاسم يجب أن يحتوي على أحرف فقط' }
+              })}
             />
             {errors.fullName && <p className="ferr">{errors.fullName.message}</p>}
           </div>
