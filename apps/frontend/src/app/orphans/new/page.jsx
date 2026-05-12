@@ -245,6 +245,8 @@ export default function OrphanRegistrationPage() {
     formState: { errors },
     reset,
     setError,
+    trigger,
+    watch,
   } = useForm({
     defaultValues: {
       fullName: '', dateOfBirth: '', gender: '',
@@ -289,6 +291,53 @@ export default function OrphanRegistrationPage() {
     });
     setFileErrors(errs);
     return Object.keys(errs).length === 0;
+  };
+
+  const handleNext = async () => {
+    let isValid = true;
+    if (currentPage === 1) {
+      isValid = await trigger(['fullName', 'dateOfBirth', 'gender', 'governorateId', 'motherGovernorate', 'birthPlace', 'residence', 'phone1', 'phone1Relation', 'phone2', 'phone2Relation', 'address']);
+    } else if (currentPage === 2) {
+      isValid = await trigger(['schoolGrade', 'sectorType', 'directorate', 'schoolOrg', 'favoriteSubject', 'difficultySubject', 'generalLevel', 'repeatedYearReason', 'gradeDetail', 'generalGrade', 'lastResultAvg', 'highestGrade', 'lowestGrade', 'eduResponsible', 'eduResponsiblePhone', 'eduLevel', 'guardianName', 'guardianRelation', 'guardianAge', 'guardianEduLevel', 'guardianJob', 'guardianHealth', 'familyMaleCount', 'familyFemaleCount', 'familyProblems']);
+      const sErr = { ...stateErrors };
+      if (!repeatedYear) { sErr.repeatedYear = 'يرجى الإجابة على هذا السؤال'; isValid = false; } else delete sErr.repeatedYear;
+      setStateErrors(sErr);
+    } else if (currentPage === 3) {
+      isValid = await trigger(['floorsCount', 'roomsCount', 'water', 'electricity', 'rentAmount', 'housingDetails', 'chronicDiseaseDetails', 'monthlyIncome', 'charitySupportDetails']);
+      const sErr = { ...stateErrors };
+      if (!ownershipType) { sErr.ownershipType = 'نوع السكن مطلوب'; isValid = false; } else delete sErr.ownershipType;
+      if (!buildingType) { sErr.buildingType = 'نوع البناء مطلوب'; isValid = false; } else delete sErr.buildingType;
+      if (!hasChronicDisease) { sErr.hasChronicDisease = 'يرجى الإجابة'; isValid = false; } else delete sErr.hasChronicDisease;
+      if (!hasRegularTreatment) { sErr.hasRegularTreatment = 'يرجى الإجابة'; isValid = false; } else delete sErr.hasRegularTreatment;
+      if (!hasHealthInsurance) { sErr.hasHealthInsurance = 'يرجى الإجابة'; isValid = false; } else delete sErr.hasHealthInsurance;
+      if (!incomeSource) { sErr.incomeSource = 'مصدر الدخل مطلوب'; isValid = false; } else delete sErr.incomeSource;
+      if (!hasCharitySupport) { sErr.hasCharitySupport = 'يرجى الإجابة'; isValid = false; } else delete sErr.hasCharitySupport;
+      setStateErrors(sErr);
+    } else if (currentPage === 4) {
+      isValid = await trigger(['talentsOther', 'recommendations', 'notes']);
+      const sErr = { ...stateErrors };
+      if (!familyRelations) { sErr.familyRelations = 'يرجى الاختيار'; isValid = false; } else delete sErr.familyRelations;
+      if (!communityRelation) { sErr.communityRelation = 'يرجى الاختيار'; isValid = false; } else delete sErr.communityRelation;
+      if (!schoolRelation) { sErr.schoolRelation = 'يرجى الاختيار'; isValid = false; } else delete sErr.schoolRelation;
+      if (!socialBehavior) { sErr.socialBehavior = 'يرجى الاختيار'; isValid = false; } else delete sErr.socialBehavior;
+      if (!needsSocialSupport) { sErr.needsSocialSupport = 'يرجى الاختيار'; isValid = false; } else delete sErr.needsSocialSupport;
+      if (!quranLevel) { sErr.quranLevel = 'يرجى الاختيار'; isValid = false; } else delete sErr.quranLevel;
+      if (!prayerCommitment) { sErr.prayerCommitment = 'يرجى الاختيار'; isValid = false; } else delete sErr.prayerCommitment;
+      if (!moralBehavior) { sErr.moralBehavior = 'يرجى الاختيار'; isValid = false; } else delete sErr.moralBehavior;
+      if (!generalAppearance) { sErr.generalAppearance = 'يرجى الاختيار'; isValid = false; } else delete sErr.generalAppearance;
+      if (!selfExpression) { sErr.selfExpression = 'يرجى الاختيار'; isValid = false; } else delete sErr.selfExpression;
+      if (!psychFamilyRelations) { sErr.psychFamilyRelations = 'يرجى الاختيار'; isValid = false; } else delete sErr.psychFamilyRelations;
+      if (!peerRelations) { sErr.peerRelations = 'يرجى الاختيار'; isValid = false; } else delete sErr.peerRelations;
+      if (!sleepAppetite) { sErr.sleepAppetite = 'يرجى الاختيار'; isValid = false; } else delete sErr.sleepAppetite;
+      if (!psychSigns) { sErr.psychSigns = 'يرجى الاختيار'; isValid = false; } else delete sErr.psychSigns;
+      if (!needsPsychSupport) { sErr.needsPsychSupport = 'يرجى الاختيار'; isValid = false; } else delete sErr.needsPsychSupport;
+      setStateErrors(sErr);
+    }
+
+    if (isValid) {
+      setCurrentPage(p => p + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const onSubmit = async (data) => {
@@ -534,7 +583,10 @@ export default function OrphanRegistrationPage() {
                   placeholder="مثال: محمد أحمد علي"
                   {...register('fullName', {
                     required: 'الاسم الكامل مطلوب',
-                    minLength: { value: 3, message: 'الاسم يجب أن يكون 3 أحرف على الأقل' },
+                    pattern: {
+                      value: /^[\p{L}]+(?:[\s'-][\p{L}]+)+$/u,
+                      message: 'الاسم يجب أن يكون ثنائياً على الأقل، ويحتوي على أحرف فقط'
+                    }
                   })}
                 />
                 {errors.fullName && <p className="ferr">{errors.fullName.message}</p>}
@@ -686,7 +738,10 @@ export default function OrphanRegistrationPage() {
                   id="phone1Relation"
                   className={`inp ${errors.phone1Relation ? 'inp-err' : ''}`}
                   placeholder="مثال: عم، خال، جد"
-                  {...register('phone1Relation', { required: 'صلة القرابة مطلوبة' })}
+                  {...register('phone1Relation', { 
+                    required: 'صلة القرابة مطلوبة',
+                    pattern: { value: /^[\p{L}\s]+$/u, message: 'يجب أن تحتوي على أحرف فقط' }
+                  })}
                 />
                 {errors.phone1Relation && <p className="ferr">{errors.phone1Relation.message}</p>}
               </div>
@@ -694,13 +749,13 @@ export default function OrphanRegistrationPage() {
               {/* Phone 2 */}
               <div className="fg">
                 <label className="lbl" htmlFor="phone2">
-                  الرقم الثاني <span className="req">*</span>
+                  الرقم الثاني
                 </label>
                 <input
                   id="phone2"
                   className={`inp ltr ${errors.phone2 ? 'inp-err' : ''}`}
                   placeholder="07XXXXXXXX"
-                  {...register('phone2', { required: 'الرقم الثاني مطلوب' })}
+                  {...register('phone2')}
                 />
                 {errors.phone2 && <p className="ferr">{errors.phone2.message}</p>}
               </div>
@@ -714,7 +769,10 @@ export default function OrphanRegistrationPage() {
                   id="phone2Relation"
                   className={`inp ${errors.phone2Relation ? 'inp-err' : ''}`}
                   placeholder="مثال: عم، خال، جد"
-                  {...register('phone2Relation', { required: 'صلة القرابة مطلوبة' })}
+                  {...register('phone2Relation', { 
+                    validate: (val) => !watch('phone2') || !!val || 'صلة القرابة مطلوبة',
+                    pattern: { value: /^[\p{L}\s]*$/u, message: 'يجب أن تحتوي على أحرف فقط' }
+                  })}
                 />
                 {errors.phone2Relation && <p className="ferr">{errors.phone2Relation.message}</p>}
               </div>
@@ -1640,7 +1698,7 @@ export default function OrphanRegistrationPage() {
               <button
                 type="button"
                 className="btn-primary"
-                onClick={() => setCurrentPage(p => p + 1)}
+                onClick={handleNext}
               >
                 التالي ←
               </button>

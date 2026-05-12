@@ -47,7 +47,7 @@ const uploadFields = upload.fields([
 const createOrphanRules = [
   body('fullName')
     .notEmpty().withMessage('الاسم الكامل مطلوب')
-    .isLength({ min: 3 }).withMessage('الاسم يجب أن يكون 3 أحرف على الأقل'),
+    .matches(/^[\p{L}]+(?:[\s'-][\p{L}]+)+$/u).withMessage('الاسم يجب أن يكون ثنائياً على الأقل، ويحتوي على أحرف فقط'),
 
   body('dateOfBirth')
     .notEmpty().withMessage('تاريخ الميلاد مطلوب')
