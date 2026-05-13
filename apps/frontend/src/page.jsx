@@ -19,6 +19,8 @@
  */
 
 import { useState } from 'react';
+import { AlertTriangle, Mail } from 'lucide-react';
+
 import { useRouter } from 'next/navigation';
 import useAuthStore from '../../store/useAuthStore';
 import api from '../../lib/api';
@@ -121,7 +123,7 @@ export default function LoginPage() {
             {/* API / server error banner */}
             {apiError && (
               <div className="error-banner" role="alert">
-                <span className="error-icon">⚠</span>
+                <span className="error-icon"><AlertTriangle size={18} /></span>
                 {apiError}
               </div>
             )}

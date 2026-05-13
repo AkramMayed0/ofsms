@@ -14,7 +14,7 @@
 import { useState, useEffect, useRef, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import { Upload, FileText, Image, X, Plus, AlertCircle, CheckCircle2, File } from 'lucide-react';
+import { Upload, FileText, Image, X, Plus, AlertCircle, CheckCircle2, File, AlertTriangle, User, Check } from 'lucide-react';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 
@@ -503,7 +503,7 @@ export default function OrphanRegistrationPage() {
       <AppShell>
         <div className="success-wrap">
           <div className="success-card">
-            <div className="success-ico">✅</div>
+            <div className="success-ico"><CheckCircle2 size={16} /></div>
             <h2 className="success-title">تم التسجيل بنجاح</h2>
             <p className="success-body">
               تم إرسال بيانات اليتيم إلى قائمة انتظار مراجعة المشرف.
@@ -555,7 +555,7 @@ export default function OrphanRegistrationPage() {
             return (
               <Fragment key={n}>
                 <div className={`p-step ${active ? 'p-active' : ''} ${done ? 'p-done' : ''}`}>
-                  <span className="p-num">{done ? '✓' : n}</span>
+                  <span className="p-num">{done ? '<Check size={16} />' : n}</span>
                   <span className="p-lbl">{lbl}</span>
                 </div>
                 {i < 4 && <div className="p-sep" />}
@@ -1254,7 +1254,7 @@ export default function OrphanRegistrationPage() {
               title="المهارات والمواهب"
               subtitle={
                 selectedTalents.size > 0
-                  ? `✓ سيتم تصنيف اليتيم كموهوب تلقائياً (${selectedTalents.size} موهبة)`
+                  ? `<Check size={16} /> سيتم تصنيف اليتيم كموهوب تلقائياً (${selectedTalents.size} موهبة)`
                   : 'اختر المهارات والمواهب — أي اختيار يصنّف اليتيم كموهوب تلقائياً'
               }
             />
@@ -1672,7 +1672,7 @@ export default function OrphanRegistrationPage() {
           {/* API error banner */}
           {submitState === 'error' && apiError && (
             <div className="err-banner" role="alert">
-              <span>⚠</span>
+              <span><AlertTriangle size={18} /></span>
               <div>
                 <strong>فشل الإرسال</strong>
                 <p>{apiError}</p>

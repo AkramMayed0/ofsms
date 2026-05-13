@@ -14,6 +14,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { AlertTriangle, X, User, Users, Check } from 'lucide-react';
+
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
 
@@ -61,7 +63,7 @@ function RejectModal({ record, onConfirm, onCancel, loading }) {
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal-box" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <span className="modal-icon">⚠</span>
+          <span className="modal-icon"><AlertTriangle size={18} /></span>
           <div>
             <h3 className="modal-title">رفض التسجيل</h3>
             <p className="modal-sub">
@@ -92,7 +94,7 @@ function RejectModal({ record, onConfirm, onCancel, loading }) {
             onClick={() => notes.trim() && onConfirm(notes.trim())}
             disabled={!notes.trim() || loading}
           >
-            {loading ? <span className="spin" /> : '✕ تأكيد الرفض'}
+            {loading ? <span className="spin" /> : '<X size={16} /> تأكيد الرفض'}
           </button>
         </div>
       </div>
@@ -109,7 +111,7 @@ function DetailPanel({ record, onApprove, onReject, actionLoading, onClose }) {
       {/* Header */}
       <div className="detail-header">
         <div className="detail-avatar">
-          {isOrphan ? '👦' : '👨‍👩‍👧'}
+          {isOrphan ? '<User size={18} />' : '<Users size={18} />'}
         </div>
         <div className="detail-title-wrap">
           <h2 className="detail-name">{record.name}</h2>
@@ -117,7 +119,7 @@ function DetailPanel({ record, onApprove, onReject, actionLoading, onClose }) {
             {isOrphan ? 'يتيم' : 'أسرة'}
           </span>
         </div>
-        <button className="detail-close" onClick={onClose} aria-label="إغلاق">✕</button>
+        <button className="detail-close" onClick={onClose} aria-label="إغلاق"><X size={16} /></button>
       </div>
 
       {/* Body */}
@@ -209,14 +211,14 @@ function DetailPanel({ record, onApprove, onReject, actionLoading, onClose }) {
         >
           {actionLoading === 'approve'
             ? <><span className="spin spin-dark" /> جارٍ الاعتماد…</>
-            : '✓ اعتماد التسجيل'}
+            : '<Check size={16} /> اعتماد التسجيل'}
         </button>
         <button
           className="btn-reject-outline"
           onClick={onReject}
           disabled={!!actionLoading}
         >
-          ✕ رفض
+          <X size={16} /> رفض
         </button>
       </div>
     </div>
@@ -263,7 +265,7 @@ export default function RegistrationsPage() {
       await api.patch(endpoint, { status: 'under_marketing' });
       setQueue((prev) => prev.filter((r) => r.id !== record.id));
       setSelected(null);
-      showToast(`✓ تمت الموافقة على ${record.name} وانتقل إلى التسويق`);
+      showToast(`<Check size={16} /> تمت الموافقة على ${record.name} وانتقل إلى التسويق`);
     } catch {
       showToast('فشل الاعتماد. يرجى المحاولة مجدداً.', 'error');
     } finally {
@@ -330,7 +332,7 @@ export default function RegistrationsPage() {
         </div>
 
         {/* ── Error ── */}
-        {error && <div className="err-banner">⚠ {error}</div>}
+        {error && <div className="err-banner"><AlertTriangle size={18} /> {error}</div>}
 
         {/* ── Main split layout ── */}
         <div className={`split ${selected ? 'split-open' : ''}`}>
@@ -383,7 +385,7 @@ export default function RegistrationsPage() {
                       >
                         {/* Type badge */}
                         <div className={`row-badge ${isOrphan ? 'badge-orphan' : 'badge-family'}`}>
-                          {isOrphan ? '👦' : '👨‍👩‍👧'}
+                          {isOrphan ? '<User size={18} />' : '<Users size={18} />'}
                         </div>
 
                         {/* Info */}

@@ -14,7 +14,7 @@
 
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
-import { UserRound, Eye, Banknote, Building2, Megaphone, Users, Search, CheckCircle, AlertTriangle } from 'lucide-react';
+import { UserRound, Eye, Banknote, Building2, Megaphone, Users, Search, CheckCircle, AlertTriangle, X, User, Check } from 'lucide-react';
 
 // ── Role target options ────────────────────────────────────────────────────────
 const ROLE_TARGETS = [
@@ -156,7 +156,7 @@ export default function SendNotificationModal({ onClose, onSent }) {
               <p className="modal-sub">أرسل رسالة مباشرة للمناديب والمشرفين</p>
             </div>
           </div>
-          <button className="modal-close" onClick={onClose} aria-label="إغلاق">✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="إغلاق"><X size={16} /></button>
         </div>
 
         <div className="modal-body">
@@ -248,7 +248,7 @@ export default function SendNotificationModal({ onClose, onSent }) {
                       {label}
                     </span>
                     {active && (
-                      <span className="role-card-check" style={{ color }}>✓</span>
+                      <span className="role-card-check" style={{ color }}><Check size={16} /></span>
                     )}
                   </button>
                 );
@@ -268,7 +268,7 @@ export default function SendNotificationModal({ onClose, onSent }) {
                   onChange={(e) => setUserSearch(e.target.value)}
                 />
                 {userSearch && (
-                  <button className="search-clear" onClick={() => setUserSearch('')}>✕</button>
+                  <button className="search-clear" onClick={() => setUserSearch('')}><X size={16} /></button>
                 )}
               </div>
 

@@ -17,6 +17,8 @@
  */
 
 import { useState, useEffect } from 'react';
+import { Search, AlertTriangle, X, CheckCircle2, Info, FileText } from 'lucide-react';
+
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
 
@@ -59,7 +61,7 @@ function ExportButtons({ gov, onError }) {
       const slug     = gov.name_en.replace(/\s+/g, '-');
       const date     = new Date().toISOString().split('T')[0];
       const filename = `governorate-${slug}-${date}.${ext}`;
-      // ✅ FIXED: no /api prefix
+      // <CheckCircle2 size={16} /> FIXED: no /api prefix
       await downloadBlob(`/reports/governorate/${gov.id}?format=${format}`, filename);
     } catch (err) {
       const msg = await extractBlobError(err);
@@ -86,7 +88,7 @@ function ExportButtons({ gov, onError }) {
         disabled={!!busy}
         title={`تصدير ${gov.name_ar} كـ PDF`}
       >
-        {busy === 'pdf' ? <span className="spin" /> : '📄'}
+        {busy === 'pdf' ? <span className="spin" /> : '<FileText size={16} />'}
         <span>PDF</span>
       </button>
     </div>
@@ -191,18 +193,18 @@ export default function GovernoratesPage() {
         {/* Export error */}
         {exportError && (
           <div className="export-err-banner">
-            ⚠ {exportError}
-            <button className="err-close" onClick={() => setExportError('')}>✕</button>
+            <AlertTriangle size={18} /> {exportError}
+            <button className="err-close" onClick={() => setExportError('')}><X size={16} /></button>
           </div>
         )}
 
         {/* Error */}
-        {error && <div className="err-banner">⚠ {error}</div>}
+        {error && <div className="err-banner"><AlertTriangle size={18} /> {error}</div>}
 
         {/* Search */}
         {!loading && !error && (
           <div className="search-wrap">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><Search size={16} /></span>
             <input
               className="search-inp"
               placeholder="ابحث بالاسم العربي أو الإنجليزي…"
@@ -210,7 +212,7 @@ export default function GovernoratesPage() {
               onChange={e => setSearch(e.target.value)}
             />
             {search && (
-              <button className="search-clear" onClick={() => setSearch('')}>✕</button>
+              <button className="search-clear" onClick={() => setSearch('')}><X size={16} /></button>
             )}
           </div>
         )}

@@ -17,6 +17,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { Search, AlertTriangle, X, User, Users, Handshake, CheckCircle2, XCircle, Plus, Check } from 'lucide-react';
+
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 
@@ -39,7 +41,7 @@ function Toast({ message, type, onClose }) {
 
   return (
     <div className={`toast toast-${type}`}>
-      <span>{type === 'success' ? '✅' : '❌'}</span>
+      <span>{type === 'success' ? '<CheckCircle2 size={16} />' : '<XCircle size={16} />'}</span>
       {message}
     </div>
   );
@@ -140,7 +142,7 @@ await api.post(`/sponsors/${finalSponsorId}/sponsorships`, {
               {selected.filter(i => i.type === 'family').length} أسرة
             </p>
           </div>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose}><X size={16} /></button>
         </div>
 
         {/* Tabs */}
@@ -149,7 +151,7 @@ await api.post(`/sponsors/${finalSponsorId}/sponsorships`, {
             className={`mtab ${tab === 'existing' ? 'mtab-active' : ''}`}
             onClick={() => setTab('existing')}
           >
-            🤝 كافل موجود
+            <Handshake size={32} /> كافل موجود
           </button>
           <button
             className={`mtab ${tab === 'new' ? 'mtab-active' : ''}`}
@@ -188,7 +190,7 @@ await api.post(`/sponsors/${finalSponsorId}/sponsorships`, {
                       <div className="sponsor-name">{s.full_name}</div>
                       {s.email && <div className="sponsor-email">{s.email}</div>}
                     </div>
-                    {sponsorId === s.id && <span className="sponsor-check">✓</span>}
+                    {sponsorId === s.id && <span className="sponsor-check"><Check size={16} /></span>}
                   </div>
                 ))}
               </div>
@@ -281,7 +283,7 @@ await api.post(`/sponsors/${finalSponsorId}/sponsorships`, {
             <div className="preview-chips">
               {selected.map((item) => (
                 <span key={item.id} className={`preview-chip chip-${item.type}`}>
-                  {item.type === 'orphan' ? '👦' : '👨‍👩‍👧'} {item.name}
+                  {item.type === 'orphan' ? '<User size={18} />' : '<Users size={18} />'} {item.name}
                 </span>
               ))}
             </div>
@@ -289,7 +291,7 @@ await api.post(`/sponsors/${finalSponsorId}/sponsorships`, {
 
           {error && (
             <div className="modal-error">
-              <span>⚠</span> {error}
+              <span><AlertTriangle size={18} /></span> {error}
             </div>
           )}
         </div>
@@ -434,7 +436,7 @@ const families = (familiesRes.data.families || []).map(f => ({
               className="btn-primary"
               onClick={() => setShowModal(true)}
             >
-              🤝 تعيين كفيل ({selected.size})
+              <Handshake size={32} /> تعيين كفيل ({selected.size})
             </button>
           )}
         </div>
@@ -466,7 +468,7 @@ const families = (familiesRes.data.families || []).map(f => ({
         {/* Search + filter */}
         <div className="toolbar">
           <div className="search-wrap">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><Search size={16} /></span>
             <input
               className="search-inp"
               placeholder="ابحث بالاسم أو المحافظة أو المندوب…"
@@ -474,14 +476,14 @@ const families = (familiesRes.data.families || []).map(f => ({
               onChange={(e) => setSearch(e.target.value)}
             />
             {search && (
-              <button className="search-clear" onClick={() => setSearch('')}>✕</button>
+              <button className="search-clear" onClick={() => setSearch('')}><X size={16} /></button>
             )}
           </div>
           <div className="type-tabs">
             {[
               { key: 'all', label: 'الكل', emoji: '📋' },
-              { key: 'orphan', label: 'أيتام', emoji: '👦' },
-              { key: 'family', label: 'أسر', emoji: '👨‍👩‍👧' },
+              { key: 'orphan', label: 'أيتام', emoji: '<User size={18} />' },
+              { key: 'family', label: 'أسر', emoji: '<Users size={18} />' },
             ].map(({ key, label, emoji }) => (
               <button
                 key={key}
@@ -496,7 +498,7 @@ const families = (familiesRes.data.families || []).map(f => ({
 
         {/* Error */}
         {error && (
-          <div className="err-banner">⚠ {error}</div>
+          <div className="err-banner"><AlertTriangle size={18} /> {error}</div>
         )}
 
         {/* Loading skeleton */}
@@ -536,14 +538,14 @@ const families = (familiesRes.data.families || []).map(f => ({
             {selected.size > 0 && (
               <div className="selection-bar">
                 <span className="sel-count">
-                  ✓ تم تحديد {selected.size} من {filtered.length}
+                  <Check size={16} /> تم تحديد {selected.size} من {filtered.length}
                 </span>
                 <div className="sel-actions">
                   <button className="sel-clear" onClick={() => setSelected(new Set())}>
                     إلغاء التحديد
                   </button>
                   <button className="btn-primary-sm" onClick={() => setShowModal(true)}>
-                    🤝 تعيين كفيل ←
+                    <Handshake size={32} /> تعيين كفيل ←
                   </button>
                 </div>
               </div>
@@ -589,7 +591,7 @@ const families = (familiesRes.data.families || []).map(f => ({
                     <td>
                       <div className="name-cell">
                         <div className={`name-avatar avatar-${item.type}`}>
-                          {item.type === 'orphan' ? '👦' : '👨‍👩‍👧'}
+                          {item.type === 'orphan' ? '<User size={18} />' : '<Users size={18} />'}
                         </div>
                         <div>
                           <div className="name-text">{item.name}</div>

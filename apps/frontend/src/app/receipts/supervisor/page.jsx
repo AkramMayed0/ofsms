@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { AlertTriangle, CheckCircle2, Check } from 'lucide-react';
+
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 
@@ -100,7 +102,7 @@ export default function SupervisorBiometricLogPage() {
         )}
       </div>
 
-      {error && <div className="err-banner">⚠ {error}</div>}
+      {error && <div className="err-banner"><AlertTriangle size={18} /> {error}</div>}
 
       {loading ? (
         <div className="skeleton-box" style={{ height: 300, marginTop: '2rem' }} />
@@ -134,12 +136,12 @@ export default function SupervisorBiometricLogPage() {
                       background: agent.all_confirmed ? '#ecfdf5' : '#fffbeb',
                       color: agent.all_confirmed ? '#059669' : '#d97706'
                     }}>
-                      {agent.all_confirmed ? 'مكتمل ✅' : 'قيد التسليم ⏳'}
+                      {agent.all_confirmed ? 'مكتمل <CheckCircle2 size={16} />' : 'قيد التسليم ⏳'}
                     </span>
                   </div>
                   {agent.batch_confirmed_at && (
                     <div className="batch-confirmed-text">
-                      تم تسليم الكشف ✓
+                      تم تسليم الكشف <Check size={16} />
                     </div>
                   )}
                 </div>
@@ -184,7 +186,7 @@ export default function SupervisorBiometricLogPage() {
                           </td>
                           <td>
                             {item.receipt_id ? (
-                              <span className="status-badge success">✅ تم التسليم</span>
+                              <span className="status-badge success"><CheckCircle2 size={16} /> تم التسليم</span>
                             ) : (
                               <span className="status-badge pending">⏳ قيد التسليم</span>
                             )}

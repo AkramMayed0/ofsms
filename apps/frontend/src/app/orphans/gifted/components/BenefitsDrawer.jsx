@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
-import { School, Shirt, Briefcase, Bus, AlertCircle } from 'lucide-react';
+import { School, Shirt, Briefcase, Bus, AlertCircle, X } from 'lucide-react';
 
 const fmt = (n) =>
   n != null && n !== '' ? Number(n).toLocaleString('ar-YE') : '—';
@@ -76,7 +76,7 @@ export default function BenefitsDrawer({ orphan, onClose, onSaved }) {
             onClick={onClose} 
             aria-label="إغلاق"
           >
-            ✕
+            <X size={16} />
           </button>
         </div>
 

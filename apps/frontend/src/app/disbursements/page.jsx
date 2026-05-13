@@ -12,6 +12,8 @@
  */
 
 import { useState, useEffect } from 'react';
+import { Search, AlertTriangle, X, User, Users, CheckCircle2, Info } from 'lucide-react';
+
 import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
@@ -61,7 +63,7 @@ function RejectModal({ title, onConfirm, onClose, loading }) {
       <div className="modal" dir="rtl">
         <div className="modal-head">
           <h2 className="modal-title">{title}</h2>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose}><X size={16} /></button>
         </div>
         <form onSubmit={handleSubmit((d) => onConfirm(d.notes))} className="modal-body">
           <div className="fg">
@@ -195,7 +197,7 @@ function ItemsDrawer({ listId, listInfo, role, onClose, onAction }) {
               {listInfo && <StatusBadge status={listInfo.status} />}
             </div>
           </div>
-          <button className="drawer-close" onClick={onClose} aria-label="إغلاق">✕</button>
+          <button className="drawer-close" onClick={onClose} aria-label="إغلاق"><X size={16} /></button>
         </div>
 
         {/* Summary strip */}
@@ -222,7 +224,7 @@ function ItemsDrawer({ listId, listInfo, role, onClose, onAction }) {
         {hasAnyAction && (
           <div className="action-zone">
             <p className="action-zone-title">
-              {role === 'supervisor' && '🔍 دورك: اعتماد أو رفض هذا الكشف'}
+              {role === 'supervisor' && '<Search size={16} /> دورك: اعتماد أو رفض هذا الكشف'}
               {role === 'finance'    && '💰 دورك: التصديق المالي على هذا الكشف'}
               {role === 'gm'        && '🚀 دورك: إصدار الأموال للمناديب'}
             </p>
@@ -237,7 +239,7 @@ function ItemsDrawer({ listId, listInfo, role, onClose, onAction }) {
                 >
                   {acting
                     ? <><span className="spin spin-w" />جارٍ الاعتماد…</>
-                    : '✅ اعتماد الكشف'}
+                    : '<CheckCircle2 size={16} /> اعتماد الكشف'}
                 </button>
               )}
 
@@ -250,7 +252,7 @@ function ItemsDrawer({ listId, listInfo, role, onClose, onAction }) {
                 >
                   {acting
                     ? <><span className="spin spin-w" />جارٍ التصديق…</>
-                    : '✅ تصديق مالي'}
+                    : '<CheckCircle2 size={16} /> تصديق مالي'}
                 </button>
               )}
 
@@ -274,13 +276,13 @@ function ItemsDrawer({ listId, listInfo, role, onClose, onAction }) {
                   onClick={() => setShowReject(true)}
                   disabled={acting}
                 >
-                  ✕ رفض الكشف
+                  <X size={16} /> رفض الكشف
                 </button>
               )}
             </div>
 
             {actionErr && (
-              <div className="action-err">⚠ {actionErr}</div>
+              <div className="action-err"><AlertTriangle size={18} /> {actionErr}</div>
             )}
           </div>
         )}
@@ -302,7 +304,7 @@ function ItemsDrawer({ listId, listInfo, role, onClose, onAction }) {
         {/* Rejection notes */}
         {listInfo?.rejection_notes && (
           <div className="rejection-box">
-            <span>⚠</span>
+            <span><AlertTriangle size={18} /></span>
             <div>
               <strong>سبب الرفض</strong>
               <p>{listInfo.rejection_notes}</p>
@@ -336,7 +338,7 @@ function ItemsDrawer({ listId, listInfo, role, onClose, onAction }) {
               {included.map((item) => (
                 <div key={item.id} className="item-row">
                   <div className="item-avatar">
-                    {item.beneficiary_type === 'orphan' ? '👦' : '👨‍👩‍👧'}
+                    {item.beneficiary_type === 'orphan' ? '<User size={18} />' : '<Users size={18} />'}
                   </div>
                   <div className="item-info">
                     <div className="item-name">{item.beneficiary_name}</div>
@@ -344,7 +346,7 @@ function ItemsDrawer({ listId, listInfo, role, onClose, onAction }) {
                       <span>{item.governorate_ar || '—'}</span>
                       {item.sponsor_name && <span>· {item.sponsor_name}</span>}
                       {item.biometric_confirmed_at && (
-                        <span className="bio-tag">✅ بصمة</span>
+                        <span className="bio-tag"><CheckCircle2 size={16} /> بصمة</span>
                       )}
                     </div>
                   </div>
@@ -360,7 +362,7 @@ function ItemsDrawer({ listId, listInfo, role, onClose, onAction }) {
                   {excluded.map((item) => (
                     <div key={item.id} className="item-row item-excluded">
                       <div className="item-avatar" style={{ opacity: .5 }}>
-                        {item.beneficiary_type === 'orphan' ? '👦' : '👨‍👩‍👧'}
+                        {item.beneficiary_type === 'orphan' ? '<User size={18} />' : '<Users size={18} />'}
                       </div>
                       <div className="item-info">
                         <div className="item-name" style={{ opacity: .6 }}>{item.beneficiary_name}</div>
@@ -527,7 +529,7 @@ function ItemsDrawer({ listId, listInfo, role, onClose, onAction }) {
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export default function DisbursementsPage() {
-  // ✅ Read role fresh every render — never cache it outside the component
+  // <CheckCircle2 size={16} /> Read role fresh every render — never cache it outside the component
   const user = useAuthStore((s) => s.user);
   const role = user?.role;
 
@@ -573,7 +575,7 @@ export default function DisbursementsPage() {
       <AppShell>
         <div dir="rtl" style={{ textAlign: 'center', padding: '4rem', fontFamily: 'Cairo' }}>
           <p style={{ color: '#dc2626', fontWeight: 700 }}>
-            ⚠ لم يتم التعرف على المستخدم. يرجى تسجيل الخروج وإعادة تسجيل الدخول.
+            <AlertTriangle size={18} /> لم يتم التعرف على المستخدم. يرجى تسجيل الخروج وإعادة تسجيل الدخول.
           </p>
         </div>
       </AppShell>
@@ -603,8 +605,8 @@ export default function DisbursementsPage() {
 
         {error && (
           <div className="err-banner">
-            <span>⚠</span> {error}
-            <button className="err-close" onClick={() => setError('')}>✕</button>
+            <span><AlertTriangle size={18} /></span> {error}
+            <button className="err-close" onClick={() => setError('')}><X size={16} /></button>
           </div>
         )}
 

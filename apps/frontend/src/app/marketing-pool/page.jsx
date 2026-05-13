@@ -16,6 +16,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { AlertTriangle, X, User, Users, Handshake, CheckCircle2, Plus, Check } from 'lucide-react';
+
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
 
@@ -204,12 +206,12 @@ function AssignModal({ selected, sponsors, onClose, onSuccess }) {
               {selected.filter(i => i.type === 'family').length} أسرة
             </p>
           </div>
-          <button style={s.closeBtn} onClick={onClose}>✕</button>
+          <button style={s.closeBtn} onClick={onClose}><X size={16} /></button>
         </div>
 
         {/* Tabs */}
         <div style={s.tabs}>
-          <button style={s.tab(tab === 'existing')} onClick={() => setTab('existing')}>🤝 كافل موجود</button>
+          <button style={s.tab(tab === 'existing')} onClick={() => setTab('existing')}><Handshake size={32} /> كافل موجود</button>
           <button style={s.tab(tab === 'new')} onClick={() => setTab('new')}>➕ كافل جديد</button>
         </div>
 
@@ -243,7 +245,7 @@ function AssignModal({ selected, sponsors, onClose, onSuccess }) {
                       <div style={{ fontSize: '.85rem', fontWeight: 600, color: '#1f2937' }}>{sp.full_name}</div>
                       {sp.email && <div style={{ fontSize: '.72rem', color: '#9ca3af', direction: 'ltr', textAlign: 'left' }}>{sp.email}</div>}
                     </div>
-                    {sponsorId === sp.id && <span style={{ color: '#1B5E8C', fontWeight: 800 }}>✓</span>}
+                    {sponsorId === sp.id && <span style={{ color: '#1B5E8C', fontWeight: 800 }}><Check size={16} /></span>}
                   </div>
                 ))}
               </div>
@@ -309,7 +311,7 @@ function AssignModal({ selected, sponsors, onClose, onSuccess }) {
             <div>
               {selected.map(item => (
                 <span key={item.id} style={s.chip(item.type)}>
-                  {item.type === 'orphan' ? '👦' : '👨‍👩‍👧'} {item.name}
+                  {item.type === 'orphan' ? '<User size={18} />' : '<Users size={18} />'} {item.name}
                 </span>
               ))}
             </div>
@@ -317,7 +319,7 @@ function AssignModal({ selected, sponsors, onClose, onSuccess }) {
 
           {/* Error */}
           {error && (
-            <div style={s.errBox}>⚠ {error}</div>
+            <div style={s.errBox}><AlertTriangle size={18} /> {error}</div>
           )}
         </div>
 
@@ -524,7 +526,7 @@ export default function MarketingPoolPage() {
     const assignedIds = new Set(selected);   // capture before clearing
     setShowModal(false);
     setSelected(new Set());
-    setToast({ message: `✅ تم تعيين الكافل بنجاح لـ ${count} مستفيد`, type: 'success' });
+    setToast({ message: `<CheckCircle2 size={16} /> تم تعيين الكافل بنجاح لـ ${count} مستفيد`, type: 'success' });
     setItems(prev => prev.filter(i => !assignedIds.has(i.id)));
   };
 
@@ -547,7 +549,7 @@ export default function MarketingPoolPage() {
         {toast && (
           <div className="toast">
             {toast.message}
-            <button className="toast-close" onClick={() => setToast(null)}>✕</button>
+            <button className="toast-close" onClick={() => setToast(null)}><X size={16} /></button>
           </div>
         )}
 
@@ -568,7 +570,7 @@ export default function MarketingPoolPage() {
                 className="btn-primary"
                 onClick={() => setShowModal(true)}
               >
-                🤝 تعيين كافل ({selected.size})
+                <Handshake size={32} /> تعيين كافل ({selected.size})
               </button>
             )}
           </div>
@@ -599,7 +601,7 @@ export default function MarketingPoolPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
             {search && (
-              <button className="search-clear" onClick={() => setSearch('')}>✕</button>
+              <button className="search-clear" onClick={() => setSearch('')}><X size={16} /></button>
             )}
           </div>
 
@@ -612,8 +614,8 @@ export default function MarketingPoolPage() {
               onChange={(e) => setFilterType(e.target.value)}
             >
               <option value="all">الكل (أيتام + أسر)</option>
-              <option value="orphan">الأيتام فقط 👦</option>
-              <option value="family">الأسر فقط 👨‍👩‍👧</option>
+              <option value="orphan">الأيتام فقط <User size={18} /></option>
+              <option value="family">الأسر فقط <Users size={18} /></option>
             </select>
           </div>
 
@@ -649,7 +651,7 @@ export default function MarketingPoolPage() {
           {/* Clear filters */}
           {hasActiveFilters && (
             <button className="btn-clear-filters" onClick={clearFilters}>
-              مسح الفلاتر ✕
+              مسح الفلاتر <X size={16} />
             </button>
           )}
         </div>
@@ -657,7 +659,7 @@ export default function MarketingPoolPage() {
         {/* ── Error ───────────────────────────────────────────────── */}
         {error && (
           <div className="error-banner" role="alert">
-            ⚠ {error}
+            <AlertTriangle size={18} /> {error}
             <button onClick={load} className="retry-btn">إعادة المحاولة</button>
           </div>
         )}
@@ -666,7 +668,7 @@ export default function MarketingPoolPage() {
         <div className="table-card">
           {selected.size > 0 && (
             <div className="sel-bar">
-              <span className="sel-text">✓ تم تحديد {selected.size} من {filtered.length}</span>
+              <span className="sel-text"><Check size={16} /> تم تحديد {selected.size} من {filtered.length}</span>
               <div className="sel-actions">
                 <button className="btn-outline" onClick={() => setSelected(new Set())}>
                   إلغاء التحديد

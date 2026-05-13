@@ -11,6 +11,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { AlertTriangle, X, User, Info, Check } from 'lucide-react';
+
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
 
@@ -35,8 +37,8 @@ function AgeBar({ ageMin, ageMax }) {
 function SaveIndicator({ state }) {
   if (state === 'idle')    return null;
   if (state === 'saving')  return <span className="save-saving">جارٍ الحفظ…</span>;
-  if (state === 'saved')   return <span className="save-done">✓ تم الحفظ</span>;
-  if (state === 'error')   return <span className="save-err">✕ فشل الحفظ</span>;
+  if (state === 'saved')   return <span className="save-done"><Check size={16} /> تم الحفظ</span>;
+  if (state === 'error')   return <span className="save-err"><X size={16} /> فشل الحفظ</span>;
   return null;
 }
 
@@ -254,7 +256,7 @@ export default function QuranThresholdsPage() {
 
         {/* ── Error ── */}
         {error && (
-          <div className="err-banner">⚠ {error}</div>
+          <div className="err-banner"><AlertTriangle size={18} /> {error}</div>
         )}
 
         {/* ── Thresholds list ── */}

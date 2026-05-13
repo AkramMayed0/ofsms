@@ -12,7 +12,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Handshake } from 'lucide-react';
+import { Handshake, Search, AlertTriangle, User, CheckCircle2, Check } from 'lucide-react';
 import api from '../../../lib/api';
 import AppShell from '../../../components/AppShell';
 import useAuthStore from '../../../store/useAuthStore';
@@ -166,7 +166,7 @@ export default function OrphanDetailPage() {
   }, [id]);
 
   const handleTransferSuccess = () => {
-    setSuccessMsg('تم نقل الكفالة بنجاح ✓');
+    setSuccessMsg('تم نقل الكفالة بنجاح <Check size={16} />');
     fetchOrphan(); // refresh orphan data to show new sponsor
     setTimeout(() => setSuccessMsg(''), 4000);
   };
@@ -209,13 +209,13 @@ export default function OrphanDetailPage() {
         {/* ── Success banner ──────────────────────────────────────── */}
         {successMsg && (
           <div className="success-banner" role="status">
-            ✅ {successMsg}
+            <CheckCircle2 size={16} /> {successMsg}
           </div>
         )}
 
         {/* ── Error ───────────────────────────────────────────────── */}
         {error && (
-          <div className="error-banner" role="alert">⚠ {error}</div>
+          <div className="error-banner" role="alert"><AlertTriangle size={18} /> {error}</div>
         )}
 
         {loading ? (
@@ -374,7 +374,7 @@ export default function OrphanDetailPage() {
           </>
         ) : (
           <div className="not-found">
-            <span>🔍</span>
+            <span><Search size={16} /></span>
             <p>لم يُعثر على اليتيم</p>
             <button onClick={() => router.back()} className="btn-back-ghost">
               رجوع

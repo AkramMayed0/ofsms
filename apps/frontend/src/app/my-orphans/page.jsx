@@ -11,6 +11,8 @@
  */
 
 import { useState, useEffect, Fragment } from 'react';
+import { Search, AlertTriangle, X, User, CheckCircle2, FileText } from 'lucide-react';
+
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
@@ -99,7 +101,7 @@ function DetailDrawer({ orphan, onClose }) {
             <h2 className="drawer-name">{orphan.full_name}</h2>
             <StatusBadge status={orphan.status} />
           </div>
-          <button className="drawer-close" onClick={onClose} aria-label="إغلاق">✕</button>
+          <button className="drawer-close" onClick={onClose} aria-label="إغلاق"><X size={16} /></button>
         </div>
 
         <div className="drawer-body">
@@ -115,7 +117,7 @@ function DetailDrawer({ orphan, onClose }) {
               <InfoRow label="اسم الوصي"   value={orphan.guardian_name || '—'} />
               <InfoRow label="صلة الوصي"   value={RELATION_MAP[orphan.guardian_relation] || '—'} />
               <InfoRow label="تاريخ التسجيل" value={formatDate(orphan.created_at)} />
-              {orphan.is_gifted && <InfoRow label="موهوب" value="✅ نعم" highlight />}
+              {orphan.is_gifted && <InfoRow label="موهوب" value="<CheckCircle2 size={16} /> نعم" highlight />}
             </div>
           </div>
 
@@ -134,7 +136,7 @@ function DetailDrawer({ orphan, onClose }) {
           {/* Rejection notes */}
           {orphan.status === 'rejected' && orphan.notes && (
             <div className="rejection-box">
-              <span className="rejection-icon">⚠</span>
+              <span className="rejection-icon"><AlertTriangle size={18} /></span>
               <div>
                 <strong>سبب الرفض</strong>
                 <p>{orphan.notes}</p>
@@ -153,7 +155,7 @@ function DetailDrawer({ orphan, onClose }) {
               <div className="doc-list">
                 {docs.map((d) => (
                   <div key={d.id} className="doc-chip">
-                    <span>📄</span>
+                    <span><FileText size={16} /></span>
                     <span className="doc-name">{d.original_name || d.doc_type}</span>
                     <span className="doc-date">{formatDate(d.uploaded_at)}</span>
                   </div>
@@ -278,7 +280,7 @@ export default function MyOrphansPage() {
         {/* Search + filter bar */}
         <div className="toolbar">
           <div className="search-wrap">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><Search size={16} /></span>
             <input
               className="search-inp"
               placeholder="ابحث بالاسم أو المحافظة أو الوصي…"
@@ -286,7 +288,7 @@ export default function MyOrphansPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
             {search && (
-              <button className="search-clear" onClick={() => setSearch('')}>✕</button>
+              <button className="search-clear" onClick={() => setSearch('')}><X size={16} /></button>
             )}
           </div>
 
@@ -314,7 +316,7 @@ export default function MyOrphansPage() {
         {/* Error state */}
         {error && (
           <div className="err-banner">
-            <span>⚠</span> {error}
+            <span><AlertTriangle size={18} /></span> {error}
           </div>
         )}
 
@@ -335,7 +337,7 @@ export default function MyOrphansPage() {
         {/* Empty state */}
         {!loading && !error && filtered.length === 0 && (
           <div className="empty">
-            <div className="empty-ico">👦</div>
+            <div className="empty-ico"><User size={18} /></div>
             <h3 className="empty-title">
               {search || filterStatus !== 'all' ? 'لا توجد نتائج مطابقة' : 'لا يوجد أيتام مسجّلون بعد'}
             </h3>

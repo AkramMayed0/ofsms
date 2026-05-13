@@ -5,6 +5,8 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
+import { Search, AlertTriangle, X, User, ChevronRight } from 'lucide-react';
+
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
 import ExportButtons from '../../components/ExportButtons';
@@ -116,7 +118,7 @@ export default function GovernoratesPage() {
             </div>
             <div style={{ flex:1, overflowY:'auto', padding:'.5rem .6rem' }}>
               {loadingLeft ? <LeftSkeleton /> : errorLeft ? (
-                <p style={{ color:'#b91c1c', fontSize:'.82rem', padding:'1rem', textAlign:'center' }}>⚠ {errorLeft}</p>
+                <p style={{ color:'#b91c1c', fontSize:'.82rem', padding:'1rem', textAlign:'center' }}><AlertTriangle size={18} /> {errorLeft}</p>
               ) : govStats.map(gov => (
                 <div
                   key={gov.id}
@@ -189,7 +191,7 @@ export default function GovernoratesPage() {
                   {!loadingRight && orphans.length > 0 && (
                     <div style={{ display:'flex', gap:'.6rem', flexWrap:'wrap', alignItems:'center' }}>
                       <div style={{ position:'relative', flex:1, minWidth:180 }}>
-                        <span style={{ position:'absolute', right:'.75rem', top:'50%', transform:'translateY(-50%)', fontSize:'.85rem', pointerEvents:'none' }}>🔍</span>
+                        <span style={{ position:'absolute', right:'.75rem', top:'50%', transform:'translateY(-50%)', fontSize:'.85rem', pointerEvents:'none' }}><Search size={16} /></span>
                         <input
                           className="gv-input"
                           style={{ width:'100%', border:'1.5px solid #d1d5db', borderRadius:'.625rem', padding:'.55rem .85rem .55rem 2rem', paddingRight:'2.2rem', fontSize:'.82rem', fontFamily:'Cairo,sans-serif', background:'#fafafa', outline:'none', boxSizing:'border-box' }}
@@ -198,7 +200,7 @@ export default function GovernoratesPage() {
                           onChange={e => setSearch(e.target.value)}
                         />
                         {search && (
-                          <button onClick={() => setSearch('')} style={{ position:'absolute', left:'.6rem', top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'#9ca3af', fontSize:'.8rem' }}>✕</button>
+                          <button onClick={() => setSearch('')} style={{ position:'absolute', left:'.6rem', top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'#9ca3af', fontSize:'.8rem' }}><X size={16} /></button>
                         )}
                       </div>
                       <div style={{ display:'flex', gap:'.35rem', flexWrap:'wrap' }}>
@@ -217,10 +219,10 @@ export default function GovernoratesPage() {
                 {/* Table */}
                 <div style={{ flex:1, overflowY:'auto' }}>
                   {loadingRight ? <RightSkeleton /> : errorRight ? (
-                    <div style={{ padding:'2rem', textAlign:'center', color:'#b91c1c', fontSize:'.85rem' }}>⚠ {errorRight}</div>
+                    <div style={{ padding:'2rem', textAlign:'center', color:'#b91c1c', fontSize:'.85rem' }}><AlertTriangle size={18} /> {errorRight}</div>
                   ) : filteredOrphans.length === 0 ? (
                     <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'.5rem', padding:'3rem 2rem', color:'#9ca3af', textAlign:'center' }}>
-                      <span style={{ fontSize:'2.5rem' }}>{orphans.length === 0 ? '🏜️' : '🔍'}</span>
+                      <span style={{ fontSize:'2.5rem' }}>{orphans.length === 0 ? '🏜️' : '<Search size={16} />'}</span>
                       <p style={{ fontWeight:700, color:'#374151', margin:'0 0 .25rem', fontSize:'.9rem' }}>
                         {orphans.length === 0 ? 'لا يوجد أيتام في هذه المحافظة' : 'لا توجد نتائج مطابقة'}
                       </p>
@@ -246,7 +248,7 @@ export default function GovernoratesPage() {
                                 <td style={{ padding:'.75rem .9rem', color:'#9ca3af', borderBottom:'1px solid #f8fafc', fontSize:'.72rem' }}>{idx + 1}</td>
                                 <td style={{ padding:'.75rem .9rem', borderBottom:'1px solid #f8fafc' }}>
                                   <div style={{ display:'flex', alignItems:'center', gap:'.5rem' }}>
-                                    <span style={{ fontSize:'1rem' }}>{o.gender === 'female' ? '👧' : '👦'}</span>
+                                    <span style={{ fontSize:'1rem' }}>{o.gender === 'female' ? '👧' : '<User size={18} />'}</span>
                                     <div>
                                       <div style={{ fontWeight:700, color:'#0d3d5c', fontSize:'.85rem' }}>{o.full_name}</div>
                                       {o.is_gifted && <span style={{ fontSize:'.63rem', fontWeight:700, color:'#f59e0b' }}>🌟 موهوب</span>}
