@@ -423,7 +423,7 @@ const oldStyles = `/* ── Modal shared ────────────�
         /* Delete msg */
         .delete-msg { font-size: .88rem; color: #374151; line-height: 1.7; margin: 0 0 1rem; }`;
 
-const newStyles = \`/* ── Modal shared ─────────────────────────────────────────────── */
+const newStyles = `/* ── Modal shared ─────────────────────────────────────────────── */
         .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 50; animation: fadeIn .2s ease; backdrop-filter: blur(3px); }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .modal {
@@ -480,7 +480,7 @@ const newStyles = \`/* ── Modal shared ────────────�
         .inp-err { border-color: #dc2626 !important; }
         .sel { appearance: none; cursor: pointer; }
         .ferr { font-size: .77rem; color: #dc2626; margin: 0; }
-        .err-banner { display: flex; align-items: center; gap: .5rem; background: #fef2f2; border: 1px solid #fecaca; border-radius: .625rem; padding: .65rem .85rem; font-size: .82rem; color: #b91c1c; font-weight: 500; }\`;
+        .err-banner { display: flex; align-items: center; gap: .5rem; background: #fef2f2; border: 1px solid #fecaca; border-radius: .625rem; padding: .65rem .85rem; font-size: .82rem; color: #b91c1c; font-weight: 500; }`;
 
 content = content.replace(oldStyles, newStyles);
 
