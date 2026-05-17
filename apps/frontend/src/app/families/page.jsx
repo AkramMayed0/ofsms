@@ -13,7 +13,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { Search, AlertTriangle, X, Users, CheckCircle2, FileText, Check } from 'lucide-react';
+import { Search, AlertTriangle, X, Users, CheckCircle2, FileText, Check, Filter } from 'lucide-react';
 
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
@@ -23,11 +23,11 @@ import useAuthStore from '@/store/useAuthStore';
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 const STATUS_MAP = {
-  under_review:       { label: 'قيد المراجعة',   color: '#f59e0b', bg: '#fffbeb' },
-  under_marketing:    { label: 'تحت التسويق',     color: '#3b82f6', bg: '#eff6ff' },
-  under_sponsorship:  { label: 'تحت الكفالة',     color: '#10b981', bg: '#ecfdf5' },
-  rejected:           { label: 'مرفوض',            color: '#ef4444', bg: '#fef2f2' },
-  inactive:           { label: 'غير نشط',          color: '#9ca3af', bg: '#f9fafb' },
+  under_review: { label: 'قيد المراجعة', color: '#f59e0b', bg: '#fffbeb' },
+  under_marketing: { label: 'تحت التسويق', color: '#3b82f6', bg: '#eff6ff' },
+  under_sponsorship: { label: 'تحت الكفالة', color: '#10b981', bg: '#ecfdf5' },
+  rejected: { label: 'مرفوض', color: '#ef4444', bg: '#fef2f2' },
+  inactive: { label: 'غير نشط', color: '#9ca3af', bg: '#f9fafb' },
 };
 
 const fmtDate = (iso) =>
@@ -94,145 +94,32 @@ function RejectModal({ family, onConfirm, onClose, loading }) {
   );
 }
 
-// ── DetailDrawer ───────────────────────────────────────────────────────────────
 
-function DetailDrawer({ family, onClose, onApprove, onReject, actioning, role }) {
-  const [docs, setDocs] = useState([]);
-  const [docsLoading, setDL] = useState(true);
-
-  useEffect(() => {
-    if (!family) return;
-    setDL(true);
-    api.get(`/families/${family.id}`)
-      .then(({ data }) => setDocs(data.documents || []))
-      .catch(() => setDocs([]))
-      .finally(() => setDL(false));
-  }, [family?.id]);
-
-  if (!family) return null;
-
-  const canApprove = family.status === 'under_review';
-  const canReject  = family.status === 'under_review';
-
+// ── StatPill ───────────────────────────────────────────────────────────────────
+function StatPill({ label, count, color }) {
   return (
-    <>
-      <div className="backdrop" onClick={onClose} />
-      <aside className="drawer" dir="rtl">
-        <div className="drawer-head">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '.85rem' }}>
-            <div className="drawer-avatar"><Users size={18} /></div>
-            <div>
-              <h2 className="drawer-name">{family.family_name}</h2>
-              <StatusBadge status={family.status} />
-            </div>
-          </div>
-          <button className="drawer-close" onClick={onClose}><X size={16} /></button>
-        </div>
-
-        <div className="drawer-body">
-          <div className="info-section">
-            <h3 className="info-title">بيانات الأسرة</h3>
-            <div className="info-grid">
-              {[
-                ['رب الأسرة / المعيل', family.head_of_family || '—'],
-                ['عدد الأفراد', family.member_count ? `${family.member_count} فرد` : '—'],
-                ['المحافظة', family.governorate_ar || '—'],
-                ['المندوب', family.agent_name || '—'],
-                ['تاريخ التسجيل', fmtDate(family.created_at)],
-              ].map(([l, v]) => (
-                <div key={l} className="info-row">
-                  <span className="info-label">{l}</span>
-                  <span className="info-val">{v}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {family.status === 'under_sponsorship' && family.sponsor_name && (
-            <div className="info-section">
-              <h3 className="info-title">بيانات الكفالة</h3>
-              <div className="info-grid">
-                <div className="info-row">
-                  <span className="info-label">الكافل</span>
-                  <span className="info-val">{family.sponsor_name}</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">المبلغ الشهري</span>
-                  <span className="info-val">
-                    {family.monthly_amount ? `${Number(family.monthly_amount).toLocaleString()} ر.ي` : '—'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {family.status === 'rejected' && family.notes && (
-            <div className="rejection-box">
-              <span><AlertTriangle size={18} /></span>
-              <div>
-                <strong>سبب الرفض</strong>
-                <p>{family.notes}</p>
-              </div>
-            </div>
-          )}
-
-          {family.notes && family.status !== 'rejected' && (
-            <div className="info-section">
-              <h3 className="info-title">ملاحظات المندوب</h3>
-              <p style={{ fontSize: '.85rem', color: '#374151', lineHeight: 1.7, margin: 0 }}>
-                {family.notes}
-              </p>
-            </div>
-          )}
-
-          <div className="info-section">
-            <h3 className="info-title">المستندات المرفوعة</h3>
-            {docsLoading ? (
-              <p className="muted-text">جارٍ التحميل…</p>
-            ) : docs.length === 0 ? (
-              <p className="muted-text">لا توجد مستندات مرفوعة</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '.4rem' }}>
-                {docs.map((d) => (
-                  <div key={d.id} className="doc-chip">
-                    <span><FileText size={16} /></span>
-                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', direction: 'ltr', textAlign: 'left' }}>
-                      {d.original_name || d.doc_type}
-                    </span>
-                    <span className="muted-text">{fmtDate(d.uploaded_at)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {(canApprove || canReject) && (
-          <div className="drawer-foot">
-            {canApprove && (
-              <button
-                className="btn-approve"
-                onClick={() => onApprove(family)}
-                disabled={!!actioning}
-              >
-                {actioning === 'approve'
-                  ? <><span className="spin spin-dark" />جارٍ الاعتماد…</>
-                  : '<Check size={16} /> اعتماد التسجيل'}
-              </button>
-            )}
-            {canReject && (
-              <button
-                className="btn-reject-outline"
-                onClick={() => onReject(family)}
-                disabled={!!actioning}
-              >
-                <X size={16} /> رفض
-              </button>
-            )}
-          </div>
-        )}
-      </aside>
-    </>
+    <div
+      style={{
+        display: 'inline-flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '2px',
+        padding: '.6rem 1.1rem',
+        background: '#fff',
+        border: '1.5px solid #e5e7eb',
+        borderRadius: '12px',
+        fontFamily: "'Cairo', sans-serif",
+        minWidth: '80px',
+        boxShadow: '0 1px 3px rgba(0,0,0,.04)',
+      }}
+    >
+      <span style={{ fontSize: '1.35rem', fontWeight: 800, lineHeight: 1, color }}>
+        {count}
+      </span>
+      <span style={{ fontSize: '.72rem', fontWeight: 600, color: '#6b7280', whiteSpace: 'nowrap' }}>
+        {label}
+      </span>
+    </div>
   );
 }
 
@@ -241,18 +128,16 @@ function DetailDrawer({ family, onClose, onApprove, onReject, actioning, role })
 export default function FamiliesManagementPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const role = user?.role;
 
-  const [families, setFamilies]         = useState([]);
-  const [loading, setLoading]           = useState(true);
-  const [error, setError]               = useState('');
-  const [search, setSearch]             = useState('');
+  const [families, setFamilies] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [filterGov, setFilterGov]       = useState('all');
-  const [selected, setSelected]         = useState(null);
+  const [filterGov, setFilterGov] = useState('all');
   const [rejectTarget, setRejectTarget] = useState(null);
-  const [actioning, setActioning]       = useState(null);
-  const [toast, setToast]               = useState(null);
+  const [actioning, setActioning] = useState(null);
+  const [toast, setToast] = useState(null);
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
@@ -294,9 +179,8 @@ export default function FamiliesManagementPage() {
     setActioning('approve');
     try {
       await api.patch(`/families/${family.id}/status`, { status: 'under_marketing' });
-      showToast(`<Check size={16} /> تمت الموافقة على أسرة ${family.family_name}`);
+      showToast(`تمت الموافقة على أسرة ${family.family_name}`);
       fetchFamilies();
-      setSelected(null);
     } catch (err) {
       showToast(err.response?.data?.error || 'فشل الاعتماد', 'error');
     } finally {
@@ -312,7 +196,6 @@ export default function FamiliesManagementPage() {
       showToast(`تم رفض تسجيل أسرة ${rejectTarget.family_name}`);
       fetchFamilies();
       setRejectTarget(null);
-      if (selected?.id === rejectTarget.id) setSelected(null);
     } catch (err) {
       showToast(err.response?.data?.error || 'فشل الرفض', 'error');
     } finally {
@@ -356,53 +239,130 @@ export default function FamiliesManagementPage() {
           </button>
         </div>
 
-        {/* Stats row */}
+        {/* ── Stat pills ──────────────────────────────────────────── */}
         {!loading && (
-          <div className="stats-row">
-            {Object.entries(STATUS_MAP).map(([status, cfg]) => (
-              <div
-                key={status}
-                className={`stat-chip ${filterStatus === status ? 'stat-chip-active' : ''}`}
-                style={{ '--c': cfg.color, '--bg': cfg.bg }}
-                onClick={() => setFilterStatus(filterStatus === status ? 'all' : status)}
-              >
-                <span style={{ fontWeight: 800, color: cfg.color }}>{counts[status] || 0}</span>
-                <span style={{ fontSize: '.72rem', color: cfg.color }}>{cfg.label}</span>
-              </div>
-            ))}
+          <div style={{ display: 'flex', gap: '.6rem', flexWrap: 'wrap', justifyContent: 'flex-start' }}>
+            <StatPill label="تحت الكفالة" count={counts.under_sponsorship || 0} color="#10B981" />
+            <StatPill label="تحت التسويق" count={counts.under_marketing || 0} color="#3B82F6" />
+            <StatPill label="قيد المراجعة" count={counts.under_review || 0} color="#F59E0B" />
+            <StatPill label="الإجمالي" count={families.length} color="#1B5E8C" />
           </div>
         )}
 
-        {/* Toolbar */}
-        <div className="toolbar">
-          <div className="search-wrap">
-            <span className="search-icon"><Search size={16} /></span>
+        {/* ── Filters bar ─────────────────────────────────────────── */}
+        <div style={{
+          display: 'flex', gap: '0.65rem', flexWrap: 'wrap', alignItems: 'center',
+          background: '#fff', border: '1px solid #e5eaf0', borderRadius: '0.875rem',
+          padding: '0.875rem 1rem',
+          boxShadow: '0 1px 3px rgba(0,0,0,.04)',
+        }}>
+          {/* Search */}
+          <div style={{ position: 'relative', flex: 1, minWidth: '200px' }}>
+            <span style={{
+              position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)',
+              color: '#9ca3af', display: 'flex', pointerEvents: 'none',
+            }}>
+              <Search size={16} />
+            </span>
             <input
-              className="search-inp"
+              type="text"
               placeholder="ابحث باسم الأسرة أو المعيل أو المندوب…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              style={{
+                width: '100%', boxSizing: 'border-box',
+                padding: '0.55rem 2.25rem 0.55rem 2rem',
+                border: '1.5px solid #e5e7eb', borderRadius: '0.625rem',
+                fontFamily: "'Cairo', sans-serif", fontSize: '0.875rem', color: '#1f2937',
+                background: '#fafafa', outline: 'none', direction: 'rtl',
+                transition: 'border-color .15s, box-shadow .15s',
+              }}
+              onFocus={e => { e.target.style.borderColor = '#1B5E8C'; e.target.style.boxShadow = '0 0 0 3px rgba(27,94,140,.1)'; e.target.style.background = '#fff'; }}
+              onBlur={e  => { e.target.style.borderColor = '#e5e7eb'; e.target.style.boxShadow = 'none';                           e.target.style.background = '#fafafa'; }}
             />
-            {search && <button className="search-clear" onClick={() => setSearch('')}><X size={16} /></button>}
-          </div>
-          <div className="filters-row">
-            <select
-              className="filter-sel"
-              value={filterGov}
-              onChange={(e) => setFilterGov(e.target.value)}
-            >
-              <option value="all">كل المحافظات</option>
-              {uniqueGovs.map(g => <option key={g} value={g}>{g}</option>)}
-            </select>
-            {(search || filterStatus !== 'all' || filterGov !== 'all') && (
+            {search && (
               <button
-                className="clear-filters"
-                onClick={() => { setSearch(''); setFilterStatus('all'); setFilterGov('all'); }}
-              >
-                <X size={16} /> مسح الفلاتر
-              </button>
+                onClick={() => setSearch('')}
+                style={{
+                  position: 'absolute', left: '0.6rem', top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer',
+                  fontSize: '0.8rem', padding: '0.2rem', lineHeight: 1,
+                }}
+              ><X size={16} /></button>
             )}
           </div>
+
+          {/* Status filter */}
+          <div style={{ position: 'relative' }}>
+            <span style={{
+              position: 'absolute', right: '0.65rem', top: '50%', transform: 'translateY(-50%)',
+              color: '#9ca3af', display: 'flex', pointerEvents: 'none', zIndex: 1,
+            }}>
+              <Filter size={15} />
+            </span>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              style={{
+                padding: '0.55rem 2.1rem 0.55rem 1.75rem',
+                border: '1.5px solid #e5e7eb', borderRadius: '0.625rem',
+                fontFamily: "'Cairo', sans-serif", fontSize: '0.82rem', color: '#374151',
+                background: '#fafafa', outline: 'none', cursor: 'pointer',
+                appearance: 'none',
+                backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")",
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'left 0.6rem center',
+                transition: 'border-color .15s',
+              }}
+              onFocus={e => e.target.style.borderColor = '#1B5E8C'}
+              onBlur={e  => e.target.style.borderColor = '#e5e7eb'}
+            >
+              <option value="all">جميع الحالات</option>
+              {Object.entries(STATUS_MAP).map(([val, cfg]) => (
+                <option key={val} value={val}>{cfg.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Governorate filter */}
+          <select
+            value={filterGov}
+            onChange={(e) => setFilterGov(e.target.value)}
+            style={{
+              padding: '0.55rem 0.875rem 0.55rem 1.75rem',
+              border: '1.5px solid #e5e7eb', borderRadius: '0.625rem',
+              fontFamily: "'Cairo', sans-serif", fontSize: '0.82rem', color: '#374151',
+              background: '#fafafa', outline: 'none', cursor: 'pointer',
+              appearance: 'none',
+              backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")",
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'left 0.6rem center',
+              transition: 'border-color .15s',
+            }}
+            onFocus={e => e.target.style.borderColor = '#1B5E8C'}
+            onBlur={e  => e.target.style.borderColor = '#e5e7eb'}
+          >
+            <option value="all">جميع المحافظات</option>
+            {uniqueGovs.map(g => <option key={g} value={g}>{g}</option>)}
+          </select>
+
+          {/* Clear filters */}
+          {(search || filterStatus !== 'all' || filterGov !== 'all') && (
+            <button
+              onClick={() => { setSearch(''); setFilterStatus('all'); setFilterGov('all'); }}
+              style={{
+                padding: '0.5rem 0.875rem',
+                background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '0.625rem',
+                color: '#B91C1C', fontFamily: "'Cairo', sans-serif", fontSize: '0.78rem',
+                fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
+                transition: 'background .12s',
+              }}
+              onMouseEnter={e => e.target.style.background = '#FEE2E2'}
+              onMouseLeave={e => e.target.style.background = '#FEF2F2'}
+            >
+              مسح الفلاتر <X size={16} />
+            </button>
+          )}
         </div>
 
         {/* Error */}
@@ -459,15 +419,14 @@ export default function FamiliesManagementPage() {
                   <th>المندوب</th>
                   <th>الكافل</th>
                   <th>تاريخ التسجيل</th>
-                  {(role === 'gm' || role === 'supervisor') && <th>إجراء</th>}
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((f) => (
                   <tr
                     key={f.id}
-                    className={`trow ${selected?.id === f.id ? 'trow-selected' : ''}`}
-                    onClick={() => setSelected(selected?.id === f.id ? null : f)}
+                    className="trow"
+                    onClick={() => router.push(`/families/${f.id}`)}
                   >
                     <td>
                       <div className="name-cell">
@@ -484,26 +443,6 @@ export default function FamiliesManagementPage() {
                     <td className="muted">{f.agent_name || '—'}</td>
                     <td className="muted">{f.sponsor_name || '—'}</td>
                     <td className="muted">{fmtDate(f.created_at)}</td>
-                    {(role === 'gm' || role === 'supervisor') && (
-                      <td>
-                        {f.status === 'under_review' && (
-                          <div className="action-btns">
-                            <button
-                              className="act-approve"
-                              onClick={(e) => { e.stopPropagation(); handleApprove(f); }}
-                              disabled={!!actioning}
-                              title="اعتماد"
-                            ><CheckCircle2 size={16} /></button>
-                            <button
-                              className="act-reject"
-                              onClick={(e) => { e.stopPropagation(); setRejectTarget(f); }}
-                              disabled={!!actioning}
-                              title="رفض"
-                            ><X size={16} /></button>
-                          </div>
-                        )}
-                      </td>
-                    )}
                   </tr>
                 ))}
               </tbody>
@@ -517,15 +456,6 @@ export default function FamiliesManagementPage() {
         )}
       </div>
 
-      {/* Detail Drawer */}
-      <DetailDrawer
-        family={selected ? families.find(f => f.id === selected.id) || selected : null}
-        onClose={() => setSelected(null)}
-        onApprove={handleApprove}
-        onReject={(f) => setRejectTarget(f)}
-        actioning={actioning}
-        role={role}
-      />
 
       <style jsx>{`
         .page { max-width:1200px; margin:0 auto; padding-bottom:4rem; font-family:'Cairo','Tajawal',sans-serif; display:flex; flex-direction:column; gap:1.25rem; position:relative; }
@@ -539,22 +469,7 @@ export default function FamiliesManagementPage() {
         .page-title { font-size:1.6rem; font-weight:800; color:#0d3d5c; margin:0 0 .2rem; }
         .page-sub { font-size:.85rem; color:#6b7a8d; margin:0; }
 
-        .stats-row { display:flex; gap:.5rem; flex-wrap:wrap; }
-        .stat-chip { display:flex; align-items:center; gap:.4rem; padding:.35rem .85rem; background:var(--bg); border:1.5px solid transparent; border-radius:2rem; cursor:pointer; transition:all .15s; }
-        .stat-chip:hover { border-color:var(--c); }
-        .stat-chip-active { border-color:var(--c) !important; box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 15%,transparent); }
 
-        .toolbar { display:flex; flex-direction:column; gap:.65rem; }
-        .search-wrap { position:relative; display:flex; align-items:center; }
-        .search-icon { position:absolute; right:.85rem; font-size:.9rem; pointer-events:none; }
-        .search-inp { width:100%; border:1.5px solid #d1d5db; border-radius:.75rem; padding:.65rem .9rem .65rem 2.5rem; padding-right:2.4rem; font-size:.88rem; font-family:'Cairo',sans-serif; color:#1f2937; background:#fafafa; outline:none; transition:border-color .15s,box-shadow .15s; box-sizing:border-box; }
-        .search-inp:focus { border-color:#1B5E8C; background:#fff; box-shadow:0 0 0 3px rgba(27,94,140,.1); }
-        .search-clear { position:absolute; left:.75rem; background:none; border:none; cursor:pointer; color:#9ca3af; font-size:.85rem; }
-        .filters-row { display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; }
-        .filter-sel { border:1.5px solid #e5eaf0; border-radius:.625rem; padding:.5rem .85rem; font-size:.82rem; font-family:'Cairo',sans-serif; color:#374151; background:#fff; outline:none; cursor:pointer; }
-        .filter-sel:focus { border-color:#1B5E8C; }
-        .clear-filters { background:none; border:1.5px solid #fca5a5; border-radius:.625rem; padding:.45rem .85rem; font-size:.78rem; font-weight:600; color:#dc2626; cursor:pointer; font-family:'Cairo',sans-serif; transition:all .15s; }
-        .clear-filters:hover { background:#fef2f2; }
 
         .err-banner { background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; padding:.85rem 1rem; border-radius:.75rem; font-size:.85rem; }
 
@@ -573,13 +488,6 @@ export default function FamiliesManagementPage() {
         .name-text { font-weight:700; color:#1f2937; }
         .member-badge { display:inline-flex; align-items:center; padding:.2rem .6rem; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:2rem; font-size:.72rem; font-weight:700; color:#15803d; }
         .muted { color:#6b7a8d; }
-        .action-btns { display:flex; gap:.35rem; }
-        .act-approve,.act-reject { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.8rem; cursor:pointer; transition:all .15s; border:1.5px solid; }
-        .act-approve { background:#ecfdf5; border-color:#6ee7b7; color:#059669; }
-        .act-approve:hover:not(:disabled) { background:#d1fae5; }
-        .act-reject { background:#fef2f2; border-color:#fca5a5; color:#dc2626; }
-        .act-reject:hover:not(:disabled) { background:#fee2e2; }
-        .act-approve:disabled,.act-reject:disabled { opacity:.5; cursor:not-allowed; }
         .table-footer { padding:.75rem 1rem; font-size:.78rem; color:#9ca3af; border-top:1px solid #f0f4f8; }
 
         .skel-row { display:flex; align-items:center; gap:1rem; padding:.85rem 1rem; border-bottom:1px solid #f8fafc; }
@@ -593,38 +501,7 @@ export default function FamiliesManagementPage() {
         .btn-primary { display:inline-flex; align-items:center; gap:.4rem; padding:.7rem 1.4rem; background:linear-gradient(135deg,#1B5E8C,#134569); color:#fff; font-family:'Cairo',sans-serif; font-size:.88rem; font-weight:700; border:none; border-radius:.75rem; cursor:pointer; box-shadow:0 2px 8px rgba(27,94,140,.25); transition:all .15s; white-space:nowrap; }
         .btn-primary:hover { background:linear-gradient(135deg,#2E7EB8,#1B5E8C); transform:translateY(-1px); }
 
-        /* Drawer */
-        .backdrop { position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:40; animation:fadeIn .2s ease; }
-        .drawer { position:fixed; top:0; left:0; width:420px; max-width:95vw; height:100vh; background:#fff; z-index:50; display:flex; flex-direction:column; box-shadow:-4px 0 24px rgba(0,0,0,.12); animation:slideIn .25s ease; }
-        @keyframes slideIn { from{transform:translateX(-100%)}to{transform:none} }
-        @keyframes fadeIn { from{opacity:0}to{opacity:1} }
-        .drawer-head { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; padding:1.25rem 1.5rem; border-bottom:1px solid #f0f4f8; }
-        .drawer-avatar { width:46px; height:46px; border-radius:50%; background:linear-gradient(135deg,#059669,#047857); display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0; }
-        .drawer-name { font-size:1.05rem; font-weight:800; color:#0d3d5c; margin:0 0 .4rem; }
-        .drawer-close { background:none; border:none; font-size:1.1rem; color:#9ca3af; cursor:pointer; padding:.25rem .4rem; border-radius:6px; flex-shrink:0; }
-        .drawer-close:hover { background:#f3f4f6; }
-        .drawer-body { flex:1; overflow-y:auto; padding:1.25rem 1.5rem; display:flex; flex-direction:column; gap:1.25rem; }
-        .drawer-foot { display:flex; gap:.75rem; padding:1rem 1.5rem; border-top:1px solid #f0f4f8; }
 
-        .info-section {}
-        .info-title { font-size:.72rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.06em; margin:0 0 .75rem; }
-        .info-grid { display:flex; flex-direction:column; gap:.4rem; }
-        .info-row { display:flex; justify-content:space-between; align-items:center; padding:.3rem 0; border-bottom:1px solid #f8fafc; }
-        .info-label { font-size:.78rem; color:#6b7a8d; font-weight:500; }
-        .info-val { font-size:.83rem; color:#1f2937; font-weight:600; }
-        .muted-text { font-size:.83rem; color:#94a3b8; margin:0; }
-        .doc-chip { display:flex; align-items:center; gap:.5rem; padding:.45rem .65rem; background:#f8fafc; border:1px solid #e5eaf0; border-radius:.5rem; font-size:.78rem; }
-        .rejection-box { display:flex; gap:.75rem; background:#fef2f2; border:1px solid #fecaca; border-radius:.75rem; padding:1rem; }
-        .rejection-box span { font-size:1.1rem; flex-shrink:0; }
-        .rejection-box strong { display:block; font-size:.85rem; color:#b91c1c; margin-bottom:.25rem; }
-        .rejection-box p { font-size:.82rem; color:#dc2626; margin:0; line-height:1.6; }
-
-        .btn-approve { flex:1; display:flex; align-items:center; justify-content:center; gap:.4rem; padding:.7rem; background:linear-gradient(135deg,#059669,#047857); color:#fff; font-family:'Cairo',sans-serif; font-size:.88rem; font-weight:700; border:none; border-radius:.75rem; cursor:pointer; transition:all .15s; }
-        .btn-approve:hover:not(:disabled) { transform:translateY(-1px); }
-        .btn-approve:disabled { opacity:.6; cursor:not-allowed; }
-        .btn-reject-outline { padding:.7rem 1.1rem; background:#fff; border:1.5px solid #fca5a5; color:#dc2626; font-family:'Cairo',sans-serif; font-size:.85rem; font-weight:700; border-radius:.75rem; cursor:pointer; transition:all .15s; }
-        .btn-reject-outline:hover:not(:disabled) { background:#fef2f2; }
-        .btn-reject-outline:disabled { opacity:.5; cursor:not-allowed; }
 
         /* Modal */
         .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:60; animation:fadeIn .2s ease; }

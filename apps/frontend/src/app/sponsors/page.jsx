@@ -275,7 +275,6 @@ export default function SponsorManagementPage() {
                   <th>الكفالات النشطة</th>
                   <th>أنشأه</th>
                   <th>تاريخ التسجيل</th>
-                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -304,15 +303,6 @@ export default function SponsorManagementPage() {
                     </td>
                     <td className="muted">{s.created_by_name || '—'}</td>
                     <td className="muted">{formatDate(s.created_at)}</td>
-                    <td>
-                      <button
-                        className="view-btn"
-                        onClick={(e) => { e.stopPropagation(); router.push(`/sponsors/${s.id}`); }}
-                      >
-                        <span>عرض الملف</span>
-                        <ArrowLeft size={14} />
-                      </button>
-                    </td>
                   </tr>
                 ))}
               </tbody>
