@@ -312,7 +312,8 @@ const updateOrphanStatus = async (req, res, next) => {
       req.params.id,
       status,
       notes,
-      req.user.name
+      req.user.name,
+      req.user.id
     );
 
     if (!orphan) {
@@ -325,6 +326,24 @@ const updateOrphanStatus = async (req, res, next) => {
   }
 };
 
+/**
+ * DELETE /api/orphans/:id
+ */
+const deleteOrphan = async (req, res, next) => {
+  try {
+    const orphan = await service.deleteOrphan(req.params.id);
+    if (!orphan) {
+      return res.status(404).json({ error: 'اليتيم غير موجود' });
+    }
+    return res.json({ message: 'تم حذف اليتيم بنجاح' });
+  } catch (err) {
+    if (err.status === 409) {
+      return res.status(409).json({ error: err.message });
+    }
+    next(err);
+  }
+};
+
 module.exports = {
   createOrphan,
   getOrphans,
@@ -332,4 +351,5 @@ module.exports = {
   getOrphanById,
   updateOrphan,
   updateOrphanStatus,
+  deleteOrphan,
 };

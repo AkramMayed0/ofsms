@@ -384,8 +384,19 @@ export default function GmDashboard() {
           .two-col { grid-template-columns:1fr; }
         }
         @media (max-width: 600px) {
-          .stats-grid { grid-template-columns:1fr 1fr; }
+          .gm-dash { gap:1.25rem; }
+          .greeting { flex-direction:column; align-items:flex-start; gap:.75rem; }
+          .greeting-title { font-size:1.3rem; }
+          .stats-grid { grid-template-columns:1fr 1fr; gap:.75rem; }
+          .finance-grid { grid-template-columns:1fr 1fr; gap:.75rem; }
+          .card { padding:1.1rem; }
+          .table th:nth-child(4), .table td:nth-child(4) { display:none; }
+        }
+        @media (max-width: 420px) {
+          .stats-grid { grid-template-columns:1fr; }
           .finance-grid { grid-template-columns:1fr; }
+          .btn-notif { width:100%; justify-content:center; }
+          .gov-name { width:80px; }
         }
       `}</style>
       {showNotifModal && (
