@@ -4,7 +4,10 @@
 
 const { query } = require('../../config/db');
 
-// ── List all disbursement lists ────────────────────────────────────────────────
+/**
+ * List all disbursement lists
+ * (used as "history" view in UI)
+ */
 const getDisbursementLists = async () => {
   const { rows } = await query(`
     SELECT
@@ -31,6 +34,13 @@ const getDisbursementLists = async () => {
     ORDER BY dl.year DESC, dl.month DESC
   `);
   return rows;
+};
+
+// ── Disbursement history (compat) ─────────────────────────────────────────────
+// NOTE: UI calls: /api/disbursements/history.
+// We map it to the same data as "list all disbursement lists".
+const getDisbursementHistory = async () => {
+  return getDisbursementLists();
 };
 
 // ── Get single list with all items ────────────────────────────────────────────
@@ -246,6 +256,7 @@ const gmRelease = async (id, gmId) => {
 
 module.exports = {
   getDisbursementLists,
+  getDisbursementHistory,
   getDisbursementById,
   generateDisbursementList,
   supervisorApprove,
