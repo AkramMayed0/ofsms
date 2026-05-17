@@ -13,8 +13,8 @@ import { Search, AlertTriangle, User, Handshake } from 'lucide-react';
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import sponsorApi from '../sponsorApi';
-import useSponsorStore from '../useSponsorStore';
+import sponsorApi from '@/lib/sponsorApi';
+import useSponsorStore from '@/store/useSponsorStore';
 
 const STATUS_CONFIG = {
   under_review:      { label: 'قيد المراجعة', color: '#92400E', bg: '#FEF3C7' },

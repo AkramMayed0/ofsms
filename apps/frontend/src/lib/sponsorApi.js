@@ -9,7 +9,7 @@ import axios from 'axios';
 
 let getStore;
 if (typeof window !== 'undefined') {
-  getStore = () => require('./useSponsorStore').default.getState();
+  getStore = () => require('@/store/useSponsorStore').default.getState();
 }
 
 const sponsorApi = axios.create({

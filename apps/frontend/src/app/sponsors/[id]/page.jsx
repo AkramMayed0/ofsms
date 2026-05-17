@@ -468,7 +468,10 @@ export default function SponsorDetailPage() {
           </button>
           <div className="header-btns">
             <button className="btn-edit" onClick={() => setShowEdit(true)}>
-              <Pencil size={16} />
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
               <span>تعديل</span>
             </button>
             <button className="btn-delete" onClick={() => setShowDelete(true)}>
@@ -691,14 +694,33 @@ export default function SponsorDetailPage() {
       <style jsx>{`
         .page { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem 4rem; font-family: 'Cairo', 'Tajawal', sans-serif; display: flex; flex-direction: column; gap: 1.5rem; }
         
-        .header-actions { display: flex; align-items: center; justify-content: space-between; }
+        .header-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
         .header-btns { display: flex; gap: 0.5rem; }
         .btn-back { display: inline-flex; align-items: center; gap: 0.5rem; background: none; border: none; color: #6b7a8d; font-family: inherit; font-size: 0.95rem; font-weight: 600; cursor: pointer; padding: 0.5rem 0.75rem; border-radius: 0.5rem; transition: all 0.2s; }
         .btn-back:hover { background: #f0f4f8; color: #1B5E8C; }
-        .btn-edit { display: inline-flex; align-items: center; gap: 0.4rem; background: linear-gradient(135deg, #1B5E8C, #134569); color: #fff; border: none; border-radius: 0.625rem; padding: 0.55rem 1rem; font-family: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(27, 94, 140, 0.25); }
-        .btn-edit:hover { background: linear-gradient(135deg, #2E7EB8, #1B5E8C); transform: translateY(-1px); }
-        .btn-delete { display: inline-flex; align-items: center; gap: 0.4rem; background: #fff; color: #dc2626; border: 1.5px solid #fecaca; border-radius: 0.625rem; padding: 0.55rem 1rem; font-family: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-        .btn-delete:hover { background: #fef2f2; border-color: #f87171; transform: translateY(-1px); }
+        .btn-edit {
+          display: inline-flex; align-items: center; gap: .4rem;
+          padding: .6rem 1.1rem;
+          background: #fff; color: #D97706;
+          border: 1.5px solid #D97706; border-radius: .75rem;
+          font-family: 'Cairo', sans-serif; font-size: .875rem; font-weight: 700;
+          cursor: pointer; transition: all .15s;
+        }
+        .btn-edit:hover { background: #fffbeb; transform: translateY(-1px); }
+        .btn-delete {
+          display: inline-flex; align-items: center; gap: .4rem;
+          padding: .6rem 1.1rem;
+          background: #fff; color: #dc2626;
+          border: 1.5px solid #fca5a5; border-radius: .75rem;
+          font-family: 'Cairo', sans-serif; font-size: .875rem; font-weight: 700;
+          cursor: pointer; transition: all .15s;
+        }
+        .btn-delete:hover { background: #fef2f2; border-color: #dc2626; transform: translateY(-1px); }
+
+        @media (max-width: 480px) {
+          .header-btns { width: 100%; display: flex; }
+          .btn-edit, .btn-delete { flex: 1; justify-content: center; }
+        }
         
         .top-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 1.5rem; }
         @media (max-width: 860px) { .top-grid { grid-template-columns: 1fr; } }
