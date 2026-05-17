@@ -716,11 +716,6 @@ export default function SponsorDetailPage() {
           cursor: pointer; transition: all .15s;
         }
         .btn-delete:hover { background: #fef2f2; border-color: #dc2626; transform: translateY(-1px); }
-
-        @media (max-width: 480px) {
-          .header-btns { width: 100%; display: flex; }
-          .btn-edit, .btn-delete { flex: 1; justify-content: center; }
-        }
         
         .top-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 1.5rem; }
         @media (max-width: 860px) { .top-grid { grid-template-columns: 1fr; } }
