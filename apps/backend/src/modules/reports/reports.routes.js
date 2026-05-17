@@ -189,9 +189,9 @@ router.get(
   }
 );
 
-// ── GET /api/reports/disbursement/:id/excel ───────────────────────────────────
+// ── GET /api/reports/disbursement/:id/excel (also accepts /xlsx) ──────────────
 router.get(
-  '/disbursement/:id/excel',
+  ['/disbursement/:id/excel', '/disbursement/:id/xlsx'],
   authenticate,
   authorize('gm', 'supervisor', 'finance'),
   async (req, res, next) => {
@@ -345,9 +345,9 @@ router.get(
   }
 );
 
-// ── GET /api/reports/governorate/:id/excel ────────────────────────────────────
+// ── GET /api/reports/governorate/:id/excel (also accepts /xlsx) ───────────────
 router.get(
-  '/governorate/:id/excel',
+  ['/governorate/:id/excel', '/governorate/:id/xlsx'],
   authenticate,
   authorize('gm'),
   async (req, res, next) => {
