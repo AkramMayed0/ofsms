@@ -11,6 +11,12 @@ const getDisbursementLists = async (_req, res, next) => {
   } catch (err) { next(err); }
 };
 
+const getDisbursementHistory = async (_req, res, next) => {
+  try {
+    return res.json({ lists: await service.getDisbursementHistory() });
+  } catch (err) { next(err); }
+};
+
 const getDisbursementById = async (req, res, next) => {
   try {
     const data = await service.getDisbursementById(req.params.id);
@@ -85,6 +91,7 @@ const gmRelease = async (req, res, next) => {
 
 module.exports = {
   getDisbursementLists,
+  getDisbursementHistory,
   getDisbursementById,
   generateDisbursementList,
   supervisorApprove,
