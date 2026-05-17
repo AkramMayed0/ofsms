@@ -7,6 +7,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
+import useAuthStore from '@/store/useAuthStore';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -49,7 +50,9 @@ function SectionHeader({ number, title, subtitle }) {
 export default function OrphanEditPage() {
   const router = useRouter();
   const { id } = useParams();
-  
+  const { user } = useAuthStore();
+  const isGM = user?.role === 'gm';
+
   const [governorates, setGovernorates] = useState([]);
   const [govLoading,   setGovLoading]   = useState(true);
   
@@ -188,6 +191,8 @@ export default function OrphanEditPage() {
       .finally(() => setLoading(false));
   }, [id, reset]);
 
+  const [toastVisible, setToastVisible] = useState(false);
+
   const onSubmit = async (data) => {
     let hasRadioError = false;
 
@@ -285,6 +290,8 @@ export default function OrphanEditPage() {
         },
       });
       setSubmitState('success');
+      setToastVisible(true);
+      setTimeout(() => router.push(`/orphans/${id}`), 3000);
     } catch (err) {
       setSubmitState('error');
       setApiError(
@@ -295,40 +302,40 @@ export default function OrphanEditPage() {
     }
   };
 
-  // ── Success screen ─────────────────────────────────────────────────────────
-
-  if (submitState === 'success') {
-    return (
-      <AppShell>
-        <div className="success-wrap">
-          <div className="success-card">
-            <div className="success-ico"><CheckCircle2 size={16} /></div>
-            <h2 className="success-title">تمت إعادة الإرسال بنجاح</h2>
-            <p className="success-body">
-              تم تحديث بيانات اليتيم وإرسالها إلى قائمة انتظار المراجعة.
-            </p>
-            <div className="success-actions">
-              <button className="btn-primary" onClick={() => router.push('/dashboard')}>
-                العودة للوحة القيادة
-              </button>
-            </div>
-          </div>
-        </div>
-      </AppShell>
-    );
-  }
-
   // ── Main form ──────────────────────────────────────────────────────────────
 
   return (
     <AppShell>
+
+      {/* ── Success toast popup ─────────────────────────────────────────── */}
+      {toastVisible && (
+        <div className="toast-backdrop" onClick={() => { setToastVisible(false); router.push(`/orphans/${id}`); }}>
+          <div className="toast-box" onClick={(e) => e.stopPropagation()} dir="rtl">
+            <div className="toast-icon-wrap">
+              <CheckCircle2 size={40} color="#10B981" strokeWidth={1.8} />
+            </div>
+            <h3 className="toast-title">{isGM ? 'تم الحفظ بنجاح' : 'تمت إعادة الإرسال بنجاح'}</h3>
+            <p className="toast-body">
+              {isGM
+                ? 'تم تحديث بيانات اليتيم بنجاح.'
+                : 'تم تحديث بيانات اليتيم وإرسالها إلى قائمة انتظار المراجعة.'}
+            </p>
+            <button className="toast-btn" onClick={() => { setToastVisible(false); router.push(`/orphans/${id}`); }}>
+              العودة لصفحة اليتيم
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="page" dir="rtl">
 
         {/* Page header */}
         <div className="page-top">
           <div>
             <h1 className="page-title">تعديل بيانات اليتيم</h1>
-            <p className="page-sub">قم بتعديل البيانات وإعادة الإرسال للمراجعة</p>
+            <p className="page-sub">
+              {isGM ? 'قم بتعديل البيانات — الحالة لن تتغير' : 'قم بتعديل البيانات وإعادة الإرسال للمراجعة'}
+            </p>
           </div>
           <button type="button" className="btn-ghost" onClick={() => router.back()}>
             ← رجوع
@@ -1236,7 +1243,7 @@ export default function OrphanEditPage() {
               >
                 {submitState === 'loading'
                   ? <><span className="spin" aria-hidden />جارٍ الحفظ…</>
-                  : 'حفظ وإعادة إرسال ←'}
+                  : isGM ? 'حفظ التعديلات ←' : 'حفظ وإعادة إرسال ←'}
               </button>
             </div>
 
@@ -1306,12 +1313,31 @@ export default function OrphanEditPage() {
         @keyframes spin { to { transform:rotate(360deg); } }
         @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
 
-        .success-wrap { display:flex; align-items:center; justify-content:center; min-height:60vh; }
-        .success-card { text-align:center; max-width:420px; background:#fff; border-radius:1.25rem; padding:3rem 2rem; border:1px solid #e5eaf0; box-shadow:0 4px 24px rgba(27,94,140,.08); }
-        .success-ico { font-size:3rem; margin-bottom:1rem; }
-        .success-title { font-size:1.4rem; font-weight:800; color:#0d3d5c; margin:0 0 .75rem; }
-        .success-body { font-size:.88rem; color:#6b7a8d; line-height:1.75; margin:0 0 2rem; }
-        .success-actions { display:flex; gap:.75rem; justify-content:center; flex-wrap:wrap; }
+        .toast-backdrop {
+          position:fixed; inset:0; background:rgba(0,0,0,.45);
+          display:flex; align-items:center; justify-content:center;
+          z-index:1000; padding:1rem;
+          animation:fadeIn .2s ease;
+        }
+        .toast-box {
+          background:#fff; border-radius:1.25rem; padding:2.25rem 2rem;
+          max-width:400px; width:100%; text-align:center;
+          box-shadow:0 20px 60px rgba(0,0,0,.18);
+          animation:scaleIn .2s ease;
+        }
+        .toast-icon-wrap { display:flex; justify-content:center; margin-bottom:1rem; }
+        .toast-title { font-size:1.2rem; font-weight:800; color:#0d3d5c; margin:0 0 .6rem; }
+        .toast-body { font-size:.875rem; color:#6b7280; line-height:1.7; margin:0 0 1.5rem; }
+        .toast-btn {
+          display:inline-flex; align-items:center; justify-content:center;
+          padding:.75rem 2rem; background:linear-gradient(135deg,#1B5E8C,#134569);
+          color:#fff; border:none; border-radius:.75rem;
+          font-family:'Cairo',sans-serif; font-size:.9rem; font-weight:700;
+          cursor:pointer; box-shadow:0 2px 8px rgba(27,94,140,.25);
+          transition:all .15s;
+        }
+        .toast-btn:hover { transform:translateY(-1px); box-shadow:0 4px 14px rgba(27,94,140,.35); }
+        @keyframes scaleIn { from{opacity:0;transform:scale(.93)} to{opacity:1;transform:none} }
 
         @media (max-width: 640px) {
           .grid { grid-template-columns:1fr; }

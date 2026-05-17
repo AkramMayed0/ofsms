@@ -65,18 +65,12 @@ function StatCard({ icon, label, value, sub, color = '#1B5E8C', onClick }) {
       onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 8px 24px rgba(27,94,140,.13)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
       onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 2px 8px rgba(27,94,140,.06)'; e.currentTarget.style.transform = 'translateY(0)'; }}
     >
-      {/* Icon + Value row */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '.25rem' }}>
-        <div style={{ width: 46, height: 46, borderRadius: '.875rem', background: `${color}18`, color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          {icon}
-        </div>
-        <div style={{ fontSize: '2rem', fontWeight: 800, color, lineHeight: 1, fontFamily: "'Cairo',sans-serif" }}>
-          {value ?? '—'}
-        </div>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'.25rem' }}>
+        <div style={{ width:46, height:46, borderRadius:'.875rem', background:`${color}18`, color, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{icon}</div>
+        <div className="stat-val" style={{ color }}>{value ?? '—'}</div>
       </div>
-      {/* Label */}
-      <div style={{ fontSize: '.82rem', fontWeight: 600, color: '#4b5563' }}>{label}</div>
-      {sub && <div style={{ fontSize: '.71rem', color: '#b0bac8' }}>{sub}</div>}
+      <div style={{ fontSize:'.82rem', fontWeight:600, color:'#4b5563' }}>{label}</div>
+      {sub && <div style={{ fontSize:'.71rem', color:'#b0bac8' }}>{sub}</div>}
       {/* Bottom accent bar */}
       <div style={{ position: 'absolute', bottom: 0, right: 0, left: 0, height: 3, background: color, borderRadius: '0 0 1.1rem 1.1rem' }} />
     </div>
@@ -387,17 +381,28 @@ export default function GmDashboard() {
           .gm-dash { gap:1.25rem; }
           .greeting { flex-direction:column; align-items:flex-start; gap:.75rem; }
           .greeting-title { font-size:1.3rem; }
-          .stats-grid { grid-template-columns:1fr 1fr; gap:.75rem; }
+          .stats-grid { grid-template-columns:1fr 1fr; gap:.6rem; }
           .finance-grid { grid-template-columns:1fr 1fr; gap:.75rem; }
-          .card { padding:1.1rem; }
+          .card { padding:1rem; }
+          .sc-top { flex-direction:column; align-items:flex-start; gap:.5rem; }
+          .sc-val { font-size:1.5rem; }
           .table th:nth-child(4), .table td:nth-child(4) { display:none; }
         }
+        @media (max-width: 480px) {
+          .sc-val { font-size:1.3rem; }
+          .sc-icon { width:36px; height:36px; }
+        }
         @media (max-width: 420px) {
-          .stats-grid { grid-template-columns:1fr; }
+          .stats-grid { grid-template-columns:1fr 1fr; }
           .finance-grid { grid-template-columns:1fr; }
           .btn-notif { width:100%; justify-content:center; }
           .gov-name { width:80px; }
         }
+      `}</style>
+      <style jsx global>{`
+        @media (max-width: 600px) { .stat-val { font-size:1.5rem !important; } }
+        @media (max-width: 480px) { .stat-val { font-size:1.25rem !important; } }
+        .stat-val { font-size:2rem; font-weight:800; line-height:1; font-family:'Cairo',sans-serif; }
       `}</style>
       {showNotifModal && (
         <SendNotificationModal

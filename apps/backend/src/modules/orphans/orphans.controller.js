@@ -285,7 +285,8 @@ const updateOrphan = async (req, res, next) => {
       }
     }
 
-    const orphan = await service.updateOrphan(req.params.id, req.body);
+    const resetStatus = req.user.role === 'agent';
+    const orphan = await service.updateOrphan(req.params.id, req.body, resetStatus);
     return res.json({ message: 'تم تحديث بيانات اليتيم', orphan });
   } catch (err) {
     next(err);
