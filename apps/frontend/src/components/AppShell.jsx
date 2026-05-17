@@ -17,7 +17,7 @@ import NotificationBell from './NotificationBell';
 import {
   LayoutDashboard, Users, Home, Tag, Handshake, Star,
   Map, UserCog, BookOpen, FileText, ClipboardList,
-  Plus, DollarSign, Archive, LogOut, ChevronRight, ChevronLeft,
+  Plus, DollarSign, Archive, LogOut, ChevronRight, ChevronLeft, Megaphone,
 } from 'lucide-react';
 
 // ── Nav items per role ────────────────────────────────────────────────────────
@@ -36,6 +36,7 @@ const NAV_ITEMS = {
     { label: 'أيتامي',           href: '/my-orphans',        icon: Users },
     { label: 'رفع تقرير الحفظ', href: '/quran-reports/new', icon: BookOpen },
     { label: 'التقارير',          href: '/reports',           icon: FileText },
+    { label: 'الإعلانات',         href: '/announcements',     icon: Megaphone },
   ],
   supervisor: [
     { label: 'لوحة التحكم',    href: '/dashboard',      icon: LayoutDashboard },
@@ -43,6 +44,7 @@ const NAV_ITEMS = {
     { label: 'تقارير الحفظ',   href: '/quran-reports',  icon: BookOpen },
     { label: 'كشف الصرف',      href: '/disbursements/', icon: DollarSign },
     { label: 'التقارير',        href: '/reports',        icon: FileText },
+    { label: 'الإعلانات',      href: '/announcements',  icon: Megaphone },
   ],
   agent: [
     { label: 'لوحة التحكم',     href: '/dashboard',         icon: LayoutDashboard },
@@ -50,12 +52,14 @@ const NAV_ITEMS = {
     { label: 'تسجيل يتيم',      href: '/orphans/new',       icon: Plus },
     { label: 'تسجيل أسرة',      href: '/families/new',      icon: Plus },
     { label: 'رفع تقرير الحفظ', href: '/quran-reports/new', icon: BookOpen },
+    { label: 'الإعلانات',       href: '/announcements',     icon: Megaphone },
   ],
   finance: [
     { label: 'لوحة التحكم',   href: '/dashboard',             icon: LayoutDashboard },
     { label: 'كشف الصرف',     href: '/disbursements',         icon: DollarSign },
     { label: 'سجل الإصدارات', href: '/disbursements/history', icon: Archive },
     { label: 'التقارير',       href: '/reports',               icon: FileText },
+    { label: 'الإعلانات',     href: '/announcements',         icon: Megaphone },
   ],
 };
 

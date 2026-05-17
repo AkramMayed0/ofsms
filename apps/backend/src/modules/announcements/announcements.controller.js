@@ -42,7 +42,7 @@ const deleteAnnouncement = async (req, res, next) => {
   try {
     const announcement = await service.deleteAnnouncement(req.params.id);
     if (!announcement) return res.status(404).json({ error: 'الإعلان غير موجود' });
-    return res.json({ message: 'تم إخفاء الإعلان بنجاح' });
+    return res.json({ message: 'تم حذف الإعلان بنجاح' });
   } catch (err) { next(err); }
 };
 

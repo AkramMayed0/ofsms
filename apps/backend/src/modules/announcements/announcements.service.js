@@ -19,13 +19,13 @@ const createAnnouncement = async ({ title, body, createdBy }) => {
   const userIds = users.map(u => u.id);
 
   if (userIds.length > 0) {
-    await sendBulkNotification(
+    sendBulkNotification(
       userIds,
       `📢 إعلان جديد: ${title}`,
       body,
       { link: '/announcements', announcementId: announcement.id },
       'announcement'
-    );
+    ).catch((err) => console.error('[announcements] bulk notification failed:', err));
   }
 
   return announcement;
@@ -68,7 +68,7 @@ const updateAnnouncement = async (id, { title, body, isActive }) => {
 
 const deleteAnnouncement = async (id) => {
   const { rows } = await query(
-    `UPDATE announcements SET is_active = FALSE WHERE id = $1 RETURNING *`,
+    `DELETE FROM announcements WHERE id = $1 RETURNING *`,
     [id]
   );
   return rows[0] || null;
