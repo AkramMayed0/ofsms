@@ -14,6 +14,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { Search, AlertTriangle, X, User, Handshake, CheckCircle2, FileText, Check } from 'lucide-react';
+
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
@@ -76,7 +78,7 @@ function RejectModal({ orphan, onConfirm, onClose, loading }) {
       <div className="modal-overlay" onClick={onClose} />
       <div className="modal-box" dir="rtl">
         <div className="modal-head">
-          <span className="modal-warn-icon">⚠</span>
+          <span className="modal-warn-icon"><AlertTriangle size={18} /></span>
           <div>
             <h3 className="modal-title">رفض تسجيل اليتيم</h3>
             <p className="modal-sub">{orphan.full_name}</p>
@@ -141,7 +143,7 @@ function DetailDrawer({ orphan, onClose, onApprove, onReject, actioning, role })
               <StatusBadge status={orphan.status} />
             </div>
           </div>
-          <button className="drawer-close" onClick={onClose}>✕</button>
+          <button className="drawer-close" onClick={onClose}><X size={16} /></button>
         </div>
 
         <div className="drawer-body">
@@ -193,7 +195,7 @@ function DetailDrawer({ orphan, onClose, onApprove, onReject, actioning, role })
 
           {orphan.status === 'rejected' && orphan.notes && (
             <div className="rejection-box">
-              <span>⚠</span>
+              <span><AlertTriangle size={18} /></span>
               <div>
                 <strong>سبب الرفض</strong>
                 <p>{orphan.notes}</p>
@@ -211,7 +213,7 @@ function DetailDrawer({ orphan, onClose, onApprove, onReject, actioning, role })
               <div style={{ display: 'flex', flexDirection: 'column', gap: '.4rem' }}>
                 {docs.map((d) => (
                   <div key={d.id} className="doc-chip">
-                    <span>📄</span>
+                    <span><FileText size={16} /></span>
                     <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', direction: 'ltr', textAlign: 'left' }}>{d.original_name || d.doc_type}</span>
                     <span className="muted-text">{fmtDate(d.uploaded_at)}</span>
                   </div>
@@ -225,12 +227,12 @@ function DetailDrawer({ orphan, onClose, onApprove, onReject, actioning, role })
           <div className="drawer-foot">
             {canApprove && (
               <button className="btn-approve" onClick={() => onApprove(orphan)} disabled={actioning}>
-                {actioning === 'approve' ? <><span className="spin spin-dark" />جارٍ الاعتماد…</> : '✓ اعتماد التسجيل'}
+                {actioning === 'approve' ? <><span className="spin spin-dark" />جارٍ الاعتماد…</> : '<Check size={16} /> اعتماد التسجيل'}
               </button>
             )}
             {canReject && (
               <button className="btn-reject-outline" onClick={() => onReject(orphan)} disabled={!!actioning}>
-                ✕ رفض
+                <X size={16} /> رفض
               </button>
             )}
           </div>
@@ -305,7 +307,7 @@ export default function OrphansManagementPage() {
     setActioning('approve');
     try {
       await api.patch(`/orphans/${orphan.id}/status`, { status: 'under_marketing' });
-      showToast(`✓ تمت الموافقة على ${orphan.full_name}`);
+      showToast(`<Check size={16} /> تمت الموافقة على ${orphan.full_name}`);
       fetchOrphans();
       setSelected(null);
     } catch (err) {
@@ -363,7 +365,7 @@ export default function OrphansManagementPage() {
           <div style={{ display: 'flex', gap: '.65rem' }}>
             {role === 'gm' && (
               <button className="btn-export" onClick={() => router.push('/marketing-pool')}>
-                🤝 قائمة التسويق
+                <Handshake size={32} /> قائمة التسويق
               </button>
             )}
             <button className="btn-primary" onClick={() => router.push('/orphans/new')}>
@@ -392,14 +394,14 @@ export default function OrphansManagementPage() {
         {/* Toolbar */}
         <div className="toolbar">
           <div className="search-wrap">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><Search size={16} /></span>
             <input
               className="search-inp"
               placeholder="ابحث بالاسم أو الوصي أو المندوب…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
-            {search && <button className="search-clear" onClick={() => setSearch('')}>✕</button>}
+            {search && <button className="search-clear" onClick={() => setSearch('')}><X size={16} /></button>}
           </div>
           <div className="filters-row">
             <select className="filter-sel" value={filterGov} onChange={(e) => setFilterGov(e.target.value)}>
@@ -416,14 +418,14 @@ export default function OrphansManagementPage() {
                 className="clear-filters"
                 onClick={() => { setSearch(''); setFilterStatus('all'); setFilterGov('all'); setFilterGifted('all'); }}
               >
-                ✕ مسح الفلاتر
+                <X size={16} /> مسح الفلاتر
               </button>
             )}
           </div>
         </div>
 
         {/* Error */}
-        {error && <div className="err-banner">⚠ {error}</div>}
+        {error && <div className="err-banner"><AlertTriangle size={18} /> {error}</div>}
 
         {/* Skeleton */}
         {loading && (
@@ -445,7 +447,7 @@ export default function OrphansManagementPage() {
         {/* Empty */}
         {!loading && filtered.length === 0 && (
           <div className="empty">
-            <div style={{ fontSize: '3rem' }}>👦</div>
+            <div style={{ fontSize: '3rem' }}><User size={18} /></div>
             <h3 className="empty-title">
               {orphans.length === 0 ? 'لا يوجد أيتام مسجّلون بعد' : 'لا توجد نتائج مطابقة'}
             </h3>
@@ -502,13 +504,13 @@ export default function OrphansManagementPage() {
                               onClick={(e) => { e.stopPropagation(); handleApprove(o); }}
                               disabled={!!actioning}
                               title="اعتماد"
-                            >✅</button>
+                            ><CheckCircle2 size={16} /></button>
                             <button
                               className="act-reject"
                               onClick={(e) => { e.stopPropagation(); setRejectTarget(o); }}
                               disabled={!!actioning}
                               title="رفض"
-                            >✕</button>
+                            ><X size={16} /></button>
                           </div>
                         )}
                       </td>
@@ -627,9 +629,34 @@ export default function OrphansManagementPage() {
         .info-section {}
         .info-title { font-size:.72rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.06em; margin:0 0 .75rem; }
         .info-grid { display:flex; flex-direction:column; gap:.4rem; }
-        .info-row { display:flex; justify-content:space-between; align-items:center; padding:.3rem 0; border-bottom:1px solid #f8fafc; }
-        .info-label { font-size:.78rem; color:#6b7a8d; font-weight:500; }
-        .info-val { font-size:.83rem; color:#1f2937; font-weight:600; }
+        .info-row {
+          display:flex;
+          justify-content:space-between;
+          align-items:flex-start;
+          gap:.75rem;
+          flex-wrap:wrap;
+          padding:.3rem 0;
+          border-bottom:1px solid #f8fafc;
+          min-width:0;
+        }
+        .info-label {
+          font-size:.78rem;
+          color:#6b7a8d;
+          font-weight:500;
+          flex-shrink:0;
+          min-width: 90px;
+        }
+        .info-val {
+          font-size:.83rem;
+          color:#1f2937;
+          font-weight:600;
+          flex:1;
+          min-width:0;
+          overflow-wrap:anywhere;
+          word-break:break-word;
+          white-space:normal;
+          text-align:right;
+        }
         .gifted-val { color:#f59e0b; }
         .muted-text { font-size:.83rem; color:#94a3b8; margin:0; }
         .doc-chip { display:flex; align-items:center; gap:.5rem; padding:.45rem .65rem; background:#f8fafc; border:1px solid #e5eaf0; border-radius:.5rem; font-size:.78rem; }

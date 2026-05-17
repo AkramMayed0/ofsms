@@ -7,6 +7,8 @@
  */
 
 import { useState, useEffect } from 'react';
+import { AlertTriangle, X, CheckCircle2 } from 'lucide-react';
+
 import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
@@ -103,11 +105,11 @@ function SubmitReportModal({ orphans, onClose, onSubmitted }) {
       <div className="modal" dir="rtl">
         <div className="modal-head">
           <h2 className="modal-title">رفع تقرير حفظ القرآن</h2>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose}><X size={16} /></button>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="modal-body">
-          {apiErr && <div className="err-banner">⚠ {apiErr}</div>}
+          {apiErr && <div className="err-banner"><AlertTriangle size={18} /> {apiErr}</div>}
 
           {/* Orphan select */}
           <div className="fg">
@@ -182,7 +184,7 @@ function SubmitReportModal({ orphans, onClose, onSubmitted }) {
             </div>
             {suggestedJuz && juz < suggestedJuz && (
               <p className="juz-warning">
-                ⚠ الحصة المقترحة لهذه الفئة العمرية هي {suggestedJuz} جزء
+                <AlertTriangle size={18} /> الحصة المقترحة لهذه الفئة العمرية هي {suggestedJuz} جزء
               </p>
             )}
           </div>
@@ -323,7 +325,7 @@ export default function QuranReportsPage() {
           )}
         </div>
 
-        {error && <div className="err-banner">⚠ {error}</div>}
+        {error && <div className="err-banner"><AlertTriangle size={18} /> {error}</div>}
 
         {/* Filter tabs */}
         <div className="filter-tabs">
@@ -418,12 +420,12 @@ export default function QuranReportsPage() {
                               className="approve-btn"
                               onClick={() => handleApprove(r.id)}
                               disabled={acting}
-                            >✅</button>
+                            ><CheckCircle2 size={16} /></button>
                             <button
                               className="reject-btn"
                               onClick={() => handleReject(r.id)}
                               disabled={acting}
-                            >✕</button>
+                            ><X size={16} /></button>
                           </div>
                         )}
                       </td>

@@ -21,7 +21,7 @@
 
 import { useState } from 'react';
 import api from '../lib/api';
-import { Download, FileText, FileSpreadsheet, AlertTriangle } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, AlertTriangle, X } from 'lucide-react';
 
 export default function ExportButtons({
   pdfUrl,
@@ -222,7 +222,7 @@ function ErrorToast({ msg, onClose }) {
       display: 'flex', alignItems: 'center', gap: '.5rem',
     }}>
       <AlertTriangle size={13}/> {msg}
-      <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#b91c1c', fontWeight: 700, padding: 0 }}>✕</button>
+      <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#b91c1c', fontWeight: 700, padding: 0 }}><X size={16} /></button>
     </div>
   );
 }

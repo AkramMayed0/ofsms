@@ -12,6 +12,8 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
+import { Search, X, CheckCircle2, FileText, Check } from 'lucide-react';
+
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
 
@@ -59,7 +61,7 @@ function ExportBar({ selectedCount, onExportPdf, onExportExcel, pdfLoading, exce
     }}>
       <span style={{ fontSize: '.83rem', fontWeight: 700, color: selectedCount > 0 ? '#1B5E8C' : '#9ca3af' }}>
         {selectedCount > 0
-          ? `✓ تم تحديد ${selectedCount} ${label}`
+          ? `<Check size={16} /> تم تحديد ${selectedCount} ${label}`
           : `اختر ${label} للتصدير`}
       </span>
       <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -99,7 +101,7 @@ function ExportBar({ selectedCount, onExportPdf, onExportExcel, pdfLoading, exce
             opacity: busy && !pdfLoading ? .5 : 1,
           }}
         >
-          {pdfLoading ? <MiniSpinner color="#dc2626" /> : '📄'}
+          {pdfLoading ? <MiniSpinner color="#dc2626" /> : '<FileText size={16} />'}
           {pdfLoading ? 'جارٍ التصدير…' : 'PDF'}
         </button>
       </div>
@@ -150,7 +152,7 @@ function Toast({ msg, type = 'error', onClose }) {
       fontFamily: 'Cairo,sans-serif',
     }}>
       {msg}
-      <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.text, fontWeight: 800, padding: 0, fontSize: '1rem', lineHeight: 1 }}>✕</button>
+      <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.text, fontWeight: 800, padding: 0, fontSize: '1rem', lineHeight: 1 }}><X size={16} /></button>
     </div>
   );
 }
@@ -211,7 +213,7 @@ function DisbursementsTab() {
         // Small delay between multiple downloads
         if (selectedLists.length > 1) await new Promise(r => setTimeout(r, 600));
       }
-      setToast({ msg: `✅ تم تصدير ${selectedLists.length} ملف بنجاح`, type: 'success' });
+      setToast({ msg: `<CheckCircle2 size={16} /> تم تصدير ${selectedLists.length} ملف بنجاح`, type: 'success' });
     } catch {
       setToast({ msg: 'فشل التصدير — تأكد من صلاحياتك وحاول مجدداً', type: 'error' });
     } finally {
@@ -226,7 +228,7 @@ function DisbursementsTab() {
       {/* Toolbar */}
       <div style={{ display: 'flex', gap: '.65rem', flexWrap: 'wrap', alignItems: 'center', padding: '1rem', borderBottom: '1px solid #f0f4f8' }}>
         <div style={{ position: 'relative', flex: 1, minWidth: 180 }}>
-          <span style={{ position: 'absolute', right: '.75rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>🔍</span>
+          <span style={{ position: 'absolute', right: '.75rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><Search size={16} /></span>
           <input
             style={{ width: '100%', border: '1.5px solid #d1d5db', borderRadius: '.625rem', padding: '.55rem .85rem .55rem 2rem', paddingRight: '2.2rem', fontSize: '.83rem', fontFamily: 'Cairo,sans-serif', background: '#fafafa', outline: 'none', boxSizing: 'border-box' }}
             placeholder="ابحث بالشهر أو السنة أو المُنشئ…"
@@ -234,7 +236,7 @@ function DisbursementsTab() {
             onChange={e => setSearch(e.target.value)}
           />
           {search && (
-            <button onClick={() => setSearch('')} style={{ position: 'absolute', left: '.6rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af' }}>✕</button>
+            <button onClick={() => setSearch('')} style={{ position: 'absolute', left: '.6rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af' }}><X size={16} /></button>
           )}
         </div>
         <div style={{ display: 'flex', gap: '.35rem', flexWrap: 'wrap' }}>
@@ -278,7 +280,7 @@ function DisbursementsTab() {
             {loading ? <SkeletonRows count={5} /> :
              filtered.length === 0 ? (
               <tr><td colSpan={7} style={{ padding: '3rem', textAlign: 'center', color: '#9ca3af', fontSize: '.85rem' }}>
-                {lists.length === 0 ? '📭 لا توجد كشوف صرف بعد' : '🔍 لا توجد نتائج مطابقة'}
+                {lists.length === 0 ? '📭 لا توجد كشوف صرف بعد' : '<Search size={16} /> لا توجد نتائج مطابقة'}
               </td></tr>
             ) : filtered.map((list, idx) => {
               const cfg  = DISB_STATUS[list.status] || DISB_STATUS.draft;
@@ -391,7 +393,7 @@ function GovernoratesTab() {
         );
         if (selectedGovs.length > 1) await new Promise(r => setTimeout(r, 600));
       }
-      setToast({ msg: `✅ تم تصدير ${selectedGovs.length} تقرير بنجاح`, type: 'success' });
+      setToast({ msg: `<CheckCircle2 size={16} /> تم تصدير ${selectedGovs.length} تقرير بنجاح`, type: 'success' });
     } catch {
       setToast({ msg: 'فشل التصدير — تأكد من صلاحياتك وحاول مجدداً', type: 'error' });
     } finally {
@@ -406,7 +408,7 @@ function GovernoratesTab() {
       {/* Toolbar */}
       <div style={{ padding: '1rem', borderBottom: '1px solid #f0f4f8' }}>
         <div style={{ position: 'relative', maxWidth: 340 }}>
-          <span style={{ position: 'absolute', right: '.75rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>🔍</span>
+          <span style={{ position: 'absolute', right: '.75rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><Search size={16} /></span>
           <input
             style={{ width: '100%', border: '1.5px solid #d1d5db', borderRadius: '.625rem', padding: '.55rem .85rem .55rem 2rem', paddingRight: '2.2rem', fontSize: '.83rem', fontFamily: 'Cairo,sans-serif', background: '#fafafa', outline: 'none', boxSizing: 'border-box' }}
             placeholder="ابحث باسم المحافظة…"
@@ -414,7 +416,7 @@ function GovernoratesTab() {
             onChange={e => setSearch(e.target.value)}
           />
           {search && (
-            <button onClick={() => setSearch('')} style={{ position: 'absolute', left: '.6rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af' }}>✕</button>
+            <button onClick={() => setSearch('')} style={{ position: 'absolute', left: '.6rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af' }}><X size={16} /></button>
           )}
         </div>
       </div>
@@ -448,7 +450,7 @@ function GovernoratesTab() {
           <tbody>
             {loading ? <SkeletonRows count={8} /> :
              filtered.length === 0 ? (
-              <tr><td colSpan={5} style={{ padding: '3rem', textAlign: 'center', color: '#9ca3af' }}>🔍 لا توجد نتائج</td></tr>
+              <tr><td colSpan={5} style={{ padding: '3rem', textAlign: 'center', color: '#9ca3af' }}><Search size={16} /> لا توجد نتائج</td></tr>
             ) : filtered.map((gov, idx) => {
               const isSel     = selected.has(gov.id);
               const hasOrphans = gov.count > 0;

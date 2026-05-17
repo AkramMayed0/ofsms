@@ -9,6 +9,8 @@
  */
 
 import { useEffect, useState } from 'react';
+import { Search, AlertTriangle, User, Handshake } from 'lucide-react';
+
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import sponsorApi from '../sponsorApi';
@@ -59,7 +61,7 @@ export default function SponsorDashboard() {
       <header className="header">
         <div className="header-inner">
           <div className="header-brand">
-            <span className="header-icon">🤝</span>
+            <span className="header-icon"><Handshake size={32} /></span>
             <div>
               <span className="header-title">بوابة الكافل</span>
               <span className="header-org">مؤسسة الأرض الطيبة</span>
@@ -74,7 +76,7 @@ export default function SponsorDashboard() {
 
       <main className="main">
 
-        {error && <div className="err-banner">⚠ {error}</div>}
+        {error && <div className="err-banner"><AlertTriangle size={18} /> {error}</div>}
 
         {/* Welcome card */}
         <div className="welcome-card">
@@ -93,7 +95,7 @@ export default function SponsorDashboard() {
           {/* Orphans section */}
           <section className="section orphans-section">
             <h2 className="section-title">
-              <span className="section-icon">👦</span>
+              <span className="section-icon"><User size={18} /></span>
               أيتامك المكفولون
             </h2>
 
@@ -103,7 +105,7 @@ export default function SponsorDashboard() {
               </div>
             ) : orphans.length === 0 ? (
               <div className="empty">
-                <span>🔍</span>
+                <span><Search size={16} /></span>
                 <p>لا يوجد أيتام مرتبطون بكفالتك حالياً</p>
               </div>
             ) : (
@@ -219,7 +221,7 @@ function OrphanCard({ orphan }) {
     <Link href={`/sponsor/orphans/${orphan.id}`} style={{ textDecoration:'none' }}>
       <div className="ocard">
         <div className="ocard-avatar">
-          {orphan.gender === 'female' ? '👧' : '👦'}
+          {orphan.gender === 'female' ? '👧' : '<User size={18} />'}
         </div>
         <div className="ocard-info">
           <div className="ocard-top">

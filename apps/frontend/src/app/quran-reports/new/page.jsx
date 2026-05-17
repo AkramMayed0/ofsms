@@ -17,6 +17,8 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
+import { AlertTriangle, User, CheckCircle2, Info, Check } from 'lucide-react';
+
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
@@ -69,7 +71,7 @@ function ThresholdHint({ threshold, juzValue, age }) {
   const meets = juz >= threshold.min_juz_per_month;
   return (
     <div className={`threshold-hint ${meets ? 'hint-ok' : juz === 0 ? 'hint-neutral' : 'hint-warn'}`}>
-      <span className="hint-icon">{meets ? '✅' : juz === 0 ? 'ℹ' : '⚠'}</span>
+      <span className="hint-icon">{meets ? '<CheckCircle2 size={16} />' : juz === 0 ? 'ℹ' : '<AlertTriangle size={18} />'}</span>
       <div>
         <span className="hint-label">{threshold.label}</span>
         <span className="hint-body">
@@ -77,7 +79,7 @@ function ThresholdHint({ threshold, juzValue, age }) {
           <strong>{threshold.min_juz_per_month} جزء/شهر</strong>
           {juz > 0 && (
             meets
-              ? <span className="hint-ok-text"> — يستوفي الشرط ✓</span>
+              ? <span className="hint-ok-text"> — يستوفي الشرط <Check size={16} /></span>
               : <span className="hint-warn-text"> — لا يستوفي الشرط (قد يُوقف الصرف)</span>
           )}
         </span>
@@ -192,8 +194,8 @@ export default function QuranReportSubmissionPage() {
           <div className="success-wrap">
             <div className="success-card">
               <div className="success-ico">
-                {submitted.meetsThreshold === true ? '✅' :
-                 submitted.meetsThreshold === false ? '⚠️' : '📋'}
+                {submitted.meetsThreshold === true ? '<CheckCircle2 size={16} />' :
+                 submitted.meetsThreshold === false ? '<AlertTriangle size={18} />️' : '📋'}
               </div>
               <h2 className="success-title">تم رفع التقرير بنجاح</h2>
               <p className="success-body">
@@ -206,7 +208,7 @@ export default function QuranReportSubmissionPage() {
 
               {submitted.meetsThreshold === false && (
                 <div className="success-warning">
-                  ⚠ مقدار الحفظ أقل من الحد الأدنى المطلوب. قد يقرر المشرف تعليق الصرف هذا الشهر.
+                  <AlertTriangle size={18} /> مقدار الحفظ أقل من الحد الأدنى المطلوب. قد يقرر المشرف تعليق الصرف هذا الشهر.
                 </div>
               )}
 
@@ -312,7 +314,7 @@ export default function QuranReportSubmissionPage() {
                           {age != null ? `${age} سنة` : ''}{o.governorate_ar ? ` · ${o.governorate_ar}` : ''}
                         </div>
                       </div>
-                      {isSelected && <span className="orphan-check">✓</span>}
+                      {isSelected && <span className="orphan-check"><Check size={16} /></span>}
                     </label>
                   );
                 })}
@@ -464,7 +466,7 @@ export default function QuranReportSubmissionPage() {
             {/* API error */}
             {submitState === 'error' && apiError && (
               <div className="err-banner">
-                <span>⚠</span>
+                <span><AlertTriangle size={18} /></span>
                 <div>
                   <strong>فشل الإرسال</strong>
                   <p>{apiError}</p>

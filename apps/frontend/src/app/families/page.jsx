@@ -13,6 +13,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { Search, AlertTriangle, X, Users, CheckCircle2, FileText, Check } from 'lucide-react';
+
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
@@ -59,7 +61,7 @@ function RejectModal({ family, onConfirm, onClose, loading }) {
       <div className="modal-overlay" onClick={onClose} />
       <div className="modal-box" dir="rtl">
         <div className="modal-head">
-          <span className="modal-warn-icon">⚠</span>
+          <span className="modal-warn-icon"><AlertTriangle size={18} /></span>
           <div>
             <h3 className="modal-title">رفض تسجيل الأسرة</h3>
             <p className="modal-sub">{family.family_name}</p>
@@ -118,13 +120,13 @@ function DetailDrawer({ family, onClose, onApprove, onReject, actioning, role })
       <aside className="drawer" dir="rtl">
         <div className="drawer-head">
           <div style={{ display: 'flex', alignItems: 'center', gap: '.85rem' }}>
-            <div className="drawer-avatar">👨‍👩‍👧</div>
+            <div className="drawer-avatar"><Users size={18} /></div>
             <div>
               <h2 className="drawer-name">{family.family_name}</h2>
               <StatusBadge status={family.status} />
             </div>
           </div>
-          <button className="drawer-close" onClick={onClose}>✕</button>
+          <button className="drawer-close" onClick={onClose}><X size={16} /></button>
         </div>
 
         <div className="drawer-body">
@@ -166,7 +168,7 @@ function DetailDrawer({ family, onClose, onApprove, onReject, actioning, role })
 
           {family.status === 'rejected' && family.notes && (
             <div className="rejection-box">
-              <span>⚠</span>
+              <span><AlertTriangle size={18} /></span>
               <div>
                 <strong>سبب الرفض</strong>
                 <p>{family.notes}</p>
@@ -193,7 +195,7 @@ function DetailDrawer({ family, onClose, onApprove, onReject, actioning, role })
               <div style={{ display: 'flex', flexDirection: 'column', gap: '.4rem' }}>
                 {docs.map((d) => (
                   <div key={d.id} className="doc-chip">
-                    <span>📄</span>
+                    <span><FileText size={16} /></span>
                     <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', direction: 'ltr', textAlign: 'left' }}>
                       {d.original_name || d.doc_type}
                     </span>
@@ -215,7 +217,7 @@ function DetailDrawer({ family, onClose, onApprove, onReject, actioning, role })
               >
                 {actioning === 'approve'
                   ? <><span className="spin spin-dark" />جارٍ الاعتماد…</>
-                  : '✓ اعتماد التسجيل'}
+                  : '<Check size={16} /> اعتماد التسجيل'}
               </button>
             )}
             {canReject && (
@@ -224,7 +226,7 @@ function DetailDrawer({ family, onClose, onApprove, onReject, actioning, role })
                 onClick={() => onReject(family)}
                 disabled={!!actioning}
               >
-                ✕ رفض
+                <X size={16} /> رفض
               </button>
             )}
           </div>
@@ -292,7 +294,7 @@ export default function FamiliesManagementPage() {
     setActioning('approve');
     try {
       await api.patch(`/families/${family.id}/status`, { status: 'under_marketing' });
-      showToast(`✓ تمت الموافقة على أسرة ${family.family_name}`);
+      showToast(`<Check size={16} /> تمت الموافقة على أسرة ${family.family_name}`);
       fetchFamilies();
       setSelected(null);
     } catch (err) {
@@ -374,14 +376,14 @@ export default function FamiliesManagementPage() {
         {/* Toolbar */}
         <div className="toolbar">
           <div className="search-wrap">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><Search size={16} /></span>
             <input
               className="search-inp"
               placeholder="ابحث باسم الأسرة أو المعيل أو المندوب…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
-            {search && <button className="search-clear" onClick={() => setSearch('')}>✕</button>}
+            {search && <button className="search-clear" onClick={() => setSearch('')}><X size={16} /></button>}
           </div>
           <div className="filters-row">
             <select
@@ -397,14 +399,14 @@ export default function FamiliesManagementPage() {
                 className="clear-filters"
                 onClick={() => { setSearch(''); setFilterStatus('all'); setFilterGov('all'); }}
               >
-                ✕ مسح الفلاتر
+                <X size={16} /> مسح الفلاتر
               </button>
             )}
           </div>
         </div>
 
         {/* Error */}
-        {error && <div className="err-banner">⚠ {error}</div>}
+        {error && <div className="err-banner"><AlertTriangle size={18} /> {error}</div>}
 
         {/* Skeleton */}
         {loading && (
@@ -426,7 +428,7 @@ export default function FamiliesManagementPage() {
         {/* Empty */}
         {!loading && filtered.length === 0 && (
           <div className="empty">
-            <div style={{ fontSize: '3rem' }}>👨‍👩‍👧</div>
+            <div style={{ fontSize: '3rem' }}><Users size={18} /></div>
             <h3 className="empty-title">
               {families.length === 0 ? 'لا توجد أسر مسجّلة بعد' : 'لا توجد نتائج مطابقة'}
             </h3>
@@ -469,7 +471,7 @@ export default function FamiliesManagementPage() {
                   >
                     <td>
                       <div className="name-cell">
-                        <div className="avatar">👨‍👩‍👧</div>
+                        <div className="avatar"><Users size={18} /></div>
                         <span className="name-text">{f.family_name}</span>
                       </div>
                     </td>
@@ -491,13 +493,13 @@ export default function FamiliesManagementPage() {
                               onClick={(e) => { e.stopPropagation(); handleApprove(f); }}
                               disabled={!!actioning}
                               title="اعتماد"
-                            >✅</button>
+                            ><CheckCircle2 size={16} /></button>
                             <button
                               className="act-reject"
                               onClick={(e) => { e.stopPropagation(); setRejectTarget(f); }}
                               disabled={!!actioning}
                               title="رفض"
-                            >✕</button>
+                            ><X size={16} /></button>
                           </div>
                         )}
                       </td>

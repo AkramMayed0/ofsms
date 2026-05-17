@@ -10,6 +10,8 @@
  */
 
 import { useState, useEffect } from 'react';
+import { AlertTriangle } from 'lucide-react';
+
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import useSponsorStore from '../useSponsorStore';
@@ -78,7 +80,7 @@ export default function SponsorLoginPage() {
           <form onSubmit={handleSubmit} noValidate>
             {error && (
               <div className="err-banner">
-                <span>⚠</span> {error}
+                <span><AlertTriangle size={18} /></span> {error}
               </div>
             )}
 

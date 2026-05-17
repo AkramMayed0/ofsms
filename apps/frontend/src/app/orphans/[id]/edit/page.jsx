@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, Fragment } from 'react';
+import { AlertTriangle, CheckCircle2 } from 'lucide-react';
+
 import { useRouter, useParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
@@ -134,7 +136,7 @@ export default function OrphanEditPage() {
       <AppShell>
         <div className="success-wrap">
           <div className="success-card">
-            <div className="success-ico">✅</div>
+            <div className="success-ico"><CheckCircle2 size={16} /></div>
             <h2 className="success-title">تمت إعادة الإرسال بنجاح</h2>
             <p className="success-body">
               تم تحديث بيانات اليتيم وإرسالها إلى قائمة انتظار المراجعة.
@@ -307,7 +309,7 @@ export default function OrphanEditPage() {
             {/* API error banner */}
             {submitState === 'error' && apiError && (
               <div className="err-banner" role="alert">
-                <span>⚠</span>
+                <span><AlertTriangle size={18} /></span>
                 <div>
                   <strong>فشل الإرسال</strong>
                   <p>{apiError}</p>

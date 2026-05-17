@@ -16,6 +16,8 @@
  */
 
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { AlertTriangle, X, User } from 'lucide-react';
+
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '../../lib/api';
@@ -343,7 +345,7 @@ export default function OrphansListPage() {
                   background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer',
                   fontSize: '0.8rem', padding: '0.2rem', lineHeight: 1,
                 }}
-              >✕</button>
+              ><X size={16} /></button>
             )}
           </div>
 
@@ -441,7 +443,7 @@ export default function OrphansListPage() {
               onMouseEnter={e => e.target.style.background = '#FEE2E2'}
               onMouseLeave={e => e.target.style.background = '#FEF2F2'}
             >
-              مسح الفلاتر ✕
+              مسح الفلاتر <X size={16} />
             </button>
           )}
         </div>
@@ -449,7 +451,7 @@ export default function OrphansListPage() {
         {/* ── Error ───────────────────────────────────────────────── */}
         {error && (
           <div className="error-banner" role="alert">
-            ⚠ {error}
+            <AlertTriangle size={18} /> {error}
             <button onClick={fetchData} className="retry-btn">إعادة المحاولة</button>
           </div>
         )}
@@ -572,20 +574,7 @@ export default function OrphansListPage() {
                       )}
 
                       {/* Actions */}
-                      <td onClick={(e) => e.stopPropagation()}>
-                        <div className="actions-cell">
-                          {isGM && orphan.status === 'under_sponsorship' && (
-                            <button
-                              className="btn-transfer-row"
-                              onClick={(e) => handleTransferClick(e, orphan)}
-                              title="نقل الكفالة"
-                            >
-                              <IconTransfer />
-                              <span>نقل</span>
-                            </button>
-                          )}
-                        </div>
-                      </td>
+                      <td />
                     </tr>
                   ))
                 )}

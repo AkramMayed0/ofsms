@@ -13,6 +13,8 @@
  */
 
 import { useEffect, useState } from 'react';
+import { AlertTriangle, CheckCircle2 } from 'lucide-react';
+
 import { useRouter, useParams } from 'next/navigation';
 import api from '../../../lib/api';
 import AppShell from '../../../components/AppShell';
@@ -129,13 +131,13 @@ export default function DisbursementDetailPage() {
     setActionMsg('');
     try {
       const res = await api.patch(`/disbursements/${id}/${endpoint}`, body);
-      setActionMsg(`✅ ${res.data.message}`);
+      setActionMsg(`<CheckCircle2 size={16} /> ${res.data.message}`);
       // Reload list
       const refresh = await api.get(`/disbursements/${id}`);
       setList(refresh.data.list);
       setItems(refresh.data.items || []);
     } catch (err) {
-      setActionMsg(`⚠ ${err.response?.data?.error || 'حدث خطأ'}`);
+      setActionMsg(`<AlertTriangle size={18} /> ${err.response?.data?.error || 'حدث خطأ'}`);
     } finally {
       setActing(false);
     }
@@ -177,7 +179,7 @@ export default function DisbursementDetailPage() {
           <button className="btn-ghost" onClick={() => router.push('/disbursements')}>
             <IconBack /> رجوع
           </button>
-          <div className="msg-banner msg-err" style={{ marginTop: '1rem' }}>⚠ {error}</div>
+          <div className="msg-banner msg-err" style={{ marginTop: '1rem' }}><AlertTriangle size={18} /> {error}</div>
         </div>
       </AppShell>
     );
@@ -218,7 +220,7 @@ export default function DisbursementDetailPage() {
 
         {/* Action message */}
         {actionMsg && (
-          <div className={`msg-banner ${actionMsg.startsWith('✅') ? 'msg-ok' : 'msg-err'}`}>
+          <div className={`msg-banner ${actionMsg.startsWith('<CheckCircle2 size={16} />') ? 'msg-ok' : 'msg-err'}`}>
             {actionMsg}
           </div>
         )}

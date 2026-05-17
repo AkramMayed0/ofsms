@@ -20,6 +20,8 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { AlertTriangle, User, Users, Handshake, CheckCircle2 } from 'lucide-react';
+
 import { useSearchParams, useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
@@ -79,7 +81,7 @@ function FingerprintUploader({ item, onUploaded }) {
   if (item.biometric_confirmed_at) {
     return (
       <div className="confirmed-wrap">
-        <span className="confirmed-badge">✅ تم التأكيد</span>
+        <span className="confirmed-badge"><CheckCircle2 size={16} /> تم التأكيد</span>
         <span className="confirmed-date">
           {new Date(item.biometric_confirmed_at).toLocaleDateString('ar-YE', { dateStyle: 'short' })}
         </span>
@@ -142,7 +144,7 @@ function ListPicker({ onSelect }) {
 
   if (error) {
     return (
-      <div className="err-banner">⚠ {error}</div>
+      <div className="err-banner"><AlertTriangle size={18} /> {error}</div>
     );
   }
 
@@ -281,7 +283,7 @@ function BatchView({ listId, onBack }) {
         </div>
       </div>
 
-      {error && <div className="err-banner">⚠ {error}</div>}
+      {error && <div className="err-banner"><AlertTriangle size={18} /> {error}</div>}
 
       {/* Progress bar */}
       {!loading && total > 0 && (
@@ -310,7 +312,7 @@ function BatchView({ listId, onBack }) {
           </div>
           {allDone && (
             <p className="progress-done">
-              ✅ رائع! تم رفع جميع بصمات هذا الكشف بنجاح.
+              <CheckCircle2 size={16} /> رائع! تم رفع جميع بصمات هذا الكشف بنجاح.
             </p>
           )}
         </div>
@@ -350,7 +352,7 @@ function BatchView({ listId, onBack }) {
             >
               {/* Avatar */}
               <div className="item-avatar">
-                {item.beneficiary_type === 'orphan' ? '👦' : '👨‍👩‍👧'}
+                {item.beneficiary_type === 'orphan' ? '<User size={18} />' : '<Users size={18} />'}
               </div>
 
               {/* Info */}
@@ -360,7 +362,7 @@ function BatchView({ listId, onBack }) {
                   <span>{item.governorate_ar || '—'}</span>
                   <span className="item-amount">{formatAmount(item.amount)}</span>
                   {item.sponsor_name && (
-                    <span className="item-sponsor">🤝 {item.sponsor_name}</span>
+                    <span className="item-sponsor"><Handshake size={32} /> {item.sponsor_name}</span>
                   )}
                 </div>
               </div>

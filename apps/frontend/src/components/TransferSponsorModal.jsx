@@ -18,6 +18,8 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
+import { Search, AlertTriangle, User, Check } from 'lucide-react';
+
 import api from '../lib/api';
 
 // ── Icons ──────────────────────────────────────────────────────────────────────
@@ -226,7 +228,7 @@ export default function TransferSponsorModal({
         {/* ── Error banner ───────────────────────────────────────────── */}
         {error && (
           <div className="error-banner" role="alert">
-            ⚠ {error}
+            <AlertTriangle size={18} /> {error}
           </div>
         )}
 
@@ -264,7 +266,7 @@ export default function TransferSponsorModal({
                 </>
               ) : filtered.length === 0 ? (
                 <div className="empty-state">
-                  <span>🔍</span>
+                  <span><Search size={16} /></span>
                   <p>لا يوجد كفلاء مطابقون</p>
                 </div>
               ) : (
@@ -364,7 +366,7 @@ export default function TransferSponsorModal({
 
             {/* Warning note */}
             <div className="warning-note">
-              ⚠ سيتم إنهاء الكفالة الحالية وإنشاء كفالة جديدة فوراً. هذا الإجراء لا يمكن التراجع عنه.
+              <AlertTriangle size={18} /> سيتم إنهاء الكفالة الحالية وإنشاء كفالة جديدة فوراً. هذا الإجراء لا يمكن التراجع عنه.
             </div>
 
             {/* Actions */}
@@ -381,7 +383,7 @@ export default function TransferSponsorModal({
                 {loading ? (
                   <><span className="spin" />جارٍ النقل…</>
                 ) : (
-                  <>تأكيد النقل ✓</>
+                  <>تأكيد النقل <Check size={16} /></>
                 )}
               </button>
             </div>

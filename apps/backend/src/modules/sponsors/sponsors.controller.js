@@ -35,6 +35,9 @@ const createSponsor = async (req, res, next) => {
       sponsor,
     });
   } catch (err) {
+    if (err.status === 409) {
+      return res.status(409).json({ error: err.message });
+    }
     next(err);
   }
 };

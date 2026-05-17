@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, Fragment } from 'react';
+import { AlertTriangle, User, Users, CheckCircle2 } from 'lucide-react';
+
 import { useRouter, useParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
@@ -109,7 +111,7 @@ export default function FamilyEditPage() {
       <AppShell>
         <div className="success-wrap">
           <div className="success-card">
-            <div className="success-ico">✅</div>
+            <div className="success-ico"><CheckCircle2 size={16} /></div>
             <h2 className="success-title">تمت إعادة الإرسال بنجاح</h2>
             <p className="success-body">
               تم تحديث بيانات الأسرة وإرسالها إلى قائمة انتظار المراجعة.
@@ -225,7 +227,7 @@ export default function FamilyEditPage() {
                     />
                     <div className="member-hint">
                       <div className="member-hint-row">
-                        <span className="member-hint-icon">👨‍👩‍👧‍👦</span>
+                        <span className="member-hint-icon"><Users size={18} />‍<User size={18} /></span>
                         <span>يشمل جميع أفراد الأسرة المعيشية بما فيهم المعيل</span>
                       </div>
                       <div className="member-scale">
@@ -270,7 +272,7 @@ export default function FamilyEditPage() {
 
             {submitState === 'error' && apiError && (
               <div className="err-banner" role="alert">
-                <span>⚠</span>
+                <span><AlertTriangle size={18} /></span>
                 <div>
                   <strong>فشل الإرسال</strong>
                   <p>{apiError}</p>

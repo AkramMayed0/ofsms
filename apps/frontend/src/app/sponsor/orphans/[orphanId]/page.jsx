@@ -7,6 +7,8 @@
  */
 
 import { useEffect, useState } from 'react';
+import { AlertTriangle, User, Handshake, CheckCircle2, XCircle, FileEdit, Check } from 'lucide-react';
+
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import sponsorApi from '../../sponsorApi';
@@ -19,8 +21,8 @@ const ARABIC_MONTHS = [
 
 const REPORT_STATUS = {
   pending:  { label: 'قيد المراجعة', color: '#92400E', bg: '#FEF3C7', icon: '⏳' },
-  approved: { label: 'مقبول',        color: '#065F46', bg: '#ECFDF5', icon: '✅' },
-  rejected: { label: 'مرفوض',       color: '#991B1B', bg: '#FEF2F2', icon: '❌' },
+  approved: { label: 'مقبول',        color: '#065F46', bg: '#ECFDF5', icon: '<CheckCircle2 size={16} />' },
+  rejected: { label: 'مرفوض',       color: '#991B1B', bg: '#FEF2F2', icon: '<XCircle size={16} />' },
 };
 
 const DISB_STATUS = {
@@ -58,7 +60,7 @@ export default function SponsorOrphanDetail() {
             ← العودة للقائمة
           </Link>
           <div className="header-brand">
-            <span>🤝</span>
+            <span><Handshake size={32} /></span>
             <span className="brand-name">بوابة الكافل</span>
           </div>
           <span className="sponsor-name">{sponsor?.name || ''}</span>
@@ -66,7 +68,7 @@ export default function SponsorOrphanDetail() {
       </header>
 
       <main className="main">
-        {error && <div className="err-banner">⚠ {error}</div>}
+        {error && <div className="err-banner"><AlertTriangle size={18} /> {error}</div>}
 
         {loading ? (
           <LoadingSkeleton />
@@ -74,7 +76,7 @@ export default function SponsorOrphanDetail() {
           <>
             {/* Orphan header card */}
             <div className="orphan-header">
-              <div className="orphan-avatar">👦</div>
+              <div className="orphan-avatar"><User size={18} /></div>
               <div className="orphan-info">
                 <h1 className="orphan-name">تقارير اليتيم</h1>
                 <p className="orphan-sub">
@@ -255,13 +257,13 @@ function DisbursementsTab({ disbursements }) {
                   <td><span className="disb-status" style={{ color:cfg.color }}>{cfg.label}</span></td>
                   <td>
                     {d.included
-                      ? <span className="badge-yes">✓ نعم</span>
+                      ? <span className="badge-yes"><Check size={16} /> نعم</span>
                       : <span className="badge-no" title={d.exclusion_reason}>✗ لا</span>
                     }
                   </td>
                   <td>
                     {d.receipt_confirmed_at
-                      ? <span className="badge-yes">✓ {new Date(d.receipt_confirmed_at).toLocaleDateString('ar-YE', { day:'numeric', month:'short' })}</span>
+                      ? <span className="badge-yes"><Check size={16} /> {new Date(d.receipt_confirmed_at).toLocaleDateString('ar-YE', { day:'numeric', month:'short' })}</span>
                       : <span className="badge-pending">بانتظار</span>
                     }
                   </td>

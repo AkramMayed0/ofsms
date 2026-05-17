@@ -17,6 +17,8 @@
  */
 
 import { useState, useEffect } from 'react';
+import { Search, AlertTriangle, X, User, FileText } from 'lucide-react';
+
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
@@ -145,7 +147,7 @@ function OrphanTable({ orphans, search }) {
   if (filtered.length === 0) {
     return (
       <div className="table-empty">
-        <span>🔍</span>
+        <span><Search size={16} /></span>
         <p>لا توجد نتائج مطابقة</p>
       </div>
     );
@@ -280,11 +282,11 @@ export default function GovernoratesDrillPage() {
             </p>
           </div>
           <button className="btn-ghost" onClick={() => router.push('/reports')}>
-            📄 تصدير تقرير ←
+            <FileText size={16} /> تصدير تقرير ←
           </button>
         </div>
 
-        {govError && <div className="err-banner">⚠ {govError}</div>}
+        {govError && <div className="err-banner"><AlertTriangle size={18} /> {govError}</div>}
 
         {/* ── Main split layout ── */}
         <div className={`split ${selectedGov ? 'split-open' : ''}`}>
@@ -333,10 +335,10 @@ export default function GovernoratesDrillPage() {
                   className="drill-close"
                   onClick={() => { setSelectedGov(null); setDrillData(null); }}
                   aria-label="إغلاق"
-                >✕</button>
+                ><X size={16} /></button>
               </div>
 
-              {drillError && <div className="err-banner" style={{ margin: '0 1.5rem 1rem' }}>⚠ {drillError}</div>}
+              {drillError && <div className="err-banner" style={{ margin: '0 1.5rem 1rem' }}><AlertTriangle size={18} /> {drillError}</div>}
 
               {/* Summary strip skeleton */}
               {drillLoading && (
@@ -358,7 +360,7 @@ export default function GovernoratesDrillPage() {
               {/* Search bar */}
               {drillData && drillData.orphans.length > 0 && (
                 <div className="drill-search">
-                  <span className="dsearch-icon">🔍</span>
+                  <span className="dsearch-icon"><Search size={16} /></span>
                   <input
                     className="dsearch-inp"
                     placeholder="ابحث بالاسم أو الكافل أو المندوب…"
@@ -366,7 +368,7 @@ export default function GovernoratesDrillPage() {
                     onChange={(e) => setSearch(e.target.value)}
                   />
                   {search && (
-                    <button className="dsearch-clear" onClick={() => setSearch('')}>✕</button>
+                    <button className="dsearch-clear" onClick={() => setSearch('')}><X size={16} /></button>
                   )}
                 </div>
               )}
@@ -391,7 +393,7 @@ export default function GovernoratesDrillPage() {
               {!drillLoading && drillData && (
                 drillData.orphans.length === 0 ? (
                   <div className="drill-empty">
-                    <span>👦</span>
+                    <span><User size={18} /></span>
                     <p>لا يوجد أيتام مسجّلون في هذه المحافظة</p>
                   </div>
                 ) : (

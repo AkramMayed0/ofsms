@@ -15,6 +15,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { Search, AlertTriangle, X, User, CheckCircle2, XCircle, Trash2, Edit2, Users } from 'lucide-react';
+
 import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
@@ -23,17 +25,17 @@ import useAuthStore from '@/store/useAuthStore';
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 const ROLE_MAP = {
-  gm:         { label: 'مدير عام',       color: '#7c3aed', bg: '#f5f3ff' },
-  supervisor: { label: 'مشرف أيتام',    color: '#1d4ed8', bg: '#eff6ff' },
-  agent:      { label: 'مندوب',           color: '#059669', bg: '#ecfdf5' },
-  finance:    { label: 'قسم مالي',       color: '#d97706', bg: '#fffbeb' },
+  gm: { label: 'مدير عام', color: '#7c3aed', bg: '#f5f3ff' },
+  supervisor: { label: 'مشرف أيتام', color: '#1d4ed8', bg: '#eff6ff' },
+  agent: { label: 'مندوب', color: '#059669', bg: '#ecfdf5' },
+  finance: { label: 'قسم مالي', color: '#d97706', bg: '#fffbeb' },
 };
 
 const ROLES_OPTIONS = [
-  { value: 'agent',      label: 'مندوب' },
+  { value: 'agent', label: 'مندوب' },
   { value: 'supervisor', label: 'مشرف أيتام' },
-  { value: 'finance',    label: 'قسم مالي' },
-  { value: 'gm',        label: 'مدير عام' },
+  { value: 'finance', label: 'قسم مالي' },
+  { value: 'gm', label: 'مدير عام' },
 ];
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -137,13 +139,13 @@ function UserFormModal({ mode, user, onClose, onSaved }) {
           <h2 className="modal-title">
             {isEdit ? `تعديل: ${user.full_name}` : 'إضافة مستخدم جديد'}
           </h2>
-          <button className="modal-close" onClick={onClose} aria-label="إغلاق">✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="إغلاق"><X size={16} /></button>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="modal-body">
           {apiErr && (
             <div className="err-banner">
-              <span>⚠</span> {apiErr}
+              <span><AlertTriangle size={18} /></span> {apiErr}
             </div>
           )}
 
@@ -242,20 +244,21 @@ function DeleteConfirmModal({ user, onClose, onConfirm, loading }) {
   return (
     <>
       <div className="modal-backdrop" onClick={onClose} />
-      <div className="modal modal-sm" dir="rtl">
-        <div className="modal-head">
-          <h2 className="modal-title">حذف المستخدم</h2>
-          <button className="modal-close" onClick={onClose}>✕</button>
-        </div>
-        <div className="modal-body">
+      <div className="modal modal-sm delete-modal" dir="rtl">
+        <div className="modal-body text-center">
+          <div className="delete-icon-wrapper">
+            <AlertTriangle size={42} strokeWidth={1.5} />
+          </div>
+          <h2 className="delete-title">تأكيد الحذف</h2>
           <p className="delete-msg">
-            هل أنت متأكد من حذف <strong>{user.full_name}</strong>؟
-            هذا الإجراء لا يمكن التراجع عنه.
+            هل أنت متأكد من رغبتك في حذف المستخدم <strong>{user.full_name}</strong>؟
+            <br />
+            <span className="delete-warning">لا يمكن التراجع عن هذا الإجراء بعد تنفيذه.</span>
           </p>
-          <div className="modal-foot">
-            <button className="btn-ghost" onClick={onClose} disabled={loading}>إلغاء</button>
+          <div className="modal-foot delete-foot">
+            <button className="btn-ghost" onClick={onClose} disabled={loading}>تراجع</button>
             <button className="btn-danger" onClick={onConfirm} disabled={loading}>
-              {loading ? <><span className="spin" /> جارٍ الحذف…</> : 'نعم، احذف'}
+              {loading ? <><span className="spin" /> جاري الحذف…</> : 'نعم، احذف المستخدم'}
             </button>
           </div>
         </div>
@@ -269,19 +272,19 @@ function DeleteConfirmModal({ user, onClose, onConfirm, loading }) {
 export default function UserManagementPage() {
   const currentUser = useAuthStore((s) => s.user);
 
-  const [users, setUsers]           = useState([]);
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState('');
-  const [search, setSearch]         = useState('');
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
-  const [toast, setToast]           = useState(null);
+  const [toast, setToast] = useState(null);
 
   // Modals
-  const [showAdd,    setShowAdd]    = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
-  const [delTarget,  setDelTarget]  = useState(null);
-  const [toggling,   setToggling]   = useState(null); // user id being toggled
-  const [deleting,   setDeleting]   = useState(false);
+  const [delTarget, setDelTarget] = useState(null);
+  const [toggling, setToggling] = useState(null); // user id being toggled
+  const [deleting, setDeleting] = useState(false);
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
@@ -346,7 +349,7 @@ export default function UserManagementPage() {
     }
   };
 
-  const activeCount   = users.filter((u) => u.is_active).length;
+  const activeCount = users.filter((u) => u.is_active).length;
   const inactiveCount = users.filter((u) => !u.is_active).length;
 
   return (
@@ -356,7 +359,7 @@ export default function UserManagementPage() {
         {/* ── Toast ── */}
         {toast && (
           <div className={`toast toast-${toast.type}`}>
-            {toast.type === 'success' ? '✅' : '❌'} {toast.msg}
+            {toast.type === 'success' ? <CheckCircle2 size={16} /> : <XCircle size={16} />} {toast.msg}
           </div>
         )}
 
@@ -417,7 +420,7 @@ export default function UserManagementPage() {
         {/* ── Search + filter ── */}
         <div className="toolbar">
           <div className="search-wrap">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><Search size={16} /></span>
             <input
               className="search-inp"
               placeholder="ابحث بالاسم أو البريد الإلكتروني…"
@@ -425,7 +428,7 @@ export default function UserManagementPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
             {search && (
-              <button className="search-clear" onClick={() => setSearch('')}>✕</button>
+              <button className="search-clear" onClick={() => setSearch('')}><X size={16} /></button>
             )}
           </div>
           <div className="role-tabs">
@@ -450,12 +453,12 @@ export default function UserManagementPage() {
         </div>
 
         {/* ── Error ── */}
-        {error && <div className="err-banner">⚠ {error}</div>}
+        {error && <div className="err-banner"><AlertTriangle size={18} /> {error}</div>}
 
         {/* ── Skeleton ── */}
         {loading && (
           <div className="table-wrap">
-            {[1,2,3,4,5].map(i => (
+            {[1, 2, 3, 4, 5].map(i => (
               <div key={i} className="skel-row">
                 <div className="skel" style={{ width: 40, height: 40, borderRadius: '50%' }} />
                 <div style={{ flex: 1 }}>
@@ -472,7 +475,7 @@ export default function UserManagementPage() {
         {/* ── Empty ── */}
         {!loading && filtered.length === 0 && (
           <div className="empty">
-            <div style={{ fontSize: '3rem' }}>👥</div>
+            <Users size={48} strokeWidth={1.2} color="#9ca3af" />
             <h3 className="empty-title">
               {search || roleFilter !== 'all' ? 'لا توجد نتائج مطابقة' : 'لا يوجد مستخدمون بعد'}
             </h3>
@@ -546,7 +549,7 @@ export default function UserManagementPage() {
                             onClick={() => setEditTarget(user)}
                             title="تعديل"
                           >
-                            ✏️
+                            <Edit2 size={15} />
                           </button>
                           {!isSelf && (
                             <button
@@ -554,7 +557,7 @@ export default function UserManagementPage() {
                               onClick={() => setDelTarget(user)}
                               title="حذف"
                             >
-                              🗑️
+                              <Trash2 size={15} />
                             </button>
                           )}
                         </div>
@@ -707,8 +710,9 @@ export default function UserManagementPage() {
         .action-btns { display: flex; gap: .4rem; }
         .action-btn {
           background: none; border: 1.5px solid #e5eaf0; border-radius: .5rem;
-          padding: .3rem .5rem; font-size: .88rem; cursor: pointer; transition: all .15s;
-          line-height: 1;
+          padding: .4rem .5rem; font-size: .88rem; cursor: pointer; transition: all .15s;
+          line-height: 1; display: inline-flex; align-items: center; justify-content: center;
+          color: #6b7a8d;
         }
         .action-btn:hover { background: #f0f7ff; border-color: #1B5E8C; }
         .action-btn-del:hover { background: #fef2f2; border-color: #fca5a5; }
@@ -731,11 +735,12 @@ export default function UserManagementPage() {
           to   { opacity: 1; transform: translate(-50%, -50%); }
         }
         .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 1px solid #f0f4f8; position: sticky; top: 0; background: #fff; z-index: 1; }
-        .modal-title { font-size: 1rem; font-weight: 800; color: #0d3d5c; margin: 0; }
-        .modal-close { background: none; border: none; font-size: 1.1rem; color: #9ca3af; cursor: pointer; padding: .2rem .35rem; border-radius: 6px; transition: all .15s; }
-        .modal-close:hover { background: #f3f4f6; color: #374151; }
-        .modal-body { display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem; }
-        .modal-foot { display: flex; gap: .75rem; justify-content: flex-end; padding-top: .5rem; border-top: 1px solid #f0f4f8; margin-top: .5rem; }
+        .modal-title { font-size: 1.1rem; font-weight: 800; color: #0d3d5c; margin: 0; }
+        .modal-close { background: #f3f4f6; border: none; font-size: 1.1rem; color: #6b7280; cursor: pointer; padding: .4rem; border-radius: 50%; transition: all .2s; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { background: #e5e7eb; color: #111827; transform: rotate(90deg); }
+        .modal-body { display: flex; flex-direction: column; gap: 1.15rem; padding: 1.75rem; }
+        .modal-foot { display: flex; gap: .75rem; justify-content: flex-end; padding-top: .75rem; border-top: 1px solid #f0f4f8; margin-top: .5rem; }
+        .text-center { text-align: center; }
 
         /* Modal field helpers */
         .fg { display: flex; flex-direction: column; gap: .3rem; }
@@ -754,8 +759,16 @@ export default function UserManagementPage() {
         .ferr { font-size: .77rem; color: #dc2626; margin: 0; }
         .err-banner { display: flex; align-items: center; gap: .5rem; background: #fef2f2; border: 1px solid #fecaca; border-radius: .625rem; padding: .65rem .85rem; font-size: .82rem; color: #b91c1c; font-weight: 500; }
 
-        /* Delete msg */
-        .delete-msg { font-size: .88rem; color: #374151; line-height: 1.7; margin: 0 0 1rem; }
+        /* Delete modal */
+        .delete-modal { overflow: visible; width: 420px; border-top: 4px solid #ef4444; }
+        .delete-modal .modal-body { padding-top: 3.5rem; align-items: center; }
+        .delete-icon-wrapper { width: 80px; height: 80px; border-radius: 50%; background: #fef2f2; color: #ef4444; display: flex; align-items: center; justify-content: center; position: absolute; top: -40px; left: 50%; transform: translateX(-50%); border: 4px solid #fff; box-shadow: 0 4px 12px rgba(239,68,68,.15); }
+        .delete-title { font-size: 1.3rem; font-weight: 800; color: #111827; margin: 0 0 .5rem; }
+        .delete-msg { font-size: .95rem; color: #4b5563; line-height: 1.6; margin: 0 0 1.5rem; }
+        .delete-warning { color: #dc2626; font-size: .85rem; font-weight: 600; display: inline-block; margin-top: .5rem; padding: .3rem .75rem; background: #fef2f2; border-radius: 2rem; }
+        .delete-foot { border-top: none; padding-top: 0; justify-content: center; gap: 1rem; margin-top: 0; width: 100%; }
+        .delete-foot .btn-ghost { min-width: 100px; justify-content: center; }
+        .delete-foot .btn-danger { flex: 1; justify-content: center; }
 
         /* ── Buttons ──────────────────────────────────────────────────── */
         .btn-primary {
