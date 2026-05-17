@@ -66,7 +66,7 @@ const getOrphans = async ({ status, agentId, governorateId, isGifted } = {}) => 
     `SELECT
        o.id, o.full_name, o.date_of_birth, o.gender, o.status,
        o.guardian_name, o.guardian_relation, o.is_gifted, o.notes,
-       o.created_at,
+       o.created_at, o.agent_id,
        g.name_ar AS governorate_ar, g.name_en AS governorate_en,
        u.full_name AS agent_name
      FROM orphans o
@@ -177,7 +177,7 @@ const updateOrphanStatus = async (id, status, notes, reviewerName = 'المشر�
  * Update orphan details (agent can edit while under_review).
  */
 const updateOrphan = async (id, fields) => {
-  const { fullName, dateOfBirth, gender, governorateId, guardianName, guardianRelation, isGifted, notes } = fields;
+  const { fullName, dateOfBirth, gender, governorateId, guardianName, guardianRelation, isGifted, notes, profile } = fields;
   const { rows } = await query(
     `UPDATE orphans
      SET
@@ -189,10 +189,12 @@ const updateOrphan = async (id, fields) => {
        guardian_relation = COALESCE($6, guardian_relation),
        is_gifted         = COALESCE($7, is_gifted),
        notes             = COALESCE($8, notes),
+       profile           = COALESCE($10, profile),
        status            = 'under_review'
      WHERE id = $9
      RETURNING *`,
-    [fullName, dateOfBirth, gender, governorateId, guardianName, guardianRelation, isGifted, notes, id]
+    [fullName, dateOfBirth, gender, governorateId, guardianName, guardianRelation, isGifted, notes, id,
+     profile ? JSON.stringify(profile) : null]
   );
   return rows[0] || null;
 };
@@ -245,6 +247,24 @@ const getOrphanDocuments = async (orphanId) => {
   return rows;
 };
 
+/**
+ * Delete an orphan record and their documents.
+ * Blocked if orphan has an active sponsorship.
+ */
+const deleteOrphan = async (id) => {
+  const { rows: activeRows } = await query(
+    `SELECT id FROM sponsorships WHERE beneficiary_id = $1 AND beneficiary_type = 'orphan' AND is_active = TRUE LIMIT 1`,
+    [id]
+  );
+  if (activeRows.length > 0) {
+    throw Object.assign(new Error('لا يمكن حذف يتيم لديه كفالة نشطة'), { status: 409 });
+  }
+
+  await query(`DELETE FROM documents WHERE entity_type = 'orphan' AND entity_id = $1`, [id]);
+  const { rows } = await query(`DELETE FROM orphans WHERE id = $1 RETURNING *`, [id]);
+  return rows[0] || null;
+};
+
 module.exports = {
   createOrphan,
   getOrphans,
@@ -254,4 +274,5 @@ module.exports = {
   getOrphansUnderMarketing,
   addDocument,
   getOrphanDocuments,
+  deleteOrphan,
 };

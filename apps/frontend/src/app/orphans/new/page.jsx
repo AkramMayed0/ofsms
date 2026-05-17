@@ -430,13 +430,13 @@ export default function OrphanRegistrationPage() {
     fd.append('guardianEduLevel',     data.guardianEduLevel.trim());
     fd.append('guardianJob',          data.guardianJob.trim());
     fd.append('guardianHealth',       data.guardianHealth.trim());
-    fd.append('familyMaleCount',      data.familyMaleCount.trim());
-    fd.append('familyFemaleCount',    data.familyFemaleCount.trim());
+    fd.append('familyMaleCount',      String(data.familyMaleCount));
+    fd.append('familyFemaleCount',    String(data.familyFemaleCount));
     fd.append('familyProblems',       data.familyProblems.trim());
     fd.append('ownershipType',     ownershipType);
     fd.append('buildingType',      buildingType);
-    fd.append('floorsCount',       data.floorsCount.trim());
-    fd.append('roomsCount',        data.roomsCount.trim());
+    fd.append('floorsCount',       String(data.floorsCount));
+    fd.append('roomsCount',        String(data.roomsCount));
     fd.append('water',             data.water.trim());
     fd.append('electricity',       data.electricity.trim());
     if (data.rentAmount?.trim())          fd.append('rentAmount',           data.rentAmount.trim());
