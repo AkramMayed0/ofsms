@@ -23,8 +23,6 @@ import Link from 'next/link';
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
 import useAuthStore from '../../store/useAuthStore';
-import TransferSponsorModal from '../../components/TransferSponsorModal';
-
 // ── Constants ─────────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
   under_review:      { label: 'قيد المراجعة',  color: '#D97706', bg: '#FEF3C7', dot: '#F59E0B' },
@@ -57,16 +55,6 @@ const IconFilter = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
     strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-  </svg>
-);
-
-const IconTransfer = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-    strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="17 1 21 5 17 9"/>
-    <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
-    <polyline points="7 23 3 19 7 15"/>
-    <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
   </svg>
 );
 
@@ -188,9 +176,6 @@ export default function OrphansListPage() {
   const [govFilter, setGov]             = useState('');
   const [giftedFilter, setGifted]       = useState('');
 
-  // Transfer modal
-  const [transferTarget, setTransferTarget] = useState(null); // { orphan }
-
   // Stats
   const stats = {
     total: orphans.length,
@@ -239,16 +224,6 @@ export default function OrphansListPage() {
 
   const handleRowClick = (orphan) => {
     router.push(`/orphans/${orphan.id}`);
-  };
-
-  const handleTransferClick = (e, orphan) => {
-    e.stopPropagation(); // don't navigate
-    setTransferTarget(orphan);
-  };
-
-  const handleTransferSuccess = () => {
-    setTransferTarget(null);
-    fetchData(); // refresh list
   };
 
   const clearFilters = () => {
@@ -594,20 +569,6 @@ export default function OrphansListPage() {
           )}
         </div>
       </div>
-
-      {/* ── Transfer Modal ──────────────────────────────────────── */}
-      {transferTarget && (
-        <TransferSponsorModal
-          isOpen={!!transferTarget}
-          onClose={() => setTransferTarget(null)}
-          onSuccess={handleTransferSuccess}
-          beneficiaryType="orphan"
-          beneficiaryId={transferTarget.id}
-          beneficiaryName={transferTarget.full_name}
-          currentSponsor={transferTarget.sponsor_name}
-          agentId={transferTarget.agent_id}
-        />
-      )}
 
       <style jsx>{`
         .orphans-page {

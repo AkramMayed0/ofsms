@@ -24,6 +24,7 @@ import {
 const NAV_ITEMS = {
   gm: [
     { label: 'لوحة التحكم',      href: '/dashboard',        icon: LayoutDashboard },
+    { label: 'طلبات التسجيل',   href: '/registrations',    icon: ClipboardList },
     { label: 'الأيتام',           href: '/orphans',           icon: Users },
     { label: 'الأسر',             href: '/families',          icon: Home },
     { label: 'مجمع التسويق',     href: '/marketing-pool',    icon: Tag },
@@ -32,6 +33,8 @@ const NAV_ITEMS = {
     { label: 'تحليلات المحافظات', href: '/governorates',      icon: Map },
     { label: 'إدارة المستخدمين', href: '/users',              icon: UserCog },
     { label: 'إعدادات الحفظ',    href: '/quran-thresholds',  icon: BookOpen },
+    { label: 'أيتامي',           href: '/my-orphans',        icon: Users },
+    { label: 'رفع تقرير الحفظ', href: '/quran-reports/new', icon: BookOpen },
     { label: 'التقارير',          href: '/reports',           icon: FileText },
   ],
   supervisor: [

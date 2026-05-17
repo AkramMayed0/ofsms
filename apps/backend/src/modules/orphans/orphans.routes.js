@@ -143,6 +143,14 @@ router.patch(
   controller.updateOrphanStatus
 );
 
+// GM only: delete orphan (blocked if active sponsorship exists)
+router.delete(
+  '/:id',
+  authenticate,
+  authorize('gm'),
+  controller.deleteOrphan
+);
+
 // ── Multer error handler (must be last in this router) ────────────────────────
 router.use((err, _req, res, next) => {
   if (err instanceof multer.MulterError || err.message?.includes('نوع الملف')) {

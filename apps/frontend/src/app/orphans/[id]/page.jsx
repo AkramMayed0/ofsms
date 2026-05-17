@@ -147,6 +147,8 @@ export default function OrphanDetailPage() {
   const [error, setError]           = useState('');
   const [transferOpen, setTransfer] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleting, setDeleting]     = useState(false);
 
   const isGM = user?.role === 'gm';
 
@@ -166,9 +168,22 @@ export default function OrphanDetailPage() {
   }, [id]);
 
   const handleTransferSuccess = () => {
-    setSuccessMsg('تم نقل الكفالة بنجاح <Check size={16} />');
-    fetchOrphan(); // refresh orphan data to show new sponsor
+    setSuccessMsg('تم نقل الكفالة بنجاح');
+    fetchOrphan();
     setTimeout(() => setSuccessMsg(''), 4000);
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await api.delete(`/orphans/${id}`);
+      router.push('/orphans');
+    } catch (err) {
+      setError(err.response?.data?.error || 'تعذّر حذف اليتيم');
+      setDeleteConfirm(false);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const statusInfo = STATUS_CONFIG[orphan?.status] || STATUS_CONFIG.inactive;
@@ -198,12 +213,39 @@ export default function OrphanDetailPage() {
             <span className="crumb-current">تفاصيل اليتيم</span>
           </div>
 
-          {/* Transfer button — GM only, only if under sponsorship */}
-          {isGM && orphan?.status === 'under_sponsorship' && (
-            <button className="btn-transfer" onClick={() => setTransfer(true)}>
-              <IconTransfer /> نقل الكفالة
-            </button>
-          )}
+          <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            {/* Transfer button — rightmost (GM only, under sponsorship) */}
+            {isGM && orphan?.status === 'under_sponsorship' && (
+              <button className="btn-transfer" onClick={() => setTransfer(true)}>
+                <IconTransfer /> نقل الكفالة
+              </button>
+            )}
+
+            {/* Edit + Delete grouped on the left */}
+            <div style={{ marginRight: 'auto', display: 'flex', gap: '.5rem' }}>
+              {orphan && (isGM || (user?.role === 'agent' && (orphan.status === 'under_review' || orphan.status === 'rejected'))) && (
+                <button className="btn-edit" onClick={() => router.push(`/orphans/${id}/edit`)}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                  تعديل
+                </button>
+              )}
+
+              {isGM && orphan && (
+                <button className="btn-delete" onClick={() => setDeleteConfirm(true)}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                    <path d="M10 11v6"/><path d="M14 11v6"/>
+                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                  </svg>
+                  حذف
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* ── Success banner ──────────────────────────────────────── */}
@@ -383,6 +425,34 @@ export default function OrphanDetailPage() {
         )}
       </div>
 
+      {/* ── Delete Confirm Modal ────────────────────────────────────── */}
+      {deleteConfirm && (
+        <div className="modal-backdrop" onClick={() => !deleting && setDeleteConfirm(false)}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()} dir="rtl">
+            <div className="modal-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <path d="M10 11v6"/><path d="M14 11v6"/>
+              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+            </svg>
+          </div>
+            <h3 className="modal-title">تأكيد الحذف</h3>
+            <p className="modal-body">
+              هل أنت متأكد من حذف <strong>{orphan?.full_name}</strong>؟ لا يمكن التراجع عن هذا الإجراء.
+            </p>
+            <div className="modal-actions">
+              <button className="btn-cancel-modal" onClick={() => setDeleteConfirm(false)} disabled={deleting}>
+                إلغاء
+              </button>
+              <button className="btn-confirm-delete" onClick={handleDelete} disabled={deleting}>
+                {deleting ? 'جارٍ الحذف…' : 'نعم، احذف'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Transfer Modal ──────────────────────────────────────────── */}
       {orphan && (
         <TransferSponsorModal
@@ -479,6 +549,16 @@ export default function OrphanDetailPage() {
         .crumb-link:hover { text-decoration: underline; }
         .crumb-current { color: #6b7280; }
 
+        .btn-edit {
+          display: inline-flex; align-items: center; gap: .4rem;
+          padding: .6rem 1.1rem;
+          background: #fff; color: #D97706;
+          border: 1.5px solid #D97706; border-radius: .75rem;
+          font-family: 'Cairo', sans-serif; font-size: .875rem; font-weight: 700;
+          cursor: pointer; transition: all .15s;
+        }
+        .btn-edit:hover { background: #fffbeb; transform: translateY(-1px); }
+
         .btn-transfer {
           display: inline-flex; align-items: center; gap: .5rem;
           padding: .65rem 1.25rem;
@@ -489,6 +569,52 @@ export default function OrphanDetailPage() {
           transition: all .15s;
         }
         .btn-transfer:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(27,94,140,.35); }
+
+        .btn-delete {
+          display: inline-flex; align-items: center; gap: .4rem;
+          padding: .6rem 1.1rem;
+          background: #fff; color: #dc2626;
+          border: 1.5px solid #fca5a5; border-radius: .75rem;
+          font-family: 'Cairo', sans-serif; font-size: .875rem; font-weight: 700;
+          cursor: pointer; transition: all .15s;
+        }
+        .btn-delete:hover { background: #fef2f2; border-color: #dc2626; transform: translateY(-1px); }
+
+        /* ── Delete modal ───────────────────────────────────────────── */
+        .modal-backdrop {
+          position: fixed; inset: 0; background: rgba(0,0,0,.45);
+          display: flex; align-items: center; justify-content: center;
+          z-index: 1000; padding: 1rem;
+          animation: fadeIn .15s ease;
+        }
+        .modal-box {
+          background: #fff; border-radius: 1.25rem; padding: 2rem 1.75rem;
+          max-width: 420px; width: 100%;
+          box-shadow: 0 20px 60px rgba(0,0,0,.2);
+          animation: scaleIn .15s ease;
+        }
+        .modal-icon { display: flex; justify-content: center; margin-bottom: .75rem; }
+        .modal-title { font-size: 1.15rem; font-weight: 800; color: #0d3d5c; text-align: center; margin: 0 0 .75rem; }
+        .modal-body { font-size: .875rem; color: #6b7280; text-align: center; line-height: 1.7; margin: 0 0 1.5rem; }
+        .modal-actions { display: flex; gap: .75rem; justify-content: center; }
+        .btn-cancel-modal {
+          padding: .65rem 1.5rem; background: none; border: 1.5px solid #d1d5db;
+          border-radius: .75rem; color: #374151;
+          font-family: 'Cairo', sans-serif; font-size: .875rem; font-weight: 600;
+          cursor: pointer; transition: all .15s;
+        }
+        .btn-cancel-modal:hover { border-color: #9ca3af; background: #f9fafb; }
+        .btn-confirm-delete {
+          padding: .65rem 1.5rem;
+          background: linear-gradient(135deg, #dc2626, #b91c1c);
+          color: #fff; border: none; border-radius: .75rem;
+          font-family: 'Cairo', sans-serif; font-size: .875rem; font-weight: 700;
+          cursor: pointer; box-shadow: 0 2px 8px rgba(220,38,38,.3);
+          transition: all .15s;
+        }
+        .btn-confirm-delete:disabled { opacity: .65; cursor: not-allowed; }
+        .btn-confirm-delete:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(220,38,38,.4); }
+        @keyframes scaleIn { from { opacity:0; transform:scale(.95); } to { opacity:1; transform:none; } }
 
         /* ── Banners ────────────────────────────────────────────────── */
         .success-banner {
