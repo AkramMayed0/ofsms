@@ -203,10 +203,11 @@ function DisbursementsTab() {
   const doExport = async (ext, setLoading) => {
     setLoading(true);
     try {
+      const apiExt = ext === 'xlsx' ? 'excel' : ext;
       for (const list of selectedLists) {
         const monthName = ARABIC_MONTHS[list.month] || list.month;
         await downloadFile(
-          `/reports/disbursement/${list.id}/${ext}`,
+          `/reports/disbursement/${list.id}/${apiExt}`,
           `كشف-صرف-${monthName}-${list.year}`,
           ext
         );
@@ -385,9 +386,10 @@ function GovernoratesTab() {
   const doExport = async (ext, setLoading) => {
     setLoading(true);
     try {
+      const apiExt = ext === 'xlsx' ? 'excel' : ext;
       for (const gov of selectedGovs) {
         await downloadFile(
-          `/reports/governorate/${gov.id}/${ext}`,
+          `/reports/governorate/${gov.id}/${apiExt}`,
           `أيتام-${gov.name_ar}`,
           ext
         );
