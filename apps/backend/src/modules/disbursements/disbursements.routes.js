@@ -73,6 +73,17 @@ router.post(
   controller.generateDisbursementList
 );
 
+/**
+ * ── GET /api/disbursements/history ──────────────────────────────────────────
+ * "History" view for UI (must be defined BEFORE /:id to avoid param capture)
+ */
+router.get(
+  '/history',
+  authenticate,
+  authorize('supervisor', 'finance', 'gm', 'agent'),
+  controller.getDisbursementHistory
+);
+
 // ── GET /api/disbursements/:id ────────────────────────────────────────────────
 // Agents can also view a specific list (needed for the batch receipts page)
 router.get(

@@ -176,7 +176,7 @@ const updateOrphanStatus = async (id, status, notes, reviewerName = 'المشر�
 /**
  * Update orphan details (agent can edit while under_review).
  */
-const updateOrphan = async (id, fields) => {
+const updateOrphan = async (id, fields, resetStatus = false) => {
   const { fullName, dateOfBirth, gender, governorateId, guardianName, guardianRelation, isGifted, notes, profile } = fields;
   const { rows } = await query(
     `UPDATE orphans
@@ -190,11 +190,11 @@ const updateOrphan = async (id, fields) => {
        is_gifted         = COALESCE($7, is_gifted),
        notes             = COALESCE($8, notes),
        profile           = COALESCE($10, profile),
-       status            = 'under_review'
+       status            = CASE WHEN $11 THEN 'under_review' ELSE status END
      WHERE id = $9
      RETURNING *`,
     [fullName, dateOfBirth, gender, governorateId, guardianName, guardianRelation, isGifted, notes, id,
-     profile ? JSON.stringify(profile) : null]
+     profile ? JSON.stringify(profile) : null, resetStatus]
   );
   return rows[0] || null;
 };

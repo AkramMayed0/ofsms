@@ -60,12 +60,12 @@ function StatCard({ icon, label, value, sub, color = '#1B5E8C', onClick, urgent 
       onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 8px 24px rgba(27,94,140,.13)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
       onMouseLeave={e => { e.currentTarget.style.boxShadow = urgent ? `0 0 0 3px ${color}20` : '0 2px 8px rgba(27,94,140,.06)'; e.currentTarget.style.transform = 'translateY(0)'; }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '.25rem' }}>
-        <div style={{ width: 46, height: 46, borderRadius: '.875rem', background: `${color}18`, color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{icon}</div>
-        <div style={{ fontSize: '1.8rem', fontWeight: 800, color, lineHeight: 1, fontFamily: "'Cairo',sans-serif" }}>{value ?? '—'}</div>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'.25rem' }}>
+        <div style={{ width:46, height:46, borderRadius:'.875rem', background:`${color}18`, color, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{icon}</div>
+        <div className="stat-val" style={{ color }}>{value ?? '—'}</div>
       </div>
-      <div style={{ fontSize: '.82rem', fontWeight: 600, color: '#4b5563' }}>{label}</div>
-      {sub && <div style={{ fontSize: '.71rem', color: '#b0bac8' }}>{sub}</div>}
+      <div style={{ fontSize:'.82rem', fontWeight:600, color:'#4b5563' }}>{label}</div>
+      {sub && <div style={{ fontSize:'.71rem', color:'#b0bac8' }}>{sub}</div>}
       <div style={{ position: 'absolute', bottom: 0, right: 0, left: 0, height: 3, background: color, borderRadius: '0 0 1.1rem 1.1rem' }} />
     </div>
   );
@@ -448,14 +448,28 @@ export default function FinanceDashboard() {
         .link-btn { background:none; border:none; font-family:'Cairo',sans-serif; font-size:.78rem; font-weight:700; color:#1B5E8C; cursor:pointer; padding:0; }
         .link-btn:hover { opacity:.7; }
 
-        @media (max-width: 900px) {
+@media (max-width: 900px) {
           .stats-grid { grid-template-columns:repeat(2,1fr); }
           .two-col { grid-template-columns:1fr; }
           .actions-grid { grid-template-columns:repeat(2,1fr); }
         }
         @media (max-width: 600px) {
-          .greeting { flex-direction:column; align-items:flex-start; }
+          .fin-dash { gap:1.25rem; }
+          .greeting { flex-direction:column; align-items:flex-start; gap:.75rem; }
+          .greeting-title { font-size:1.3rem; }
+          .card { padding:1rem; }
           .table th:nth-child(4), .table td:nth-child(4) { display:none; }
+          .table-wrap { overflow-x:auto; }
+        }
+        @media (max-width: 480px) {
+          .stats-grid { grid-template-columns:1fr 1fr; gap:.6rem; }
+          .actions-grid { grid-template-columns:1fr 1fr; gap:.6rem; }
+          .action-card { padding:.75rem; }
+          .table th:nth-child(3), .table td:nth-child(3) { display:none; }
+        }
+        @media (max-width: 360px) {
+          .stats-grid { grid-template-columns:1fr; }
+          .actions-grid { grid-template-columns:1fr; }
         }
       `}</style>
     </div>

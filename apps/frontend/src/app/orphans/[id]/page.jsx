@@ -12,7 +12,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Handshake, Search, AlertTriangle, User, CheckCircle2, Check } from 'lucide-react';
+import { Handshake, Search, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import api from '../../../lib/api';
 import AppShell from '../../../components/AppShell';
 import useAuthStore from '../../../store/useAuthStore';
@@ -26,6 +26,40 @@ const STATUS_CONFIG = {
   rejected:          { label: 'مرفوض',         color: '#EF4444', bg: '#FEF2F2' },
   inactive:          { label: 'غير نشط',       color: '#6B7280', bg: '#F3F4F6' },
 };
+
+// Derives the two-level registration + placement state from a single status field.
+// Level 1: registration (under_review | accepted | rejected)
+// Level 2: placement — only present when accepted (under_marketing | under_sponsorship)
+function deriveStatusLevels(status) {
+  if (status === 'under_review') {
+    return {
+      registration: { label: 'قيد المراجعة', color: '#F59E0B', bg: '#FEF3C7' },
+      placement: null,
+    };
+  }
+  if (status === 'rejected') {
+    return {
+      registration: { label: 'مرفوض', color: '#EF4444', bg: '#FEF2F2' },
+      placement: null,
+    };
+  }
+  if (status === 'under_marketing') {
+    return {
+      registration: { label: 'مقبول', color: '#10B981', bg: '#ECFDF5' },
+      placement: { label: 'تحت التسويق', color: '#3B82F6', bg: '#EFF6FF' },
+    };
+  }
+  if (status === 'under_sponsorship') {
+    return {
+      registration: { label: 'مقبول', color: '#10B981', bg: '#ECFDF5' },
+      placement: { label: 'مكفول', color: '#10B981', bg: '#ECFDF5' },
+    };
+  }
+  return {
+    registration: { label: 'غير نشط', color: '#6B7280', bg: '#F3F4F6' },
+    placement: null,
+  };
+}
 
 const GENDER_LABELS = { male: 'ذكر', female: 'أنثى' };
 const RELATION_LABELS = {
@@ -149,6 +183,7 @@ export default function OrphanDetailPage() {
   const [successMsg, setSuccessMsg] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting]     = useState(false);
+  const [deleteToast, setDeleteToast] = useState(false);
 
   const isGM = user?.role === 'gm';
 
@@ -177,7 +212,9 @@ export default function OrphanDetailPage() {
     setDeleting(true);
     try {
       await api.delete(`/orphans/${id}`);
-      router.push('/orphans');
+      setDeleteConfirm(false);
+      setDeleteToast(true);
+      setTimeout(() => router.push('/orphans'), 2500);
     } catch (err) {
       setError(err.response?.data?.error || 'تعذّر حذف اليتيم');
       setDeleteConfirm(false);
@@ -186,7 +223,8 @@ export default function OrphanDetailPage() {
     }
   };
 
-  const statusInfo = STATUS_CONFIG[orphan?.status] || STATUS_CONFIG.inactive;
+  const statusInfo   = STATUS_CONFIG[orphan?.status] || STATUS_CONFIG.inactive;
+  const statusLevels = orphan ? deriveStatusLevels(orphan.status) : null;
 
   const formatDate = (d) =>
     d ? new Date(d).toLocaleDateString('ar-YE', { day: 'numeric', month: 'long', year: 'numeric' }) : '—';
@@ -366,14 +404,46 @@ export default function OrphanDetailPage() {
 
               {/* Sponsorship + Status card */}
               <Section title="بيانات الكفالة">
-                <div
-                  className="status-card-inner"
-                  style={{ borderColor: statusInfo.color, background: statusInfo.bg }}
-                >
-                  <span className="status-dot" style={{ background: statusInfo.color }} />
-                  <span style={{ color: statusInfo.color, fontWeight: 700 }}>
-                    {statusInfo.label}
-                  </span>
+                {/* ── Two-level status flow ── */}
+                <div className="status-flow">
+                  {/* Level 1: registration state */}
+                  <div className="status-flow-row">
+                    <span className="status-flow-step-label">حالة التسجيل</span>
+                    <span
+                      className="status-flow-badge"
+                      style={{
+                        color: statusLevels.registration.color,
+                        background: statusLevels.registration.bg,
+                        borderColor: statusLevels.registration.color + '40',
+                      }}
+                    >
+                      <span className="status-flow-dot" style={{ background: statusLevels.registration.color }} />
+                      {statusLevels.registration.label}
+                    </span>
+                  </div>
+
+                  {/* Level 2: placement state (only when accepted) */}
+                  {statusLevels.placement && (
+                    <>
+                      <div className="status-flow-connector">
+                        <div className="status-flow-line" />
+                      </div>
+                      <div className="status-flow-row">
+                        <span className="status-flow-step-label">حالة الكفالة</span>
+                        <span
+                          className="status-flow-badge"
+                          style={{
+                            color: statusLevels.placement.color,
+                            background: statusLevels.placement.bg,
+                            borderColor: statusLevels.placement.color + '40',
+                          }}
+                        >
+                          <span className="status-flow-dot" style={{ background: statusLevels.placement.color }} />
+                          {statusLevels.placement.label}
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {orphan.sponsor_name ? (
@@ -424,6 +494,22 @@ export default function OrphanDetailPage() {
           </div>
         )}
       </div>
+
+      {/* ── Delete success toast ───────────────────────────────────── */}
+      {deleteToast && (
+        <div className="modal-backdrop">
+          <div className="modal-box" dir="rtl" style={{ textAlign: 'center' }}>
+            <div className="modal-icon">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+            </div>
+            <h3 className="modal-title">تم الحذف بنجاح</h3>
+            <p className="modal-body">تم حذف بيانات اليتيم. سيتم تحويلك إلى قائمة الأيتام…</p>
+          </div>
+        </div>
+      )}
 
       {/* ── Delete Confirm Modal ────────────────────────────────────── */}
       {deleteConfirm && (
@@ -736,24 +822,35 @@ export default function OrphanDetailPage() {
         }
         .assign-link:hover { text-decoration: underline; }
 
-        /* ── Status card ────────────────────────────────────────────── */
-        .status-card-inner {
-          display: flex; align-items: center; justify-content: center; gap: .65rem;
-          padding: 1rem; border-radius: .75rem; border: 2px solid;
-          font-size: .95rem; font-weight: 800; margin-bottom: .875rem;
-          letter-spacing: .01em;
+        /* ── Two-level status flow ──────────────────────────────────── */
+        .status-flow {
+          display: flex; flex-direction: column; gap: 0; margin-bottom: .875rem;
         }
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; animation: pulse 2s infinite; }
+        .status-flow-row {
+          display: flex; align-items: center; justify-content: space-between;
+          gap: .75rem; padding: .6rem .75rem;
+          background: #f8fafc; border: 1px solid #eef2f7; border-radius: .625rem;
+        }
+        .status-flow-step-label {
+          font-size: .72rem; color: #94a3b8; font-weight: 600;
+          text-transform: uppercase; letter-spacing: .04em; white-space: nowrap;
+        }
+        .status-flow-badge {
+          display: inline-flex; align-items: center; gap: .35rem;
+          padding: .3rem .8rem; border-radius: 999px; border: 1px solid;
+          font-size: .8rem; font-weight: 700;
+        }
+        .status-flow-dot {
+          width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+          animation: pulse 2s infinite;
+        }
+        .status-flow-connector {
+          display: flex; justify-content: flex-end; padding: 0 1.25rem;
+        }
+        .status-flow-line {
+          width: 2px; height: 14px; background: #e2e8f0; border-radius: 1px;
+        }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.45} }
-        .btn-change-status {
-          display: flex; align-items: center; justify-content: center;
-          width: 100%; padding: .65rem 1rem;
-          background: linear-gradient(135deg, #1B5E8C, #134569);
-          color: #fff; font-family: 'Cairo', sans-serif; font-size: .82rem; font-weight: 700;
-          text-decoration: none; border-radius: .75rem;
-          box-shadow: 0 2px 8px rgba(27,94,140,.25); transition: all .15s;
-        }
-        .btn-change-status:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(27,94,140,.35); }
 
         /* ── Skeleton ───────────────────────────────────────────────── */
         .skeleton-wrap { display: flex; flex-direction: column; gap: 1rem; }
