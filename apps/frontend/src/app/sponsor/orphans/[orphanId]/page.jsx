@@ -11,8 +11,8 @@ import { AlertTriangle, User, Handshake, CheckCircle2, XCircle, FileEdit, Check 
 
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import sponsorApi from '../../sponsorApi';
-import useSponsorStore from '../../useSponsorStore';
+import sponsorApi from '@/lib/sponsorApi';
+import useSponsorStore from '@/store/useSponsorStore';
 
 const ARABIC_MONTHS = [
   '', 'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',

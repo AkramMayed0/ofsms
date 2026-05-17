@@ -14,7 +14,7 @@ import { AlertTriangle } from 'lucide-react';
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
-import useSponsorStore from '../useSponsorStore';
+import useSponsorStore from '@/store/useSponsorStore';
 
 export default function SponsorLoginPage() {
   const router = useRouter();
