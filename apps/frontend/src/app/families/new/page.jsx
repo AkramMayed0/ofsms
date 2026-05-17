@@ -12,7 +12,7 @@
  */
 
 import { useState, useEffect, Fragment } from 'react';
-import { AlertTriangle, User, Users, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, User, Users, CheckCircle2, Check } from 'lucide-react';
 
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -391,7 +391,7 @@ export default function FamilyRegistrationPage() {
               >
                 {submitState === 'loading'
                   ? <><span className="spin" aria-hidden />جارٍ الإرسال…</>
-                  : 'إرسال للمراجعة ✓'}
+                  : 'إرسال للمراجعة <Check size={16} />'}
               </button>
             )}
           </div>
