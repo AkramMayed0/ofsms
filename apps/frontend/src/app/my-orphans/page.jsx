@@ -117,7 +117,7 @@ function DetailDrawer({ orphan, onClose }) {
               <InfoRow label="اسم الوصي"   value={orphan.guardian_name || '—'} />
               <InfoRow label="صلة الوصي"   value={RELATION_MAP[orphan.guardian_relation] || '—'} />
               <InfoRow label="تاريخ التسجيل" value={formatDate(orphan.created_at)} />
-              {orphan.is_gifted && <InfoRow label="موهوب" value="<CheckCircle2 size={16} /> نعم" highlight />}
+              {orphan.is_gifted && <InfoRow label="موهوب" value={<span style={{ display:'inline-flex', alignItems:'center', gap:'.3rem' }}><CheckCircle2 size={14} /> نعم</span>} highlight />}
             </div>
           </div>
 

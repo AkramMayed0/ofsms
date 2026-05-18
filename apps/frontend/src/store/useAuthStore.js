@@ -1,46 +1,44 @@
 /**
  * useAuthStore.js — Global auth state via Zustand
  *
- * Stores: accessToken (memory), user (sessionStorage)
+ * Stores: accessToken (memory), user (localStorage)
  *
- * WHY sessionStorage for user?
- *   - accessToken lives in memory only (security — never persisted)
- *   - But user.role is needed on refresh to know which dashboard to render
- *   - sessionStorage survives F5 refresh but is cleared when the tab closes
- *   - On refresh: user is rehydrated from sessionStorage, then a silent
- *     /auth/refresh call restores the accessToken from the httpOnly cookie
+ * - accessToken lives in memory only (security — never persisted)
+ * - user.role is stored in localStorage so it survives browser close/reopen
+ * - On return: user is rehydrated from localStorage, then a silent
+ *   /auth/refresh call restores the accessToken from the httpOnly cookie
  *
- * Flow on refresh:
- *   1. Zustand rehydrates user.role from sessionStorage
+ * Flow on browser reopen:
+ *   1. Zustand rehydrates user.role from localStorage
  *   2. AuthBootstrap (in layout) calls /auth/refresh → gets new accessToken
  *   3. setAuth() stores the new token in memory
- *   4. Dashboard renders normally
+ *   4. Dashboard + sidebar render normally with correct role
  */
 
 import { create } from 'zustand';
 
-// ── Safely read user from sessionStorage (handles SSR) ───────────────────────
+// ── Safely read user from localStorage (handles SSR) ─────────────────────────
 const readUserFromSession = () => {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = sessionStorage.getItem('ofsms_user');
+    const raw = localStorage.getItem('ofsms_user');
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
 };
 
-// ── Safely write user to sessionStorage ──────────────────────────────────────
+// ── Safely write user to localStorage ────────────────────────────────────────
 const writeUserToSession = (user) => {
   if (typeof window === 'undefined') return;
   try {
     if (user) {
-      sessionStorage.setItem('ofsms_user', JSON.stringify(user));
+      localStorage.setItem('ofsms_user', JSON.stringify(user));
     } else {
-      sessionStorage.removeItem('ofsms_user');
+      localStorage.removeItem('ofsms_user');
     }
   } catch {
-    // sessionStorage quota exceeded or private mode — fail silently
+    // localStorage quota exceeded or private mode — fail silently
   }
 };
 

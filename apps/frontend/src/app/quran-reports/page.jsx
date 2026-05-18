@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { AlertTriangle, X, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, X, CheckCircle2, BookOpen } from 'lucide-react';
 
 import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
@@ -276,10 +276,17 @@ export default function QuranReportsPage() {
     }
   }, [role]);
 
-  const handleApprove = async (id) => {
+  const handleApprove = async (r) => {
+    const belowThreshold = r.threshold != null && r.juz_memorized < r.threshold;
+    if (belowThreshold) {
+      const confirmed = window.confirm(
+        `تحذير: هذا اليتيم حفظ ${r.juz_memorized} جزء والحد المطلوب هو ${r.threshold} جزء.\n\nهل تريد الموافقة على التقرير رغم ذلك؟`
+      );
+      if (!confirmed) return;
+    }
     setActing(true);
     try {
-      await api.patch(`/quran-reports/${id}/approve`);
+      await api.patch(`/quran-reports/${r.id}/approve`);
       fetchReports();
     } catch (err) {
       setError(err.response?.data?.error || 'فشل الاعتماد');
@@ -364,13 +371,13 @@ export default function QuranReportsPage() {
         {/* Empty */}
         {!loading && filtered.length === 0 && (
           <div className="empty">
-            <div style={{ fontSize: '3rem' }}>📖</div>
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#f0f7ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><BookOpen size={28} color="#1B5E8C" /></div>
             <h3 className="empty-title">
               {filterStatus !== 'all' ? 'لا توجد تقارير بهذه الحالة' : 'لا توجد تقارير حفظ بعد'}
             </h3>
             {role === 'agent' && filterStatus === 'all' && (
               <button className="btn-primary" onClick={() => setShowSubmit(true)}>
-                + رفع أول تقرير
+                <BookOpen size={16} /> رفع أول تقرير
               </button>
             )}
           </div>
@@ -396,7 +403,7 @@ export default function QuranReportsPage() {
                   <tr key={r.id} className="trow">
                     <td>
                       <div className="name-cell">
-                        <div className="avatar">📖</div>
+                        <div className="avatar"><BookOpen size={16} color="#1B5E8C" /></div>
                         <div>
                           <div className="name-text">{r.orphan_name}</div>
                           {r.supervisor_notes && r.status === 'rejected' && (
@@ -408,7 +415,14 @@ export default function QuranReportsPage() {
                     <td className="muted">{r.governorate_ar || '—'}</td>
                     <td className="muted">{MONTHS_AR[r.month]} {r.year}</td>
                     <td>
-                      <span className="juz-chip">{r.juz_memorized} جزء</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '.4rem' }}>
+                        <span className="juz-chip">{r.juz_memorized} جزء</span>
+                        {r.threshold != null && r.juz_memorized < r.threshold && (
+                          <span title={`الحد المطلوب: ${r.threshold} جزء`} style={{ display:'inline-flex', alignItems:'center', gap:'.2rem', background:'#fff7ed', border:'1px solid #fed7aa', borderRadius:'2rem', padding:'.15rem .5rem', fontSize:'.7rem', fontWeight:700, color:'#c2410c', whiteSpace:'nowrap' }}>
+                            <AlertTriangle size={11} /> أقل من الحد
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td><StatusBadge status={r.status} /></td>
                     <td className="muted">{formatDate(r.submitted_at)}</td>
@@ -418,7 +432,7 @@ export default function QuranReportsPage() {
                           <div className="action-btns">
                             <button
                               className="approve-btn"
-                              onClick={() => handleApprove(r.id)}
+                              onClick={() => handleApprove(r)}
                               disabled={acting}
                             ><CheckCircle2 size={16} /></button>
                             <button

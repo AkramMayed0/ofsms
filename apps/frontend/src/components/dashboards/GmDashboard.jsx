@@ -262,7 +262,7 @@ export default function GmDashboard() {
           <div className="finance-grid">
             <div className="finance-item">
               <span className="finance-label">الإجمالي</span>
-              <span className="finance-value" style={{ color: '#1B5E8C' }}>
+              <span className="finance-value" style={{ color: '#ffffff', fontWeight: 800 }}>
                 {Number(finance.total).toLocaleString()} ر.ي
               </span>
             </div>

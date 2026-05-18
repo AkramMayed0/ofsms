@@ -45,20 +45,46 @@ const getThresholdForAge = (age, thresholds) => {
 // ── JuzSlider ─────────────────────────────────────────────────────────────────
 // Visual quick-pick for common juz values
 
+const JUZ_PRESETS = [
+  { value: 0,    label: 'صفر',       sub: '٠ جزء'    },
+  { value: 0.25, label: 'ربع جزء',   sub: '٠٫٢٥'     },
+  { value: 0.5,  label: 'نصف جزء',   sub: '٠٫٥'      },
+  { value: 1,    label: 'جزء',       sub: '١ كامل'   },
+  { value: 1.5,  label: 'جزء ونصف', sub: '١٫٥'      },
+  { value: 2,    label: 'جزءان',     sub: '٢ كاملان' },
+  { value: 3,    label: 'ثلاثة',     sub: '٣ أجزاء'  },
+];
+
 function JuzQuickPick({ value, onChange }) {
-  const presets = [0, 0.25, 0.5, 1, 1.5, 2, 3];
   return (
-    <div className="juz-presets">
-      {presets.map((v) => (
-        <button
-          key={v}
-          type="button"
-          className={`juz-btn ${parseFloat(value) === v ? 'juz-btn-active' : ''}`}
-          onClick={() => onChange(v)}
-        >
-          {v === 0 ? 'صفر' : v}
-        </button>
-      ))}
+    <div style={{ display:'flex', gap:'.5rem', flexWrap:'wrap' }}>
+      {JUZ_PRESETS.map(({ value: v, label, sub }) => {
+        const active = parseFloat(value) === v;
+        return (
+          <button
+            key={v}
+            type="button"
+            onClick={() => onChange(v)}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
+              minWidth: 72, padding: '.5rem .9rem',
+              border: `1.5px solid ${active ? '#1B5E8C' : '#d1d5db'}`,
+              borderRadius: '.75rem',
+              background: active ? '#1B5E8C' : '#fff',
+              boxShadow: active ? '0 2px 8px rgba(27,94,140,.2)' : '0 1px 3px rgba(0,0,0,.06)',
+              cursor: 'pointer', transition: 'all .15s',
+              fontFamily: "'Cairo','Tajawal',sans-serif",
+            }}
+          >
+            <span style={{ fontSize: '.82rem', fontWeight: 700, color: active ? '#fff' : '#1f2937', lineHeight: 1.3 }}>
+              {label}
+            </span>
+            <span style={{ fontSize: '.67rem', fontWeight: 500, color: active ? 'rgba(255,255,255,.75)' : '#9ca3af', direction: 'ltr', lineHeight: 1 }}>
+              {sub}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -592,15 +618,7 @@ export default function QuranReportSubmissionPage() {
         .hint-ok-text   { color: #059669; font-weight: 700; }
         .hint-warn-text { color: #d97706; font-weight: 700; }
 
-        /* ── Juz presets ──────────────────────────────────────────────── */
-        .juz-presets { display: flex; gap: .5rem; flex-wrap: wrap; }
-        .juz-btn {
-          padding: .4rem .85rem; border: 1.5px solid #e5eaf0; border-radius: 2rem;
-          font-size: .8rem; font-weight: 700; font-family: 'Cairo', sans-serif;
-          color: #6b7280; background: #fff; cursor: pointer; transition: all .15s;
-        }
-        .juz-btn:hover { border-color: #1B5E8C; color: #1B5E8C; }
-        .juz-btn-active { border-color: #1B5E8C; background: #1B5E8C; color: #fff; }
+        /* juz-presets: now fully inline-styled */
 
         /* ── Juz input ────────────────────────────────────────────────── */
         .juz-input-wrap { display: flex; align-items: center; gap: .75rem; }
