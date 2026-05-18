@@ -110,7 +110,7 @@ export default function MarketingPoolPage() {
   const [filterType, setFilterType] = useState('all');
   const [govFilter, setGovFilter] = useState('');
   const [giftedFilter, setGiftedFilter] = useState('');
-  const [selectedOrphans, setSelectedOrphans] = useState([]);
+  const [selectedItems, setSelectedItems] = useState([]);
   const [exporting, setExporting] = useState(false);
 
   const load = useCallback(async () => {
@@ -170,9 +170,9 @@ export default function MarketingPoolPage() {
     const matchGifted = !giftedFilter || String(item.isGifted) === giftedFilter;
     return matchSearch && matchType && matchGov && matchGifted;
   });
-  const filteredOrphans = filtered.filter(item => item.type === 'orphan');
-  const allFilteredSelected = filteredOrphans.length > 0
-    && filteredOrphans.every(item => selectedOrphans.includes(item.id));
+  const itemKey = (item) => `${item.type}:${item.id}`;
+  const allFilteredSelected = filtered.length > 0
+    && filtered.every(item => selectedItems.includes(itemKey(item)));
 
   const downloadBlob = (blob, filename) => {
     const url = window.URL.createObjectURL(blob);
@@ -193,30 +193,32 @@ export default function MarketingPoolPage() {
     }
   };
 
-  const toggleOrphan = (id) => {
-    setSelectedOrphans((current) =>
-      current.includes(id) ? current.filter((itemId) => itemId !== id) : [...current, id]
+  const toggleItem = (item) => {
+    const key = itemKey(item);
+    setSelectedItems((current) =>
+      current.includes(key) ? current.filter((selectedKey) => selectedKey !== key) : [...current, key]
     );
   };
 
-  const toggleFilteredOrphans = () => {
+  const toggleFilteredItems = () => {
     if (allFilteredSelected) {
-      setSelectedOrphans((current) => current.filter((id) => !filteredOrphans.some(item => item.id === id)));
+      setSelectedItems((current) => current.filter((key) => !filtered.some(item => itemKey(item) === key)));
       return;
     }
-    setSelectedOrphans((current) => Array.from(new Set([...current, ...filteredOrphans.map(item => item.id)])));
+    setSelectedItems((current) => Array.from(new Set([...current, ...filtered.map(itemKey)])));
   };
 
   const exportSelected = async () => {
-    if (selectedOrphans.length === 0) return;
+    if (selectedItems.length === 0) return;
     setExporting(true);
     setError('');
     try {
-      for (const orphanId of selectedOrphans) {
-        const item = items.find(i => i.id === orphanId);
-        const res = await api.get(`/reports/orphan/${orphanId}/pdf`, { responseType: 'blob' });
-        const safeName = (item?.name || orphanId).replace(/[\\/:*?"<>|]/g, '-');
-        downloadBlob(res.data, `orphan-${safeName}.pdf`);
+      for (const selectedKey of selectedItems) {
+        const [type, id] = selectedKey.split(':');
+        const item = items.find(i => i.type === type && i.id === id);
+        const res = await api.get(`/reports/${type}/${id}/pdf`, { responseType: 'blob' });
+        const safeName = (item?.name || id).replace(/[\\/:*?"<>|]/g, '-');
+        downloadBlob(res.data, `${type}-${safeName}.pdf`);
         await new Promise((resolve) => setTimeout(resolve, 300));
       }
     } catch {
@@ -335,11 +337,11 @@ export default function MarketingPoolPage() {
           <button
             className="btn-export-selected"
             onClick={exportSelected}
-            disabled={selectedOrphans.length === 0 || exporting}
-            title="تصدير ملف PDF منفصل لكل يتيم محدد"
+            disabled={selectedItems.length === 0 || exporting}
+            title="تصدير ملف PDF منفصل لكل مستفيد محدد"
           >
             <Download size={16} />
-            {exporting ? 'جارٍ التصدير…' : `Export (${selectedOrphans.length})`}
+            {exporting ? 'جارٍ التصدير…' : `Export (${selectedItems.length})`}
           </button>
         </div>
 
@@ -361,9 +363,9 @@ export default function MarketingPoolPage() {
                     <input
                       type="checkbox"
                       checked={allFilteredSelected}
-                      disabled={filteredOrphans.length === 0}
-                      onChange={toggleFilteredOrphans}
-                      aria-label="تحديد كل الأيتام الظاهرين"
+                      disabled={filtered.length === 0}
+                      onChange={toggleFilteredItems}
+                      aria-label="تحديد كل المستفيدين الظاهرين"
                     />
                   </th>
                   <th>الاسم</th>
@@ -407,16 +409,12 @@ export default function MarketingPoolPage() {
                       role="button"
                     >
                       <td className="select-col" onClick={(e) => e.stopPropagation()}>
-                        {item.type === 'orphan' ? (
-                          <input
-                            type="checkbox"
-                            checked={selectedOrphans.includes(item.id)}
-                            onChange={() => toggleOrphan(item.id)}
-                            aria-label={`تحديد ${item.name}`}
-                          />
-                        ) : (
-                          <span className="select-placeholder">—</span>
-                        )}
+                        <input
+                          type="checkbox"
+                          checked={selectedItems.includes(itemKey(item))}
+                          onChange={() => toggleItem(item)}
+                          aria-label={`تحديد ${item.name}`}
+                        />
                       </td>
                       {/* Name */}
                       <td>

@@ -16,7 +16,7 @@ const { Router }  = require('express');
 const ExcelJS     = require('exceljs');
 const { authenticate, authorize } = require('../../middleware/rbac');
 const { query }   = require('../../config/db');
-const { disbursementHTML, governorateHTML, orphanProfileHTML, htmlToPDF } = require('./reports.pdf');
+const { disbursementHTML, governorateHTML, orphanProfileHTML, familyProfileHTML, htmlToPDF } = require('./reports.pdf');
 
 const router = Router();
 
@@ -127,6 +127,27 @@ const getOrphanProfileData = async (id) => {
       AND sp.is_active = TRUE
      LEFT JOIN sponsors s ON s.id = sp.sponsor_id
      WHERE o.id = $1`,
+    [id]
+  );
+  return rows[0] || null;
+};
+
+const getFamilyProfileData = async (id) => {
+  const { rows } = await query(
+    `SELECT
+       f.*,
+       g.name_ar AS governorate_ar,
+       u.full_name AS agent_name,
+       s.full_name AS sponsor_name
+     FROM families f
+     LEFT JOIN governorates g ON g.id = f.governorate_id
+     LEFT JOIN users u ON u.id = f.agent_id
+     LEFT JOIN sponsorships sp
+       ON sp.beneficiary_id = f.id
+      AND sp.beneficiary_type = 'family'
+      AND sp.is_active = TRUE
+     LEFT JOIN sponsors s ON s.id = sp.sponsor_id
+     WHERE f.id = $1`,
     [id]
   );
   return rows[0] || null;
@@ -284,6 +305,41 @@ router.get(
       const html = orphanProfileHTML({ orphan, profileRows, stats, issueDate });
       const pdf = await htmlToPDF(html);
       sendPDF(res, `ملف-يتيم-${orphan.full_name}`, pdf);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+router.get(
+  '/family/:id/pdf',
+  authenticate,
+  authorize('gm', 'supervisor'),
+  async (req, res, next) => {
+    try {
+      const family = await getFamilyProfileData(req.params.id);
+      if (!family) return res.status(404).json({ error: 'الأسرة غير موجودة' });
+
+      const issueDate = new Date().toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' });
+      const stats = [
+        { label: 'عدد الأفراد', value: `${family.member_count || '—'}` },
+        { label: 'الحالة', value: STATUS_AR[family.status] || family.status },
+        { label: 'المحافظة', value: family.governorate_ar || '—' },
+        { label: 'الكفالة', value: family.sponsor_name ? 'مكفولة' : 'بانتظار كافل' },
+      ];
+      const profileRows = [
+        { label: 'اسم الأسرة', value: family.family_name },
+        { label: 'رب الأسرة / المعيل', value: family.head_of_family },
+        { label: 'عدد الأفراد', value: family.member_count },
+        { label: 'المندوب', value: family.agent_name },
+        { label: 'المحافظة', value: family.governorate_ar },
+        { label: 'الحالة التسويقية', value: family.sponsor_name ? `مكفولة بواسطة ${family.sponsor_name}` : 'بانتظار كافل' },
+        { label: 'ملاحظات وتوصيات', value: family.notes || '—', full: true },
+      ];
+
+      const html = familyProfileHTML({ family, profileRows, stats, issueDate });
+      const pdf = await htmlToPDF(html);
+      sendPDF(res, `ملف-أسرة-${family.family_name}`, pdf);
     } catch (err) {
       next(err);
     }

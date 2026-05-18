@@ -60,6 +60,24 @@ const createSponsorOrphanAd = async ({ orphan, createdBy }) => {
   });
 };
 
+const createSponsorFamilyAd = async ({ family, createdBy }) => {
+  const bodyParts = [
+    'من سيكفل هذه الأسرة؟',
+    `اسم الأسرة: ${family.family_name}`,
+    family.head_of_family ? `رب الأسرة: ${family.head_of_family}` : null,
+    family.member_count ? `عدد الأفراد: ${family.member_count}` : null,
+    family.governorate_ar ? `المحافظة: ${family.governorate_ar}` : null,
+  ].filter(Boolean);
+
+  return createAnnouncement({
+    title: `طلب كفالة أسرة: ${family.family_name}`,
+    body: bodyParts.join('\n'),
+    createdBy,
+    audience: 'sponsor',
+    notifyStaff: false,
+  });
+};
+
 const getActiveAnnouncements = async () => {
   const { rows } = await query(
     `SELECT a.id, a.title, a.body, a.published_at, a.is_active,
@@ -126,6 +144,7 @@ const deleteAnnouncement = async (id) => {
 module.exports = {
   createAnnouncement,
   createSponsorOrphanAd,
+  createSponsorFamilyAd,
   getActiveAnnouncements,
   getActiveSponsorAnnouncements,
   getAllAnnouncements,
