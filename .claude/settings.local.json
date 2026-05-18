@@ -44,7 +44,8 @@
       "Bash(curl -s https://ofsms.onrender.com/health)",
       "Bash(Get-ChildItem -Path \"d:\\\\NawaDev\\\\ofsms\\\\frontend\\\\src\" -Recurse -Filter \"*report*\" -ErrorAction SilentlyContinue)",
       "Bash(Select-Object -ExpandProperty FullName)",
-      "Bash(npx playwright *)"
+      "Bash(npx playwright *)",
+      "PowerShell(Get-ChildItem \"d:\\\\NawaDev\\\\ofsms\\\\apps\\\\frontend\\\\src\\\\app\" -Recurse | Where-Object { !$_.PSIsContainer } | Select-Object FullName)"
     ]
   }
 }

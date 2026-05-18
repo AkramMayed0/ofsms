@@ -15,7 +15,7 @@ const getGmDashboard = async () => {
   `);
 
   const { rows: orphansPerSponsor } = await query(`
-    SELECT s.full_name AS sponsor_name, COUNT(sp.id) AS count
+    SELECT s.id AS sponsor_id, s.full_name AS sponsor_name, COUNT(sp.id) AS count
     FROM sponsorships sp JOIN sponsors s ON s.id = sp.sponsor_id
     WHERE sp.is_active = TRUE
     GROUP BY s.id, s.full_name ORDER BY count DESC LIMIT 10

@@ -188,8 +188,6 @@ export default function GmDashboard() {
           ) : (
             <div className="sponsor-list">
               {sponsorData.slice(0, 8).map((s, i) => (
-
-                console.log(s.sponsor_id),
                 <div key={s.sponsor_id} className="sponsor-row">
                   <div className="sponsor-rank">{i + 1}</div>
                   <div className="sponsor-name">{s.sponsor_name}</div>
