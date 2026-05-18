@@ -26,43 +26,128 @@ import {
 // ── Nav items per role ────────────────────────────────────────────────────────
 const NAV_ITEMS = {
   gm: [
-    { label: 'لوحة التحكم',      href: '/dashboard',        icon: LayoutDashboard },
-    { label: 'طلبات التسجيل',   href: '/registrations',    icon: ClipboardList },
-    { label: 'الأيتام',           href: '/orphans',           icon: Users },
-    { label: 'الأسر',             href: '/families',          icon: Home },
-    { label: 'مجمع التسويق',     href: '/marketing-pool',    icon: Tag },
-    { label: 'الكفلاء',           href: '/sponsors',          icon: Handshake },
-    { label: 'الأيتام الموهوبون', href: '/orphans/gifted',    icon: Star },
-    { label: 'تحليلات المحافظات', href: '/governorates',      icon: Map },
-    { label: 'إدارة المستخدمين', href: '/users',              icon: UserCog },
-    { label: 'إعدادات الحفظ',    href: '/quran-thresholds',  icon: BookOpen },
-    { label: 'أيتامي',           href: '/my-orphans',        icon: Users },
-    { label: 'رفع تقرير الحفظ', href: '/quran-reports/new', icon: BookOpen },
-    { label: 'التقارير',          href: '/reports',           icon: FileText },
-    { label: 'الإعلانات',         href: '/announcements',     icon: Megaphone },
+    {
+      group: 'الرئيسية',
+      items: [
+        { label: 'لوحة التحكم', href: '/dashboard', icon: LayoutDashboard },
+      ],
+    },
+    {
+      group: 'الإدارة',
+      items: [
+        { label: 'طلبات التسجيل',    href: '/registrations',   icon: ClipboardList },
+        { label: 'الأيتام',           href: '/orphans',          icon: Users },
+        { label: 'الأسر',             href: '/families',         icon: Home },
+        { label: 'مجمع التسويق',     href: '/marketing-pool',   icon: Tag },
+        { label: 'الكفلاء',           href: '/sponsors',         icon: Handshake },
+        { label: 'الأيتام الموهوبون', href: '/orphans/gifted',   icon: Star },
+        { label: 'أيتامي',            href: '/my-orphans',       icon: Users },
+      ],
+    },
+    {
+      group: 'القرآن الكريم',
+      items: [
+        { label: 'إعدادات الحفظ',    href: '/quran-thresholds',  icon: BookOpen },
+        { label: 'رفع تقرير الحفظ', href: '/quran-reports/new', icon: BookOpen },
+      ],
+    },
+    {
+      group: 'التقارير والتواصل',
+      items: [
+        { label: 'تحليلات المحافظات', href: '/governorates',   icon: Map },
+        { label: 'التقارير',           href: '/reports',        icon: FileText },
+        { label: 'الإعلانات',          href: '/announcements',  icon: Megaphone },
+      ],
+    },
+    {
+      group: 'النظام',
+      items: [
+        { label: 'إدارة المستخدمين', href: '/users', icon: UserCog },
+      ],
+    },
   ],
   supervisor: [
-    { label: 'لوحة التحكم',    href: '/dashboard',      icon: LayoutDashboard },
-    { label: 'طلبات التسجيل',  href: '/registrations',  icon: ClipboardList },
-    { label: 'تقارير الحفظ',   href: '/quran-reports',  icon: BookOpen },
-    { label: 'كشف الصرف',      href: '/disbursements/', icon: DollarSign },
-    { label: 'التقارير',        href: '/reports',        icon: FileText },
-    { label: 'الإعلانات',      href: '/announcements',  icon: Megaphone },
+    {
+      group: 'الرئيسية',
+      items: [
+        { label: 'لوحة التحكم', href: '/dashboard', icon: LayoutDashboard },
+      ],
+    },
+    {
+      group: 'الإدارة',
+      items: [
+        { label: 'طلبات التسجيل', href: '/registrations', icon: ClipboardList },
+      ],
+    },
+    {
+      group: 'القرآن والحفظ',
+      items: [
+        { label: 'تقارير الحفظ', href: '/quran-reports', icon: BookOpen },
+      ],
+    },
+    {
+      group: 'المالية',
+      items: [
+        { label: 'كشف الصرف', href: '/disbursements/', icon: DollarSign },
+      ],
+    },
+    {
+      group: 'التقارير والتواصل',
+      items: [
+        { label: 'التقارير',  href: '/reports',       icon: FileText },
+        { label: 'الإعلانات', href: '/announcements', icon: Megaphone },
+      ],
+    },
   ],
   agent: [
-    { label: 'لوحة التحكم',     href: '/dashboard',         icon: LayoutDashboard },
-    { label: 'أيتامي',           href: '/my-orphans',        icon: Users },
-    { label: 'تسجيل يتيم',      href: '/orphans/new',       icon: Plus },
-    { label: 'تسجيل أسرة',      href: '/families/new',      icon: Plus },
-    { label: 'رفع تقرير الحفظ', href: '/quran-reports/new', icon: BookOpen },
-    { label: 'الإعلانات',       href: '/announcements',     icon: Megaphone },
+    {
+      group: 'الرئيسية',
+      items: [
+        { label: 'لوحة التحكم', href: '/dashboard',  icon: LayoutDashboard },
+        { label: 'أيتامي',      href: '/my-orphans', icon: Users },
+      ],
+    },
+    {
+      group: 'التسجيل',
+      items: [
+        { label: 'تسجيل يتيم', href: '/orphans/new',  icon: Plus },
+        { label: 'تسجيل أسرة', href: '/families/new', icon: Plus },
+      ],
+    },
+    {
+      group: 'القرآن الكريم',
+      items: [
+        { label: 'رفع تقرير الحفظ', href: '/quran-reports/new', icon: BookOpen },
+      ],
+    },
+    {
+      group: 'التواصل',
+      items: [
+        { label: 'الإعلانات', href: '/announcements', icon: Megaphone },
+      ],
+    },
   ],
   finance: [
-    { label: 'لوحة التحكم',   href: '/dashboard',             icon: LayoutDashboard },
-    { label: 'كشف الصرف',     href: '/disbursements',         icon: DollarSign },
-    { label: 'سجل الإصدارات', href: '/disbursements/history', icon: Archive },
-    { label: 'التقارير',       href: '/reports',               icon: FileText },
-    { label: 'الإعلانات',     href: '/announcements',         icon: Megaphone },
+    {
+      group: 'الرئيسية',
+      items: [
+        { label: 'لوحة التحكم', href: '/dashboard', icon: LayoutDashboard },
+      ],
+    },
+    {
+      group: 'المالية',
+      items: [
+        { label: 'كشف الصرف',     href: '/disbursements',         icon: DollarSign },
+        { label: 'سجل الإصدارات', href: '/disbursements/history', icon: Archive },
+      ],
+    },
+    {
+      group: 'التقارير والتواصل',
+      items: [
+        { label: 'التقارير',  href: '/reports',       icon: FileText },
+        { label: 'الإعلانات', href: '/announcements', icon: Megaphone },
+      ],
+    },
   ],
 };
 
@@ -74,6 +159,8 @@ const ROLE_LABELS = {
   sponsor:    'كافل',
 };
 
+const flatItems = (groups) => groups.flatMap((g) => g.items);
+
 // ── AppShell ──────────────────────────────────────────────────────────────────
 export default function AppShell({ children }) {
   const [drawerOpen, setDrawerOpen] = useState(false); // mobile drawer
@@ -83,7 +170,8 @@ export default function AppShell({ children }) {
   const router   = useRouter();
   const { user, clearAuth } = useAuthStore();
 
-  const navItems = NAV_ITEMS[user?.role] || [];
+  const navGroups = NAV_ITEMS[user?.role] || [];
+  const navItems  = flatItems(navGroups);
 
   // Close mobile drawer whenever the route changes
   useEffect(() => { setDrawerOpen(false); }, [pathname]);
@@ -134,22 +222,31 @@ export default function AppShell({ children }) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 ${
-                  isActive ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100 hover:text-primary'
-                }`}
-              >
-                <item.icon size={18} className="flex-shrink-0" />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
+        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
+          {navGroups.map((group) => (
+            <div key={group.group}>
+              <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-gray-400 select-none">
+                {group.group}
+              </p>
+              <div className="space-y-0.5">
+                {group.items.map((item) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 ${
+                        isActive ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100 hover:text-primary'
+                      }`}
+                    >
+                      <item.icon size={18} className="flex-shrink-0" />
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
         {/* User + Logout */}
@@ -190,23 +287,34 @@ export default function AppShell({ children }) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                title={item.label}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 ${
-                  isActive ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100 hover:text-primary'
-                }`}
-              >
-                <item.icon size={18} className="flex-shrink-0" />
-                {!collapsed && <span>{item.label}</span>}
-              </Link>
-            );
-          })}
+        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
+          {navGroups.map((group) => (
+            <div key={group.group}>
+              {!collapsed && (
+                <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-gray-400 select-none">
+                  {group.group}
+                </p>
+              )}
+              <div className="space-y-0.5">
+                {group.items.map((item) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      title={item.label}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 ${
+                        isActive ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100 hover:text-primary'
+                      }`}
+                    >
+                      <item.icon size={18} className="flex-shrink-0" />
+                      {!collapsed && <span>{item.label}</span>}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
         {/* User + Logout */}

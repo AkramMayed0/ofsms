@@ -417,17 +417,15 @@ export default function SponsorDetailPage() {
   if (loading) {
     return (
       <AppShell>
-        <div className="page-container skel-loading">
-          <div className="skel skel-header"></div>
-          <div className="skel skel-card"></div>
-          <div className="skel skel-card"></div>
+        <div className="skeleton-wrap" dir="rtl">
+          {[120, 80, 200].map((h, i) => (
+            <div key={i} className="skeleton-block" style={{ height: h }} />
+          ))}
         </div>
         <style jsx>{`
-          .page-container { padding: 2rem; max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem; }
-          .skel { background: linear-gradient(90deg, #f0f4f8 25%, #e5eaf0 50%, #f0f4f8 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 1rem; }
-          .skel-header { height: 40px; width: 300px; }
-          .skel-card { height: 200px; width: 100%; }
-          @keyframes shimmer { to { background-position: -200% 0; } }
+          .skeleton-wrap { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem; padding-bottom: 3rem; }
+          .skeleton-block { border-radius: 1rem; background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+          @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         `}</style>
       </AppShell>
     );
@@ -436,16 +434,16 @@ export default function SponsorDetailPage() {
   if (error || !sponsor) {
     return (
       <AppShell>
-        <div className="page-container error-state" dir="rtl">
-          <XCircle size={48} className="error-icon" />
-          <h2>{error || 'لم يتم العثور على الكافل'}</h2>
-          <button onClick={() => router.back()} className="btn-ghost">العودة للسابق</button>
+        <div className="not-found" dir="rtl">
+          <XCircle size={48} style={{ color: '#ef4444' }} />
+          <p>{error || 'لم يتم العثور على الكافل'}</p>
+          <button onClick={() => router.back()} className="btn-back-ghost">رجوع</button>
         </div>
         <style jsx>{`
-          .page-container { padding: 4rem 2rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
-          .error-icon { color: #ef4444; }
-          .btn-ghost { padding: 0.75rem 1.5rem; border-radius: 0.5rem; border: 1px solid #e5e7eb; background: transparent; cursor: pointer; font-family: inherit; font-weight: 600; color: #374151; transition: all 0.2s; }
-          .btn-ghost:hover { background: #f3f4f6; }
+          .not-found { text-align: center; padding: 4rem; color: #9ca3af; display: flex; flex-direction: column; align-items: center; gap: .75rem; }
+          .not-found p { font-size: .9rem; color: #6b7280; }
+          .btn-back-ghost { color: #1B5E8C; background: none; border: 1.5px solid #1B5E8C; border-radius: .625rem; padding: .5rem 1.25rem; font-family: 'Cairo', sans-serif; font-weight: 600; cursor: pointer; font-size: .875rem; }
+          .btn-back-ghost:hover { background: #f0f7ff; }
         `}</style>
       </AppShell>
     );
@@ -459,108 +457,87 @@ export default function SponsorDetailPage() {
 
   return (
     <AppShell>
-      <div className="page" dir="rtl">
-        {/* Header Actions */}
-        <div className="header-actions">
-          <button onClick={() => router.push('/sponsors')} className="btn-back">
-            <ArrowRight size={18} />
-            <span>العودة للكفلاء</span>
-          </button>
-          <div className="header-btns">
+      <div className="detail-page" dir="rtl">
+        {/* Page top bar */}
+        <div className="page-top">
+          <div className="breadcrumb">
+            <button className="back-btn" onClick={() => router.push('/sponsors')}>
+              <ArrowRight size={15} /> رجوع
+            </button>
+            <span className="sep">/</span>
+            <span className="crumb-link" style={{ cursor: 'pointer', color: '#1B5E8C', fontWeight: 600 }} onClick={() => router.push('/sponsors')}>الكفلاء</span>
+            <span className="sep">/</span>
+            <span className="crumb-current">تفاصيل الكافل</span>
+          </div>
+          <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
             <button className="btn-edit" onClick={() => setShowEdit(true)}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
               </svg>
-              <span>تعديل</span>
+              تعديل
             </button>
             <button className="btn-delete" onClick={() => setShowDelete(true)}>
-              <Trash2 size={16} />
-              <span>حذف</span>
+              <Trash2 size={15} /> حذف
             </button>
           </div>
         </div>
 
-        {/* Top Grid: Profile & Stats */}
-        <div className="top-grid">
-          {/* Profile Card */}
-          <div className="card profile-card">
-            <div className="profile-header">
-              <div className="avatar-large">{sponsorData.full_name?.charAt(0) || <User />}</div>
-              <div className="profile-titles">
-                <h1 className="sponsor-name">{sponsorData.full_name}</h1>
-                <p className="sponsor-id">رقم التعريف: {sponsorData.id}</p>
+        {/* Hero Banner */}
+        <div className="hero-card">
+          <div className="hero-left">
+            <div className="hero-avatar">{sponsorData.full_name?.charAt(0) || '؟'}</div>
+            <div className="hero-identity">
+              <h2 className="hero-name">{sponsorData.full_name}</h2>
+              <div className="hero-badges">
+                <span className="hero-stat-chip"><CheckCircle2 size={13} /> {sponsorData.active_sponsorships || 0} كفالة نشطة</span>
+                <span className="hero-stat-chip"><Briefcase size={13} /> {formatAmount(totalMonthly)} / شهر</span>
               </div>
             </div>
-            
-            <div className="contact-info">
-              {sponsorData.phone && (
-                <div className="info-row">
-                  <div className="info-icon"><Phone size={16} /></div>
-                  <span className="info-text ltr" dir="ltr">{sponsorData.phone}</span>
-                </div>
-              )}
-              {sponsorData.email && (
-                <div className="info-row">
-                  <div className="info-icon"><Mail size={16} /></div>
-                  <span className="info-text">{sponsorData.email}</span>
-                </div>
-              )}
-              <div className="info-row">
-                <div className="info-icon"><Calendar size={16} /></div>
-                <span className="info-text">تاريخ التسجيل: {formatDate(sponsorData.created_at)}</span>
-              </div>
-              <div className="info-row">
-                <div className="info-icon"><User size={16} /></div>
-                <span className="info-text">بواسطة: {sponsorData.created_by_name || '—'}</span>
+          </div>
+        </div>
+
+        {/* Content Grid */}
+        <div className="content-grid">
+          {/* col-main */}
+          <div className="col-main">
+            <div className="section-card">
+              <h3 className="section-title">بيانات التواصل</h3>
+              <div className="info-grid single-col">
+                {sponsorData.phone && (
+                  <div className="info-row"><span className="info-label">الهاتف</span><span className="info-value" dir="ltr">{sponsorData.phone}</span></div>
+                )}
+                {sponsorData.email && (
+                  <div className="info-row"><span className="info-label">البريد الإلكتروني</span><span className="info-value">{sponsorData.email}</span></div>
+                )}
+                <div className="info-row"><span className="info-label">تاريخ التسجيل</span><span className="info-value">{formatDate(sponsorData.created_at)}</span></div>
+                <div className="info-row"><span className="info-label">بواسطة</span><span className="info-value">{sponsorData.created_by_name || '—'}</span></div>
               </div>
             </div>
           </div>
 
-          {/* Stats & Portal Column */}
-          <div className="stats-column">
-            <div className="stats-grid">
-              <div className="stat-card">
-                <div className="stat-icon-wrapper active-spon"><CheckCircle2 size={24} /></div>
-                <div className="stat-content">
-                  <span className="stat-label">كفالة نشطة</span>
-                  <span className="stat-value">{sponsorData.active_sponsorships || 0}</span>
-                </div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-icon-wrapper total-amt"><Briefcase size={24} /></div>
-                <div className="stat-content">
-                  <span className="stat-label">إجمالي شهري</span>
-                  <span className="stat-value text-primary">{formatAmount(totalMonthly)}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="card portal-card">
-              <div className="portal-header">
-                <LinkIcon size={18} className="portal-icon" />
-                <h3 className="portal-title">رابط البوابة الخاصة بالكافل</h3>
-              </div>
-              <p className="portal-desc">يمكنك مشاركة هذا الرابط مع الكافل ليتمكن من متابعة كفالاته وتقاريره.</p>
+          {/* col-side */}
+          <div className="col-side">
+            <div className="section-card">
+              <h3 className="section-title">بوابة الكافل</h3>
+              <p className="portal-desc">شارك هذا الرابط مع الكافل ليتابع كفالاته وتقاريره.</p>
               <div className="portal-action">
                 <div className="token-display" dir="ltr">
                   {`${window.location.origin}/sponsor/portal?token=${sponsorData.portal_token?.substring(0,8)}...`}
                 </div>
-                <button 
+                <button
                   onClick={() => {
                     if (!sponsorData.portal_token) return;
                     navigator.clipboard.writeText(`${window.location.origin}/sponsor/portal?token=${sponsorData.portal_token}`);
                     setCopied(true);
                     setTimeout(() => setCopied(false), 2000);
-                  }} 
+                  }}
                   className={`btn-copy ${copied ? 'copied' : ''}`}
                 >
                   <Copy size={16} />
                   <span>{copied ? 'تم النسخ!' : 'نسخ الرابط'}</span>
                 </button>
               </div>
-
-              {/* Password display */}
               <div className="password-section">
                 <div className="password-label">كلمة مرور البوابة</div>
                 <div className="password-row">
@@ -568,8 +545,7 @@ export default function SponsorDetailPage() {
                     {sponsorData.portal_password_plain || '••••••••'}
                   </div>
                   <button className="btn-change-pass" onClick={() => setShowEdit(true)}>
-                    <Pencil size={14} />
-                    <span>تغيير</span>
+                    <Pencil size={14} /> تغيير
                   </button>
                 </div>
                 {!sponsorData.portal_password_plain && (
@@ -581,18 +557,11 @@ export default function SponsorDetailPage() {
         </div>
 
         {/* Sponsorships Section */}
-        <div className="card sponsorships-section">
-          <div className="section-header">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <h2>الكفالات التابعة له</h2>
-              <span className="badge">{sponsorships.length} كفالة</span>
-            </div>
-            <button 
-              className="btn-assign"
-              onClick={() => setShowAssign(true)}
-            >
-              <Handshake size={16} />
-              <span>تعيين مستفيد</span>
+        <div className="section-card">
+          <div className="section-top-row">
+            <h3 className="section-title">الكفالات التابعة له <span className="count-badge">{sponsorships.length}</span></h3>
+            <button className="btn-assign" onClick={() => setShowAssign(true)}>
+              <Handshake size={16} /> تعيين مستفيد
             </button>
           </div>
 
@@ -643,8 +612,8 @@ export default function SponsorDetailPage() {
               </table>
             </div>
           )}
-        </div>
-      </div>
+        </div>{/* end section-card sponsorships */}
+      </div>{/* end .detail-page */}
 
       {/* Assign Beneficiary Modal */}
       {showAssign && (

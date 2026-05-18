@@ -36,7 +36,12 @@
       "Bash(node -e *)",
       "Bash(xargs grep -l \"registration\")",
       "Bash(xargs grep -l \"roles\\\\|ROLE\")",
-      "mcp__claude_ai_Notion__notion-search"
+      "mcp__claude_ai_Notion__notion-search",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(npm run *)",
+      "Bash(curl -s https://ofsms.onrender.com/health)"
     ]
   }
 }
