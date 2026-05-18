@@ -16,7 +16,7 @@ const { Router }  = require('express');
 const ExcelJS     = require('exceljs');
 const { authenticate, authorize } = require('../../middleware/rbac');
 const { query }   = require('../../config/db');
-const { disbursementHTML, governorateHTML, htmlToPDF } = require('./reports.pdf');
+const { disbursementHTML, governorateHTML, orphanProfileHTML, htmlToPDF } = require('./reports.pdf');
 
 const router = Router();
 
@@ -109,6 +109,27 @@ const getGovernorateData = async (id) => {
      ORDER BY o.created_at DESC`, [id],
   );
   return { governorate: govRows[0], orphans };
+};
+
+const getOrphanProfileData = async (id) => {
+  const { rows } = await query(
+    `SELECT
+       o.*,
+       g.name_ar AS governorate_ar,
+       u.full_name AS agent_name,
+       s.full_name AS sponsor_name
+     FROM orphans o
+     LEFT JOIN governorates g ON g.id = o.governorate_id
+     LEFT JOIN users u ON u.id = o.agent_id
+     LEFT JOIN sponsorships sp
+       ON sp.beneficiary_id = o.id
+      AND sp.beneficiary_type = 'orphan'
+      AND sp.is_active = TRUE
+     LEFT JOIN sponsors s ON s.id = sp.sponsor_id
+     WHERE o.id = $1`,
+    [id]
+  );
+  return rows[0] || null;
 };
 
 router.get(
@@ -224,6 +245,45 @@ router.get(
       res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}.xlsx"`);
       await wb.xlsx.write(res);
       res.end();
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+router.get(
+  '/orphan/:id/pdf',
+  authenticate,
+  authorize('gm', 'supervisor'),
+  async (req, res, next) => {
+    try {
+      const orphan = await getOrphanProfileData(req.params.id);
+      if (!orphan) return res.status(404).json({ error: 'اليتيم غير موجود' });
+
+      const issueDate = new Date().toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' });
+      const profile = orphan.profile || {};
+      const stats = [
+        { label: 'العمر', value: calcAge(orphan.date_of_birth) },
+        { label: 'الحالة', value: STATUS_AR[orphan.status] || orphan.status },
+        { label: 'المحافظة', value: orphan.governorate_ar || '—' },
+        { label: 'موهوب', value: orphan.is_gifted ? 'نعم' : 'لا' },
+      ];
+      const profileRows = [
+        { label: 'الاسم الكامل', value: orphan.full_name },
+        { label: 'الجنس', value: orphan.gender === 'female' ? 'أنثى' : 'ذكر' },
+        { label: 'تاريخ الميلاد', value: formatDate(orphan.date_of_birth) },
+        { label: 'المندوب', value: orphan.agent_name },
+        { label: 'اسم الوصي', value: orphan.guardian_name },
+        { label: 'الحالة التسويقية', value: orphan.sponsor_name ? `مكفول بواسطة ${orphan.sponsor_name}` : 'بانتظار كافل' },
+        { label: 'العنوان', value: profile.address || profile.residence || orphan.governorate_ar, full: true },
+        { label: 'الدراسة', value: [profile.schoolGrade, profile.eduLevel, profile.generalLevel].filter(Boolean).join(' - '), full: true },
+        { label: 'الحالة الصحية', value: profile.chronicDiseaseDetails || profile.hasChronicDisease || 'لا توجد بيانات إضافية', full: true },
+        { label: 'التوصيات', value: profile.recommendations || orphan.notes || '—', full: true },
+      ];
+
+      const html = orphanProfileHTML({ orphan, profileRows, stats, issueDate });
+      const pdf = await htmlToPDF(html);
+      sendPDF(res, `ملف-يتيم-${orphan.full_name}`, pdf);
     } catch (err) {
       next(err);
     }

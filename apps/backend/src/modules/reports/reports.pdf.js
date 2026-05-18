@@ -380,6 +380,67 @@ const governorateHTML = ({ title, meta, stats, rows }) => `
 </html>
 `;
 
+const orphanProfileHTML = ({ orphan, profileRows, stats, issueDate }) => `
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <style>${BASE_CSS}
+    .profile-wrap { padding: 18px 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .profile-card { border: 1px solid #d8e6f0; border-radius: 8px; padding: 12px 14px; background: #fff; }
+    .profile-card.full { grid-column: 1 / -1; }
+    .profile-label { font-size: 7.5pt; color: #7a95a8; font-weight: 700; margin-bottom: 4px; }
+    .profile-value { font-size: 10pt; color: #0f3350; font-weight: 700; line-height: 1.7; white-space: pre-line; }
+    .request-box { margin: 14px 32px 0; padding: 14px 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-right: 4px solid #0f766e; border-radius: 8px; }
+    .request-title { font-size: 14pt; color: #065f46; font-weight: 800; margin-bottom: 4px; }
+    .request-sub { font-size: 9pt; color: #047857; line-height: 1.7; }
+  </style>
+</head>
+<body>
+<div class="page">
+  <header class="header">
+    <div class="header-gold-bar"></div>
+    <div class="header-inner">
+      <div class="header-system-name">نظام إدارة كفالة الأيتام والأسر — OFSMS</div>
+      <div class="header-divider"></div>
+      <div class="header-title">ملف يتيم للكفالة — ${safeCell(orphan.full_name)}</div>
+      <div class="header-meta">تاريخ الإصدار: ${issueDate} &nbsp;|&nbsp; المحافظة: ${safeCell(orphan.governorate_ar)}</div>
+    </div>
+    <div class="header-bottom-bar"></div>
+  </header>
+
+  <div class="request-box">
+    <div class="request-title">من سيكفل هذا الطفل؟</div>
+    <div class="request-sub">هذا الملف مخصص للمشاركة مع الكفلاء الخارجيين للتعريف بالحالة وبياناتها الأساسية.</div>
+  </div>
+
+  <div class="stats-grid">
+    ${stats.map(s => `
+      <div class="stat-card">
+        <div class="stat-label">${s.label}</div>
+        <div class="stat-value">${s.value}</div>
+      </div>
+    `).join('')}
+  </div>
+
+  <div class="profile-wrap">
+    ${profileRows.map(r => `
+      <div class="profile-card ${r.full ? 'full' : ''}">
+        <div class="profile-label">${r.label}</div>
+        <div class="profile-value">${safeCell(r.value)}</div>
+      </div>
+    `).join('')}
+  </div>
+
+  <footer class="footer">
+    <span class="footer-brand">نظام OFSMS — نظام إدارة كفالة الأيتام والأسر</span>
+    <span class="footer-confidential">للمشاركة مع الكفلاء</span>
+  </footer>
+</div>
+</body>
+</html>
+`;
+
 // ── Puppeteer renderer ─────────────────────────────────────────────────────────
 
 const fs = require('fs');
@@ -459,4 +520,4 @@ const htmlToPDF = async (html) => {
   return pdf;
 };
 
-module.exports = { disbursementHTML, governorateHTML, htmlToPDF };
+module.exports = { disbursementHTML, governorateHTML, orphanProfileHTML, htmlToPDF };

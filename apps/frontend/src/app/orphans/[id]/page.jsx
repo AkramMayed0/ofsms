@@ -12,7 +12,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Handshake, Search, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Handshake, Search, AlertTriangle, CheckCircle2, Share2 } from 'lucide-react';
 import api from '../../../lib/api';
 import AppShell from '../../../components/AppShell';
 import useAuthStore from '../../../store/useAuthStore';
@@ -184,6 +184,7 @@ export default function OrphanDetailPage() {
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting]     = useState(false);
   const [deleteToast, setDeleteToast] = useState(false);
+  const [sharing, setSharing]       = useState(false);
 
   const isGM = user?.role === 'gm';
 
@@ -223,6 +224,20 @@ export default function OrphanDetailPage() {
     }
   };
 
+  const handleShare = async () => {
+    setSharing(true);
+    setError('');
+    try {
+      await api.post(`/orphans/${id}/share`);
+      setSuccessMsg('تمت مشاركة بيانات اليتيم في واجهة الكافل');
+      setTimeout(() => setSuccessMsg(''), 4000);
+    } catch (err) {
+      setError(err.response?.data?.error || 'تعذّرت مشاركة بيانات اليتيم');
+    } finally {
+      setSharing(false);
+    }
+  };
+
   const statusInfo   = STATUS_CONFIG[orphan?.status] || STATUS_CONFIG.inactive;
   const statusLevels = orphan ? deriveStatusLevels(orphan.status) : null;
 
@@ -256,6 +271,11 @@ export default function OrphanDetailPage() {
             {isGM && orphan?.status === 'under_sponsorship' && (
               <button className="btn-transfer" onClick={() => setTransfer(true)}>
                 <IconTransfer /> نقل الكفالة
+              </button>
+            )}
+            {isGM && orphan?.status === 'under_marketing' && !orphan?.sponsor_name && (
+              <button className="btn-share" onClick={handleShare} disabled={sharing}>
+                <Share2 size={16} /> {sharing ? 'جارٍ المشاركة…' : 'Share'}
               </button>
             )}
 
@@ -655,6 +675,17 @@ export default function OrphanDetailPage() {
           transition: all .15s;
         }
         .btn-transfer:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(27,94,140,.35); }
+
+        .btn-share {
+          display: inline-flex; align-items: center; gap: .45rem;
+          padding: .65rem 1.25rem;
+          background: #0f766e; color: #fff; border: none; border-radius: .75rem;
+          font-family: 'Cairo', sans-serif; font-size: .875rem; font-weight: 800;
+          cursor: pointer; box-shadow: 0 2px 8px rgba(15,118,110,.22);
+          transition: all .15s;
+        }
+        .btn-share:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(15,118,110,.32); }
+        .btn-share:disabled { opacity: .65; cursor: not-allowed; }
 
         .btn-delete {
           display: inline-flex; align-items: center; gap: .4rem;
