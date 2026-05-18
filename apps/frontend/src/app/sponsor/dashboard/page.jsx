@@ -40,7 +40,7 @@ export default function SponsorDashboard() {
     }
     Promise.all([
       sponsorApi.get('/sponsor/orphans'),
-      sponsorApi.get('/announcements').catch(() => ({ data: { announcements: [] } })),
+      sponsorApi.get('/sponsor/announcements').catch(() => ({ data: { announcements: [] } })),
     ])
       .then(([orphansRes, announcementsRes]) => {
         setOrphans(orphansRes.data.orphans || []);

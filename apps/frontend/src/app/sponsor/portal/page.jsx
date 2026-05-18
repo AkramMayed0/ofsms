@@ -296,7 +296,7 @@ function DashboardView({ token, sponsor, onLogout }) {
   useEffect(() => {
     Promise.all([
       sponsorApi.get('/sponsor/orphans', authHeaders),
-      sponsorApi.get('/announcements', authHeaders).catch(() => ({ data: { announcements: [] } })),
+      sponsorApi.get('/sponsor/announcements', authHeaders).catch(() => ({ data: { announcements: [] } })),
     ])
       .then(([orphanRes, annRes]) => {
         setOrphans(orphanRes.data.orphans || []);

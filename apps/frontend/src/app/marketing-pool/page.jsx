@@ -10,7 +10,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, X, User, Users, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, X, User, Users, Download } from 'lucide-react';
 
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
@@ -110,6 +110,8 @@ export default function MarketingPoolPage() {
   const [filterType, setFilterType] = useState('all');
   const [govFilter, setGovFilter] = useState('');
   const [giftedFilter, setGiftedFilter] = useState('');
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [exporting, setExporting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -168,12 +170,61 @@ export default function MarketingPoolPage() {
     const matchGifted = !giftedFilter || String(item.isGifted) === giftedFilter;
     return matchSearch && matchType && matchGov && matchGifted;
   });
+  const itemKey = (item) => `${item.type}:${item.id}`;
+  const allFilteredSelected = filtered.length > 0
+    && filtered.every(item => selectedItems.includes(itemKey(item)));
+
+  const downloadBlob = (blob, filename) => {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  };
 
   const handleRowClick = (item) => {
     if (item.type === 'orphan') {
       router.push(`/orphans/${item.id}`);
     } else {
       router.push(`/families/${item.id}`);
+    }
+  };
+
+  const toggleItem = (item) => {
+    const key = itemKey(item);
+    setSelectedItems((current) =>
+      current.includes(key) ? current.filter((selectedKey) => selectedKey !== key) : [...current, key]
+    );
+  };
+
+  const toggleFilteredItems = () => {
+    if (allFilteredSelected) {
+      setSelectedItems((current) => current.filter((key) => !filtered.some(item => itemKey(item) === key)));
+      return;
+    }
+    setSelectedItems((current) => Array.from(new Set([...current, ...filtered.map(itemKey)])));
+  };
+
+  const exportSelected = async () => {
+    if (selectedItems.length === 0) return;
+    setExporting(true);
+    setError('');
+    try {
+      for (const selectedKey of selectedItems) {
+        const [type, id] = selectedKey.split(':');
+        const item = items.find(i => i.type === type && i.id === id);
+        const res = await api.get(`/reports/${type}/${id}/pdf`, { responseType: 'blob' });
+        const safeName = (item?.name || id).replace(/[\\/:*?"<>|]/g, '-');
+        downloadBlob(res.data, `${type}-${safeName}.pdf`);
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      }
+    } catch {
+      setError('تعذّر تصدير ملفات PDF المحددة');
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -282,6 +333,16 @@ export default function MarketingPoolPage() {
               مسح الفلاتر <X size={16} />
             </button>
           )}
+
+          <button
+            className="btn-export-selected"
+            onClick={exportSelected}
+            disabled={selectedItems.length === 0 || exporting}
+            title="تصدير ملف PDF منفصل لكل مستفيد محدد"
+          >
+            <Download size={16} />
+            {exporting ? 'جارٍ التصدير…' : `Export (${selectedItems.length})`}
+          </button>
         </div>
 
         {/* ── Error ───────────────────────────────────────────────── */}
@@ -298,6 +359,15 @@ export default function MarketingPoolPage() {
             <table className="orphans-table">
               <thead>
                 <tr>
+                  <th className="select-col">
+                    <input
+                      type="checkbox"
+                      checked={allFilteredSelected}
+                      disabled={filtered.length === 0}
+                      onChange={toggleFilteredItems}
+                      aria-label="تحديد كل المستفيدين الظاهرين"
+                    />
+                  </th>
                   <th>الاسم</th>
                   <th>النوع</th>
                   <th>المحافظة</th>
@@ -311,7 +381,7 @@ export default function MarketingPoolPage() {
                   Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)
                 ) : !error && filtered.length === 0 ? (
                   <tr>
-                    <td colSpan="6">
+                    <td colSpan="7">
                       <div className="empty-state">
                         <IconEmpty />
                         <p className="empty-title">
@@ -338,6 +408,14 @@ export default function MarketingPoolPage() {
                       onKeyDown={(e) => e.key === 'Enter' && handleRowClick(item)}
                       role="button"
                     >
+                      <td className="select-col" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={selectedItems.includes(itemKey(item))}
+                          onChange={() => toggleItem(item)}
+                          aria-label={`تحديد ${item.name}`}
+                        />
+                      </td>
                       {/* Name */}
                       <td>
                         <div className="name-cell">
@@ -488,6 +566,15 @@ export default function MarketingPoolPage() {
           font-weight: 600; cursor: pointer; transition: all .12s; white-space: nowrap;
         }
         .btn-clear-filters:hover { background: #FEE2E2; }
+        .btn-export-selected {
+          display: inline-flex; align-items: center; gap: .4rem;
+          padding: .55rem .95rem;
+          background: #0f766e; border: 1px solid #0f766e; border-radius: .625rem;
+          color: #fff; font-family: 'Cairo', sans-serif; font-size: .78rem;
+          font-weight: 800; cursor: pointer; transition: all .12s; white-space: nowrap;
+        }
+        .btn-export-selected:hover:not(:disabled) { background: #0d665f; transform: translateY(-1px); }
+        .btn-export-selected:disabled { opacity: .5; cursor: not-allowed; transform: none; }
         .btn-clear-filters-sm {
           padding: .4rem .8rem; margin-top: 1rem;
           background: #fff; border: 1px solid #e5e7eb; border-radius: .5rem;
@@ -517,7 +604,7 @@ export default function MarketingPoolPage() {
 
         .orphans-table {
           width: 100%; border-collapse: collapse; font-size: .82rem;
-          min-width: 700px;
+          min-width: 760px;
         }
 
         .orphans-table thead tr {
@@ -528,6 +615,13 @@ export default function MarketingPoolPage() {
           color: #9ca3af; text-align: right; white-space: nowrap;
           letter-spacing: .04em; text-transform: uppercase;
         }
+        .select-col {
+          width: 46px; text-align: center !important;
+        }
+        .select-col input {
+          width: 16px; height: 16px; cursor: pointer; accent-color: #0f766e;
+        }
+        .select-placeholder { color: #cbd5e1; font-weight: 700; }
 
         /* ── Data rows ──────────────────────────────────────────── */
         .data-row {

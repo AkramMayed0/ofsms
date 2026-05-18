@@ -12,6 +12,7 @@
 
 const { validationResult } = require('express-validator');
 const service = require('./orphans.service');
+const announcementsService = require('../announcements/announcements.service');
 const { uploadFile } = require('../../config/s3');
 
 const VALID_RELATIONS = ['uncle', 'maternal_uncle', 'grandfather', 'sibling', 'other'];
@@ -328,6 +329,36 @@ const updateOrphanStatus = async (req, res, next) => {
 };
 
 /**
+ * POST /api/orphans/:id/share
+ */
+const shareOrphanToAds = async (req, res, next) => {
+  try {
+    const orphan = await service.getOrphanById(req.params.id);
+    if (!orphan) {
+      return res.status(404).json({ error: 'اليتيم غير موجود' });
+    }
+    if (orphan.status !== 'under_marketing') {
+      return res.status(400).json({ error: 'يمكن مشاركة الأيتام تحت التسويق فقط' });
+    }
+    if (orphan.sponsor_name) {
+      return res.status(400).json({ error: 'لا يمكن مشاركة يتيم لديه كافل حالي' });
+    }
+
+    const announcement = await announcementsService.createSponsorOrphanAd({
+      orphan,
+      createdBy: req.user.id,
+    });
+
+    return res.status(201).json({
+      message: 'تمت مشاركة بيانات اليتيم مع واجهة الكافل',
+      announcement,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
  * DELETE /api/orphans/:id
  */
 const deleteOrphan = async (req, res, next) => {
@@ -352,5 +383,6 @@ module.exports = {
   getOrphanById,
   updateOrphan,
   updateOrphanStatus,
+  shareOrphanToAds,
   deleteOrphan,
 };

@@ -143,6 +143,14 @@ router.patch(
   controller.updateOrphanStatus
 );
 
+// GM only: share orphan profile as a sponsor-facing ad/request
+router.post(
+  '/:id/share',
+  authenticate,
+  authorize('gm'),
+  controller.shareOrphanToAds
+);
+
 // GM only: delete orphan (blocked if active sponsorship exists)
 router.delete(
   '/:id',

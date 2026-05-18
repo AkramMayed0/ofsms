@@ -12,7 +12,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Handshake, Search, AlertTriangle, Users, CheckCircle2, Check, X, Plus, User } from 'lucide-react';
+import { Handshake, Search, AlertTriangle, Users, CheckCircle2, Check, X, Plus, User, Share2 } from 'lucide-react';
 import api from '../../../lib/api';
 import AppShell from '../../../components/AppShell';
 import useAuthStore from '../../../store/useAuthStore';
@@ -347,6 +347,7 @@ export default function FamilyDetailPage() {
   const [successMsg, setSuccessMsg] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   const isGM = user?.role === 'gm';
 
@@ -390,6 +391,20 @@ export default function FamilyDetailPage() {
     }
   };
 
+  const handleShare = async () => {
+    setSharing(true);
+    setError('');
+    try {
+      await api.post(`/families/${id}/share`);
+      setSuccessMsg('تمت مشاركة بيانات الأسرة في واجهة الكافل');
+      setTimeout(() => setSuccessMsg(''), 4000);
+    } catch (err) {
+      setError(err.response?.data?.error || 'تعذّرت مشاركة بيانات الأسرة');
+    } finally {
+      setSharing(false);
+    }
+  };
+
   const statusInfo = STATUS_CONFIG[family?.status] || STATUS_CONFIG.inactive;
 
   const formatDate = (d) =>
@@ -416,6 +431,11 @@ export default function FamilyDetailPage() {
             {isGM && family?.status === 'under_sponsorship' && (
               <button className="btn-transfer" onClick={() => setTransfer(true)}>
                 <IconTransfer /> نقل الكفالة
+              </button>
+            )}
+            {isGM && family?.status === 'under_marketing' && !family?.sponsor_name && (
+              <button className="btn-share" onClick={handleShare} disabled={sharing}>
+                <Share2 size={16} /> {sharing ? 'جارٍ المشاركة…' : 'Share'}
               </button>
             )}
 
@@ -766,6 +786,17 @@ export default function FamilyDetailPage() {
           transition: all .15s;
         }
         .btn-transfer:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(27,94,140,.35); }
+
+        .btn-share {
+          display: inline-flex; align-items: center; gap: .45rem;
+          padding: .65rem 1.25rem;
+          background: #0f766e; color: #fff; border: none; border-radius: .75rem;
+          font-family: 'Cairo', sans-serif; font-size: .875rem; font-weight: 800;
+          cursor: pointer; box-shadow: 0 2px 8px rgba(15,118,110,.22);
+          transition: all .15s;
+        }
+        .btn-share:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(15,118,110,.32); }
+        .btn-share:disabled { opacity: .65; cursor: not-allowed; }
 
         .btn-delete {
           display: inline-flex; align-items: center; gap: .4rem;
