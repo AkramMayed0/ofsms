@@ -12,7 +12,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import { Search, X, CheckCircle2, FileText, Check } from 'lucide-react';
+import { Search, X, CheckCircle2, FileText, Check, Wallet, MapPin, FileSpreadsheet, Lightbulb } from 'lucide-react';
 
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
@@ -32,6 +32,19 @@ const ARABIC_MONTHS = [
 ];
 
 // ── Download helper ───────────────────────────────────────────────────────────
+const readBlobError = async (err) => {
+  try {
+    const data = err?.response?.data;
+    if (data instanceof Blob && data.type?.includes('json')) {
+      const text = await data.text();
+      return JSON.parse(text)?.error || null;
+    }
+  } catch {
+    // ignore parse failures
+  }
+  return null;
+};
+
 const downloadFile = async (url, filename, ext) => {
   const res  = await api.get(url, { responseType: 'blob' });
   const blob = new Blob([res.data], {
@@ -59,9 +72,9 @@ function ExportBar({ selectedCount, onExportPdf, onExportExcel, pdfLoading, exce
       background: selectedCount > 0 ? 'linear-gradient(90deg,#f0f7ff,#e8f4ff)' : '#f8fafc',
       borderBottom: '1px solid #e5eaf0', transition: 'background .2s',
     }}>
-      <span style={{ fontSize: '.83rem', fontWeight: 700, color: selectedCount > 0 ? '#1B5E8C' : '#9ca3af' }}>
+      <span style={{ fontSize: '.83rem', fontWeight: 700, color: selectedCount > 0 ? '#1B5E8C' : '#9ca3af', display: 'inline-flex', alignItems: 'center', gap: '.3rem' }}>
         {selectedCount > 0
-          ? `<Check size={16} /> تم تحديد ${selectedCount} ${label}`
+          ? <><Check size={14} /> تم تحديد {selectedCount} {label}</>
           : `اختر ${label} للتصدير`}
       </span>
       <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -84,7 +97,7 @@ function ExportBar({ selectedCount, onExportPdf, onExportExcel, pdfLoading, exce
             opacity: busy && !excelLoading ? .5 : 1,
           }}
         >
-          {excelLoading ? <MiniSpinner color="#16a34a" /> : '📊'}
+          {excelLoading ? <MiniSpinner color="#16a34a" /> : <FileSpreadsheet size={15} />}
           {excelLoading ? 'جارٍ التصدير…' : 'Excel'}
         </button>
         <button
@@ -101,7 +114,7 @@ function ExportBar({ selectedCount, onExportPdf, onExportExcel, pdfLoading, exce
             opacity: busy && !pdfLoading ? .5 : 1,
           }}
         >
-          {pdfLoading ? <MiniSpinner color="#dc2626" /> : '<FileText size={16} />'}
+          {pdfLoading ? <MiniSpinner color="#dc2626" /> : <FileText size={15} />}
           {pdfLoading ? 'جارٍ التصدير…' : 'PDF'}
         </button>
       </div>
@@ -128,7 +141,7 @@ function SkeletonRows({ count = 5 }) {
         <tr key={i}>
           {Array.from({ length: 5 }).map((__, j) => (
             <td key={j} style={{ padding: '.75rem 1rem', borderBottom: '1px solid #f8fafc' }}>
-              <div style={{ height: 14, borderRadius: 4, background: 'linear-gradient(90deg,#f3f4f6 25%,#e5e7eb 50%,#f3f4f6 75%)', backgroundSize: '200% 100%', animation: 'rp-spin 1.4s infinite', width: `${60 + (i + j) * 7}%` }} />
+              <div style={{ height: 14, borderRadius: 4, background: 'linear-gradient(90deg,#f3f4f6 25%,#e5e7eb 50%,#f3f4f6 75%)', backgroundSize: '400% 100%', animation: 'rp-shimmer 1.4s ease-in-out infinite', width: `${60 + (i + j) * 7}%` }} />
             </td>
           ))}
         </tr>
@@ -211,12 +224,18 @@ function DisbursementsTab() {
           `كشف-صرف-${monthName}-${list.year}`,
           ext
         );
-        // Small delay between multiple downloads
         if (selectedLists.length > 1) await new Promise(r => setTimeout(r, 600));
       }
-      setToast({ msg: `<CheckCircle2 size={16} /> تم تصدير ${selectedLists.length} ملف بنجاح`, type: 'success' });
-    } catch {
-      setToast({ msg: 'فشل التصدير — تأكد من صلاحياتك وحاول مجدداً', type: 'error' });
+      setToast({ msg: <><CheckCircle2 size={15} style={{ flexShrink: 0 }} /> تم تصدير {selectedLists.length} ملف بنجاح</>, type: 'success' });
+    } catch (err) {
+      const serverMsg = await readBlobError(err);
+      const status    = err?.response?.status;
+      const fallback  = status === 403
+        ? 'ليس لديك صلاحية لتصدير هذا الملف'
+        : status === 401
+        ? 'انتهت الجلسة — يرجى تسجيل الدخول مجدداً'
+        : 'فشل التصدير — يرجى المحاولة مجدداً';
+      setToast({ msg: serverMsg || fallback, type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -280,8 +299,12 @@ function DisbursementsTab() {
           <tbody>
             {loading ? <SkeletonRows count={5} /> :
              filtered.length === 0 ? (
-              <tr><td colSpan={7} style={{ padding: '3rem', textAlign: 'center', color: '#9ca3af', fontSize: '.85rem' }}>
-                {lists.length === 0 ? '📭 لا توجد كشوف صرف بعد' : '<Search size={16} /> لا توجد نتائج مطابقة'}
+              <tr><td colSpan={7} style={{ padding: '3rem', color: '#9ca3af', fontSize: '.85rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.4rem' }}>
+                  {lists.length === 0
+                    ? <><FileText size={16} style={{ opacity: .4 }} /> لا توجد كشوف صرف بعد</>
+                    : <><Search size={16} /> لا توجد نتائج مطابقة</>}
+                </div>
               </td></tr>
             ) : filtered.map((list, idx) => {
               const cfg  = DISB_STATUS[list.status] || DISB_STATUS.draft;
@@ -395,9 +418,16 @@ function GovernoratesTab() {
         );
         if (selectedGovs.length > 1) await new Promise(r => setTimeout(r, 600));
       }
-      setToast({ msg: `<CheckCircle2 size={16} /> تم تصدير ${selectedGovs.length} تقرير بنجاح`, type: 'success' });
-    } catch {
-      setToast({ msg: 'فشل التصدير — تأكد من صلاحياتك وحاول مجدداً', type: 'error' });
+      setToast({ msg: <><CheckCircle2 size={15} style={{ flexShrink: 0 }} /> تم تصدير {selectedGovs.length} تقرير بنجاح</>, type: 'success' });
+    } catch (err) {
+      const serverMsg = await readBlobError(err);
+      const status    = err?.response?.status;
+      const fallback  = status === 403
+        ? 'ليس لديك صلاحية لتصدير هذا الملف'
+        : status === 401
+        ? 'انتهت الجلسة — يرجى تسجيل الدخول مجدداً'
+        : 'فشل التصدير — يرجى المحاولة مجدداً';
+      setToast({ msg: serverMsg || fallback, type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -511,8 +541,8 @@ export default function ReportsPage() {
   const [tab, setTab] = useState('disbursements');
 
   const tabs = [
-    { key: 'disbursements', label: 'كشوف الصرف',  icon: '💰', desc: 'تصدير كشوف الصرف الشهرية' },
-    { key: 'governorates',  label: 'المحافظات',    icon: '📍', desc: 'تصدير تقارير الأيتام بالمحافظة' },
+    { key: 'disbursements', label: 'كشوف الصرف',  Icon: Wallet,  desc: 'تصدير كشوف الصرف الشهرية' },
+    { key: 'governorates',  label: 'المحافظات',    Icon: MapPin,  desc: 'تصدير تقارير الأيتام بالمحافظة' },
   ];
 
   return (
@@ -521,8 +551,9 @@ export default function ReportsPage() {
 
         {/* Keyframes */}
         <style>{`
-          @keyframes rp-spin   { to   { transform: rotate(360deg); } }
-          @keyframes rp-fadein { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+          @keyframes rp-spin    { to   { transform: rotate(360deg); } }
+          @keyframes rp-fadein  { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+          @keyframes rp-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
         `}</style>
 
         {/* Page header */}
@@ -533,7 +564,7 @@ export default function ReportsPage() {
           </div>
           {/* How-to tip */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '.625rem', padding: '.5rem .85rem', fontSize: '.75rem', color: '#1d4ed8', fontWeight: 600 }}>
-            <span>💡</span>
+            <Lightbulb size={14} />
             <span>حدد صفاً أو أكثر ثم اضغط PDF أو Excel</span>
           </div>
         </div>
@@ -554,7 +585,7 @@ export default function ReportsPage() {
                 boxShadow: tab === t.key ? '0 2px 8px rgba(27,94,140,.2)' : 'none',
               }}
             >
-              <span style={{ fontSize: '1rem' }}>{t.icon}</span>
+              <t.Icon size={18} />
               <div style={{ textAlign: 'right' }}>
                 <div>{t.label}</div>
                 <div style={{ fontSize: '.68rem', fontWeight: 400, opacity: .8 }}>{t.desc}</div>

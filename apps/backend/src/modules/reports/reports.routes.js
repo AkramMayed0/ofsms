@@ -114,7 +114,7 @@ const getGovernorateData = async (id) => {
 router.get(
   '/disbursement/:id/pdf',
   authenticate,
-  authorize('gm', 'supervisor', 'finance'),
+  authorize('gm', 'admin', 'supervisor', 'finance'),
   async (req, res, next) => {
     try {
       const data = await getDisbursementData(req.params.id);
@@ -152,7 +152,7 @@ router.get(
 router.get(
   ['/disbursement/:id/excel', '/disbursement/:id/xlsx'],
   authenticate,
-  authorize('gm', 'supervisor', 'finance'),
+  authorize('gm', 'admin', 'supervisor', 'finance'),
   async (req, res, next) => {
     try {
       const data = await getDisbursementData(req.params.id);
@@ -233,7 +233,7 @@ router.get(
 router.get(
   '/governorate/:id/pdf',
   authenticate,
-  authorize('gm', 'supervisor', 'finance'),
+  authorize('gm', 'admin', 'supervisor', 'finance'),
   async (req, res, next) => {
     try {
       const data = await getGovernorateData(req.params.id);
@@ -274,7 +274,7 @@ router.get(
 router.get(
   ['/governorate/:id/excel', '/governorate/:id/xlsx'],
   authenticate,
-  authorize('gm', 'supervisor', 'finance'),
+  authorize('gm', 'admin', 'supervisor', 'finance'),
   async (req, res, next) => {
     try {
       const data = await getGovernorateData(req.params.id);

@@ -266,6 +266,7 @@ export default function SponsorManagementPage() {
         {/* Table */}
         {!loading && filtered.length > 0 && (
           <div className="table-wrap">
+            <div className="table-scroll">
             <table className="table">
               <thead>
                 <tr>
@@ -307,6 +308,7 @@ export default function SponsorManagementPage() {
                 ))}
               </tbody>
             </table>
+            </div>
             <div className="table-footer">
               عرض {filtered.length} من {sponsors.length} كافل
             </div>
@@ -338,6 +340,7 @@ export default function SponsorManagementPage() {
         .err-banner { background:#fef2f2; border:1px solid #fecaca; border-radius:.75rem; padding:.85rem 1rem; font-size:.85rem; color:#b91c1c; font-weight:500; display:flex; align-items:center; gap:.5rem; }
 
         .table-wrap { background:#fff; border:1px solid #e5eaf0; border-radius:1rem; overflow:hidden; box-shadow:0 1px 4px rgba(27,94,140,.05); }
+        .table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
         .table { width:100%; border-collapse:collapse; }
         .table thead tr { background:#f8fafc; }
         .table th { padding:.8rem 1.1rem; text-align:right; font-size:.72rem; font-weight:700; color:#6b7a8d; border-bottom:1px solid #e5eaf0; white-space:nowrap; }
@@ -356,8 +359,8 @@ export default function SponsorManagementPage() {
         .table-footer { padding:.75rem 1.1rem; font-size:.78rem; color:#9ca3af; border-top:1px solid #f0f4f8; }
 
         .skel-row { display:flex; align-items:center; gap:1rem; padding:.85rem 1.1rem; border-bottom:1px solid #f8fafc; }
-        .skel { background:linear-gradient(90deg,#f0f4f8 25%,#e5eaf0 50%,#f0f4f8 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:4px; }
-        @keyframes shimmer { to { background-position:-200% 0; } }
+        .skel { background:linear-gradient(90deg,#f0f4f8 25%,#e5eaf0 50%,#f0f4f8 75%); background-size:400% 100%; animation:shimmer 1.4s ease-in-out infinite; border-radius:4px; }
+        @keyframes shimmer { from { background-position:200% 0; } to { background-position:-200% 0; } }
 
         .empty { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:320px; gap:.75rem; text-align:center; background:#fff; border:1px solid #e5eaf0; border-radius:1rem; padding:2rem; }
         .empty-title { font-size:1.05rem; font-weight:700; color:#374151; margin:0; }
@@ -369,8 +372,12 @@ export default function SponsorManagementPage() {
 
         @media (max-width: 768px) {
           .page-top { flex-direction:column; }
+        }
+        @media (max-width: 640px) {
+          /* keep: col1 (name), col2 (phone), col4 (sponsorships) */
           .table th:nth-child(3), .table td:nth-child(3),
-          .table th:nth-child(5), .table td:nth-child(5) { display:none; }
+          .table th:nth-child(5), .table td:nth-child(5),
+          .table th:nth-child(6), .table td:nth-child(6) { display:none; }
         }
       `}</style>
     </AppShell>

@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import { Search, AlertTriangle, X, User, ChevronRight } from 'lucide-react';
+import { Search, AlertTriangle, X, User, ChevronRight, MapPin, Map, Users, Star, ArrowRight } from 'lucide-react';
 
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
@@ -34,6 +34,14 @@ export default function GovernoratesPage() {
   const [errorRight, setErrorRight]       = useState('');
   const [search, setSearch]               = useState('');
   const [statusFilter, setStatusFilter]   = useState('all');
+  const [isMobile, setIsMobile]           = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   useEffect(() => {
     Promise.all([
@@ -85,17 +93,20 @@ export default function GovernoratesPage() {
 
   return (
     <AppShell>
-      <div dir="rtl" style={{ fontFamily:"'Cairo','Tajawal',sans-serif", height:'calc(100vh - 80px)', display:'flex', flexDirection:'column', gap:'1rem' }}>
+      <div dir="rtl" style={{ fontFamily:"'Cairo','Tajawal',sans-serif", minHeight:'calc(100vh - 80px)', display:'flex', flexDirection:'column', gap:'1rem' }}>
 
         <style>{`
-          @keyframes gv-spin { to { transform: rotate(360deg); } }
-          @keyframes gv-fade { from { opacity:0; transform:translateX(12px); } to { opacity:1; transform:none; } }
-          @keyframes gv-bar  { from { width: 0 } }
+          @keyframes gv-spin    { to { transform: rotate(360deg); } }
+          @keyframes gv-fade    { from { opacity:0; transform:translateX(12px); } to { opacity:1; transform:none; } }
+          @keyframes gv-slidein { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+          @keyframes gv-bar     { from { width: 0 } }
+          @keyframes gv-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
           .gv-gov-row:hover  { background: #f0f7ff !important; border-color: #93c5fd !important; }
           .gv-gov-active     { background: #eff6ff !important; border-color: #1B5E8C !important; }
           .gv-orphan-row:hover td { background: #f8fbff !important; }
           .gv-input:focus    { border-color: #1B5E8C !important; box-shadow: 0 0 0 3px rgba(27,94,140,.1) !important; background: #fff !important; }
           .gv-filter:hover   { border-color: #1B5E8C; color: #1B5E8C; }
+          .gv-back-btn:hover { background: #f0f7ff !important; }
         `}</style>
 
         {/* Page title */}
@@ -107,13 +118,13 @@ export default function GovernoratesPage() {
         </div>
 
         {/* Two-panel layout */}
-        <div style={{ display:'grid', gridTemplateColumns:'320px 1fr', gap:'1rem', flex:1, minHeight:0 }}>
+        <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '320px 1fr', gap:'1rem', flex:1, minHeight: isMobile ? 'auto' : 0 }}>
 
-          {/* LEFT panel */}
-          <div style={{ background:'#fff', border:'1.5px solid #e5eaf0', borderRadius:'1rem', display:'flex', flexDirection:'column', overflow:'hidden' }}>
+          {/* LEFT panel — hidden on mobile when a governorate is selected */}
+          <div style={{ background:'#fff', border:'1.5px solid #e5eaf0', borderRadius:'1rem', display: isMobile && selected ? 'none' : 'flex', flexDirection:'column', overflow:'hidden', minHeight: isMobile ? 400 : 0 }}>
             <div style={{ padding:'1rem 1.1rem .75rem', borderBottom:'1px solid #f0f4f8', flexShrink:0 }}>
-              <h2 style={{ fontSize:'.88rem', fontWeight:700, color:'#1B5E8C', margin:0 }}>
-                📍 المحافظات ({govStats.length})
+              <h2 style={{ fontSize:'.88rem', fontWeight:700, color:'#1B5E8C', margin:0, display:'flex', alignItems:'center', gap:'.4rem' }}>
+                <MapPin size={15} /> المحافظات ({govStats.length})
               </h2>
             </div>
             <div style={{ flex:1, overflowY:'auto', padding:'.5rem .6rem' }}>
@@ -143,11 +154,11 @@ export default function GovernoratesPage() {
             </div>
           </div>
 
-          {/* RIGHT panel */}
-          <div style={{ background:'#fff', border:'1.5px solid #e5eaf0', borderRadius:'1rem', display:'flex', flexDirection:'column', overflow:'hidden' }}>
+          {/* RIGHT panel — hidden on mobile when nothing is selected */}
+          <div style={{ background:'#fff', border:'1.5px solid #e5eaf0', borderRadius:'1rem', display: isMobile && !selected ? 'none' : 'flex', flexDirection:'column', overflow:'hidden', minHeight: isMobile ? 400 : 0, animation: isMobile && selected ? 'gv-slidein .2s ease' : undefined }}>
             {!selected ? (
               <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:'1rem', color:'#9ca3af', padding:'2rem', textAlign:'center' }}>
-                <div style={{ fontSize:'3.5rem' }}>🗺️</div>
+                <Map size={52} strokeWidth={1.2} style={{ color:'#d1d5db' }} />
                 <div>
                   <p style={{ fontSize:'1rem', fontWeight:700, color:'#374151', margin:'0 0 .4rem' }}>اختر محافظة من القائمة</p>
                   <p style={{ fontSize:'.82rem', margin:0 }}>سيظهر هنا جدول الأيتام المسجلين في المحافظة المختارة</p>
@@ -157,16 +168,26 @@ export default function GovernoratesPage() {
               <>
                 {/* Right header */}
                 <div style={{ padding:'1rem 1.25rem', borderBottom:'1px solid #f0f4f8', flexShrink:0 }}>
-                  <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:'1rem', marginBottom:'.75rem' }}>
+                  {/* Mobile back button */}
+                  {isMobile && (
+                    <button
+                      className="gv-back-btn"
+                      onClick={() => setSelected(null)}
+                      style={{ display:'inline-flex', alignItems:'center', gap:'.4rem', marginBottom:'.75rem', padding:'.35rem .75rem', border:'1.5px solid #e5eaf0', borderRadius:'.625rem', background:'#f8fafc', color:'#1B5E8C', fontSize:'.8rem', fontWeight:700, fontFamily:'Cairo,sans-serif', cursor:'pointer', transition:'background .15s' }}
+                    >
+                      <ArrowRight size={15} /> العودة للمحافظات
+                    </button>
+                  )}
+                  <div style={{ display:'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'flex-start', justifyContent:'space-between', gap: isMobile ? '.6rem' : '1rem', marginBottom:'.75rem' }}>
                     <div>
-                      <h2 style={{ fontSize:'1.1rem', fontWeight:800, color:'#0d3d5c', margin:'0 0 .15rem' }}>📍 {selected.name}</h2>
+                      <h2 style={{ fontSize: isMobile ? '1rem' : '1.1rem', fontWeight:800, color:'#0d3d5c', margin:'0 0 .15rem', display:'flex', alignItems:'center', gap:'.4rem' }}><MapPin size={16} /> {selected.name}</h2>
                       <p style={{ fontSize:'.78rem', color:'#9ca3af', margin:0 }}>
                         {loadingRight ? 'جارٍ التحميل…' : `${orphans.length} يتيم مسجل`}
                       </p>
                     </div>
-                    {/* Status chips */}
+                    {/* Status chips + export */}
                     {!loadingRight && orphans.length > 0 && (
-                      <div style={{ display:'flex', gap:'.4rem', flexWrap:'wrap', justifyContent:'flex-end', alignItems:'center' }}>
+                      <div style={{ display:'flex', gap:'.4rem', flexWrap:'wrap', justifyContent: isMobile ? 'flex-start' : 'flex-end', alignItems:'center' }}>
                         {Object.entries(statusCounts).map(([status, count]) => {
                           const cfg = STATUS[status];
                           if (!cfg) return null;
@@ -176,7 +197,6 @@ export default function GovernoratesPage() {
                             </span>
                           );
                         })}
-                        {/* ── Export buttons ── */}
                         <ExportButtons
                           pdfUrl={`/reports/governorate/${selected.id}/pdf`}
                           excelUrl={`/reports/governorate/${selected.id}/excel`}
@@ -189,8 +209,8 @@ export default function GovernoratesPage() {
 
                   {/* Toolbar */}
                   {!loadingRight && orphans.length > 0 && (
-                    <div style={{ display:'flex', gap:'.6rem', flexWrap:'wrap', alignItems:'center' }}>
-                      <div style={{ position:'relative', flex:1, minWidth:180 }}>
+                    <div style={{ display:'flex', flexDirection: isMobile ? 'column' : 'row', gap:'.6rem', flexWrap:'wrap', alignItems: isMobile ? 'stretch' : 'center' }}>
+                      <div style={{ position:'relative', flex:1, minWidth: isMobile ? 'auto' : 180 }}>
                         <span style={{ position:'absolute', right:'.75rem', top:'50%', transform:'translateY(-50%)', fontSize:'.85rem', pointerEvents:'none' }}><Search size={16} /></span>
                         <input
                           className="gv-input"
@@ -222,7 +242,7 @@ export default function GovernoratesPage() {
                     <div style={{ padding:'2rem', textAlign:'center', color:'#b91c1c', fontSize:'.85rem' }}><AlertTriangle size={18} /> {errorRight}</div>
                   ) : filteredOrphans.length === 0 ? (
                     <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'.5rem', padding:'3rem 2rem', color:'#9ca3af', textAlign:'center' }}>
-                      <span style={{ fontSize:'2.5rem' }}>{orphans.length === 0 ? '🏜️' : '<Search size={16} />'}</span>
+                      {orphans.length === 0 ? <Users size={40} strokeWidth={1.2} style={{ color:'#d1d5db' }} /> : <Search size={28} style={{ color:'#d1d5db' }} />}
                       <p style={{ fontWeight:700, color:'#374151', margin:'0 0 .25rem', fontSize:'.9rem' }}>
                         {orphans.length === 0 ? 'لا يوجد أيتام في هذه المحافظة' : 'لا توجد نتائج مطابقة'}
                       </p>
@@ -232,10 +252,11 @@ export default function GovernoratesPage() {
                     </div>
                   ) : (
                     <div style={{ animation:'gv-fade .25s ease' }}>
-                      <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'.8rem' }}>
+                      <div style={{ overflowX:'auto', WebkitOverflowScrolling:'touch' }}>
+                      <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'.8rem', minWidth: isMobile ? 'auto' : 600 }}>
                         <thead>
                           <tr style={{ background:'#f8fafc', position:'sticky', top:0, zIndex:1 }}>
-                            {['#','الاسم','العمر','الحالة','الكافل','المندوب','تاريخ التسجيل'].map(h => (
+                            {['#','الاسم','العمر','الحالة','الكافل', ...(!isMobile ? ['المندوب','تاريخ التسجيل'] : [])].map(h => (
                               <th key={h} style={{ padding:'.75rem .9rem', textAlign:'right', fontSize:'.72rem', fontWeight:700, color:'#6b7a8d', whiteSpace:'nowrap', borderBottom:'2px solid #e5eaf0' }}>{h}</th>
                             ))}
                           </tr>
@@ -248,10 +269,10 @@ export default function GovernoratesPage() {
                                 <td style={{ padding:'.75rem .9rem', color:'#9ca3af', borderBottom:'1px solid #f8fafc', fontSize:'.72rem' }}>{idx + 1}</td>
                                 <td style={{ padding:'.75rem .9rem', borderBottom:'1px solid #f8fafc' }}>
                                   <div style={{ display:'flex', alignItems:'center', gap:'.5rem' }}>
-                                    <span style={{ fontSize:'1rem' }}>{o.gender === 'female' ? '👧' : '<User size={18} />'}</span>
+                                    <User size={17} style={{ color: o.gender === 'female' ? '#db2777' : '#1B5E8C', flexShrink:0 }} />
                                     <div>
                                       <div style={{ fontWeight:700, color:'#0d3d5c', fontSize:'.85rem' }}>{o.full_name}</div>
-                                      {o.is_gifted && <span style={{ fontSize:'.63rem', fontWeight:700, color:'#f59e0b' }}>🌟 موهوب</span>}
+                                      {o.is_gifted && <span style={{ fontSize:'.63rem', fontWeight:700, color:'#f59e0b', display:'inline-flex', alignItems:'center', gap:'.2rem' }}><Star size={10} fill="#f59e0b" /> موهوب</span>}
                                     </div>
                                   </div>
                                 </td>
@@ -262,15 +283,18 @@ export default function GovernoratesPage() {
                                 <td style={{ padding:'.75rem .9rem', borderBottom:'1px solid #f8fafc', color: o.sponsor_name ? '#065F46' : '#9ca3af', fontSize:'.8rem', fontWeight: o.sponsor_name ? 600 : 400 }}>
                                   {o.sponsor_name || 'بدون كافل'}
                                 </td>
-                                <td style={{ padding:'.75rem .9rem', borderBottom:'1px solid #f8fafc', color:'#6b7a8d', fontSize:'.8rem' }}>{o.agent_name || '—'}</td>
-                                <td style={{ padding:'.75rem .9rem', borderBottom:'1px solid #f8fafc', color:'#9ca3af', fontSize:'.75rem', whiteSpace:'nowrap' }}>
-                                  {o.created_at ? new Date(o.created_at).toLocaleDateString('ar-YE', { dateStyle:'medium' }) : '—'}
-                                </td>
+                                {!isMobile && <>
+                                  <td style={{ padding:'.75rem .9rem', borderBottom:'1px solid #f8fafc', color:'#6b7a8d', fontSize:'.8rem' }}>{o.agent_name || '—'}</td>
+                                  <td style={{ padding:'.75rem .9rem', borderBottom:'1px solid #f8fafc', color:'#9ca3af', fontSize:'.75rem', whiteSpace:'nowrap' }}>
+                                    {o.created_at ? new Date(o.created_at).toLocaleDateString('ar-YE', { dateStyle:'medium' }) : '—'}
+                                  </td>
+                                </>}
                               </tr>
                             );
                           })}
                         </tbody>
                       </table>
+                      </div>
                       <div style={{ padding:'.65rem 1rem', fontSize:'.75rem', color:'#9ca3af', borderTop:'1px solid #f0f4f8', background:'#fafafa' }}>
                         عرض {filteredOrphans.length} من {orphans.length} يتيم في {selected.name}
                       </div>
@@ -290,7 +314,7 @@ function LeftSkeleton() {
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:'.4rem', padding:'.25rem' }}>
       {Array.from({ length: 10 }).map((_, i) => (
-        <div key={i} style={{ height:52, borderRadius:'.75rem', background:'linear-gradient(90deg,#f3f4f6 25%,#e5e7eb 50%,#f3f4f6 75%)', backgroundSize:'200% 100%', animation:'gv-spin 1.4s infinite' }} />
+        <div key={i} style={{ height:52, borderRadius:'.75rem', background:'linear-gradient(90deg,#f3f4f6 25%,#e5e7eb 50%,#f3f4f6 75%)', backgroundSize:'400% 100%', animation:'gv-shimmer 1.4s ease-in-out infinite' }} />
       ))}
     </div>
   );
@@ -300,7 +324,7 @@ function RightSkeleton() {
   return (
     <div style={{ padding:'1rem', display:'flex', flexDirection:'column', gap:'.5rem' }}>
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} style={{ height:44, borderRadius:'.625rem', background:'linear-gradient(90deg,#f3f4f6 25%,#e5e7eb 50%,#f3f4f6 75%)', backgroundSize:'200% 100%', animation:'gv-spin 1.4s infinite' }} />
+        <div key={i} style={{ height:44, borderRadius:'.625rem', background:'linear-gradient(90deg,#f3f4f6 25%,#e5e7eb 50%,#f3f4f6 75%)', backgroundSize:'400% 100%', animation:'gv-shimmer 1.4s ease-in-out infinite' }} />
       ))}
     </div>
   );
