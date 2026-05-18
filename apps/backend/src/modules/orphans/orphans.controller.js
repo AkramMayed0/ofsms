@@ -12,7 +12,7 @@
 
 const { validationResult } = require('express-validator');
 const service = require('./orphans.service');
-const announcementsService = require('../announcements/announcements.service');
+const adsService = require('../ads/ads.service');
 const { uploadFile } = require('../../config/s3');
 
 const VALID_RELATIONS = ['uncle', 'maternal_uncle', 'grandfather', 'sibling', 'other'];
@@ -333,6 +333,11 @@ const updateOrphanStatus = async (req, res, next) => {
  */
 const shareOrphanToAds = async (req, res, next) => {
   try {
+    const { targetAll = true, sponsorIds = [] } = req.body || {};
+    const shareWithAll = targetAll === true || targetAll === 'true';
+    if (!shareWithAll && (!Array.isArray(sponsorIds) || sponsorIds.length === 0)) {
+      return res.status(422).json({ error: 'يرجى اختيار كافل واحد على الأقل أو اختيار جميع الكفلاء' });
+    }
     const orphan = await service.getOrphanById(req.params.id);
     if (!orphan) {
       return res.status(404).json({ error: 'اليتيم غير موجود' });
@@ -344,14 +349,17 @@ const shareOrphanToAds = async (req, res, next) => {
       return res.status(400).json({ error: 'لا يمكن مشاركة يتيم لديه كافل حالي' });
     }
 
-    const announcement = await announcementsService.createSponsorOrphanAd({
-      orphan,
+    const ad = await adsService.createAd({
+      beneficiaryType: 'orphan',
+      beneficiaryId: orphan.id,
       createdBy: req.user.id,
+      targetAll: shareWithAll,
+      sponsorIds,
     });
 
     return res.status(201).json({
       message: 'تمت مشاركة بيانات اليتيم مع واجهة الكافل',
-      announcement,
+      ad,
     });
   } catch (err) {
     next(err);

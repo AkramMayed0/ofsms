@@ -17,6 +17,7 @@ import api from '../../../lib/api';
 import AppShell from '../../../components/AppShell';
 import useAuthStore from '../../../store/useAuthStore';
 import TransferSponsorModal from '../../../components/TransferSponsorModal';
+import ShareAdModal from '../../../components/ShareAdModal';
 
 // ── Status config ─────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -184,7 +185,7 @@ export default function OrphanDetailPage() {
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting]     = useState(false);
   const [deleteToast, setDeleteToast] = useState(false);
-  const [sharing, setSharing]       = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const isGM = user?.role === 'gm';
 
@@ -224,20 +225,6 @@ export default function OrphanDetailPage() {
     }
   };
 
-  const handleShare = async () => {
-    setSharing(true);
-    setError('');
-    try {
-      await api.post(`/orphans/${id}/share`);
-      setSuccessMsg('تمت مشاركة بيانات اليتيم في واجهة الكافل');
-      setTimeout(() => setSuccessMsg(''), 4000);
-    } catch (err) {
-      setError(err.response?.data?.error || 'تعذّرت مشاركة بيانات اليتيم');
-    } finally {
-      setSharing(false);
-    }
-  };
-
   const statusInfo   = STATUS_CONFIG[orphan?.status] || STATUS_CONFIG.inactive;
   const statusLevels = orphan ? deriveStatusLevels(orphan.status) : null;
 
@@ -274,8 +261,8 @@ export default function OrphanDetailPage() {
               </button>
             )}
             {isGM && orphan?.status === 'under_marketing' && !orphan?.sponsor_name && (
-              <button className="btn-share" onClick={handleShare} disabled={sharing}>
-                <Share2 size={16} /> {sharing ? 'جارٍ المشاركة…' : 'Share'}
+              <button className="btn-share" onClick={() => setShareOpen(true)}>
+                <Share2 size={16} /> Share
               </button>
             )}
 
@@ -570,6 +557,17 @@ export default function OrphanDetailPage() {
           beneficiaryName={orphan.full_name}
           currentSponsor={orphan.sponsor_name}
           agentId={orphan.agent_id}
+        />
+      )}
+
+      {orphan && (
+        <ShareAdModal
+          isOpen={shareOpen}
+          onClose={() => setShareOpen(false)}
+          onSuccess={() => router.push('/announcements')}
+          endpoint={`/orphans/${id}/share`}
+          title="مشاركة اليتيم مع الكفلاء"
+          subtitle={orphan.full_name}
         />
       )}
 

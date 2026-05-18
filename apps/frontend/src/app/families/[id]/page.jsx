@@ -17,6 +17,7 @@ import api from '../../../lib/api';
 import AppShell from '../../../components/AppShell';
 import useAuthStore from '../../../store/useAuthStore';
 import TransferSponsorModal from '../../../components/TransferSponsorModal';
+import ShareAdModal from '../../../components/ShareAdModal';
 
 // ── Status config ─────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -347,7 +348,7 @@ export default function FamilyDetailPage() {
   const [successMsg, setSuccessMsg] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [sharing, setSharing] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const isGM = user?.role === 'gm';
 
@@ -391,20 +392,6 @@ export default function FamilyDetailPage() {
     }
   };
 
-  const handleShare = async () => {
-    setSharing(true);
-    setError('');
-    try {
-      await api.post(`/families/${id}/share`);
-      setSuccessMsg('تمت مشاركة بيانات الأسرة في واجهة الكافل');
-      setTimeout(() => setSuccessMsg(''), 4000);
-    } catch (err) {
-      setError(err.response?.data?.error || 'تعذّرت مشاركة بيانات الأسرة');
-    } finally {
-      setSharing(false);
-    }
-  };
-
   const statusInfo = STATUS_CONFIG[family?.status] || STATUS_CONFIG.inactive;
 
   const formatDate = (d) =>
@@ -434,8 +421,8 @@ export default function FamilyDetailPage() {
               </button>
             )}
             {isGM && family?.status === 'under_marketing' && !family?.sponsor_name && (
-              <button className="btn-share" onClick={handleShare} disabled={sharing}>
-                <Share2 size={16} /> {sharing ? 'جارٍ المشاركة…' : 'Share'}
+              <button className="btn-share" onClick={() => setShareOpen(true)}>
+                <Share2 size={16} /> Share
               </button>
             )}
 
@@ -690,6 +677,17 @@ export default function FamilyDetailPage() {
           familyName={family.family_name}
           familyId={family.id}
           agentId={family.agent_id}
+        />
+      )}
+
+      {family && (
+        <ShareAdModal
+          isOpen={shareOpen}
+          onClose={() => setShareOpen(false)}
+          onSuccess={() => router.push('/announcements')}
+          endpoint={`/families/${id}/share`}
+          title="مشاركة الأسرة مع الكفلاء"
+          subtitle={family.family_name}
         />
       )}
 

@@ -40,11 +40,21 @@ export default function SponsorDashboard() {
     }
     Promise.all([
       sponsorApi.get('/sponsor/orphans'),
-      sponsorApi.get('/sponsor/announcements').catch(() => ({ data: { announcements: [] } })),
+      sponsorApi.get('/ads/sponsor/feed').catch(() => ({ data: { ads: [] } })),
     ])
       .then(([orphansRes, announcementsRes]) => {
         setOrphans(orphansRes.data.orphans || []);
-        setAnnouncements((announcementsRes.data.announcements || []).filter(a => a.is_active));
+        setAnnouncements((announcementsRes.data.ads || []).map(ad => ({
+          id: ad.id,
+          title: ad.beneficiary_type === 'family'
+            ? `طلب كفالة أسرة: ${ad.beneficiary_name}`
+            : `طلب كفالة: ${ad.beneficiary_name}`,
+          body: ad.beneficiary_type === 'family'
+            ? `من سيكفل هذه الأسرة؟ المحافظة: ${ad.governorate_ar || '—'}`
+            : `من سيكفل هذا الطفل؟ المحافظة: ${ad.governorate_ar || '—'}`,
+          published_at: ad.published_at,
+          is_active: true,
+        })));
       })
       .catch(() => setError('تعذّر تحميل البيانات'))
       .finally(() => setLoading(false));

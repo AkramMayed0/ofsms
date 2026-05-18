@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Megaphone, Plus, Pencil, Trash2, RefreshCw, AlertTriangle, X, Eye, EyeOff } from 'lucide-react';
+import { Megaphone, Plus, Pencil, Trash2, RefreshCw, AlertTriangle, X, Eye, EyeOff, User, Users } from 'lucide-react';
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
 import useAuthStore from '../../store/useAuthStore';
@@ -78,6 +78,46 @@ function AnnouncementCard({ ann, isGM, togglingId, onEdit, onDelete, onToggle })
   );
 }
 
+function SponsorAdCard({ ad, isGM, deletingAdId, onDelete }) {
+  const isOrphan = ad.beneficiary_type === 'orphan';
+  const isDeleting = deletingAdId === ad.id;
+
+  return (
+    <div className="ad-card">
+      <div className="ad-main">
+        <div className="ad-avatar">
+          {isOrphan ? <User size={18} /> : <Users size={18} />}
+        </div>
+        <div className="ad-content">
+          <div className="ad-title-row">
+            <h3 className="ad-title">
+              {isOrphan ? 'طلب كفالة يتيم' : 'طلب كفالة أسرة'}: {ad.beneficiary_name || '—'}
+            </h3>
+            <span className={`sponsor-badge ${ad.is_sponsored ? 'sponsor-badge-done' : 'sponsor-badge-wait'}`}>
+              {ad.is_sponsored ? 'Sponsored' : 'Awaiting Sponsor'}
+            </span>
+          </div>
+          <p className="ad-body">
+            {isOrphan ? 'من سيكفل هذا الطفل؟' : 'من سيكفل هذه الأسرة؟'}
+          </p>
+          <div className="ad-meta">
+            <span>{ad.governorate_ar || '—'}</span>
+            <span>{ad.agent_name || '—'}</span>
+            {!isOrphan && <span>{ad.member_count || '—'} أفراد</span>}
+            <span>{fmtDate(ad.published_at)}</span>
+          </div>
+        </div>
+      </div>
+
+      {isGM && ad.is_sponsored && (
+        <button className="ad-delete" onClick={() => onDelete(ad)} disabled={isDeleting}>
+          <Trash2 size={14} /> {isDeleting ? 'جارٍ الحذف…' : 'Delete Ad'}
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const fmtDate = (d) =>
   d ? new Date(d).toLocaleDateString('ar-YE', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
@@ -89,6 +129,7 @@ export default function AnnouncementsPage() {
 
   // data
   const [announcements, setAnnouncements] = useState([]);
+  const [ads, setAds] = useState([]);
   const [loading, setLoading]             = useState(true);
   const [error, setError]                 = useState('');
 
@@ -108,6 +149,7 @@ export default function AnnouncementsPage() {
 
   // toggle loading per-row
   const [togglingId, setTogglingId] = useState(null);
+  const [deletingAdId, setDeletingAdId] = useState('');
 
   // ── Helpers ──────────────────────────────────────────────────────────────
   const showToast = (msg, type = 'success') => {
@@ -119,8 +161,14 @@ export default function AnnouncementsPage() {
   const fetchAnnouncements = useCallback(() => {
     setLoading(true);
     setError('');
-    api.get('/announcements')
-      .then((res) => setAnnouncements(res.data.announcements || []))
+    Promise.all([
+      api.get('/announcements'),
+      api.get('/ads'),
+    ])
+      .then(([annRes, adsRes]) => {
+        setAnnouncements(annRes.data.announcements || []);
+        setAds(adsRes.data.ads || []);
+      })
       .catch(() => setError('تعذّر تحميل الإعلانات.'))
       .finally(() => setLoading(false));
   }, []);
@@ -214,6 +262,19 @@ export default function AnnouncementsPage() {
     }
   };
 
+  const handleDeleteAd = async (ad) => {
+    setDeletingAdId(ad.id);
+    try {
+      await api.delete(`/ads/${ad.id}`);
+      setAds((prev) => prev.filter((item) => item.id !== ad.id));
+      showToast('تم حذف الإعلان من صفحة الإعلانات');
+    } catch (err) {
+      showToast(err.response?.data?.error || 'فشل حذف الإعلان.', 'error');
+    } finally {
+      setDeletingAdId('');
+    }
+  };
+
   // ── Render ───────────────────────────────────────────────────────────────
   return (
     <AppShell>
@@ -224,7 +285,7 @@ export default function AnnouncementsPage() {
           <div>
             <h1 className="page-title">الإعلانات</h1>
             <p className="page-sub">
-              {loading ? '…' : `${announcements.length} إعلان`}
+              {loading ? '…' : `${announcements.length + ads.length} إعلان`}
             </p>
           </div>
           <div className="header-actions">
@@ -254,7 +315,7 @@ export default function AnnouncementsPage() {
         )}
 
         {/* ── Empty state ── */}
-        {!loading && !error && announcements.length === 0 && (
+        {!loading && !error && announcements.length === 0 && ads.length === 0 && (
           <div className="empty-state">
             <Megaphone size={40} strokeWidth={1.5} />
             <p className="empty-title">لا توجد إعلانات</p>
@@ -265,6 +326,20 @@ export default function AnnouncementsPage() {
         )}
 
         {/* ── Announcements list ── */}
+        {!loading && ads.length > 0 && (
+          <div className="list">
+            {ads.map((ad) => (
+              <SponsorAdCard
+                key={ad.id}
+                ad={ad}
+                isGM={isGM}
+                deletingAdId={deletingAdId}
+                onDelete={handleDeleteAd}
+              />
+            ))}
+          </div>
+        )}
+
         {!loading && announcements.length > 0 && (
           <div className="list">
             {announcements.map((ann) => (
@@ -450,6 +525,40 @@ export default function AnnouncementsPage() {
         }
         .card:not(.card-inactive) { border-right-color: #1B5E8C; }
         .card-inactive { opacity: 0.5; filter: grayscale(30%); }
+
+        .ad-card {
+          display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+          background: #fff; border: 1.5px solid #dbeafe; border-right: 4px solid #0f766e;
+          border-radius: 1.125rem; padding: 1rem 1.2rem;
+          box-shadow: 0 2px 8px rgba(0,0,0,.06);
+        }
+        .ad-main { display: flex; align-items: flex-start; gap: .85rem; min-width: 0; }
+        .ad-avatar {
+          width: 42px; height: 42px; border-radius: 12px; background: #ecfdf5; color: #0f766e;
+          display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .ad-content { min-width: 0; display: flex; flex-direction: column; gap: .35rem; }
+        .ad-title-row { display: flex; align-items: center; gap: .55rem; flex-wrap: wrap; }
+        .ad-title { margin: 0; font-size: .98rem; font-weight: 900; color: #0d3d5c; }
+        .ad-body { margin: 0; font-size: .86rem; color: #475569; }
+        .ad-meta { display: flex; flex-wrap: wrap; gap: .45rem; color: #94a3b8; font-size: .74rem; }
+        .sponsor-badge {
+          width: fit-content; border-radius: 999px; padding: .22rem .6rem;
+          font-size: .7rem; font-weight: 900;
+        }
+        .sponsor-badge-done { background: #dcfce7; color: #166534; }
+        .sponsor-badge-wait { background: #dbeafe; color: #1d4ed8; }
+        .ad-delete {
+          display: inline-flex; align-items: center; gap: .35rem;
+          border: 1px solid #fecaca; border-radius: .65rem; background: #fef2f2; color: #b91c1c;
+          padding: .48rem .75rem; font-family: 'Cairo', sans-serif; font-size: .78rem; font-weight: 800;
+          cursor: pointer; flex-shrink: 0;
+        }
+        .ad-delete:disabled { opacity: .6; cursor: not-allowed; }
+        @media (max-width: 640px) {
+          .ad-card { align-items: stretch; flex-direction: column; }
+          .ad-delete { justify-content: center; }
+        }
 
         /* ── card header ── */
         .card-header {
