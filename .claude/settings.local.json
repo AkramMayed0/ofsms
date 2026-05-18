@@ -45,7 +45,10 @@
       "Bash(Get-ChildItem -Path \"d:\\\\NawaDev\\\\ofsms\\\\frontend\\\\src\" -Recurse -Filter \"*report*\" -ErrorAction SilentlyContinue)",
       "Bash(Select-Object -ExpandProperty FullName)",
       "Bash(npx playwright *)",
-      "PowerShell(Get-ChildItem \"d:\\\\NawaDev\\\\ofsms\\\\apps\\\\frontend\\\\src\\\\app\" -Recurse | Where-Object { !$_.PSIsContainer } | Select-Object FullName)"
+      "PowerShell(Get-ChildItem \"d:\\\\NawaDev\\\\ofsms\\\\apps\\\\frontend\\\\src\\\\app\" -Recurse | Where-Object { !$_.PSIsContainer } | Select-Object FullName)",
+      "Bash(Get-ChildItem -Path \"d:\\\\NawaDev\\\\ofsms\" -Recurse -Include \"*.tsx\",\"*.jsx\")",
+      "Bash(Select-Object FullName)",
+      "Bash(Head -50)"
     ]
   }
 }

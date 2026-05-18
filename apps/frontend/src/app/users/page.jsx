@@ -15,7 +15,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { Search, AlertTriangle, X, User, CheckCircle2, XCircle, Trash2, Edit2, Users } from 'lucide-react';
+import { AlertTriangle, X, Trash2, Edit2, Users } from 'lucide-react';
 
 import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
@@ -38,10 +38,153 @@ const ROLES_OPTIONS = [
   { value: 'gm', label: 'مدير عام' },
 ];
 
+// ── Icons ──────────────────────────────────────────────────────────────────────
+
+const IconSearch = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+  </svg>
+);
+
+const IconRefresh = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="23 4 23 10 17 10"/>
+    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+  </svg>
+);
+
+const IconPlus = () => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+);
+
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 const formatDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('ar-YE', { dateStyle: 'medium' }) : '—';
+
+// ── Shared modal inline styles ─────────────────────────────────────────────────
+
+const modalStyles = {
+  backdrop: {
+    position: 'fixed', inset: 0, background: 'rgba(0,0,0,.45)', zIndex: 1000,
+  },
+  box: {
+    position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
+    width: '460px', maxWidth: '95vw', background: '#fff', borderRadius: '1.25rem',
+    zIndex: 1001, boxShadow: '0 20px 60px rgba(0,0,0,.2)',
+    maxHeight: '90vh', overflowY: 'auto',
+    fontFamily: "'Cairo','Tajawal',sans-serif",
+    animation: 'none',
+  },
+  head: {
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    padding: '1.25rem 1.5rem', borderBottom: '1px solid #f0f4f8',
+    position: 'sticky', top: 0, background: '#fff', zIndex: 1,
+  },
+  title: { fontSize: '1.1rem', fontWeight: 800, color: '#0d3d5c', margin: 0 },
+  closeBtn: {
+    background: '#f3f4f6', border: 'none', color: '#6b7280', cursor: 'pointer',
+    padding: '.4rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+  },
+  body: {
+    display: 'flex', flexDirection: 'column', gap: '1.15rem', padding: '1.75rem',
+  },
+  foot: {
+    display: 'flex', gap: '.75rem', justifyContent: 'flex-end',
+    paddingTop: '.75rem', borderTop: '1px solid #f0f4f8', marginTop: '.5rem',
+  },
+  fg: { display: 'flex', flexDirection: 'column', gap: '.3rem' },
+  lbl: { fontSize: '.82rem', fontWeight: 600, color: '#374151' },
+  req: { color: '#dc2626' },
+  inp: {
+    border: '1.5px solid #d1d5db', borderRadius: '.625rem', padding: '.65rem .9rem',
+    fontSize: '.88rem', fontFamily: "'Cairo',sans-serif", color: '#1f2937',
+    background: '#fafafa', outline: 'none', width: '100%', boxSizing: 'border-box',
+    direction: 'rtl',
+  },
+  inpErr: { borderColor: '#dc2626' },
+  ferr: { fontSize: '.77rem', color: '#dc2626', margin: 0 },
+  errBanner: {
+    display: 'flex', alignItems: 'center', gap: '.5rem',
+    background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '.625rem',
+    padding: '.65rem .85rem', fontSize: '.82rem', color: '#b91c1c', fontWeight: 500,
+  },
+  btnPrimary: {
+    display: 'inline-flex', alignItems: 'center', gap: '.4rem',
+    padding: '.7rem 1.4rem', background: 'linear-gradient(135deg,#1B5E8C,#134569)',
+    color: '#fff', fontFamily: "'Cairo',sans-serif", fontSize: '.9rem', fontWeight: 700,
+    border: 'none', borderRadius: '.75rem', cursor: 'pointer',
+    boxShadow: '0 2px 8px rgba(27,94,140,.25)',
+  },
+  btnGhost: {
+    display: 'inline-flex', alignItems: 'center', padding: '.7rem 1.25rem',
+    background: 'none', color: '#6b7280', fontFamily: "'Cairo',sans-serif",
+    fontSize: '.88rem', fontWeight: 600, border: '1.5px solid #e5eaf0',
+    borderRadius: '.75rem', cursor: 'pointer',
+  },
+  btnDanger: {
+    display: 'inline-flex', alignItems: 'center', gap: '.4rem', padding: '.7rem 1.4rem',
+    background: '#dc2626', color: '#fff', fontFamily: "'Cairo',sans-serif",
+    fontSize: '.88rem', fontWeight: 700, border: 'none', borderRadius: '.75rem', cursor: 'pointer',
+  },
+  spin: {
+    display: 'inline-block', width: '14px', height: '14px',
+    border: '2px solid rgba(255,255,255,.4)', borderTopColor: '#fff',
+    borderRadius: '50%', animation: 'spin .7s linear infinite', flexShrink: 0,
+  },
+};
+
+// ── SuccessPopup ───────────────────────────────────────────────────────────────
+
+function SuccessPopup({ title, msg, type = 'success', onClose }) {
+  const isSuccess = type === 'success';
+  return (
+    <div className="sp-backdrop" onClick={onClose}>
+      <div className="sp-box" onClick={(e) => e.stopPropagation()} dir="rtl">
+        <div className="sp-icon" style={{ background: isSuccess ? '#ecfdf5' : '#fef2f2' }}>
+          {isSuccess ? (
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
+              stroke="#10B981" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          ) : (
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
+              stroke="#ef4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+          )}
+        </div>
+        <h3 className="sp-title">{title}</h3>
+        {msg && <p className="sp-msg">{msg}</p>}
+      </div>
+    </div>
+  );
+}
+
+// ── StatPill ───────────────────────────────────────────────────────────────────
+
+function StatPill({ label, count, color }) {
+  return (
+    <div style={{
+      display: 'inline-flex', flexDirection: 'column', alignItems: 'center',
+      gap: '2px', padding: '.6rem 1.1rem',
+      background: '#fff', border: '1.5px solid #e5e7eb', borderRadius: '12px',
+      fontFamily: "'Cairo', sans-serif", minWidth: '80px',
+      boxShadow: '0 1px 3px rgba(0,0,0,.04)',
+    }}>
+      <span style={{ fontSize: '1.35rem', fontWeight: 800, lineHeight: 1, color }}>{count}</span>
+      <span style={{ fontSize: '.72rem', fontWeight: 600, color: '#6b7280', whiteSpace: 'nowrap' }}>{label}</span>
+    </div>
+  );
+}
 
 // ── RoleBadge ──────────────────────────────────────────────────────────────────
 
@@ -131,103 +274,105 @@ function UserFormModal({ mode, user, onClose, onSaved }) {
     }
   };
 
+  const S = modalStyles;
+
   return (
     <>
-      <div className="modal-backdrop" onClick={onClose} />
-      <div className="modal" dir="rtl">
-        <div className="modal-head">
-          <h2 className="modal-title">
+      <div style={S.backdrop} onClick={onClose} />
+      <div style={S.box} dir="rtl">
+        <div style={S.head}>
+          <h2 style={S.title}>
             {isEdit ? `تعديل: ${user.full_name}` : 'إضافة مستخدم جديد'}
           </h2>
-          <button className="modal-close" onClick={onClose} aria-label="إغلاق"><X size={16} /></button>
+          <button style={S.closeBtn} onClick={onClose} aria-label="إغلاق"><X size={16} /></button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} noValidate className="modal-body">
+        <form onSubmit={handleSubmit(onSubmit)} noValidate style={S.body}>
           {apiErr && (
-            <div className="err-banner">
-              <span><AlertTriangle size={18} /></span> {apiErr}
+            <div style={S.errBanner}>
+              <AlertTriangle size={16} /> {apiErr}
             </div>
           )}
 
           {/* Full name */}
-          <div className="fg">
-            <label className="lbl">الاسم الكامل <span className="req">*</span></label>
+          <div style={S.fg}>
+            <label style={S.lbl}>الاسم الكامل <span style={S.req}>*</span></label>
             <input
-              className={`inp ${errors.fullName ? 'inp-err' : ''}`}
+              style={{ ...S.inp, ...(errors.fullName ? S.inpErr : {}) }}
               placeholder="الاسم الكامل"
               {...register('fullName', {
                 required: 'الاسم مطلوب',
                 minLength: { value: 3, message: 'الاسم يجب أن يكون 3 أحرف على الأقل' },
               })}
             />
-            {errors.fullName && <p className="ferr">{errors.fullName.message}</p>}
+            {errors.fullName && <p style={S.ferr}>{errors.fullName.message}</p>}
           </div>
 
           {/* Email — only for create */}
           {!isEdit && (
-            <div className="fg">
-              <label className="lbl">البريد الإلكتروني <span className="req">*</span></label>
+            <div style={S.fg}>
+              <label style={S.lbl}>البريد الإلكتروني <span style={S.req}>*</span></label>
               <input
                 type="email"
-                className={`inp ltr ${errors.email ? 'inp-err' : ''}`}
+                style={{ ...S.inp, direction: 'ltr', ...(errors.email ? S.inpErr : {}) }}
                 placeholder="user@example.com"
                 {...register('email', {
                   required: 'البريد مطلوب',
                   pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'بريد غير صحيح' },
                 })}
               />
-              {errors.email && <p className="ferr">{errors.email.message}</p>}
+              {errors.email && <p style={S.ferr}>{errors.email.message}</p>}
             </div>
           )}
 
           {/* Password — only for create */}
           {!isEdit && (
-            <div className="fg">
-              <label className="lbl">كلمة المرور <span className="req">*</span></label>
+            <div style={S.fg}>
+              <label style={S.lbl}>كلمة المرور <span style={S.req}>*</span></label>
               <input
                 type="password"
-                className={`inp ltr ${errors.password ? 'inp-err' : ''}`}
+                style={{ ...S.inp, direction: 'ltr', ...(errors.password ? S.inpErr : {}) }}
                 placeholder="8 أحرف على الأقل"
                 {...register('password', {
                   required: 'كلمة المرور مطلوبة',
                   minLength: { value: 8, message: '8 أحرف على الأقل' },
                 })}
               />
-              {errors.password && <p className="ferr">{errors.password.message}</p>}
+              {errors.password && <p style={S.ferr}>{errors.password.message}</p>}
             </div>
           )}
 
           {/* Phone */}
-          <div className="fg">
-            <label className="lbl">رقم الهاتف <span className="opt">(اختياري)</span></label>
+          <div style={S.fg}>
+            <label style={S.lbl}>رقم الهاتف <span style={{ color: '#94a3b8', fontWeight: 400, fontSize: '.75rem' }}>(اختياري)</span></label>
             <input
-              className="inp ltr"
+              style={{ ...S.inp, direction: 'ltr' }}
               placeholder="+967 7XX XXX XXX"
               {...register('phone')}
             />
           </div>
 
           {/* Role */}
-          <div className="fg">
-            <label className="lbl">الدور <span className="req">*</span></label>
+          <div style={S.fg}>
+            <label style={S.lbl}>الدور <span style={S.req}>*</span></label>
             <select
-              className={`inp sel ${errors.role ? 'inp-err' : ''}`}
+              style={{ ...S.inp, appearance: 'none', cursor: 'pointer', ...(errors.role ? S.inpErr : {}) }}
               {...register('role', { required: 'الدور مطلوب' })}
             >
               {ROLES_OPTIONS.map((r) => (
                 <option key={r.value} value={r.value}>{r.label}</option>
               ))}
             </select>
-            {errors.role && <p className="ferr">{errors.role.message}</p>}
+            {errors.role && <p style={S.ferr}>{errors.role.message}</p>}
           </div>
 
-          <div className="modal-foot">
-            <button type="button" className="btn-ghost" onClick={onClose} disabled={saving}>
+          <div style={S.foot}>
+            <button type="button" style={S.btnGhost} onClick={onClose} disabled={saving}>
               إلغاء
             </button>
-            <button type="submit" className="btn-primary" disabled={saving}>
+            <button type="submit" style={S.btnPrimary} disabled={saving}>
               {saving
-                ? <><span className="spin" /> جارٍ الحفظ…</>
+                ? <><span style={S.spin} /> جارٍ الحفظ…</>
                 : isEdit ? 'حفظ التغييرات' : 'إضافة المستخدم'}
             </button>
           </div>
@@ -243,22 +388,39 @@ function DeleteConfirmModal({ user, onClose, onConfirm, loading }) {
   if (!user) return null;
   return (
     <>
-      <div className="modal-backdrop" onClick={onClose} />
-      <div className="modal modal-sm delete-modal" dir="rtl">
-        <div className="modal-body text-center">
-          <div className="delete-icon-wrapper">
-            <AlertTriangle size={42} strokeWidth={1.5} />
-          </div>
-          <h2 className="delete-title">تأكيد الحذف</h2>
-          <p className="delete-msg">
+      <div style={modalStyles.backdrop} onClick={onClose} />
+      <div style={{
+        ...modalStyles.box,
+        width: '420px',
+        borderTop: '4px solid #ef4444',
+        overflow: 'visible',
+      }} dir="rtl">
+        {/* Icon floating above box */}
+        <div style={{
+          position: 'absolute', top: '-44px', left: '50%', transform: 'translateX(-50%)',
+          width: '80px', height: '80px', borderRadius: '50%',
+          background: '#fef2f2', color: '#ef4444',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          border: '4px solid #fff', boxShadow: '0 4px 12px rgba(239,68,68,.15)',
+        }}>
+          <AlertTriangle size={42} strokeWidth={1.5} />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '.75rem', padding: '3.5rem 2rem 2rem', textAlign: 'center', fontFamily: "'Cairo','Tajawal',sans-serif" }}>
+          <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#111827', margin: 0 }}>تأكيد الحذف</h2>
+          <p style={{ fontSize: '.95rem', color: '#4b5563', lineHeight: 1.6, margin: 0 }}>
             هل أنت متأكد من رغبتك في حذف المستخدم <strong>{user.full_name}</strong>؟
-            <br />
-            <span className="delete-warning">لا يمكن التراجع عن هذا الإجراء بعد تنفيذه.</span>
           </p>
-          <div className="modal-foot delete-foot">
-            <button className="btn-ghost" onClick={onClose} disabled={loading}>تراجع</button>
-            <button className="btn-danger" onClick={onConfirm} disabled={loading}>
-              {loading ? <><span className="spin" /> جاري الحذف…</> : 'نعم، احذف المستخدم'}
+          <span style={{
+            color: '#dc2626', fontSize: '.85rem', fontWeight: 600,
+            padding: '.3rem .75rem', background: '#fef2f2', borderRadius: '2rem',
+          }}>
+            لا يمكن التراجع عن هذا الإجراء بعد تنفيذه.
+          </span>
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '.5rem', width: '100%', justifyContent: 'center' }}>
+            <button style={modalStyles.btnGhost} onClick={onClose} disabled={loading}>تراجع</button>
+            <button style={{ ...modalStyles.btnDanger, flex: 1, justifyContent: 'center' }} onClick={onConfirm} disabled={loading}>
+              {loading ? <><span style={modalStyles.spin} /> جاري الحذف…</> : 'نعم، احذف المستخدم'}
             </button>
           </div>
         </div>
@@ -277,7 +439,7 @@ export default function UserManagementPage() {
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
-  const [toast, setToast] = useState(null);
+  const [popup, setPopup] = useState(null); // { title, msg, type }
 
   // Modals
   const [showAdd, setShowAdd] = useState(false);
@@ -286,9 +448,9 @@ export default function UserManagementPage() {
   const [toggling, setToggling] = useState(null); // user id being toggled
   const [deleting, setDeleting] = useState(false);
 
-  const showToast = (msg, type = 'success') => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
+  const showPopup = (title, msg = '', type = 'success') => {
+    setPopup({ title, msg, type });
+    setTimeout(() => setPopup(null), 2500);
   };
 
   const fetchUsers = useCallback(() => {
@@ -325,9 +487,12 @@ export default function UserManagementPage() {
       setUsers((prev) =>
         prev.map((u) => u.id === user.id ? { ...u, is_active: !u.is_active } : u)
       );
-      showToast(user.is_active ? `تم إيقاف حساب ${user.full_name}` : `تم تفعيل حساب ${user.full_name}`);
+      showPopup(
+        user.is_active ? 'تم إيقاف الحساب' : 'تم تفعيل الحساب',
+        user.is_active ? `تم إيقاف حساب ${user.full_name} بنجاح` : `تم تفعيل حساب ${user.full_name} بنجاح`
+      );
     } catch {
-      showToast('فشل تغيير حالة الحساب', 'error');
+      showPopup('فشل العملية', 'فشل تغيير حالة الحساب', 'error');
     } finally {
       setToggling(null);
     }
@@ -340,10 +505,11 @@ export default function UserManagementPage() {
     try {
       await api.delete(`/users/${delTarget.id}`);
       setUsers((prev) => prev.filter((u) => u.id !== delTarget.id));
+      const name = delTarget.full_name;
       setDelTarget(null);
-      showToast(`تم حذف ${delTarget.full_name}`);
+      showPopup('تم الحذف بنجاح', `تم حذف المستخدم ${name} من النظام`);
     } catch (err) {
-      showToast(err.response?.data?.error || 'فشل الحذف', 'error');
+      showPopup('فشل الحذف', err.response?.data?.error || 'تعذّر حذف المستخدم', 'error');
     } finally {
       setDeleting(false);
     }
@@ -354,21 +520,24 @@ export default function UserManagementPage() {
 
   return (
     <AppShell>
-      <div className="page" dir="rtl">
+      {/* ── Success / Error Popup ── */}
+      {popup && (
+        <SuccessPopup
+          title={popup.title}
+          msg={popup.msg}
+          type={popup.type}
+          onClose={() => setPopup(null)}
+        />
+      )}
 
-        {/* ── Toast ── */}
-        {toast && (
-          <div className={`toast toast-${toast.type}`}>
-            {toast.type === 'success' ? <CheckCircle2 size={16} /> : <XCircle size={16} />} {toast.msg}
-          </div>
-        )}
+      <div className="page" dir="rtl">
 
         {/* ── Modals ── */}
         {showAdd && (
           <UserFormModal
             mode="add"
             onClose={() => setShowAdd(false)}
-            onSaved={() => { fetchUsers(); showToast('تم إضافة المستخدم بنجاح'); }}
+            onSaved={() => { fetchUsers(); showPopup('تم الإضافة بنجاح', 'تمت إضافة المستخدم الجديد إلى النظام'); }}
           />
         )}
         {editTarget && (
@@ -376,7 +545,7 @@ export default function UserManagementPage() {
             mode="edit"
             user={editTarget}
             onClose={() => setEditTarget(null)}
-            onSaved={() => { fetchUsers(); showToast('تم تحديث بيانات المستخدم'); }}
+            onSaved={() => { fetchUsers(); showPopup('تم الحفظ بنجاح', 'تم تحديث بيانات المستخدم'); }}
           />
         )}
         <DeleteConfirmModal
@@ -387,50 +556,71 @@ export default function UserManagementPage() {
         />
 
         {/* ── Header ── */}
-        <div className="page-top">
+        <div className="page-header">
           <div>
             <h1 className="page-title">إدارة المستخدمين</h1>
             <p className="page-sub">
               {loading ? 'جارٍ التحميل…' : `${users.length} مستخدم · ${activeCount} نشط · ${inactiveCount} موقوف`}
             </p>
           </div>
-          <button className="btn-primary" onClick={() => setShowAdd(true)}>
-            + إضافة مستخدم
-          </button>
+          <div className="header-actions">
+            <button className="btn-refresh" onClick={fetchUsers} title="تحديث">
+              <IconRefresh />
+            </button>
+            <button className="btn-primary" onClick={() => setShowAdd(true)}>
+              <IconPlus /> إضافة مستخدم
+            </button>
+          </div>
         </div>
 
-        {/* ── Stats chips ── */}
-        {!loading && (
-          <div className="stats-row">
-            {Object.entries(ROLE_MAP).map(([role, cfg]) => (
-              <div
-                key={role}
-                className="stat-chip"
-                style={{ borderColor: `${cfg.color}30`, background: cfg.bg }}
-              >
-                <span className="chip-count" style={{ color: cfg.color }}>
-                  {roleCounts[role] || 0}
-                </span>
-                <span className="chip-label" style={{ color: cfg.color }}>{cfg.label}</span>
-              </div>
-            ))}
-          </div>
-        )}
+        {/* ── Stat pills ── */}
+        <div className="stat-pills">
+          <StatPill label="الإجمالي"    count={users.length}          color="#1B5E8C" />
+          <StatPill label="مدير عام"    count={roleCounts.gm || 0}    color="#7c3aed" />
+          <StatPill label="مشرف أيتام"  count={roleCounts.supervisor || 0} color="#1d4ed8" />
+          <StatPill label="مندوب"       count={roleCounts.agent || 0} color="#059669" />
+          <StatPill label="قسم مالي"    count={roleCounts.finance || 0} color="#d97706" />
+        </div>
 
-        {/* ── Search + filter ── */}
-        <div className="toolbar">
-          <div className="search-wrap">
-            <span className="search-icon"><Search size={16} /></span>
+        {/* ── Filters bar ── */}
+        <div style={{
+          display: 'flex', gap: '0.65rem', flexWrap: 'wrap', alignItems: 'center',
+          background: '#fff', border: '1px solid #e5eaf0', borderRadius: '0.875rem',
+          padding: '0.875rem 1rem', boxShadow: '0 1px 3px rgba(0,0,0,.04)',
+        }}>
+          {/* Search */}
+          <div style={{ position: 'relative', flex: 1, minWidth: '200px' }}>
+            <span style={{
+              position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)',
+              color: '#9ca3af', display: 'flex', pointerEvents: 'none',
+            }}>
+              <IconSearch />
+            </span>
             <input
-              className="search-inp"
+              type="text"
               placeholder="ابحث بالاسم أو البريد الإلكتروني…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              style={{
+                width: '100%', boxSizing: 'border-box',
+                padding: '0.55rem 2.25rem 0.55rem 2rem',
+                border: '1.5px solid #e5e7eb', borderRadius: '0.625rem',
+                fontFamily: "'Cairo', sans-serif", fontSize: '0.875rem', color: '#1f2937',
+                background: '#fafafa', outline: 'none', direction: 'rtl',
+                transition: 'border-color .15s, box-shadow .15s',
+              }}
+              onFocus={e => { e.target.style.borderColor='#1B5E8C'; e.target.style.boxShadow='0 0 0 3px rgba(27,94,140,.1)'; e.target.style.background='#fff'; }}
+              onBlur={e  => { e.target.style.borderColor='#e5e7eb'; e.target.style.boxShadow='none'; e.target.style.background='#fafafa'; }}
             />
             {search && (
-              <button className="search-clear" onClick={() => setSearch('')}><X size={16} /></button>
+              <button onClick={() => setSearch('')} style={{
+                position: 'absolute', left: '0.6rem', top: '50%', transform: 'translateY(-50%)',
+                background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: '0.2rem',
+              }}><X size={16} /></button>
             )}
           </div>
+
+          {/* Role tabs */}
           <div className="role-tabs">
             <button
               className={`rtab ${roleFilter === 'all' ? 'rtab-active' : ''}`}
@@ -587,48 +777,49 @@ export default function UserManagementPage() {
           position: relative;
         }
 
-        /* ── Toast ───────────────────────────────────────────────────── */
-        .toast {
-          position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
-          z-index: 200; padding: .75rem 1.5rem; border-radius: 2rem;
-          font-size: .88rem; font-weight: 600; white-space: nowrap;
-          box-shadow: 0 4px 20px rgba(0,0,0,.15);
-          animation: toastIn .25s ease;
+        /* ── Success / Error Popup ───────────────────────────────────── */
+        .sp-backdrop {
+          position: fixed; inset: 0; background: rgba(0,0,0,.45);
+          z-index: 9999; display: flex; align-items: center; justify-content: center;
+          animation: fadeIn .2s ease;
         }
-        .toast-success { background: #0d3d5c; color: #fff; }
-        .toast-error   { background: #dc2626; color: #fff; }
-        @keyframes toastIn {
-          from { opacity: 0; transform: translateX(-50%) translateY(8px); }
-          to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .sp-box {
+          background: #fff; border-radius: 1.25rem;
+          padding: 2.5rem 2rem 2rem; width: 340px; max-width: 92vw;
+          text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.2);
+          animation: scaleIn .22s ease;
+          font-family: 'Cairo', 'Tajawal', sans-serif;
+          display: flex; flex-direction: column; align-items: center; gap: .75rem;
         }
+        .sp-icon {
+          width: 80px; height: 80px; border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          margin-bottom: .25rem;
+        }
+        .sp-title {
+          font-size: 1.2rem; font-weight: 800; color: #0d3d5c; margin: 0;
+        }
+        .sp-msg {
+          font-size: .88rem; color: #6b7280; margin: 0; line-height: 1.6;
+        }
+        @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: scale(1); } }
 
         /* ── Header ───────────────────────────────────────────────────── */
-        .page-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+        .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
         .page-title { font-size: 1.6rem; font-weight: 800; color: #0d3d5c; margin: 0 0 .2rem; }
-        .page-sub { font-size: .85rem; color: #6b7a8d; margin: 0; }
-
-        /* ── Stats chips ──────────────────────────────────────────────── */
-        .stats-row { display: flex; gap: .65rem; flex-wrap: wrap; }
-        .stat-chip {
-          display: flex; align-items: center; gap: .4rem;
-          padding: .45rem 1rem; border-radius: 2rem; border: 1.5px solid;
+        .page-sub { font-size: .82rem; color: #9ca3af; margin: 0; }
+        .header-actions { display: flex; align-items: center; gap: .75rem; flex-shrink: 0; }
+        .btn-refresh {
+          display: flex; align-items: center; justify-content: center;
+          width: 2.25rem; height: 2.25rem;
+          border: 1.5px solid #e5e7eb; border-radius: .625rem;
+          background: #fff; color: #6b7280; cursor: pointer; transition: all .15s;
         }
-        .chip-count { font-size: 1.1rem; font-weight: 800; font-family: 'Cairo', sans-serif; }
-        .chip-label { font-size: .78rem; font-weight: 600; }
+        .btn-refresh:hover { border-color: #1B5E8C; color: #1B5E8C; background: #f0f7ff; }
 
-        /* ── Toolbar ──────────────────────────────────────────────────── */
-        .toolbar { display: flex; flex-direction: column; gap: .75rem; }
-        .search-wrap { position: relative; display: flex; align-items: center; }
-        .search-icon { position: absolute; right: .85rem; font-size: .9rem; pointer-events: none; }
-        .search-inp {
-          width: 100%; border: 1.5px solid #d1d5db; border-radius: .75rem;
-          padding: .65rem .9rem .65rem 2.5rem; padding-right: 2.4rem;
-          font-size: .88rem; font-family: 'Cairo', sans-serif; color: #1f2937;
-          background: #fafafa; outline: none; box-sizing: border-box;
-          transition: border-color .15s, box-shadow .15s;
-        }
-        .search-inp:focus { border-color: #1B5E8C; background: #fff; box-shadow: 0 0 0 3px rgba(27,94,140,.1); }
-        .search-clear { position: absolute; left: .75rem; background: none; border: none; cursor: pointer; color: #9ca3af; }
+        /* ── Stat pills ───────────────────────────────────────────────── */
+        .stat-pills { display: flex; gap: .6rem; flex-wrap: wrap; }
 
         .role-tabs { display: flex; gap: .4rem; flex-wrap: wrap; }
         .rtab {
@@ -651,10 +842,10 @@ export default function UserManagementPage() {
         /* ── Skeleton ─────────────────────────────────────────────────── */
         .skel-row { display: flex; align-items: center; gap: 1rem; padding: .85rem 1.1rem; border-bottom: 1px solid #f8fafc; }
         .skel {
-          background: linear-gradient(90deg, #f0f4f8 25%, #e5eaf0 50%, #f0f4f8 75%);
+          background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
           background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 4px;
         }
-        @keyframes shimmer { to { background-position: -200% 0; } }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
         /* ── Empty ────────────────────────────────────────────────────── */
         .empty {
@@ -809,7 +1000,7 @@ export default function UserManagementPage() {
 
         /* ── Responsive ───────────────────────────────────────────────── */
         @media (max-width: 768px) {
-          .page-top { flex-direction: column; }
+          .page-title { font-size: 1.3rem; }
           .table th:nth-child(4), .table td:nth-child(4),
           .table th:nth-child(6), .table td:nth-child(6) { display: none; }
         }
