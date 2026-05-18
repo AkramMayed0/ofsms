@@ -43,7 +43,8 @@
       "Bash(npm run *)",
       "Bash(curl -s https://ofsms.onrender.com/health)",
       "Bash(Get-ChildItem -Path \"d:\\\\NawaDev\\\\ofsms\\\\frontend\\\\src\" -Recurse -Filter \"*report*\" -ErrorAction SilentlyContinue)",
-      "Bash(Select-Object -ExpandProperty FullName)"
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(npx playwright *)"
     ]
   }
 }
