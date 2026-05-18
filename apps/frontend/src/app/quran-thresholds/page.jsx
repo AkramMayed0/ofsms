@@ -16,23 +16,6 @@ import { AlertTriangle, X, User, Info, Check } from 'lucide-react';
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
 
-// ── Max age in the system (for the visual bar) ────────────────────────────────
-const MAX_AGE = 99;
-
-// ── Age range visual bar ──────────────────────────────────────────────────────
-function AgeBar({ ageMin, ageMax }) {
-  const left  = (ageMin / MAX_AGE) * 100;
-  const width = ((ageMax - ageMin) / MAX_AGE) * 100;
-  return (
-    <div className="age-bar-track" title={`${ageMin} – ${ageMax} سنة`}>
-      <div
-        className="age-bar-fill"
-        style={{ left: `${left}%`, width: `${Math.max(width, 4)}%` }}
-      />
-    </div>
-  );
-}
-
 // ── Save state indicator ──────────────────────────────────────────────────────
 function SaveIndicator({ state }) {
   if (state === 'idle')    return null;
@@ -138,7 +121,6 @@ function ThresholdRow({ threshold, index }) {
               placeholder="إلى"
             />
           </div>
-          <AgeBar ageMin={parseInt(form.age_min) || 0} ageMax={parseInt(form.age_max) || 0} />
         </div>
 
         {/* Min juz */}
@@ -234,23 +216,31 @@ export default function QuranThresholdsPage() {
       <div className="page" dir="rtl">
 
         {/* ── Page header ── */}
-        <div className="page-top">
-          <div className="page-top-text">
+        <div className="page-header">
+          <div>
             <h1 className="page-title">إعدادات حفظ القرآن</h1>
             <p className="page-sub">
-              حدّد الحد الأدنى لعدد الأجزاء المطلوبة شهرياً لكل فئة عمرية.
-              يُستخدم هذا الإعداد عند مراجعة تقارير الحفظ لتحديد الاستحقاق المالي.
+              حدّد الحد الأدنى لعدد الأجزاء المطلوبة شهرياً لكل فئة عمرية
             </p>
           </div>
-          <div className="quran-icon" aria-hidden="true">📖</div>
+          <div className="quran-icon" aria-hidden="true">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#1B5E8C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+            </svg>
+          </div>
         </div>
 
         {/* ── Info banner ── */}
         <div className="info-banner">
-          <span className="info-icon">ℹ</span>
+          <div className="info-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
           <p>
             عند رفع تقرير الحفظ، يقارن النظام تلقائياً عدد الأجزاء المحفوظة بالحد الأدنى المقابل لعمر اليتيم.
-            إذا لم يُستوفَ الحد → يُوقَف الصرف لذلك الشهر فقط مع بقاء الكفالة سارية.
+            إذا لم يُستوفَ الحد ← يُوقَف الصرف لذلك الشهر فقط مع بقاء الكفالة سارية.
           </p>
         </div>
 
@@ -322,7 +312,7 @@ export default function QuranThresholdsPage() {
 
       </div>
 
-      <style jsx>{`
+      <style jsx global>{`
         /* ── Page ─────────────────────────────────────────────────────── */
         .page {
           max-width: 860px;
@@ -334,30 +324,36 @@ export default function QuranThresholdsPage() {
           padding-bottom: 3rem;
         }
 
-        /* ── Page top ─────────────────────────────────────────────────── */
-        .page-top {
+        /* ── Page header ──────────────────────────────────────────────── */
+        .page-header {
           display: flex;
           align-items: flex-start;
           justify-content: space-between;
           gap: 1rem;
+          flex-wrap: wrap;
         }
         .page-title {
-          font-size: 1.65rem;
+          font-size: 1.6rem;
           font-weight: 800;
           color: #0d3d5c;
-          margin: 0 0 0.35rem;
+          margin: 0 0 0.2rem;
         }
         .page-sub {
-          font-size: 0.83rem;
-          color: #6b7280;
+          font-size: 0.82rem;
+          color: #9ca3af;
           margin: 0;
-          max-width: 580px;
-          line-height: 1.7;
         }
         .quran-icon {
-          font-size: 2.8rem;
           flex-shrink: 0;
-          opacity: 0.6;
+          opacity: 0.85;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 56px;
+          height: 56px;
+          background: #eff6ff;
+          border: 1.5px solid #bfdbfe;
+          border-radius: 0.875rem;
         }
 
         /* ── Info banner ──────────────────────────────────────────────── */
@@ -365,23 +361,22 @@ export default function QuranThresholdsPage() {
           display: flex;
           align-items: flex-start;
           gap: 0.75rem;
-          background: #EFF6FF;
-          border: 1px solid #BFDBFE;
+          background: #eff6ff;
+          border: 1px solid #bfdbfe;
           border-radius: 0.875rem;
           padding: 0.9rem 1.1rem;
+          box-shadow: 0 1px 3px rgba(37,99,235,.06);
         }
         .info-icon {
-          font-style: normal;
-          font-size: 1rem;
-          color: #2563EB;
+          display: flex;
           flex-shrink: 0;
-          margin-top: 1px;
+          margin-top: 2px;
         }
         .info-banner p {
           font-size: 0.82rem;
           color: #1d4ed8;
           margin: 0;
-          line-height: 1.7;
+          line-height: 1.75;
         }
 
         /* ── Error ────────────────────────────────────────────────────── */
@@ -397,26 +392,33 @@ export default function QuranThresholdsPage() {
         /* ── Thresholds card ──────────────────────────────────────────── */
         .thresholds-card {
           background: #fff;
-          border: 1px solid #e5e7eb;
-          border-radius: 1.125rem;
+          border: 1px solid #e5eaf0;
+          border-radius: 1rem;
           overflow: hidden;
+          box-shadow: 0 1px 3px rgba(0,0,0,.04);
         }
         .card-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
           padding: 1rem 1.5rem;
-          background: #0d3d5c;
+          background: linear-gradient(135deg, #0d3d5c 0%, #1B5E8C 100%);
           color: #fff;
         }
         .card-title {
           font-size: 0.9rem;
           font-weight: 700;
-          letter-spacing: 0.04em;
+          letter-spacing: 0.03em;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
         }
         .card-hint {
           font-size: 0.78rem;
-          color: rgba(255,255,255,0.55);
+          color: rgba(255,255,255,0.6);
+          background: rgba(255,255,255,0.12);
+          padding: 0.2rem 0.65rem;
+          border-radius: 2rem;
         }
 
         .thresholds-list {
@@ -429,8 +431,8 @@ export default function QuranThresholdsPage() {
           display: flex;
           align-items: flex-start;
           gap: 1.1rem;
-          padding: 1.25rem 1.5rem;
-          border-bottom: 1px solid #f3f4f6;
+          padding: 1.35rem 1.5rem;
+          border-bottom: 1px solid #f1f5f9;
           transition: background 0.15s;
           animation: rowIn 0.35s ease both;
         }
@@ -439,23 +441,28 @@ export default function QuranThresholdsPage() {
           to   { opacity: 1; transform: none; }
         }
         .threshold-row:last-child { border-bottom: none; }
-        .threshold-row:hover { background: #fafafa; }
-        .row-dirty { background: #fffbeb !important; border-right: 3px solid #F59E0B; }
+        .threshold-row:hover { background: #f8fbff; }
+        .row-dirty {
+          background: #fffbeb !important;
+          border-right: 3px solid #F59E0B;
+          box-shadow: inset 3px 0 0 #F59E0B;
+        }
 
         /* ── Row index badge ──────────────────────────────────────────── */
         .row-index {
-          width: 28px;
-          height: 28px;
-          border-radius: 8px;
-          background: #f3f4f6;
-          color: #6b7280;
-          font-size: 0.75rem;
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #1B5E8C, #134569);
+          color: #fff;
+          font-size: 0.78rem;
           font-weight: 800;
           display: flex;
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
           margin-top: 1.6rem;
+          box-shadow: 0 2px 6px rgba(27,94,140,.25);
         }
 
         /* ── Fields layout ────────────────────────────────────────────── */
@@ -480,9 +487,8 @@ export default function QuranThresholdsPage() {
         .field-label {
           font-size: 0.72rem;
           font-weight: 700;
-          color: #9ca3af;
-          letter-spacing: 0.04em;
-          text-transform: uppercase;
+          color: #6b7280;
+          letter-spacing: 0.03em;
         }
         .field-input {
           border: 1.5px solid #e5e7eb;
@@ -511,24 +517,6 @@ export default function QuranThresholdsPage() {
         }
         .age-inp { flex: 1; text-align: center; }
         .age-sep { color: #9ca3af; font-size: 0.85rem; flex-shrink: 0; }
-
-        /* ── Age bar ──────────────────────────────────────────────────── */
-        .age-bar-track {
-          height: 4px;
-          background: #f3f4f6;
-          border-radius: 999px;
-          position: relative;
-          overflow: hidden;
-          margin-top: 0.35rem;
-        }
-        .age-bar-fill {
-          position: absolute;
-          top: 0;
-          height: 100%;
-          background: linear-gradient(90deg, #1B5E8C, #2E7EB8);
-          border-radius: 999px;
-          transition: left 0.2s, width 0.2s;
-        }
 
         /* ── Juz field ────────────────────────────────────────────────── */
         .juz-wrap {
@@ -706,16 +694,28 @@ export default function QuranThresholdsPage() {
 
         /* ── Help card ────────────────────────────────────────────────── */
         .help-card {
-          background: #f9fafb;
-          border: 1px solid #e5e7eb;
+          background: #fff;
+          border: 1px solid #e5eaf0;
           border-radius: 1rem;
           padding: 1.4rem 1.5rem;
+          box-shadow: 0 1px 3px rgba(0,0,0,.04);
         }
         .help-title {
-          font-size: 0.88rem;
+          font-size: 0.9rem;
           font-weight: 800;
-          color: #374151;
-          margin: 0 0 1rem;
+          color: #0d3d5c;
+          margin: 0 0 1.1rem;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+        .help-title::before {
+          content: '';
+          display: inline-block;
+          width: 3px;
+          height: 1rem;
+          background: linear-gradient(135deg, #1B5E8C, #134569);
+          border-radius: 2px;
         }
         .help-grid {
           display: grid;
@@ -727,12 +727,18 @@ export default function QuranThresholdsPage() {
           display: flex;
           gap: 0.75rem;
           align-items: flex-start;
+          background: #f8fafc;
+          border: 1px solid #e5eaf0;
+          border-radius: 0.75rem;
+          padding: 0.85rem 1rem;
+          transition: border-color 0.15s;
         }
+        .help-item:hover { border-color: #1B5E8C30; }
         .help-num {
-          width: 26px;
-          height: 26px;
+          width: 28px;
+          height: 28px;
           border-radius: 50%;
-          background: #0d3d5c;
+          background: linear-gradient(135deg, #1B5E8C, #134569);
           color: #fff;
           font-size: 0.75rem;
           font-weight: 800;
@@ -741,13 +747,14 @@ export default function QuranThresholdsPage() {
           justify-content: center;
           flex-shrink: 0;
           font-family: 'Cairo', sans-serif;
+          box-shadow: 0 2px 6px rgba(27,94,140,.25);
         }
         .help-item strong {
           display: block;
           font-size: 0.82rem;
           font-weight: 700;
           color: #1f2937;
-          margin-bottom: 0.2rem;
+          margin-bottom: 0.25rem;
         }
         .help-item p {
           font-size: 0.78rem;
