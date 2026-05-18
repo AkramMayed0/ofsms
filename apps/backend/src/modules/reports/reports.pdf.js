@@ -6,10 +6,10 @@
  * Replaces PDFKit — browser handles Arabic shaping, Bidi, and RTL natively.
  *
  * Usage:
- *   npm install puppeteer
+ *   npm install puppeteer-core
  */
 
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
 
 // ── Shared styles ──────────────────────────────────────────────────────────────
 

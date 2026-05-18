@@ -9,7 +9,7 @@
  * GET /api/reports/governorate/:id/pdf
  * GET /api/reports/governorate/:id/excel
  *
- * Requires: npm install puppeteer exceljs
+ * Requires: npm install puppeteer-core exceljs
  */
 
 const { Router }  = require('express');
