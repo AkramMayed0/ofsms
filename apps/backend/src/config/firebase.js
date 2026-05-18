@@ -59,9 +59,15 @@ const initFirebase = () => {
 };
 
 // Initialize immediately when this module is required
-initFirebase();
+try {
+  initFirebase();
+} catch (err) {
+  console.error('[Firebase] Init failed, notifications disabled:', err.message);
+}
 
 module.exports = {
   admin,
-  messaging: admin.messaging(),
+  get messaging() {
+    return admin.apps.length > 0 ? admin.messaging() : null;
+  },
 };

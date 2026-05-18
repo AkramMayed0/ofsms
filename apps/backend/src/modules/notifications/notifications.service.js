@@ -97,6 +97,7 @@ const sendPushNotification = async (
     };
 
     try {
+      if (!messaging) return;
       const response = await messaging.sendEachForMulticast(message);
 
       // Clean up invalid/unregistered tokens
