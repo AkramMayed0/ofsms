@@ -108,8 +108,9 @@ export default function DisbursementDetailPage() {
   const [items, setItems]       = useState([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState('');
-  const [acting, setActing]     = useState(false);
+  const [acting, setActing]       = useState(false);
   const [actionMsg, setActionMsg] = useState('');
+  const [isActionOk, setIsActionOk] = useState(false);
   const [showReject, setShowReject] = useState(false);
 
   const role = user?.role;
@@ -119,8 +120,9 @@ export default function DisbursementDetailPage() {
     setLoading(true);
     api.get(`/disbursements/${id}`)
       .then(res => {
-        setList(res.data.list);
-        setItems(res.data.items || []);
+        const { items: fetchedItems, ...listData } = res.data;
+        setList(listData);
+        setItems(fetchedItems || []);
       })
       .catch(err => setError(err.response?.data?.error || 'تعذّر تحميل بيانات كشف الصرف'))
       .finally(() => setLoading(false));
@@ -131,13 +133,16 @@ export default function DisbursementDetailPage() {
     setActionMsg('');
     try {
       const res = await api.patch(`/disbursements/${id}/${endpoint}`, body);
-      setActionMsg(`<CheckCircle2 size={16} /> ${res.data.message}`);
+      setIsActionOk(true);
+      setActionMsg(res.data.message);
       // Reload list
       const refresh = await api.get(`/disbursements/${id}`);
-      setList(refresh.data.list);
-      setItems(refresh.data.items || []);
+      const { items: refreshedItems, ...refreshedList } = refresh.data;
+      setList(refreshedList);
+      setItems(refreshedItems || []);
     } catch (err) {
-      setActionMsg(`<AlertTriangle size={18} /> ${err.response?.data?.error || 'حدث خطأ'}`);
+      setIsActionOk(false);
+      setActionMsg(err.response?.data?.error || 'حدث خطأ');
     } finally {
       setActing(false);
     }
@@ -145,7 +150,7 @@ export default function DisbursementDetailPage() {
 
   const handleReject = async (notes) => {
     setShowReject(false);
-    const endpoint = list.status === 'draft' ? 'supervisor-reject' : 'finance-reject';
+    const endpoint = list.status === 'draft' ? 'reject' : 'finance-reject';
     await doAction(endpoint, { notes });
   };
 
@@ -220,7 +225,7 @@ export default function DisbursementDetailPage() {
 
         {/* Action message */}
         {actionMsg && (
-          <div className={`msg-banner ${actionMsg.startsWith('<CheckCircle2 size={16} />') ? 'msg-ok' : 'msg-err'}`}>
+          <div className={`msg-banner ${isActionOk ? 'msg-ok' : 'msg-err'}`}>
             {actionMsg}
           </div>
         )}
@@ -254,7 +259,7 @@ export default function DisbursementDetailPage() {
             {(canSupervisorApprove || canFinanceApprove) && (
               <button
                 className="btn-approve"
-                onClick={() => doAction(canSupervisorApprove ? 'supervisor-approve' : 'finance-approve')}
+                onClick={() => doAction(canSupervisorApprove ? 'approve' : 'finance-approve')}
                 disabled={acting}
               >
                 {acting ? <span className="spin spin-dark" /> : <IconCheck />}
@@ -264,7 +269,7 @@ export default function DisbursementDetailPage() {
             {canGmRelease && (
               <button
                 className="btn-release"
-                onClick={() => doAction('gm-release')}
+                onClick={() => doAction('release')}
                 disabled={acting}
               >
                 {acting ? <span className="spin" /> : <IconRelease />}
