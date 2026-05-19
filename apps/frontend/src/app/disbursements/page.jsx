@@ -12,7 +12,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Search, AlertTriangle, X, User, Users, CheckCircle2, Info } from 'lucide-react';
+import { Search, AlertTriangle, X, User, Users, CheckCircle2, Info, DollarSign, Zap } from 'lucide-react';
 
 import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
@@ -145,11 +145,14 @@ function ItemsDrawer({ listId, listInfo, role, onClose, onAction }) {
   const status   = listInfo?.status;
 
   // ── Which actions are available ──────────────────────────────────────────────
-  const canSupApprove  = (role === 'supervisor' || role === 'gm') && status === 'draft';
-  const canSupReject   = (role === 'supervisor' || role === 'gm') && status === 'draft';
-  const canFinApprove  = (role === 'finance'    || role === 'gm') && status === 'supervisor_approved';
-  const canFinReject   = (role === 'finance'    || role === 'gm') && status === 'supervisor_approved';
-  const canGmRelease   =  role === 'gm'                           && status === 'finance_approved';
+  const nonFinal = status && status !== 'released' && status !== 'rejected';
+  const canSupApprove  = role === 'gm' ? nonFinal && status !== 'supervisor_approved' && status !== 'finance_approved'
+                                       : role === 'supervisor' && status === 'draft';
+  const canSupReject   = role === 'gm' ? nonFinal : role === 'supervisor' && status === 'draft';
+  const canFinApprove  = role === 'gm' ? nonFinal && status !== 'finance_approved'
+                                       : role === 'finance' && status === 'supervisor_approved';
+  const canFinReject   = role === 'gm' ? nonFinal : role === 'finance' && status === 'supervisor_approved';
+  const canGmRelease   = role === 'gm' && nonFinal;
 
   const hasAnyAction = canSupApprove || canSupReject || canFinApprove || canFinReject || canGmRelease;
 
@@ -224,9 +227,9 @@ function ItemsDrawer({ listId, listInfo, role, onClose, onAction }) {
         {hasAnyAction && (
           <div className="action-zone">
             <p className="action-zone-title">
-              {role === 'supervisor' && '<Search size={16} /> دورك: اعتماد أو رفض هذا الكشف'}
-              {role === 'finance'    && '💰 دورك: التصديق المالي على هذا الكشف'}
-              {role === 'gm'        && '🚀 دورك: إصدار الأموال للمناديب'}
+              {role === 'supervisor' && <><Search size={16} /> دورك: اعتماد أو رفض هذا الكشف</>}
+              {role === 'finance'    && <><DollarSign size={16} /> دورك: التصديق المالي على هذا الكشف</>}
+              {role === 'gm'        && <><Zap size={16} /> دورك: إصدار الأموال للمناديب</>}
             </p>
 
             <div className="action-btns">
@@ -239,7 +242,7 @@ function ItemsDrawer({ listId, listInfo, role, onClose, onAction }) {
                 >
                   {acting
                     ? <><span className="spin spin-w" />جارٍ الاعتماد…</>
-                    : '<CheckCircle2 size={16} /> اعتماد الكشف'}
+                    : <><CheckCircle2 size={16} /> اعتماد الكشف</>}
                 </button>
               )}
 
@@ -252,7 +255,7 @@ function ItemsDrawer({ listId, listInfo, role, onClose, onAction }) {
                 >
                   {acting
                     ? <><span className="spin spin-w" />جارٍ التصديق…</>
-                    : '<CheckCircle2 size={16} /> تصديق مالي'}
+                    : <><CheckCircle2 size={16} /> تصديق مالي</>}
                 </button>
               )}
 
@@ -265,7 +268,7 @@ function ItemsDrawer({ listId, listInfo, role, onClose, onAction }) {
                 >
                   {acting
                     ? <><span className="spin spin-w" />جارٍ الإصدار…</>
-                    : '🚀 إصدار الأموال'}
+                    : <><Zap size={16} /> إصدار الأموال</>}
                 </button>
               )}
 
@@ -338,7 +341,7 @@ function ItemsDrawer({ listId, listInfo, role, onClose, onAction }) {
               {included.map((item) => (
                 <div key={item.id} className="item-row">
                   <div className="item-avatar">
-                    {item.beneficiary_type === 'orphan' ? '<User size={18} />' : '<Users size={18} />'}
+                    {item.beneficiary_type === 'orphan' ? <User size={18} /> : <Users size={18} />}
                   </div>
                   <div className="item-info">
                     <div className="item-name">{item.beneficiary_name}</div>
@@ -362,7 +365,7 @@ function ItemsDrawer({ listId, listInfo, role, onClose, onAction }) {
                   {excluded.map((item) => (
                     <div key={item.id} className="item-row item-excluded">
                       <div className="item-avatar" style={{ opacity: .5 }}>
-                        {item.beneficiary_type === 'orphan' ? '<User size={18} />' : '<Users size={18} />'}
+                        {item.beneficiary_type === 'orphan' ? <User size={18} /> : <Users size={18} />}
                       </div>
                       <div className="item-info">
                         <div className="item-name" style={{ opacity: .6 }}>{item.beneficiary_name}</div>
@@ -640,7 +643,9 @@ export default function DisbursementsPage() {
         {/* Empty */}
         {!loading && lists.length === 0 && (
           <div className="empty">
-            <div style={{ fontSize: '3rem' }}>💰</div>
+            <div style={{ width:64, height:64, borderRadius:'50%', background:'#f0f7ff', border:'1.5px solid #dbeafe', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <DollarSign size={32} color="#1B5E8C" />
+            </div>
             <h3 className="empty-title">لا توجد كشوف صرف بعد</h3>
             <p className="empty-sub">
               {role === 'supervisor' || role === 'gm'

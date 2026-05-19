@@ -9,7 +9,7 @@ const router = Router();
 router.post(
   '/',
   authenticate,
-  authorize('agent'),
+  authorize('agent', 'gm'),
   [
     body('orphanId').isUUID().withMessage('معرّف اليتيم غير صحيح'),
     body('month').isInt({ min: 1, max: 12 }).withMessage('الشهر يجب أن يكون بين 1 و 12'),
@@ -28,6 +28,7 @@ router.post(
       const result = await service.submitReport({
         orphanId,
         agentId: req.user.id,
+        role: req.user.role,
         month: parseInt(month),
         year: parseInt(year),
         juzMemorized: parseFloat(juzMemorized),

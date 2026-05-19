@@ -5,7 +5,7 @@ const { logAudit } = require('../../utils/auditLog');
  * Submit a monthly Quran report for an orphan.
  * Validates juz_memorized against the age-appropriate threshold.
  */
-const submitReport = async ({ orphanId, agentId, month, year, juzMemorized }) => {
+const submitReport = async ({ orphanId, agentId, role, month, year, juzMemorized }) => {
   // 1. Get orphan's date_of_birth to calculate age
   const { rows: orphanRows } = await query(
     'SELECT id, full_name, date_of_birth, agent_id FROM orphans WHERE id = $1',
@@ -14,8 +14,8 @@ const submitReport = async ({ orphanId, agentId, month, year, juzMemorized }) =>
   const orphan = orphanRows[0];
   if (!orphan) throw Object.assign(new Error('اليتيم غير موجود'), { status: 404 });
 
-  // 2. Enforce agent ownership — agent can only report their own orphans
-  if (orphan.agent_id !== agentId) {
+  // 2. Enforce agent ownership — gm can report for any orphan
+  if (role !== 'gm' && orphan.agent_id !== agentId) {
     throw Object.assign(new Error('ليس لديك صلاحية لرفع تقرير لهذا اليتيم'), { status: 403 });
   }
 

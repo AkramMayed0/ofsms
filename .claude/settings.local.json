@@ -48,7 +48,13 @@
       "PowerShell(Get-ChildItem \"d:\\\\NawaDev\\\\ofsms\\\\apps\\\\frontend\\\\src\\\\app\" -Recurse | Where-Object { !$_.PSIsContainer } | Select-Object FullName)",
       "Bash(Get-ChildItem -Path \"d:\\\\NawaDev\\\\ofsms\" -Recurse -Include \"*.tsx\",\"*.jsx\")",
       "Bash(Select-Object FullName)",
-      "Bash(Head -50)"
+      "Bash(Head -50)",
+      "Bash(curl -s http://localhost:4000/api/auth/login -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"akramsamir9701@gmail.com\",\"password\":\"admin123\"}')",
+      "Bash(curl -s http://localhost:4000/api/auth/login -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"gm@ofsms.local\",\"password\":\"admin123\"}')",
+      "Bash(curl -s http://localhost:4000/api/auth/login -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"gm@ofsms.local\",\"password\":\"Test@1234\"}')",
+      "Bash(curl -s http://localhost:4000/api/auth/login -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"supervisor@ofsms.local\",\"password\":\"Test@1234\"}')",
+      "Bash(curl -s http://localhost:4000/api/auth/login -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"finance@ofsms.local\",\"password\":\"Test@1234\"}')",
+      "Bash(xargs grep -l \"biometric_receipt\")"
     ]
   }
 }

@@ -11,7 +11,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { AlertTriangle, X, User, Info, Check } from 'lucide-react';
+import { AlertTriangle, X, User, Info, Check, Plus } from 'lucide-react';
 
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
@@ -178,6 +178,96 @@ function ThresholdRow({ threshold, index }) {
   );
 }
 
+// ── Add Threshold Modal ───────────────────────────────────────────────────────
+function AddThresholdModal({ onClose, onSaved }) {
+  const [form, setForm] = useState({ label: '', age_min: '', age_max: '', min_juz_per_month: '' });
+  const [saving, setSaving] = useState(false);
+  const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
+
+  const isValid =
+    parseInt(form.age_min) >= 0 &&
+    parseInt(form.age_max) > parseInt(form.age_min) &&
+    parseFloat(form.min_juz_per_month) > 0;
+
+  const handleSubmit = async () => {
+    setSaving(true);
+    try {
+      const { data } = await api.post('/quran-thresholds', {
+        label:             form.label.trim() || null,
+        age_min:           parseInt(form.age_min),
+        age_max:           parseInt(form.age_max),
+        min_juz_per_month: parseFloat(form.min_juz_per_month),
+      });
+      onSaved(data.threshold);
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="m-backdrop" onClick={onClose} />
+      <div className="m-box" dir="rtl">
+        <div className="m-head">
+          <h2 className="m-title">إضافة فئة عمرية جديدة</h2>
+          <button className="m-close" onClick={onClose}><X size={16} /></button>
+        </div>
+        <div className="m-body">
+          <div className="m-fg">
+            <label className="m-lbl">التسمية</label>
+            <input className="m-inp" value={form.label} onChange={e => set('label', e.target.value)} placeholder="مثال: أطفال صغار (5-9)" />
+          </div>
+          <div className="m-row">
+            <div className="m-fg">
+              <label className="m-lbl">من (سنة)</label>
+              <input className="m-inp" type="number" min={0} value={form.age_min} onChange={e => set('age_min', e.target.value)} placeholder="0" />
+            </div>
+            <div className="m-fg">
+              <label className="m-lbl">إلى (سنة)</label>
+              <input className="m-inp" type="number" min={1} value={form.age_max} onChange={e => set('age_max', e.target.value)} placeholder="18" />
+            </div>
+          </div>
+          <div className="m-fg">
+            <label className="m-lbl">الحد الأدنى (جزء/شهر)</label>
+            <input className="m-inp" type="number" min={0} step={0.25} value={form.min_juz_per_month} onChange={e => set('min_juz_per_month', e.target.value)} placeholder="1" />
+          </div>
+        </div>
+        <div className="m-foot">
+          <button className="m-btn-ghost" onClick={onClose}>إلغاء</button>
+          <button className="m-btn-primary" disabled={!isValid || saving} onClick={handleSubmit}>
+            {saving ? <span className="m-spin" /> : 'إضافة'}
+          </button>
+        </div>
+      </div>
+      <style jsx>{`
+        .m-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:100; animation:mFade .2s; }
+        @keyframes mFade { from{opacity:0} to{opacity:1} }
+        .m-box { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:440px; max-width:94vw; background:#fff; border-radius:1.25rem; z-index:101; box-shadow:0 24px 64px rgba(0,0,0,.2); font-family:'Cairo','Tajawal',sans-serif; animation:mUp .22s ease; }
+        @keyframes mUp { from{opacity:0;transform:translate(-50%,-44%)} to{opacity:1;transform:translate(-50%,-50%)} }
+        .m-head { display:flex; align-items:center; justify-content:space-between; padding:1.1rem 1.4rem; border-bottom:1px solid #f0f4f8; }
+        .m-title { font-size:.97rem; font-weight:800; color:#0d3d5c; margin:0; }
+        .m-close { background:none; border:none; color:#9ca3af; cursor:pointer; display:flex; align-items:center; padding:.2rem; border-radius:.4rem; transition:color .15s; }
+        .m-close:hover { color:#374151; }
+        .m-body { padding:1.4rem; display:flex; flex-direction:column; gap:.85rem; }
+        .m-row { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
+        .m-fg { display:flex; flex-direction:column; gap:.3rem; }
+        .m-lbl { font-size:.82rem; font-weight:600; color:#374151; }
+        .m-inp { border:1.5px solid #d1d5db; border-radius:.625rem; padding:.65rem .9rem; font-size:.88rem; font-family:'Cairo',sans-serif; color:#1f2937; background:#fafafa; outline:none; width:100%; box-sizing:border-box; transition:border-color .15s; }
+        .m-inp:focus { border-color:#1B5E8C; box-shadow:0 0 0 3px rgba(27,94,140,.1); }
+        .m-foot { display:flex; align-items:center; justify-content:flex-end; gap:.6rem; padding:.9rem 1.4rem; border-top:1px solid #f0f4f8; }
+        .m-btn-ghost { display:inline-flex; align-items:center; padding:.6rem 1.2rem; background:none; color:#6b7280; font-family:'Cairo',sans-serif; font-size:.85rem; font-weight:600; border:1.5px solid #e5eaf0; border-radius:.75rem; cursor:pointer; transition:all .15s; }
+        .m-btn-ghost:hover { border-color:#9ca3af; color:#374151; }
+        .m-btn-primary { display:inline-flex; align-items:center; gap:.4rem; padding:.6rem 1.3rem; background:linear-gradient(135deg,#1B5E8C,#134569); color:#fff; font-family:'Cairo',sans-serif; font-size:.88rem; font-weight:700; border:none; border-radius:.75rem; cursor:pointer; box-shadow:0 2px 8px rgba(27,94,140,.25); transition:all .15s; }
+        .m-btn-primary:hover:not(:disabled) { background:linear-gradient(135deg,#2E7EB8,#1B5E8C); transform:translateY(-1px); }
+        .m-btn-primary:disabled { opacity:.45; cursor:not-allowed; }
+        .m-spin { display:inline-block; width:13px; height:13px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:mSpin .6s linear infinite; }
+        @keyframes mSpin { to{transform:rotate(360deg)} }
+      `}</style>
+    </>
+  );
+}
+
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 function SkeletonRow({ index }) {
   return (
@@ -203,6 +293,7 @@ export default function QuranThresholdsPage() {
   const [thresholds, setThresholds] = useState([]);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState('');
+  const [showAdd, setShowAdd]       = useState(false);
 
   useEffect(() => {
     api.get('/quran-thresholds')
@@ -223,6 +314,9 @@ export default function QuranThresholdsPage() {
               حدّد الحد الأدنى لعدد الأجزاء المطلوبة شهرياً لكل فئة عمرية
             </p>
           </div>
+          <button className="btn-add-threshold" onClick={() => setShowAdd(true)}>
+            <Plus size={16} /> إضافة فئة جديدة
+          </button>
           <div className="quran-icon" aria-hidden="true">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#1B5E8C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
@@ -312,6 +406,13 @@ export default function QuranThresholdsPage() {
 
       </div>
 
+      {showAdd && (
+        <AddThresholdModal
+          onClose={() => setShowAdd(false)}
+          onSaved={(t) => setThresholds((prev) => [...prev, t])}
+        />
+      )}
+
       <style jsx global>{`
         /* ── Page ─────────────────────────────────────────────────────── */
         .page {
@@ -354,6 +455,30 @@ export default function QuranThresholdsPage() {
           background: #eff6ff;
           border: 1.5px solid #bfdbfe;
           border-radius: 0.875rem;
+        }
+
+        /* ── Add button ───────────────────────────────────────────────── */
+        .btn-add-threshold {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          padding: 0.6rem 1.1rem;
+          background: linear-gradient(135deg, #1B5E8C, #134569);
+          color: #fff;
+          font-family: 'Cairo', sans-serif;
+          font-size: 0.85rem;
+          font-weight: 700;
+          border: none;
+          border-radius: 0.75rem;
+          cursor: pointer;
+          box-shadow: 0 2px 8px rgba(27,94,140,.25);
+          transition: all 0.15s;
+          flex-shrink: 0;
+          align-self: center;
+        }
+        .btn-add-threshold:hover {
+          background: linear-gradient(135deg, #2E7EB8, #1B5E8C);
+          transform: translateY(-1px);
         }
 
         /* ── Info banner ──────────────────────────────────────────────── */

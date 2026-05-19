@@ -33,30 +33,45 @@ const NAV_ITEMS = {
       ],
     },
     {
-      group: 'الإدارة',
+      group: 'الأيتام والأسر',
       items: [
-        { label: 'طلبات التسجيل',    href: '/registrations',   icon: ClipboardList },
-        { label: 'الأيتام',           href: '/orphans',          icon: Users },
-        { label: 'الأسر',             href: '/families',         icon: Home },
-        { label: 'مجمع التسويق',     href: '/marketing-pool',   icon: Tag },
-        { label: 'الكفلاء',           href: '/sponsors',         icon: Handshake },
-        { label: 'الأيتام الموهوبون', href: '/orphans/gifted',   icon: Star },
-        { label: 'أيتامي',            href: '/my-orphans',       icon: Users },
+        { label: 'الأيتام',            href: '/orphans',         icon: Users },
+        { label: 'الأسر',              href: '/families',        icon: Home },
+        { label: 'أيتامي',             href: '/my-orphans',      icon: Users },
+        { label: 'الأيتام الموهوبون',  href: '/orphans/gifted',  icon: Star },
+        { label: 'مجمع التسويق',      href: '/marketing-pool',  icon: Tag },
+        { label: 'تسجيل يتيم',        href: '/orphans/new',     icon: Plus },
+        { label: 'تسجيل أسرة',        href: '/families/new',    icon: Plus },
+      ],
+    },
+    {
+      group: 'الكفلاء والتسجيل',
+      items: [
+        { label: 'الكفلاء',         href: '/sponsors',       icon: Handshake },
+        { label: 'طلبات التسجيل',   href: '/registrations',  icon: ClipboardList },
       ],
     },
     {
       group: 'القرآن الكريم',
       items: [
-        { label: 'إعدادات الحفظ',    href: '/quran-thresholds',  icon: BookOpen },
-        { label: 'رفع تقرير الحفظ', href: '/quran-reports/new', icon: BookOpen },
+        { label: 'إعدادات الحفظ',       href: '/quran-thresholds',  icon: BookOpen },
+        { label: 'مراجعة تقارير الحفظ', href: '/quran-reports',     icon: ClipboardList },
+        { label: 'رفع تقرير الحفظ',     href: '/quran-reports/new', icon: BookOpen },
+      ],
+    },
+    {
+      group: 'المالية',
+      items: [
+        { label: 'كشف الصرف',     href: '/disbursements',         icon: DollarSign },
+        { label: 'سجل الإصدارات', href: '/disbursements/history', icon: Archive },
       ],
     },
     {
       group: 'التقارير والتواصل',
       items: [
-        { label: 'تحليلات المحافظات', href: '/governorates',   icon: Map },
-        { label: 'التقارير',           href: '/reports',        icon: FileText },
-        { label: 'الإعلانات',          href: '/announcements',  icon: Megaphone },
+        { label: 'تحليلات المحافظات', href: '/governorates',  icon: Map },
+        { label: 'التقارير',           href: '/reports',       icon: FileText },
+        { label: 'الإعلانات',          href: '/announcements', icon: Megaphone },
       ],
     },
     {

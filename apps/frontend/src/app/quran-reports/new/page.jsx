@@ -17,7 +17,7 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import { AlertTriangle, User, CheckCircle2, Info, Check } from 'lucide-react';
+import { AlertTriangle, User, CheckCircle2, Info, Check, ClipboardList, Send } from 'lucide-react';
 
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -97,7 +97,7 @@ function ThresholdHint({ threshold, juzValue, age }) {
   const meets = juz >= threshold.min_juz_per_month;
   return (
     <div className={`threshold-hint ${meets ? 'hint-ok' : juz === 0 ? 'hint-neutral' : 'hint-warn'}`}>
-      <span className="hint-icon">{meets ? '<CheckCircle2 size={16} />' : juz === 0 ? 'ℹ' : '<AlertTriangle size={18} />'}</span>
+      <span className="hint-icon">{meets ? <CheckCircle2 size={16} /> : juz === 0 ? <Info size={16} /> : <AlertTriangle size={18} />}</span>
       <div>
         <span className="hint-label">{threshold.label}</span>
         <span className="hint-body">
@@ -212,60 +212,55 @@ export default function QuranReportSubmissionPage() {
     }
   };
 
-  // ── Success screen ─────────────────────────────────────────────────────────
-  if (submitState === 'success' && submitted) {
-    return (
-      <AppShell>
-        <div className="page" dir="rtl">
-          <div className="success-wrap">
-            <div className="success-card">
-              <div className="success-ico">
-                {submitted.meetsThreshold === true ? '<CheckCircle2 size={16} />' :
-                 submitted.meetsThreshold === false ? '<AlertTriangle size={18} />️' : '📋'}
-              </div>
-              <h2 className="success-title">تم رفع التقرير بنجاح</h2>
-              <p className="success-body">
-                تم رفع تقرير حفظ القرآن لـ <strong>{submitted.orphanName}</strong>
-                {' '}عن شهر{' '}
-                <strong>{MONTHS_AR[submitted.month]} {submitted.year}</strong>
-                {' '}بمقدار{' '}
-                <strong>{submitted.juz} جزء</strong>.
-              </p>
-
-              {submitted.meetsThreshold === false && (
-                <div className="success-warning">
-                  <AlertTriangle size={18} /> مقدار الحفظ أقل من الحد الأدنى المطلوب. قد يقرر المشرف تعليق الصرف هذا الشهر.
-                </div>
-              )}
-
-              <p className="success-status">
-                📬 التقرير الآن في قائمة انتظار المشرف للمراجعة.
-              </p>
-
-              <div className="success-actions">
-                <button
-                  className="btn-primary"
-                  onClick={() => setSubmitState('idle')}
-                >
-                  رفع تقرير آخر
-                </button>
-                <button
-                  className="btn-ghost"
-                  onClick={() => router.push('/my-orphans')}
-                >
-                  عرض أيتامي
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </AppShell>
-    );
-  }
-
   // ── Main form ──────────────────────────────────────────────────────────────
   return (
     <AppShell>
+      {/* ── Success modal ──────────────────────────────────────────────── */}
+      {submitState === 'success' && submitted && (
+        <div className="modal-overlay" dir="rtl">
+          <div className="modal-card">
+            <div className="modal-ico">
+              {submitted.meetsThreshold === true
+                ? <CheckCircle2 size={48} color="#10b981" />
+                : submitted.meetsThreshold === false
+                  ? <AlertTriangle size={48} color="#f59e0b" />
+                  : <ClipboardList size={48} color="#1B5E8C" />}
+            </div>
+            <h2 className="modal-title">تم رفع التقرير بنجاح</h2>
+            <p className="modal-body">
+              تم رفع تقرير حفظ القرآن لـ <strong>{submitted.orphanName}</strong>
+              {' '}عن شهر{' '}
+              <strong>{MONTHS_AR[submitted.month]} {submitted.year}</strong>
+              {' '}بمقدار <strong>{submitted.juz} جزء</strong>.
+            </p>
+
+            {submitted.meetsThreshold === false && (
+              <div className="modal-warning">
+                <AlertTriangle size={16} />
+                <span>مقدار الحفظ أقل من الحد الأدنى المطلوب. قد يقرر المشرف تعليق الصرف هذا الشهر.</span>
+              </div>
+            )}
+
+            <p className="modal-status" style={{ display:'flex', alignItems:'center', gap:'.4rem', justifyContent:'center' }}><Send size={14} /> التقرير الآن في قائمة انتظار المشرف للمراجعة.</p>
+
+            <div className="modal-actions">
+              <button
+                className="btn-primary"
+                onClick={() => {
+                  setSubmitState('idle');
+                  reset({ orphanId: '', month: defaultMonth, year: defaultYear, juzMemorized: '' });
+                }}
+              >
+                رفع تقرير آخر
+              </button>
+              <button className="btn-ghost" onClick={() => router.push('/my-orphans')}>
+                عرض أيتامي
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="page" dir="rtl">
 
         {/* Page header */}
@@ -296,7 +291,7 @@ export default function QuranReportSubmissionPage() {
           </div>
         ) : orphans.length === 0 ? (
           <div className="empty-card">
-            <div style={{ fontSize: '3rem' }}>📋</div>
+            <div><ClipboardList size={48} color="#1B5E8C" /></div>
             <h3>لا يوجد أيتام نشطون</h3>
             <p>لديك حالياً لا أيتام مكفولين. لا يمكن رفع تقارير إلا للأيتام تحت الكفالة.</p>
             <button className="btn-ghost" onClick={() => router.push('/my-orphans')}>
@@ -467,7 +462,7 @@ export default function QuranReportSubmissionPage() {
             {/* ── Summary ── */}
             {selectedOrphan && juzValue !== '' && (
               <div className="summary-card">
-                <div className="summary-title">📋 ملخص التقرير</div>
+                <div className="summary-title" style={{ display:'flex', alignItems:'center', gap:'.4rem' }}><ClipboardList size={16} /> ملخص التقرير</div>
                 <div className="summary-grid">
                   <div className="summary-item">
                     <span className="summary-lbl">اليتيم</span>
@@ -657,23 +652,33 @@ export default function QuranReportSubmissionPage() {
           border-radius: 1rem;
         }
 
-        /* ── Success ──────────────────────────────────────────────────── */
-        .success-wrap { display: flex; align-items: center; justify-content: center; min-height: 60vh; }
-        .success-card {
-          text-align: center; max-width: 480px; background: #fff; border-radius: 1.25rem;
-          padding: 3rem 2rem; border: 1px solid #e5eaf0;
-          box-shadow: 0 4px 24px rgba(27,94,140,.08);
-          display: flex; flex-direction: column; align-items: center; gap: .85rem;
+        /* ── Success modal ────────────────────────────────────────────── */
+        .modal-overlay {
+          position: fixed; inset: 0; z-index: 1000;
+          background: rgba(0,0,0,.45); backdrop-filter: blur(3px);
+          display: flex; align-items: center; justify-content: center;
+          padding: 1rem;
+          animation: fadeIn .2s ease;
         }
-        .success-ico { font-size: 3.5rem; }
-        .success-title { font-size: 1.4rem; font-weight: 800; color: #0d3d5c; margin: 0; }
-        .success-body { font-size: .9rem; color: #374151; line-height: 1.75; margin: 0; }
-        .success-warning {
+        @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+        .modal-card {
+          background: #fff; border-radius: 1.25rem; padding: 2.5rem 2rem;
+          max-width: 460px; width: 100%; text-align: center;
+          box-shadow: 0 20px 60px rgba(0,0,0,.2);
+          display: flex; flex-direction: column; align-items: center; gap: 1rem;
+          animation: slideUp .25s ease;
+        }
+        @keyframes slideUp { from { transform: translateY(24px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+        .modal-ico { display: flex; align-items: center; justify-content: center; }
+        .modal-title { font-size: 1.35rem; font-weight: 800; color: #0d3d5c; margin: 0; }
+        .modal-body { font-size: .88rem; color: #374151; line-height: 1.8; margin: 0; }
+        .modal-warning {
+          display: flex; align-items: flex-start; gap: .5rem;
           background: #fffbeb; border: 1px solid #fde68a; border-radius: .75rem;
-          padding: .85rem 1rem; font-size: .83rem; color: #92400e; text-align: right;
+          padding: .75rem 1rem; font-size: .82rem; color: #92400e; text-align: right; width: 100%;
         }
-        .success-status { font-size: .83rem; color: #6b7a8d; margin: 0; }
-        .success-actions { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; margin-top: .5rem; }
+        .modal-status { font-size: .82rem; color: #6b7a8d; margin: 0; }
+        .modal-actions { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; margin-top: .25rem; }
 
         /* ── Field helpers ────────────────────────────────────────────── */
         .fg { display: flex; flex-direction: column; gap: .35rem; }
