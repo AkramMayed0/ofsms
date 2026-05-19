@@ -1,9 +1,9 @@
 const { expect } = require('@playwright/test');
 
 const ACCOUNTS = {
-  gm:         { email: 'gm@test.com',         password: 'Password123!' },
-  supervisor: { email: 'supervisor@test.com',  password: 'Password123!' },
-  agent:      { email: 'agent@test.com',       password: 'Password123!' },
+  gm:         { email: 'gm@ofsms.local',         password: 'Test@1234' },
+  supervisor: { email: 'supervisor@ofsms.local',  password: 'Test@1234' },
+  agent:      { email: 'agent@ofsms.local',       password: 'Test@1234' },
 };
 
 async function login(page, role) {
@@ -17,9 +17,15 @@ async function login(page, role) {
 
 async function logout(page) {
   // Click the logout button if visible in sidebar/header
-  const logoutBtn = page.locator('button:has-text("تسجيل الخروج"), a:has-text("تسجيل الخروج")');
-  if (await logoutBtn.isVisible()) {
-    await logoutBtn.click();
+  const logoutButtons = await page.locator('button:has-text("خروج"), button[title="تسجيل الخروج"], a:has-text("خروج")').all();
+  const visibleLogoutBtn = await logoutButtons.reduce(async (found, btn) => {
+    const current = await found;
+    if (current) return current;
+    return (await btn.isVisible()) ? btn : null;
+  }, Promise.resolve(null));
+
+  if (visibleLogoutBtn) {
+    await visibleLogoutBtn.click();
     await page.waitForURL('/login', { timeout: 5000 });
   } else {
     await page.goto('/login');

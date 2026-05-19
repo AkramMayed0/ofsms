@@ -209,7 +209,7 @@ export default function LoginPage() {
           </form>
 
           <p className="form-footer">
-            مؤسسة الأرض الطيبة · نظام كفالة الأيتام
+            مؤسسة إكرام النعمة الخيرية · نظام كفالة الأيتام
           </p>
         </div>
       </main>

@@ -176,6 +176,27 @@ const ROLE_LABELS = {
 
 const flatItems = (groups) => groups.flatMap((g) => g.items);
 
+const PUBLIC_PREFIXES = ['/login', '/sponsor/login', '/sponsor/portal'];
+const ROLE_EXTRA_PATHS = {
+  gm: ['/ads', '/receipts/supervisor'],
+  supervisor: ['/receipts/supervisor'],
+  agent: ['/receipts/batch'],
+};
+
+const roleCanAccessPath = (role, pathname) => {
+  if (!role || PUBLIC_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
+    return true;
+  }
+
+  const allowedItems = flatItems(NAV_ITEMS[role] || []);
+  const allowedPaths = [
+    ...allowedItems.map((item) => item.href),
+    ...(ROLE_EXTRA_PATHS[role] || []),
+  ];
+
+  return allowedPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+};
+
 // ── AppShell ──────────────────────────────────────────────────────────────────
 export default function AppShell({ children }) {
   const [drawerOpen, setDrawerOpen] = useState(false); // mobile drawer
@@ -187,9 +208,21 @@ export default function AppShell({ children }) {
 
   const navGroups = NAV_ITEMS[user?.role] || [];
   const navItems  = flatItems(navGroups);
+  const canAccessCurrentPath = roleCanAccessPath(user?.role, pathname);
 
   // Close mobile drawer whenever the route changes
   useEffect(() => { setDrawerOpen(false); }, [pathname]);
+
+  useEffect(() => {
+    if (!user) {
+      router.replace('/login');
+      return;
+    }
+
+    if (!roleCanAccessPath(user.role, pathname)) {
+      router.replace('/dashboard');
+    }
+  }, [pathname, router, user]);
 
   const handleLogout = async () => {
     try { await api.post('/auth/logout'); } catch {}
@@ -200,6 +233,10 @@ export default function AppShell({ children }) {
   // Desktop sidebar width
   const desktopSidebarW = collapsed ? 'md:w-16' : 'md:w-64';
   const desktopMainMr   = collapsed ? 'md:mr-16' : 'md:mr-64';
+
+  if (!user || !canAccessCurrentPath) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50" dir="rtl">
