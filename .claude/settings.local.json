@@ -60,7 +60,9 @@
       "Bash(xargs grep -l \"uploadBiometric\\\\|biometric_receipt\\\\|fingerprint\")",
       "Bash(xargs grep -l \"biometric_receipt\\\\|getSupervisorLog\\\\|getReceipts\")",
       "Bash(xargs grep -l \"biometric\\\\|receipt\")",
-      "Bash(xargs grep -l \"agent_batch_confirmations\")"
+      "Bash(xargs grep -l \"agent_batch_confirmations\")",
+      "Bash(Move-Item \"d:\\\\NawaDev\\\\ofsms\\\\apps\\\\frontend\\\\src\\\\components\\\\general\\\\RejectModal.jsx\" \"d:\\\\NawaDev\\\\ofsms\\\\apps\\\\frontend\\\\src\\\\components\\\\RejectModal.jsx\")",
+      "Bash(Remove-Item \"d:\\\\NawaDev\\\\ofsms\\\\apps\\\\frontend\\\\src\\\\components\\\\general\" -Recurse -Force)"
     ]
   }
 }

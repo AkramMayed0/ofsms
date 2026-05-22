@@ -4,27 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
-
-const MONTHS_AR = ['','يناير','فبراير','مارس','أبريل','مايو','يونيو',
-                    'يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-
-const STATUS_MAP = {
-  draft:               { label: 'مسودة',        color: '#6b7280', bg: '#f3f4f6' },
-  supervisor_approved: { label: 'اعتمد المشرف', color: '#f59e0b', bg: '#fffbeb' },
-  finance_approved:    { label: 'اعتمد المالي', color: '#3b82f6', bg: '#eff6ff' },
-  released:            { label: 'تم الصرف',      color: '#10b981', bg: '#ecfdf5' },
-  rejected:            { label: 'مرفوض',         color: '#ef4444', bg: '#fef2f2' },
-};
-
-function StatusBadge({ status }) {
-  const cfg = STATUS_MAP[status] || STATUS_MAP.draft;
-  return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '.3rem', padding: '.25rem .75rem', borderRadius: '2rem', fontSize: '.72rem', fontWeight: 700, color: cfg.color, background: cfg.bg, border: `1px solid ${cfg.color}25`, whiteSpace: 'nowrap' }}>
-      <span style={{ width: 5, height: 5, borderRadius: '50%', background: cfg.color, flexShrink: 0 }} />
-      {cfg.label}
-    </span>
-  );
-}
+import { MONTHS_AR, formatDate, formatAmount } from '@/components/disbursements/_constants';
+import StatusBadge from '@/components/disbursements/StatusBadge';
 
 export default function DisbursementsHistoryPage() {
   const router = useRouter();
@@ -39,38 +20,30 @@ export default function DisbursementsHistoryPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const skel = (w, h, borderRadius = '4px') => ({
-    width: w, height: h, borderRadius,
-    background: 'linear-gradient(90deg,#f0f4f8 25%,#e5eaf0 50%,#f0f4f8 75%)',
-    backgroundSize: '200% 100%',
-    animation: 'shimmer 1.4s infinite',
-    display: 'inline-block',
-  });
-
   return (
     <AppShell>
-      <div style={{ fontFamily: "'Cairo','Tajawal',sans-serif", maxWidth: 1100, margin: '0 auto' }} dir="rtl">
-        <h1 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0d3d5c', margin: '0 0 .2rem' }}>
+      <div className="max-w-[1100px] mx-auto" dir="rtl">
+        <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] mb-0.5">
           سجل الإصدارات
         </h1>
-        <p style={{ fontSize: '.85rem', color: '#6b7a8d', margin: '0 0 1.5rem' }}>
+        <p className="text-sm text-[#6b7a8d] mb-6">
           جميع كشوف الصرف الشهري
         </p>
 
         {error && (
-          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', borderRadius: '.75rem', padding: '.85rem 1rem', marginBottom: '1rem', fontSize: '.85rem' }}>
+          <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">
             {error}
           </div>
         )}
 
         {!loading && lists.length > 0 && (
-          <div style={{ background: '#fff', border: '1px solid #e5eaf0', borderRadius: '1rem', boxShadow: '0 1px 4px rgba(27,94,140,.05)', overflow: 'hidden' }}>
-            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.83rem', minWidth: 480 }}>
+          <div className="bg-white border border-[#e5eaf0] rounded-2xl shadow-[0_1px_4px_rgba(27,94,140,0.05)] overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-[0.83rem] min-w-[480px]">
                 <thead>
-                  <tr style={{ background: '#f8fafc' }}>
+                  <tr className="bg-[#f8fafc]">
                     {['الشهر / السنة', 'المستفيدون', 'المبلغ الإجمالي', 'الحالة', 'تاريخ الإنشاء'].map(h => (
-                      <th key={h} style={{ padding: '.8rem 1.1rem', textAlign: 'right', fontSize: '.72rem', fontWeight: 700, color: '#6b7a8d', borderBottom: '1px solid #e5eaf0', whiteSpace: 'nowrap' }}>{h}</th>
+                      <th key={h} className="px-4 py-3 text-right text-[0.72rem] font-bold text-[#6b7a8d] border-b border-[#e5eaf0] whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -79,27 +52,25 @@ export default function DisbursementsHistoryPage() {
                     <tr
                       key={list.id}
                       onClick={() => router.push(`/disbursements/${list.id}`)}
-                      style={{ borderBottom: '1px solid #f8fafc', cursor: 'pointer', transition: 'background .12s' }}
-                      onMouseEnter={e => e.currentTarget.style.background = '#f0f7ff'}
-                      onMouseLeave={e => e.currentTarget.style.background = ''}
+                      className="border-b border-[#f8fafc] cursor-pointer transition-colors hover:bg-[#f0f7ff]"
                     >
-                      <td style={{ padding: '.85rem 1.1rem', fontWeight: 700, color: '#0d3d5c', whiteSpace: 'nowrap' }}>
+                      <td className="px-4 py-3.5 font-bold text-[#0d3d5c] whitespace-nowrap">
                         {MONTHS_AR[list.month]} {list.year}
                       </td>
-                      <td style={{ padding: '.85rem 1.1rem', color: '#6b7a8d', whiteSpace: 'nowrap' }}>
-                        <span style={{ color: '#10b981', fontWeight: 700 }}>{list.included_count}</span>
+                      <td className="px-4 py-3.5 text-[#6b7a8d] whitespace-nowrap">
+                        <span className="text-emerald-500 font-bold">{list.included_count}</span>
                         {list.excluded_count > 0 && (
-                          <span style={{ color: '#ef4444', marginRight: '.35rem' }}>(-{list.excluded_count})</span>
+                          <span className="text-red-500 mr-1.5">(-{list.excluded_count})</span>
                         )}
                       </td>
-                      <td style={{ padding: '.85rem 1.1rem', fontWeight: 700, color: '#1B5E8C', whiteSpace: 'nowrap' }}>
-                        {Number(list.total_amount).toLocaleString('ar-YE')} ر.ي
+                      <td className="px-4 py-3.5 font-bold text-[#1B5E8C] whitespace-nowrap">
+                        {formatAmount(list.total_amount)}
                       </td>
-                      <td style={{ padding: '.85rem 1.1rem' }}>
+                      <td className="px-4 py-3.5">
                         <StatusBadge status={list.status} />
                       </td>
-                      <td style={{ padding: '.85rem 1.1rem', color: '#6b7a8d', fontSize: '.78rem', whiteSpace: 'nowrap' }}>
-                        {list.created_at ? new Date(list.created_at).toLocaleDateString('ar-YE', { dateStyle: 'medium' }) : '—'}
+                      <td className="px-4 py-3.5 text-[#6b7a8d] text-[0.78rem] whitespace-nowrap">
+                        {formatDate(list.created_at)}
                       </td>
                     </tr>
                   ))}
@@ -110,21 +81,23 @@ export default function DisbursementsHistoryPage() {
         )}
 
         {!loading && lists.length === 0 && !error && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 260, gap: '.75rem', textAlign: 'center', background: '#fff', border: '1px solid #e5eaf0', borderRadius: '1rem', padding: '2rem' }}>
-            <span style={{ fontSize: '2.5rem' }}>📋</span>
-            <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#374151', margin: 0 }}>لا توجد كشوف صرف بعد</h3>
-            <p style={{ fontSize: '.85rem', color: '#9ca3af', margin: 0 }}>لم يتم إنشاء أي كشف صرف حتى الآن</p>
+          <div className="flex flex-col items-center justify-center min-h-[260px] gap-3 text-center bg-white border border-[#e5eaf0] rounded-2xl p-8">
+            <span className="text-4xl">📋</span>
+            <h3 className="text-base font-bold text-gray-700 m-0">لا توجد كشوف صرف بعد</h3>
+            <p className="text-sm text-gray-400 m-0">لم يتم إنشاء أي كشف صرف حتى الآن</p>
           </div>
         )}
 
         {loading && (
-          <div style={{ background: '#fff', border: '1px solid #e5eaf0', borderRadius: '1rem', overflow: 'hidden' }}>
+          <div className="bg-white border border-[#e5eaf0] rounded-2xl overflow-hidden">
             {[1, 2, 3].map(i => (
-              <div key={i} style={{ display: 'flex', gap: '1rem', padding: '.85rem 1.1rem', borderBottom: '1px solid #f8fafc' }}>
-                <div style={skel(80, 14)} />
-                <div style={{ flex: 1 }}><div style={skel('40%', 14)} /></div>
-                <div style={skel(100, 24, '2rem')} />
-                <div style={skel(90, 14)} />
+              <div key={i} className="flex gap-4 px-4 py-3.5 border-b border-gray-50 last:border-b-0">
+                <div className="h-3.5 w-20 rounded bg-gradient-to-r from-[#f0f4f8] via-[#e5eaf0] to-[#f0f4f8] bg-[length:200%_100%] animate-[shimmer_1.4s_infinite]" />
+                <div className="flex-1">
+                  <div className="h-3.5 w-2/5 rounded bg-gradient-to-r from-[#f0f4f8] via-[#e5eaf0] to-[#f0f4f8] bg-[length:200%_100%] animate-[shimmer_1.4s_infinite]" />
+                </div>
+                <div className="h-6 w-24 rounded-full bg-gradient-to-r from-[#f0f4f8] via-[#e5eaf0] to-[#f0f4f8] bg-[length:200%_100%] animate-[shimmer_1.4s_infinite]" />
+                <div className="h-3.5 w-24 rounded bg-gradient-to-r from-[#f0f4f8] via-[#e5eaf0] to-[#f0f4f8] bg-[length:200%_100%] animate-[shimmer_1.4s_infinite]" />
               </div>
             ))}
           </div>
