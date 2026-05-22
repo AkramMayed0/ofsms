@@ -18,6 +18,7 @@ import AppShell from '../../../components/AppShell';
 import useAuthStore from '../../../store/useAuthStore';
 import TransferSponsorModal from '../../../components/TransferSponsorModal';
 import ShareAdModal from '../../../components/ShareAdModal';
+import PrimaryButton from '@/components/ui/PrimaryButton';
 
 // ── Status config ─────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -605,9 +606,9 @@ export default function FamilyDetailPage() {
                       <Handshake size={40} strokeWidth={1.5} />
                       <p>لا يوجد كافل مُعيَّن بعد</p>
                       {family.status === 'under_marketing' && isGM && (
-                        <button className="btn-primary" onClick={() => setAssignOpen(true)}>
+                        <PrimaryButton onClick={() => setAssignOpen(true)}>
                           تعيين كافل
-                        </button>
+                        </PrimaryButton>
                       )}
                     </div>
                   )}
@@ -841,17 +842,6 @@ export default function FamilyDetailPage() {
         .btn-confirm-delete:disabled { opacity: .65; cursor: not-allowed; }
         .btn-confirm-delete:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(220,38,38,.4); }
         @keyframes scaleIn { from { opacity:0; transform:scale(.95); } to { opacity:1; transform:none; } }
-
-        .btn-primary {
-          display: inline-flex; align-items: center; gap: .5rem;
-          padding: .65rem 1.25rem;
-          background: linear-gradient(135deg, #1B5E8C, #134569);
-          color: #fff; border: none; border-radius: .75rem;
-          font-family: 'Cairo', sans-serif; font-size: .875rem; font-weight: 700;
-          cursor: pointer; box-shadow: 0 2px 8px rgba(27,94,140,.25);
-          transition: all .15s;
-        }
-        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(27,94,140,.35); }
 
         /* ── Banners ────────────────────────────────────────────────── */
         .success-banner {

@@ -17,6 +17,7 @@ import { useForm } from 'react-hook-form';
 import { Upload, FileText, Image, X, Plus, AlertCircle, CheckCircle2, File, AlertTriangle, User, Check } from 'lucide-react';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
+import PrimaryButton from '@/components/ui/PrimaryButton';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -518,9 +519,9 @@ export default function OrphanRegistrationPage() {
               تم إرسال بيانات اليتيم إلى قائمة انتظار مراجعة المشرف.
             </p>
             <div className="toast-actions">
-              <button className="toast-btn-primary" onClick={handleRegisterAnother}>
+              <PrimaryButton onClick={handleRegisterAnother}>
                 تسجيل يتيم آخر
-              </button>
+              </PrimaryButton>
               <button className="toast-btn-ghost" onClick={() => router.push('/my-orphans')}>
                 عرض أيتامي
               </button>
@@ -1697,24 +1698,18 @@ export default function OrphanRegistrationPage() {
 
             {/* Right side: Next or Submit */}
             {currentPage < 5 ? (
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={handleNext}
-              >
+              <PrimaryButton type="button" onClick={handleNext}>
                 التالي ←
-              </button>
+              </PrimaryButton>
             ) : (
-              <button
+              <PrimaryButton
                 type="submit"
-                className="btn-primary"
                 disabled={submitState === 'loading'}
-                aria-busy={submitState === 'loading'}
               >
                 {submitState === 'loading'
                   ? <><span className="spin" aria-hidden />جارٍ الإرسال…</>
                   : 'إرسال للمراجعة ←'}
-              </button>
+              </PrimaryButton>
             )}
           </div>
 
@@ -1840,11 +1835,6 @@ export default function OrphanRegistrationPage() {
         /* ── Submit row ───────────────────────────────────────────────── */
         .submit-row { display:flex; justify-content:flex-end; align-items:center; gap:1rem; padding:1rem 1.25rem; background:#fff; border:1px solid #e5eaf0; border-radius:1rem; }
 
-        /* ── Buttons ──────────────────────────────────────────────────── */
-        .btn-primary { display:inline-flex; align-items:center; gap:.5rem; padding:.8rem 2rem; background:linear-gradient(135deg,#1B5E8C,#134569); color:#fff; font-family:'Cairo',sans-serif; font-size:.95rem; font-weight:700; border:none; border-radius:.75rem; cursor:pointer; box-shadow:0 2px 8px rgba(27,94,140,.25); transition:all .15s; }
-        .btn-primary:hover:not(:disabled) { background:linear-gradient(135deg,#2E7EB8,#1B5E8C); box-shadow:0 4px 14px rgba(27,94,140,.35); transform:translateY(-1px); }
-        .btn-primary:active:not(:disabled) { transform:translateY(0) scale(.99); }
-        .btn-primary:disabled { opacity:.65; cursor:not-allowed; }
         .btn-ghost { display:inline-flex; align-items:center; gap:.4rem; padding:.7rem 1.25rem; background:none; color:#1B5E8C; font-family:'Cairo',sans-serif; font-size:.88rem; font-weight:600; border:1.5px solid #dde5f0; border-radius:.75rem; cursor:pointer; transition:all .15s; }
         .btn-ghost:hover { background:#f0f7ff; border-color:#1B5E8C; }
 
@@ -1870,13 +1860,6 @@ export default function OrphanRegistrationPage() {
         .toast-title { font-size:1.2rem; font-weight:800; color:#0d3d5c; margin:0 0 .6rem; }
         .toast-body { font-size:.875rem; color:#6b7280; line-height:1.7; margin:0 0 1.5rem; }
         .toast-actions { display:flex; gap:.75rem; justify-content:center; flex-wrap:wrap; }
-        .toast-btn-primary {
-          padding:.75rem 1.5rem; background:linear-gradient(135deg,#1B5E8C,#134569);
-          color:#fff; border:none; border-radius:.75rem;
-          font-family:'Cairo',sans-serif; font-size:.9rem; font-weight:700;
-          cursor:pointer; box-shadow:0 2px 8px rgba(27,94,140,.25); transition:all .15s;
-        }
-        .toast-btn-primary:hover { transform:translateY(-1px); box-shadow:0 4px 14px rgba(27,94,140,.35); }
         .toast-btn-ghost {
           padding:.75rem 1.5rem; background:none; color:#1B5E8C;
           border:1.5px solid #dde5f0; border-radius:.75rem;

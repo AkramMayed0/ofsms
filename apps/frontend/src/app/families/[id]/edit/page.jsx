@@ -7,6 +7,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
+import PrimaryButton from '@/components/ui/PrimaryButton';
 
 function SectionHeader({ number, title, subtitle }) {
   return (
@@ -117,9 +118,9 @@ export default function FamilyEditPage() {
               تم تحديث بيانات الأسرة وإرسالها إلى قائمة انتظار المراجعة.
             </p>
             <div className="success-actions">
-              <button className="btn-primary" onClick={() => router.push('/dashboard')}>
+              <PrimaryButton onClick={() => router.push('/dashboard')}>
                 العودة للوحة القيادة
-              </button>
+              </PrimaryButton>
             </div>
           </div>
         </div>
@@ -284,16 +285,14 @@ export default function FamilyEditPage() {
               <button type="button" className="btn-ghost" onClick={() => router.back()}>
                 إلغاء
               </button>
-              <button
+              <PrimaryButton
                 type="submit"
-                className="btn-primary"
                 disabled={submitState === 'loading'}
-                aria-busy={submitState === 'loading'}
               >
                 {submitState === 'loading'
                   ? <><span className="spin" aria-hidden />جارٍ الحفظ…</>
                   : 'حفظ وإعادة إرسال ←'}
-              </button>
+              </PrimaryButton>
             </div>
 
           </form>
@@ -350,10 +349,6 @@ export default function FamilyEditPage() {
 
         .submit-row { display:flex; justify-content:flex-end; align-items:center; gap:1rem; padding:1rem 1.25rem; background:#fff; border:1px solid #e5eaf0; border-radius:1rem; }
 
-        .btn-primary { display:inline-flex; align-items:center; gap:.5rem; padding:.8rem 2rem; background:linear-gradient(135deg,#1B5E8C,#134569); color:#fff; font-family:'Cairo',sans-serif; font-size:.95rem; font-weight:700; border:none; border-radius:.75rem; cursor:pointer; box-shadow:0 2px 8px rgba(27,94,140,.25); transition:all .15s; }
-        .btn-primary:hover:not(:disabled) { background:linear-gradient(135deg,#2E7EB8,#1B5E8C); box-shadow:0 4px 14px rgba(27,94,140,.35); transform:translateY(-1px); }
-        .btn-primary:active:not(:disabled) { transform:translateY(0) scale(.99); }
-        .btn-primary:disabled { opacity:.65; cursor:not-allowed; }
         .btn-ghost { display:inline-flex; align-items:center; gap:.4rem; padding:.7rem 1.25rem; background:none; color:#1B5E8C; font-family:'Cairo',sans-serif; font-size:.88rem; font-weight:600; border:1.5px solid #dde5f0; border-radius:.75rem; cursor:pointer; transition:all .15s; }
         .btn-ghost:hover { background:#f0f7ff; border-color:#1B5E8C; }
 

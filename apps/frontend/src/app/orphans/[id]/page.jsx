@@ -17,6 +17,7 @@ import api from '../../../lib/api';
 import AppShell from '../../../components/AppShell';
 import useAuthStore from '../../../store/useAuthStore';
 import TransferSponsorModal from '../../../components/TransferSponsorModal';
+import PrimaryButton from '@/components/ui/PrimaryButton';
 import ShareAdModal from '../../../components/ShareAdModal';
 
 // ── Status config ─────────────────────────────────────────────────────────────
@@ -481,9 +482,9 @@ export default function OrphanDetailPage() {
                     <Handshake size={40} strokeWidth={1.5} />
                     <p>لا يوجد كافل مُعيَّن بعد</p>
                     {orphan.status === 'under_marketing' && isGM && (
-                      <button className="btn-primary" onClick={() => router.push('/sponsors')}>
+                      <PrimaryButton onClick={() => router.push('/sponsors')}>
                         تعيين كافل
-                      </button>
+                      </PrimaryButton>
                     )}
                   </div>
                 )}

@@ -15,6 +15,7 @@ import { AlertTriangle, X, User, Info, Check, Plus } from 'lucide-react';
 
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
+import PrimaryButton from '@/components/ui/PrimaryButton';
 
 // ── Save state indicator ──────────────────────────────────────────────────────
 function SaveIndicator({ state }) {
@@ -235,9 +236,9 @@ function AddThresholdModal({ onClose, onSaved }) {
         </div>
         <div className="m-foot">
           <button className="m-btn-ghost" onClick={onClose}>إلغاء</button>
-          <button className="m-btn-primary" disabled={!isValid || saving} onClick={handleSubmit}>
+          <PrimaryButton disabled={!isValid || saving} onClick={handleSubmit}>
             {saving ? <span className="m-spin" /> : 'إضافة'}
-          </button>
+          </PrimaryButton>
         </div>
       </div>
       <style jsx>{`
@@ -258,10 +259,7 @@ function AddThresholdModal({ onClose, onSaved }) {
         .m-foot { display:flex; align-items:center; justify-content:flex-end; gap:.6rem; padding:.9rem 1.4rem; border-top:1px solid #f0f4f8; }
         .m-btn-ghost { display:inline-flex; align-items:center; padding:.6rem 1.2rem; background:none; color:#6b7280; font-family:'Cairo',sans-serif; font-size:.85rem; font-weight:600; border:1.5px solid #e5eaf0; border-radius:.75rem; cursor:pointer; transition:all .15s; }
         .m-btn-ghost:hover { border-color:#9ca3af; color:#374151; }
-        .m-btn-primary { display:inline-flex; align-items:center; gap:.4rem; padding:.6rem 1.3rem; background:linear-gradient(135deg,#1B5E8C,#134569); color:#fff; font-family:'Cairo',sans-serif; font-size:.88rem; font-weight:700; border:none; border-radius:.75rem; cursor:pointer; box-shadow:0 2px 8px rgba(27,94,140,.25); transition:all .15s; }
-        .m-btn-primary:hover:not(:disabled) { background:linear-gradient(135deg,#2E7EB8,#1B5E8C); transform:translateY(-1px); }
-        .m-btn-primary:disabled { opacity:.45; cursor:not-allowed; }
-        .m-spin { display:inline-block; width:13px; height:13px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:mSpin .6s linear infinite; }
+.m-spin { display:inline-block; width:13px; height:13px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:mSpin .6s linear infinite; }
         @keyframes mSpin { to{transform:rotate(360deg)} }
       `}</style>
     </>

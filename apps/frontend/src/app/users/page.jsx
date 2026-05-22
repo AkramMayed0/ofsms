@@ -21,6 +21,7 @@ import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import useAuthStore from '@/store/useAuthStore';
+import PrimaryButton from '@/components/ui/PrimaryButton';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -567,9 +568,9 @@ export default function UserManagementPage() {
             <button className="btn-refresh" onClick={fetchUsers} title="تحديث">
               <IconRefresh />
             </button>
-            <button className="btn-primary" onClick={() => setShowAdd(true)}>
+            <PrimaryButton onClick={() => setShowAdd(true)}>
               <IconPlus /> إضافة مستخدم
-            </button>
+            </PrimaryButton>
           </div>
         </div>
 
@@ -673,9 +674,9 @@ export default function UserManagementPage() {
               {search || roleFilter !== 'all' ? 'جرّب تغيير معايير البحث' : 'ابدأ بإضافة مستخدم جديد'}
             </p>
             {!search && roleFilter === 'all' && (
-              <button className="btn-primary" onClick={() => setShowAdd(true)}>
+              <PrimaryButton onClick={() => setShowAdd(true)}>
                 + إضافة مستخدم
-              </button>
+              </PrimaryButton>
             )}
           </div>
         )}
@@ -962,17 +963,6 @@ export default function UserManagementPage() {
         .delete-foot { border-top: none; padding-top: 0; justify-content: center; gap: 1rem; margin-top: 0; width: 100%; }
         .delete-foot .btn-ghost { min-width: 100px; justify-content: center; }
         .delete-foot .btn-danger { flex: 1; justify-content: center; }
-
-        /* ── Buttons ──────────────────────────────────────────────────── */
-        .btn-primary {
-          display: inline-flex; align-items: center; gap: .4rem;
-          padding: .7rem 1.4rem; background: linear-gradient(135deg, #1B5E8C, #134569);
-          color: #fff; font-family: 'Cairo', sans-serif; font-size: .9rem; font-weight: 700;
-          border: none; border-radius: .75rem; cursor: pointer;
-          box-shadow: 0 2px 8px rgba(27,94,140,.25); transition: all .15s;
-        }
-        .btn-primary:hover:not(:disabled) { background: linear-gradient(135deg, #2E7EB8, #1B5E8C); transform: translateY(-1px); }
-        .btn-primary:disabled { opacity: .65; cursor: not-allowed; }
 
         .btn-ghost {
           display: inline-flex; align-items: center; padding: .7rem 1.25rem;

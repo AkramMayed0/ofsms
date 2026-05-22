@@ -13,6 +13,7 @@ import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import useAuthStore from '@/store/useAuthStore';
+import PrimaryButton from '@/components/ui/PrimaryButton';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -319,9 +320,9 @@ function SubmitReportModal({ orphans, onClose, onSubmitted }) {
 
           <div className="modal-foot">
             <button type="button" className="btn-ghost" onClick={onClose}>إلغاء</button>
-            <button type="submit" className="btn-primary" disabled={saving}>
+            <PrimaryButton type="submit" disabled={saving}>
               {saving ? <><span className="spin" />جارٍ الرفع…</> : 'رفع التقرير'}
-            </button>
+            </PrimaryButton>
           </div>
         </form>
       </div>
@@ -367,9 +368,6 @@ function SubmitReportModal({ orphans, onClose, onSubmitted }) {
         .juz-quick-btn:hover { border-color:#1B5E8C; color:#1B5E8C; }
         .juz-quick-active { border-color:#1B5E8C; background:#1B5E8C; color:#fff; }
         .juz-warning { font-size:.75rem; color:#f59e0b; font-weight:600; margin:0; }
-        .btn-primary { display:inline-flex; align-items:center; gap:.4rem; padding:.7rem 1.4rem; background:linear-gradient(135deg,#1B5E8C,#134569); color:#fff; font-family:'Cairo',sans-serif; font-size:.88rem; font-weight:700; border:none; border-radius:.75rem; cursor:pointer; transition:all .15s; }
-        .btn-primary:hover:not(:disabled) { background:linear-gradient(135deg,#2E7EB8,#1B5E8C); }
-        .btn-primary:disabled { opacity:.65; cursor:not-allowed; }
         .btn-ghost { display:inline-flex; align-items:center; padding:.7rem 1.25rem; background:none; color:#1B5E8C; font-family:'Cairo',sans-serif; font-size:.88rem; font-weight:600; border:1.5px solid #dde5f0; border-radius:.75rem; cursor:pointer; }
         .spin { display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; }
         @keyframes spin { to{transform:rotate(360deg)} }
@@ -459,9 +457,9 @@ export default function QuranReportsPage() {
             </p>
           </div>
           {role === 'agent' && (
-            <button className="btn-primary" onClick={() => setShowSubmit(true)}>
+            <PrimaryButton onClick={() => setShowSubmit(true)}>
               + رفع تقرير جديد
-            </button>
+            </PrimaryButton>
           )}
         </div>
 
@@ -553,9 +551,9 @@ export default function QuranReportsPage() {
                 : 'ستظهر التقارير هنا بمجرد رفعها من المندوبين'}
             </p>
             {role === 'agent' && filterStatus === 'all' && (
-              <button className="btn-primary" onClick={() => setShowSubmit(true)}>
+              <PrimaryButton onClick={() => setShowSubmit(true)}>
                 <BookOpen size={16} /> رفع أول تقرير
-              </button>
+              </PrimaryButton>
             )}
           </div>
         )}
@@ -705,8 +703,6 @@ export default function QuranReportsPage() {
         .empty-icon { width:64px; height:64px; border-radius:50%; background:#f0f7ff; border:1.5px solid #dbeafe; display:flex; align-items:center; justify-content:center; margin-bottom:.25rem; }
         .empty-title { font-size:1rem; font-weight:700; color:#374151; margin:0; }
         .empty-sub { font-size:.82rem; color:#9ca3af; margin:0; max-width:320px; line-height:1.6; }
-        .btn-primary { display:inline-flex; align-items:center; gap:.4rem; padding:.7rem 1.4rem; background:linear-gradient(135deg,#1B5E8C,#134569); color:#fff; font-family:'Cairo',sans-serif; font-size:.9rem; font-weight:700; border:none; border-radius:.75rem; cursor:pointer; box-shadow:0 2px 8px rgba(27,94,140,.25); transition:all .15s; }
-        .btn-primary:hover { background:linear-gradient(135deg,#2E7EB8,#1B5E8C); transform:translateY(-1px); }
         @media (max-width: 768px) {
           .page-top { flex-direction:column; }
           .table th:nth-child(2), .table td:nth-child(2),

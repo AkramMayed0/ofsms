@@ -5,6 +5,7 @@ import { Megaphone, Plus, Pencil, Trash2, RefreshCw, AlertTriangle, X, Eye, EyeO
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
 import useAuthStore from '../../store/useAuthStore';
+import PrimaryButton from '@/components/ui/PrimaryButton';
 
 // ── SkeletonCard ──────────────────────────────────────────────────────────────
 function SkeletonCard() {
@@ -290,9 +291,9 @@ export default function AnnouncementsPage() {
           </div>
           <div className="header-actions">
             {isGM && (
-              <button className="btn-primary" onClick={openCreate}>
+              <PrimaryButton onClick={openCreate}>
                 <Plus size={16} /> إعلان جديد
-              </button>
+              </PrimaryButton>
             )}
             <button className="btn-refresh" onClick={fetchAnnouncements} title="تحديث">
               <RefreshCw size={14} />
@@ -478,17 +479,6 @@ export default function AnnouncementsPage() {
         }
         .page-sub { font-size: 0.82rem; color: #9ca3af; margin: 0; }
         .header-actions { display: flex; align-items: center; gap: 0.5rem; }
-        .btn-primary {
-          display: inline-flex; align-items: center; gap: 0.4rem;
-          padding: 0.55rem 1.1rem;
-          background: linear-gradient(135deg, #0d3d5c, #1B5E8C);
-          color: #fff; font-family: 'Cairo', sans-serif;
-          font-size: 0.85rem; font-weight: 700;
-          border: none; border-radius: 0.75rem; cursor: pointer;
-          box-shadow: 0 2px 8px rgba(13,61,92,.22);
-          transition: transform 0.12s, box-shadow 0.12s;
-        }
-        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(13,61,92,.3); }
         .btn-refresh {
           display: flex; align-items: center; justify-content: center;
           width: 2.25rem; height: 2.25rem;

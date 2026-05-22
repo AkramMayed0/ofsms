@@ -38,8 +38,13 @@ body {
 
   /* Primary button */
   .btn-primary {
-    @apply bg-primary text-white font-semibold px-5 py-2.5 rounded-xl
-           hover:bg-primary-dark active:scale-95
+    @apply inline-flex items-center gap-1.5
+           text-white font-bold text-sm px-5 py-2.5 rounded-xl
+           border-none cursor-pointer whitespace-nowrap
+           shadow-[0_2px_8px_rgba(27,94,140,.25)]
+           bg-gradient-to-br from-primary to-primary-dark
+           hover:from-primary-light hover:to-primary
+           hover:-translate-y-px active:scale-95
            transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
@@ -61,4 +66,13 @@ body {
   .badge {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
   }
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes shimmer {
+  to { background-position: -200% 0; }
 }

@@ -9,6 +9,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
+import PrimaryButton from '@/components/ui/PrimaryButton';
 import { ClipboardList, BookOpen, Banknote, Calendar, Siren, AlarmClock, CheckCircle, AlertTriangle, FileText, Fingerprint } from 'lucide-react';
 
 const formatDate = (iso) => {
@@ -110,9 +111,9 @@ export default function SupervisorDashboard() {
           <h1 className="greeting-title">لوحة تحكم المشرف</h1>
           <p className="greeting-sub">{today}</p>
         </div>
-        <button className="btn-primary" onClick={() => router.push('/registrations')}>
+        <PrimaryButton onClick={() => router.push('/registrations')} className="max-sm:w-full max-sm:justify-center">
           مراجعة الطلبات ←
-        </button>
+        </PrimaryButton>
       </div>
 
       {error && <div className="err-banner"><AlertTriangle size={15}/> {error}</div>}
@@ -366,8 +367,6 @@ export default function SupervisorDashboard() {
         .skel { background:linear-gradient(90deg,#f0f4f8 25%,#e5eaf0 50%,#f0f4f8 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; }
         @keyframes shimmer { to { background-position:-200% 0; } }
 
-        .btn-primary { display:inline-flex; align-items:center; gap:.4rem; padding:.7rem 1.4rem; background:linear-gradient(135deg,#1B5E8C,#134569); color:#fff; font-family:'Cairo',sans-serif; font-size:.9rem; font-weight:700; border:none; border-radius:.75rem; cursor:pointer; box-shadow:0 2px 8px rgba(27,94,140,.25); transition:all .15s; }
-        .btn-primary:hover { background:linear-gradient(135deg,#2E7EB8,#1B5E8C); transform:translateY(-1px); }
         .link-btn { background:none; border:none; font-family:'Cairo',sans-serif; font-size:.78rem; font-weight:700; color:#1B5E8C; cursor:pointer; padding:0; white-space:nowrap; }
         .link-btn:hover { opacity:.7; }
 
@@ -380,8 +379,7 @@ export default function SupervisorDashboard() {
           .sup-dash { gap:1.25rem; }
           .greeting { flex-direction:column; align-items:flex-start; gap:.75rem; }
           .greeting-title { font-size:1.3rem; }
-          .btn-primary { width:100%; justify-content:center; }
-          .countdown-banner { flex-direction:column; align-items:flex-start; gap:.75rem; padding:1rem; }
+.countdown-banner { flex-direction:column; align-items:flex-start; gap:.75rem; padding:1rem; }
           .alert-action { width:100%; justify-content:center; }
           .card { padding:1.1rem; }
           .queue-date { display:none; }

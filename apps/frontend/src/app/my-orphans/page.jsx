@@ -16,6 +16,7 @@ import { Search, AlertTriangle, X, User, CheckCircle2, FileText } from 'lucide-r
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
+import PrimaryButton from '@/components/ui/PrimaryButton';
 
 // ── Status config ──────────────────────────────────────────────────────────────
 
@@ -168,7 +169,7 @@ function DetailDrawer({ orphan, onClose }) {
         {/* Footer actions */}
         <div className="drawer-foot">
           {orphan.status === 'rejected' && (
-            <a href={`/orphans/${orphan.id}/edit`} className="btn-primary-sm">
+            <a href={`/orphans/${orphan.id}/edit`} className="inline-flex items-center px-4 py-2 bg-gradient-to-br from-[#1B5E8C] to-[#134569] text-white text-[.82rem] font-bold rounded-lg no-underline hover:from-[#2E7EB8] hover:to-[#1B5E8C] transition-all">
               تعديل وإعادة الإرسال
             </a>
           )}
@@ -205,9 +206,7 @@ function DetailDrawer({ orphan, onClose }) {
         .doc-name { flex:1; color:#374151; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; direction:ltr; text-align:left; }
         .doc-date { color:#94a3b8; flex-shrink:0; }
 
-        .btn-primary-sm { display:inline-flex; align-items:center; padding:.55rem 1.1rem; background:linear-gradient(135deg,#1B5E8C,#134569); color:#fff; font-family:'Cairo',sans-serif; font-size:.82rem; font-weight:700; border:none; border-radius:.625rem; cursor:pointer; text-decoration:none; transition:all .15s; }
-        .btn-primary-sm:hover { background:linear-gradient(135deg,#2E7EB8,#1B5E8C); }
-        .btn-ghost-sm { display:inline-flex; align-items:center; padding:.55rem 1.1rem; background:none; color:#1B5E8C; font-family:'Cairo',sans-serif; font-size:.82rem; font-weight:600; border:1.5px solid #dde5f0; border-radius:.625rem; cursor:pointer; transition:all .15s; }
+.btn-ghost-sm { display:inline-flex; align-items:center; padding:.55rem 1.1rem; background:none; color:#1B5E8C; font-family:'Cairo',sans-serif; font-size:.82rem; font-weight:600; border:1.5px solid #dde5f0; border-radius:.625rem; cursor:pointer; transition:all .15s; }
         .btn-ghost-sm:hover { background:#f0f7ff; border-color:#1B5E8C; }
       `}</style>
     </>
@@ -272,9 +271,9 @@ export default function MyOrphansPage() {
               {loading ? 'جارٍ التحميل…' : `${orphans.length} يتيم مسجّل`}
             </p>
           </div>
-          <button className="btn-primary" onClick={() => router.push('/orphans/new')}>
+          <PrimaryButton onClick={() => router.push('/orphans/new')}>
             + تسجيل يتيم جديد
-          </button>
+          </PrimaryButton>
         </div>
 
         {/* Search + filter bar */}
@@ -483,11 +482,7 @@ export default function MyOrphansPage() {
 
         .table-footer { padding:.75rem 1.25rem; font-size:.78rem; color:#9ca3af; border-top:1px solid #f0f4f8; text-align:left; }
 
-        /* ── Buttons ──────────────────────────────────────────────────── */
-        .btn-primary { display:inline-flex; align-items:center; gap:.4rem; padding:.7rem 1.4rem; background:linear-gradient(135deg,#1B5E8C,#134569); color:#fff; font-family:'Cairo',sans-serif; font-size:.9rem; font-weight:700; border:none; border-radius:.75rem; cursor:pointer; box-shadow:0 2px 8px rgba(27,94,140,.25); transition:all .15s; text-decoration:none; }
-        .btn-primary:hover { background:linear-gradient(135deg,#2E7EB8,#1B5E8C); box-shadow:0 4px 14px rgba(27,94,140,.35); transform:translateY(-1px); }
-
-        /* ── Responsive ───────────────────────────────────────────────── */
+/* ── Responsive ───────────────────────────────────────────────── */
         @media (max-width: 768px) {
           .page-top { flex-direction:column; }
           .table th:nth-child(3),

@@ -14,6 +14,7 @@
 
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
+import PrimaryButton from '@/components/ui/PrimaryButton';
 import { UserRound, Eye, Banknote, Building2, Megaphone, Users, Search, CheckCircle, AlertTriangle, X, User, Check } from 'lucide-react';
 
 // ── Role target options ────────────────────────────────────────────────────────
@@ -133,7 +134,7 @@ export default function SendNotificationModal({ onClose, onSent }) {
               )}
             </p>
             <div className="success-msg-preview">{message}</div>
-            <button className="btn-primary" onClick={onClose}>إغلاق</button>
+            <PrimaryButton onClick={onClose}>إغلاق</PrimaryButton>
           </div>
         </div>
         <Styles />
@@ -339,11 +340,9 @@ export default function SendNotificationModal({ onClose, onSent }) {
           <button className="btn-ghost" onClick={onClose} disabled={sending}>
             إلغاء
           </button>
-          <button
-            className={`btn-primary ${!canSend ? 'btn-disabled' : ''}`}
+          <PrimaryButton
             onClick={handleSend}
             disabled={!canSend || sending}
-            aria-busy={sending}
           >
             {sending ? (
               <><span className="spin" aria-hidden />جارٍ الإرسال…</>
@@ -360,7 +359,7 @@ export default function SendNotificationModal({ onClose, onSent }) {
                 )}
               </>
             )}
-          </button>
+          </PrimaryButton>
         </div>
       </div>
 
@@ -575,20 +574,6 @@ function Styles() {
         display: flex; gap: .75rem; justify-content: flex-end;
         padding: 1rem 1.5rem; border-top: 1px solid #f0f4f8;
       }
-      .btn-primary {
-        display: inline-flex; align-items: center; gap: .4rem;
-        padding: .7rem 1.4rem;
-        background: linear-gradient(135deg,#1B5E8C,#134569);
-        color: #fff; font-family: 'Cairo',sans-serif;
-        font-size: .9rem; font-weight: 700; border: none;
-        border-radius: .75rem; cursor: pointer; transition: all .15s;
-        box-shadow: 0 2px 8px rgba(27,94,140,.25);
-      }
-      .btn-primary:hover:not(.btn-disabled) {
-        background: linear-gradient(135deg,#2E7EB8,#1B5E8C);
-        transform: translateY(-1px);
-      }
-      .btn-disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
       .btn-ghost {
         display: inline-flex; align-items: center; padding: .7rem 1.25rem;
         background: none; color: #6b7280; font-family: 'Cairo',sans-serif;
