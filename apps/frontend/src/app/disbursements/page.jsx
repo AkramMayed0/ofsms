@@ -658,6 +658,7 @@ export default function DisbursementsPage() {
         {/* Table */}
         {!loading && lists.length > 0 && (
           <div className="table-wrap">
+            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             <table className="table">
               <thead>
                 <tr>
@@ -720,6 +721,7 @@ export default function DisbursementsPage() {
                 })}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </div>
@@ -762,13 +764,13 @@ export default function DisbursementsPage() {
           background:#fff; border:1px solid #e5eaf0; border-radius:1rem;
           overflow:hidden; box-shadow:0 1px 4px rgba(27,94,140,.05);
         }
-        .table { width:100%; border-collapse:collapse; }
+        .table { width:100%; border-collapse:collapse; min-width:520px; }
         .table thead tr { background:#f8fafc; }
         .table th {
           padding:.8rem 1.1rem; text-align:right; font-size:.72rem;
           font-weight:700; color:#6b7a8d; border-bottom:1px solid #e5eaf0; white-space:nowrap;
         }
-        .table td { padding:.85rem 1.1rem; font-size:.83rem; border-bottom:1px solid #f8fafc; vertical-align:middle; }
+        .table td { padding:.85rem 1.1rem; font-size:.83rem; border-bottom:1px solid #f8fafc; vertical-align:middle; white-space:nowrap; }
         .trow { cursor:pointer; transition:background .12s; }
         .trow:hover { background:#f8fbff; }
         .trow:last-child td { border-bottom:none; }
@@ -832,7 +834,6 @@ export default function DisbursementsPage() {
 
         @media (max-width: 768px) {
           .page-top { flex-direction:column; }
-          .table th:nth-child(5), .table td:nth-child(5) { display:none; }
         }
       `}</style>
     </AppShell>

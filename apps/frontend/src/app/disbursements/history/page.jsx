@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 
@@ -26,6 +27,7 @@ function StatusBadge({ status }) {
 }
 
 export default function DisbursementsHistoryPage() {
+  const router = useRouter();
   const [lists,   setLists]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState('');
@@ -62,45 +64,48 @@ export default function DisbursementsHistoryPage() {
         )}
 
         {!loading && lists.length > 0 && (
-          <div style={{ background: '#fff', border: '1px solid #e5eaf0', borderRadius: '1rem', overflow: 'hidden', boxShadow: '0 1px 4px rgba(27,94,140,.05)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.83rem' }}>
-              <thead>
-                <tr style={{ background: '#f8fafc' }}>
-                  {['الشهر / السنة', 'المستفيدون', 'المبلغ الإجمالي', 'الحالة', 'تاريخ الإنشاء', ''].map(h => (
-                    <th key={h} style={{ padding: '.8rem 1.1rem', textAlign: 'right', fontSize: '.72rem', fontWeight: 700, color: '#6b7a8d', borderBottom: '1px solid #e5eaf0', whiteSpace: 'nowrap' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {lists.map(list => (
-                  <tr key={list.id} style={{ borderBottom: '1px solid #f8fafc' }}>
-                    <td style={{ padding: '.85rem 1.1rem', fontWeight: 700, color: '#0d3d5c' }}>
-                      {MONTHS_AR[list.month]} {list.year}
-                    </td>
-                    <td style={{ padding: '.85rem 1.1rem', color: '#6b7a8d' }}>
-                      <span style={{ color: '#10b981', fontWeight: 700 }}>{list.included_count}</span>
-                      {list.excluded_count > 0 && (
-                        <span style={{ color: '#ef4444', marginRight: '.35rem' }}>(-{list.excluded_count})</span>
-                      )}
-                    </td>
-                    <td style={{ padding: '.85rem 1.1rem', fontWeight: 700, color: '#1B5E8C' }}>
-                      {Number(list.total_amount).toLocaleString('ar-YE')} ر.ي
-                    </td>
-                    <td style={{ padding: '.85rem 1.1rem' }}>
-                      <StatusBadge status={list.status} />
-                    </td>
-                    <td style={{ padding: '.85rem 1.1rem', color: '#6b7a8d', fontSize: '.78rem' }}>
-                      {list.created_at ? new Date(list.created_at).toLocaleDateString('ar-YE', { dateStyle: 'medium' }) : '—'}
-                    </td>
-                    <td style={{ padding: '.85rem 1.1rem' }}>
-                      <a href={`/disbursements/${list.id}`} style={{ display: 'inline-flex', alignItems: 'center', padding: '.3rem .7rem', background: 'none', border: '1.5px solid #e5eaf0', borderRadius: '.5rem', fontSize: '.78rem', fontWeight: 600, color: '#1B5E8C', textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                        عرض ←
-                      </a>
-                    </td>
+          <div style={{ background: '#fff', border: '1px solid #e5eaf0', borderRadius: '1rem', boxShadow: '0 1px 4px rgba(27,94,140,.05)', overflow: 'hidden' }}>
+            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.83rem', minWidth: 480 }}>
+                <thead>
+                  <tr style={{ background: '#f8fafc' }}>
+                    {['الشهر / السنة', 'المستفيدون', 'المبلغ الإجمالي', 'الحالة', 'تاريخ الإنشاء'].map(h => (
+                      <th key={h} style={{ padding: '.8rem 1.1rem', textAlign: 'right', fontSize: '.72rem', fontWeight: 700, color: '#6b7a8d', borderBottom: '1px solid #e5eaf0', whiteSpace: 'nowrap' }}>{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {lists.map(list => (
+                    <tr
+                      key={list.id}
+                      onClick={() => router.push(`/disbursements/${list.id}`)}
+                      style={{ borderBottom: '1px solid #f8fafc', cursor: 'pointer', transition: 'background .12s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#f0f7ff'}
+                      onMouseLeave={e => e.currentTarget.style.background = ''}
+                    >
+                      <td style={{ padding: '.85rem 1.1rem', fontWeight: 700, color: '#0d3d5c', whiteSpace: 'nowrap' }}>
+                        {MONTHS_AR[list.month]} {list.year}
+                      </td>
+                      <td style={{ padding: '.85rem 1.1rem', color: '#6b7a8d', whiteSpace: 'nowrap' }}>
+                        <span style={{ color: '#10b981', fontWeight: 700 }}>{list.included_count}</span>
+                        {list.excluded_count > 0 && (
+                          <span style={{ color: '#ef4444', marginRight: '.35rem' }}>(-{list.excluded_count})</span>
+                        )}
+                      </td>
+                      <td style={{ padding: '.85rem 1.1rem', fontWeight: 700, color: '#1B5E8C', whiteSpace: 'nowrap' }}>
+                        {Number(list.total_amount).toLocaleString('ar-YE')} ر.ي
+                      </td>
+                      <td style={{ padding: '.85rem 1.1rem' }}>
+                        <StatusBadge status={list.status} />
+                      </td>
+                      <td style={{ padding: '.85rem 1.1rem', color: '#6b7a8d', fontSize: '.78rem', whiteSpace: 'nowrap' }}>
+                        {list.created_at ? new Date(list.created_at).toLocaleDateString('ar-YE', { dateStyle: 'medium' }) : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 

@@ -317,12 +317,6 @@ export default function QuranThresholdsPage() {
           <button className="btn-add-threshold" onClick={() => setShowAdd(true)}>
             <Plus size={16} /> إضافة فئة جديدة
           </button>
-          <div className="quran-icon" aria-hidden="true">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#1B5E8C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-            </svg>
-          </div>
         </div>
 
         {/* ── Info banner ── */}
@@ -444,19 +438,6 @@ export default function QuranThresholdsPage() {
           color: #9ca3af;
           margin: 0;
         }
-        .quran-icon {
-          flex-shrink: 0;
-          opacity: 0.85;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 56px;
-          height: 56px;
-          background: #eff6ff;
-          border: 1.5px solid #bfdbfe;
-          border-radius: 0.875rem;
-        }
-
         /* ── Add button ───────────────────────────────────────────────── */
         .btn-add-threshold {
           display: inline-flex;

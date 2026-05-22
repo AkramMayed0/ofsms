@@ -54,7 +54,13 @@
       "Bash(curl -s http://localhost:4000/api/auth/login -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"gm@ofsms.local\",\"password\":\"Test@1234\"}')",
       "Bash(curl -s http://localhost:4000/api/auth/login -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"supervisor@ofsms.local\",\"password\":\"Test@1234\"}')",
       "Bash(curl -s http://localhost:4000/api/auth/login -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"finance@ofsms.local\",\"password\":\"Test@1234\"}')",
-      "Bash(xargs grep -l \"biometric_receipt\")"
+      "Bash(xargs grep -l \"biometric_receipt\")",
+      "Bash(xargs grep -l \"biometric\\\\|fingerprint\")",
+      "Bash(xargs grep -l \"biometric\\\\|fingerprint\\\\|BiometricReceipt\")",
+      "Bash(xargs grep -l \"uploadBiometric\\\\|biometric_receipt\\\\|fingerprint\")",
+      "Bash(xargs grep -l \"biometric_receipt\\\\|getSupervisorLog\\\\|getReceipts\")",
+      "Bash(xargs grep -l \"biometric\\\\|receipt\")",
+      "Bash(xargs grep -l \"agent_batch_confirmations\")"
     ]
   }
 }

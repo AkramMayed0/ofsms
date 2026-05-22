@@ -468,7 +468,7 @@ export default function SponsorDetailPage() {
             <span className="sep">/</span>
             <span className="crumb-current">تفاصيل الكافل</span>
           </div>
-          <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div className="top-actions">
             <button className="btn-edit" onClick={() => setShowEdit(true)}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -665,6 +665,7 @@ export default function SponsorDetailPage() {
         .page-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
         .breadcrumb { display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; }
         @media (max-width: 480px) { .page-top { flex-direction: column; align-items: flex-start; } }
+        .top-actions { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
         .back-btn { display: inline-flex; align-items: center; gap: 0.35rem; background: none; border: none; color: #6b7a8d; font-family: inherit; font-size: 0.88rem; font-weight: 600; cursor: pointer; padding: 0.3rem 0.5rem; border-radius: 0.5rem; transition: all 0.15s; }
         .back-btn:hover { background: #f0f4f8; color: #1B5E8C; }
         .sep { color: #cbd5e1; font-size: 0.75rem; }
@@ -772,6 +773,57 @@ export default function SponsorDetailPage() {
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes shimmer { to { background-position: -200% 0; } }
+
+        /* 360px and below */
+        @media (max-width: 360px) {
+          .detail-page { gap: 0.55rem; }
+
+          .page-top { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+          .breadcrumb { font-size: 0.75rem; flex-wrap: wrap; gap: 0.3rem; }
+          .page-top > div { width: 100%; }
+          .btn-edit, .btn-delete { flex: 1; justify-content: center; font-size: 0.8rem; padding: 0.55rem 0.75rem; }
+
+          .hero-card { padding: 0.7rem 0.75rem; gap: 0.6rem; }
+          .hero-avatar { width: 40px; height: 40px; font-size: 1rem; }
+          .hero-name { font-size: 0.88rem; }
+          .hero-stat-chip { font-size: 0.68rem; padding: 0.15rem 0.45rem; }
+
+          .section-card { padding: 0.65rem 0.75rem; border-radius: 1rem; }
+          .section-title { font-size: 0.82rem; }
+
+          .info-label { font-size: 0.73rem; }
+          .info-value { font-size: 0.78rem; }
+
+          .portal-desc { font-size: 0.74rem; }
+          .portal-action { flex-direction: column; }
+          .token-display { white-space: normal; word-break: break-all; font-size: 0.75rem; padding: 0.6rem 0.75rem; min-width: 0; }
+          .btn-copy { justify-content: center; padding: 0.65rem 1rem; width: 100%; }
+
+          .password-row { flex-direction: column; }
+          .password-display { font-size: 0.82rem; padding: 0.6rem 0.75rem; white-space: normal; word-break: break-all; }
+          .btn-change-pass { justify-content: center; padding: 0.65rem 1rem; width: 100%; }
+          .password-hint { font-size: 0.68rem; }
+
+          .section-top-row { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+          .btn-assign { width: 100%; justify-content: center; font-size: 0.8rem; }
+          .count-badge { font-size: 0.72rem; padding: 0.15rem 0.5rem; }
+
+          .spon-table th { padding: 0.5rem 0.6rem; font-size: 0.72rem; }
+          .spon-table td { padding: 0.5rem 0.6rem; font-size: 0.78rem; }
+          .beneficiary-cell { gap: 0.4rem; font-size: 0.78rem; }
+          .ben-icon { width: 28px; height: 28px; flex-shrink: 0; }
+          .type-badge { font-size: 0.7rem; padding: 0.15rem 0.45rem; }
+          .status-badge { font-size: 0.7rem; padding: 0.15rem 0.5rem; }
+          .amount-text { font-size: 0.78rem; }
+
+          .empty-state { padding: 1.75rem 0.75rem; }
+          .empty-icon-wrap { width: 56px; height: 56px; }
+          .empty-state h3 { font-size: 0.95rem; }
+          .empty-state p { font-size: 0.8rem; }
+
+          .toast { font-size: 0.8rem; padding: 0.65rem 1rem; gap: 0.6rem; max-width: 90vw; left: 5%; right: 5%; transform: none; }
+        }
+
       `}</style>
     </AppShell>
   );

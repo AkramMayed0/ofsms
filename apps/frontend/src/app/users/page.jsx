@@ -683,6 +683,7 @@ export default function UserManagementPage() {
         {/* ── Table ── */}
         {!loading && filtered.length > 0 && (
           <div className="table-wrap">
+            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             <table className="table">
               <thead>
                 <tr>
@@ -757,6 +758,7 @@ export default function UserManagementPage() {
                 })}
               </tbody>
             </table>
+            </div>
             <div className="table-footer">
               عرض {filtered.length} من {users.length} مستخدم
             </div>
@@ -858,10 +860,10 @@ export default function UserManagementPage() {
 
         /* ── Table ────────────────────────────────────────────────────── */
         .table-wrap { background: #fff; border: 1px solid #e5eaf0; border-radius: 1rem; overflow: hidden; box-shadow: 0 1px 4px rgba(27,94,140,.05); }
-        .table { width: 100%; border-collapse: collapse; }
+        .table { width: 100%; border-collapse: collapse; min-width: 640px; }
         .table thead tr { background: #f8fafc; }
         .table th { padding: .8rem 1.1rem; text-align: right; font-size: .72rem; font-weight: 700; color: #6b7a8d; border-bottom: 1px solid #e5eaf0; white-space: nowrap; }
-        .table td { padding: .85rem 1.1rem; font-size: .83rem; border-bottom: 1px solid #f8fafc; vertical-align: middle; }
+        .table td { padding: .85rem 1.1rem; font-size: .83rem; border-bottom: 1px solid #f8fafc; vertical-align: middle; white-space: nowrap; }
         .trow:hover { background: #f8fbff; }
         .trow-inactive { opacity: .6; }
         .trow:last-child td { border-bottom: none; }
@@ -1001,8 +1003,6 @@ export default function UserManagementPage() {
         /* ── Responsive ───────────────────────────────────────────────── */
         @media (max-width: 768px) {
           .page-title { font-size: 1.3rem; }
-          .table th:nth-child(4), .table td:nth-child(4),
-          .table th:nth-child(6), .table td:nth-child(6) { display: none; }
         }
       `}</style>
     </AppShell>
