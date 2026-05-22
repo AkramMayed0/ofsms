@@ -74,7 +74,7 @@ export default function SponsorDashboard() {
             <span className="header-icon"><Handshake size={32} /></span>
             <div>
               <span className="header-title">بوابة الكافل</span>
-              <span className="header-org">مؤسسة الأرض الطيبة</span>
+              <span className="header-org">مؤسسة إكرام النعمة الخيرية</span>
             </div>
           </div>
           <div className="header-user">

@@ -130,7 +130,7 @@ export default function SponsorLoginPage() {
           </form>
 
           <p className="footer-note">
-            إذا لم يكن لديك رمز بوابة، تواصل مع مؤسسة الأرض الطيبة
+            إذا لم يكن لديك رمز بوابة، تواصل مع مؤسسة إكرام النعمة الخيرية
           </p>
         </div>
       </main>

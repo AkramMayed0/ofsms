@@ -130,7 +130,7 @@ function LoginView({ token, onLogin }) {
             </form>
           )}
 
-          <p className="form-footer">مؤسسة الأرض الطيبة · نظام كفالة الأيتام</p>
+          <p className="form-footer">مؤسسة إكرام النعمة الخيرية · نظام كفالة الأيتام</p>
         </div>
       </main>
 
@@ -325,7 +325,7 @@ function DashboardView({ token, sponsor, onLogout }) {
           <span className="header-logo"><Handshake size={32} /></span>
           <div>
             <h1 className="header-title">بوابة الكافل</h1>
-            <p className="header-sub">مؤسسة الأرض الطيبة</p>
+            <p className="header-sub">مؤسسة إكرام النعمة الخيرية</p>
           </div>
         </div>
         <div className="header-user">

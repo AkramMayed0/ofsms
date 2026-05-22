@@ -28,8 +28,8 @@ test.describe('E2E Registration Flow', () => {
     await agentPage.goto('/login');
     
     // Fill login form (assuming standard dummy accounts from create-test-accounts)
-    await agentPage.fill('input[type="email"]', 'agent@test.com');
-    await agentPage.fill('input[type="password"]', 'Password123!');
+    await agentPage.fill('input[type="email"]', 'agent@ofsms.local');
+    await agentPage.fill('input[type="password"]', 'Test@1234');
     await agentPage.click('button:has-text("تسجيل الدخول")');
     
     // Ensure dashboard loads
@@ -68,8 +68,8 @@ test.describe('E2E Registration Flow', () => {
     // ── 2. Supervisor logs in & Approves ──
     const supervisorPage = await supervisorContext.newPage();
     await supervisorPage.goto('/login');
-    await supervisorPage.fill('input[type="email"]', 'supervisor@test.com');
-    await supervisorPage.fill('input[type="password"]', 'Password123!');
+    await supervisorPage.fill('input[type="email"]', 'supervisor@ofsms.local');
+    await supervisorPage.fill('input[type="password"]', 'Test@1234');
     await supervisorPage.click('button:has-text("تسجيل الدخول")');
     
     // Go to unapproved orphans list (often main dashboard or specific list)

@@ -163,7 +163,7 @@ export default function AnnouncementsPage() {
     setError('');
     Promise.all([
       api.get('/announcements'),
-      api.get('/ads'),
+      isGM ? api.get('/ads') : Promise.resolve({ data: { ads: [] } }),
     ])
       .then(([annRes, adsRes]) => {
         setAnnouncements(annRes.data.announcements || []);
@@ -171,7 +171,7 @@ export default function AnnouncementsPage() {
       })
       .catch(() => setError('تعذّر تحميل الإعلانات.'))
       .finally(() => setLoading(false));
-  }, []);
+  }, [isGM]);
 
   useEffect(() => { fetchAnnouncements(); }, [fetchAnnouncements]);
 

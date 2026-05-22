@@ -6,9 +6,9 @@
 - حسابات تجريبية موجودة في قاعدة البيانات:
   | الدور | الإيميل | الباسورد |
   |-------|---------|---------|
-  | GM | gm@test.com | Password123! |
-  | مشرف | supervisor@test.com | Password123! |
-  | مندوب | agent@test.com | Password123! |
+  | GM | gm@ofsms.local | Test@1234 |
+  | مشرف | supervisor@ofsms.local | Test@1234 |
+  | مندوب | agent@ofsms.local | Test@1234 |
 
 ## التشغيل
 

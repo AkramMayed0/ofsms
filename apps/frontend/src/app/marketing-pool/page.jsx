@@ -293,8 +293,8 @@ export default function MarketingPoolPage() {
               onChange={(e) => setFilterType(e.target.value)}
             >
               <option value="all">الكل (أيتام + أسر)</option>
-              <option value="orphan">الأيتام فقط <User size={18} /></option>
-              <option value="family">الأسر فقط <Users size={18} /></option>
+              <option value="orphan">الأيتام فقط</option>
+              <option value="family">الأسر فقط</option>
             </select>
           </div>
 
