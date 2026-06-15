@@ -109,6 +109,14 @@ router.patch(
   controller.updateFamilyStatus
 );
 
+// GM only: share family profile as a sponsor-facing ad/request
+router.post(
+  '/:id/share',
+  authenticate,
+  authorize('gm'),
+  controller.shareFamilyToAds
+);
+
 // ── Multer error handler (must be last) ───────────────────────
 router.use((err, _req, res, next) => {
   if (err instanceof multer.MulterError || err.message?.includes('نوع الملف')) {

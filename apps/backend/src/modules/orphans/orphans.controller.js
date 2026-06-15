@@ -12,6 +12,7 @@
 
 const { validationResult } = require('express-validator');
 const service = require('./orphans.service');
+const adsService = require('../ads/ads.service');
 const { uploadFile } = require('../../config/s3');
 
 const VALID_RELATIONS = ['uncle', 'maternal_uncle', 'grandfather', 'sibling', 'other'];
@@ -29,42 +30,115 @@ const createOrphan = async (req, res, next) => {
     }
 
     const {
-      fullName,
-      dateOfBirth,
-      gender,
-      governorateId,
-      guardianName,
-      guardianRelation,
-      notes,
+      fullName, dateOfBirth, gender, governorateId,
+      guardianName, guardianRelation, notes,
     } = req.body;
 
-    // 2. Hard guards — catch anything that slipped past validation
-    //    (multer multipart fields can arrive as undefined if not sent)
+    // 2. Hard guards
     if (!gender || !VALID_GENDERS.includes(gender)) {
       return res.status(422).json({
         errors: [{ field: 'gender', msg: 'الجنس مطلوب ويجب أن يكون male أو female' }],
       });
     }
-
     if (!guardianRelation || !VALID_RELATIONS.includes(guardianRelation)) {
       return res.status(422).json({
         errors: [{ field: 'guardianRelation', msg: 'صلة الوصي مطلوبة ويجب أن تكون قيمة صحيحة' }],
       });
     }
 
-    const isGifted = req.user.role === 'gm' ? req.body.isGifted === 'true' : false;
+    // isGifted: true if talents were selected on the form, or GM manually sets it
+    const isGifted = req.body.isGifted === 'true';
 
-    // 3. Create orphan record
+    // 3. Build profile object from all extended case-study fields
+    const b = req.body;
+    const profile = {
+      // Personal extras
+      ...(b.birthPlace        && { birthPlace: b.birthPlace }),
+      ...(b.residence         && { residence: b.residence }),
+      ...(b.motherGovernorate && { motherGovernorate: b.motherGovernorate }),
+      // Contact
+      ...(b.phone1            && { phone1: b.phone1 }),
+      ...(b.phone1Relation    && { phone1Relation: b.phone1Relation }),
+      ...(b.phone2            && { phone2: b.phone2 }),
+      ...(b.phone2Relation    && { phone2Relation: b.phone2Relation }),
+      ...(b.address           && { address: b.address }),
+      // Educational
+      ...(b.schoolGrade       && { schoolGrade: b.schoolGrade }),
+      ...(b.sectorType        && { sectorType: b.sectorType }),
+      ...(b.directorate       && { directorate: b.directorate }),
+      ...(b.schoolOrg         && { schoolOrg: b.schoolOrg }),
+      ...(b.favoriteSubject   && { favoriteSubject: b.favoriteSubject }),
+      ...(b.difficultySubject && { difficultySubject: b.difficultySubject }),
+      ...(b.generalLevel      && { generalLevel: b.generalLevel }),
+      ...(b.repeatedYear      && { repeatedYear: b.repeatedYear }),
+      ...(b.repeatedYearReason && { repeatedYearReason: b.repeatedYearReason }),
+      ...(b.gradeDetail       && { gradeDetail: b.gradeDetail }),
+      ...(b.generalGrade      && { generalGrade: b.generalGrade }),
+      ...(b.lastResultAvg     && { lastResultAvg: b.lastResultAvg }),
+      ...(b.highestGrade      && { highestGrade: b.highestGrade }),
+      ...(b.lowestGrade       && { lowestGrade: b.lowestGrade }),
+      ...(b.eduResponsible    && { eduResponsible: b.eduResponsible }),
+      ...(b.eduResponsiblePhone && { eduResponsiblePhone: b.eduResponsiblePhone }),
+      ...(b.eduLevel          && { eduLevel: b.eduLevel }),
+      // Family
+      ...(b.guardianAge       && { guardianAge: b.guardianAge }),
+      ...(b.guardianEduLevel  && { guardianEduLevel: b.guardianEduLevel }),
+      ...(b.guardianJob       && { guardianJob: b.guardianJob }),
+      ...(b.guardianHealth    && { guardianHealth: b.guardianHealth }),
+      ...(b.familyMaleCount   && { familyMaleCount: b.familyMaleCount }),
+      ...(b.familyFemaleCount && { familyFemaleCount: b.familyFemaleCount }),
+      ...(b.familyProblems    && { familyProblems: b.familyProblems }),
+      // Housing
+      ...(b.ownershipType     && { ownershipType: b.ownershipType }),
+      ...(b.buildingType      && { buildingType: b.buildingType }),
+      ...(b.floorsCount       && { floorsCount: b.floorsCount }),
+      ...(b.roomsCount        && { roomsCount: b.roomsCount }),
+      ...(b.water             && { water: b.water }),
+      ...(b.electricity       && { electricity: b.electricity }),
+      ...(b.rentAmount        && { rentAmount: b.rentAmount }),
+      ...(b.housingDetails    && { housingDetails: b.housingDetails }),
+      // Health
+      ...(b.hasChronicDisease    && { hasChronicDisease: b.hasChronicDisease }),
+      ...(b.chronicDiseaseDetails && { chronicDiseaseDetails: b.chronicDiseaseDetails }),
+      ...(b.hasRegularTreatment  && { hasRegularTreatment: b.hasRegularTreatment }),
+      ...(b.hasHealthInsurance   && { hasHealthInsurance: b.hasHealthInsurance }),
+      // Economic
+      ...(b.incomeSource         && { incomeSource: b.incomeSource }),
+      ...(b.monthlyIncome        && { monthlyIncome: b.monthlyIncome }),
+      ...(b.hasCharitySupport    && { hasCharitySupport: b.hasCharitySupport }),
+      ...(b.charitySupportDetails && { charitySupportDetails: b.charitySupportDetails }),
+      // Talents
+      ...(b.talents              && { talents: JSON.parse(b.talents) }),
+      ...(b.talentsOther         && { talentsOther: b.talentsOther }),
+      // Social
+      ...(b.familyRelations      && { familyRelations: b.familyRelations }),
+      ...(b.communityRelation    && { communityRelation: b.communityRelation }),
+      ...(b.schoolRelation       && { schoolRelation: b.schoolRelation }),
+      ...(b.socialBehavior       && { socialBehavior: b.socialBehavior }),
+      ...(b.needsSocialSupport   && { needsSocialSupport: b.needsSocialSupport }),
+      // Religious
+      ...(b.quranLevel           && { quranLevel: b.quranLevel }),
+      ...(b.prayerCommitment     && { prayerCommitment: b.prayerCommitment }),
+      ...(b.moralBehavior        && { moralBehavior: b.moralBehavior }),
+      // Psychological
+      ...(b.generalAppearance    && { generalAppearance: b.generalAppearance }),
+      ...(b.selfExpression       && { selfExpression: b.selfExpression }),
+      ...(b.psychFamilyRelations && { psychFamilyRelations: b.psychFamilyRelations }),
+      ...(b.peerRelations        && { peerRelations: b.peerRelations }),
+      ...(b.sleepAppetite        && { sleepAppetite: b.sleepAppetite }),
+      ...(b.psychSigns           && { psychSigns: b.psychSigns }),
+      ...(b.needsPsychSupport    && { needsPsychSupport: b.needsPsychSupport }),
+      // Recommendations
+      ...(b.recommendations      && { recommendations: b.recommendations }),
+    };
+
+    // 4. Create orphan record
     const orphan = await service.createOrphan({
-      fullName,
-      dateOfBirth,
-      gender,
+      fullName, dateOfBirth, gender,
       governorateId: parseInt(governorateId, 10),
-      guardianName,
-      guardianRelation,
+      guardianName, guardianRelation,
       agentId: req.user.id,
-      isGifted,
-      notes,
+      isGifted, notes, profile,
     });
 
     // 4. Upload required documents to S3
@@ -212,7 +286,8 @@ const updateOrphan = async (req, res, next) => {
       }
     }
 
-    const orphan = await service.updateOrphan(req.params.id, req.body);
+    const resetStatus = req.user.role === 'agent';
+    const orphan = await service.updateOrphan(req.params.id, req.body, resetStatus);
     return res.json({ message: 'تم تحديث بيانات اليتيم', orphan });
   } catch (err) {
     next(err);
@@ -239,7 +314,8 @@ const updateOrphanStatus = async (req, res, next) => {
       req.params.id,
       status,
       notes,
-      req.user.name
+      req.user.name,
+      req.user.id
     );
 
     if (!orphan) {
@@ -252,6 +328,62 @@ const updateOrphanStatus = async (req, res, next) => {
   }
 };
 
+/**
+ * POST /api/orphans/:id/share
+ */
+const shareOrphanToAds = async (req, res, next) => {
+  try {
+    const { targetAll = true, sponsorIds = [] } = req.body || {};
+    const shareWithAll = targetAll === true || targetAll === 'true';
+    if (!shareWithAll && (!Array.isArray(sponsorIds) || sponsorIds.length === 0)) {
+      return res.status(422).json({ error: 'يرجى اختيار كافل واحد على الأقل أو اختيار جميع الكفلاء' });
+    }
+    const orphan = await service.getOrphanById(req.params.id);
+    if (!orphan) {
+      return res.status(404).json({ error: 'اليتيم غير موجود' });
+    }
+    if (orphan.status !== 'under_marketing') {
+      return res.status(400).json({ error: 'يمكن مشاركة الأيتام تحت التسويق فقط' });
+    }
+    if (orphan.sponsor_name) {
+      return res.status(400).json({ error: 'لا يمكن مشاركة يتيم لديه كافل حالي' });
+    }
+
+    const ad = await adsService.createAd({
+      beneficiaryType: 'orphan',
+      beneficiaryId: orphan.id,
+      createdBy: req.user.id,
+      targetAll: shareWithAll,
+      sponsorIds,
+    });
+
+    return res.status(201).json({
+      message: 'تمت مشاركة بيانات اليتيم مع واجهة الكافل',
+      ad,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * DELETE /api/orphans/:id
+ */
+const deleteOrphan = async (req, res, next) => {
+  try {
+    const orphan = await service.deleteOrphan(req.params.id);
+    if (!orphan) {
+      return res.status(404).json({ error: 'اليتيم غير موجود' });
+    }
+    return res.json({ message: 'تم حذف اليتيم بنجاح' });
+  } catch (err) {
+    if (err.status === 409) {
+      return res.status(409).json({ error: err.message });
+    }
+    next(err);
+  }
+};
+
 module.exports = {
   createOrphan,
   getOrphans,
@@ -259,4 +391,6 @@ module.exports = {
   getOrphanById,
   updateOrphan,
   updateOrphanStatus,
+  shareOrphanToAds,
+  deleteOrphan,
 };

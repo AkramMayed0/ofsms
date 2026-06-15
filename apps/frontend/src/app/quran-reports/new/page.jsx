@@ -17,10 +17,13 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
+import { AlertTriangle, User, CheckCircle2, Info, Check, ClipboardList, Send } from 'lucide-react';
+
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
+import PrimaryButton from '@/components/ui/PrimaryButton';
 
 // ── Arabic month names ─────────────────────────────────────────────────────────
 const MONTHS_AR = [
@@ -43,20 +46,46 @@ const getThresholdForAge = (age, thresholds) => {
 // ── JuzSlider ─────────────────────────────────────────────────────────────────
 // Visual quick-pick for common juz values
 
+const JUZ_PRESETS = [
+  { value: 0,    label: 'صفر',       sub: '٠ جزء'    },
+  { value: 0.25, label: 'ربع جزء',   sub: '٠٫٢٥'     },
+  { value: 0.5,  label: 'نصف جزء',   sub: '٠٫٥'      },
+  { value: 1,    label: 'جزء',       sub: '١ كامل'   },
+  { value: 1.5,  label: 'جزء ونصف', sub: '١٫٥'      },
+  { value: 2,    label: 'جزءان',     sub: '٢ كاملان' },
+  { value: 3,    label: 'ثلاثة',     sub: '٣ أجزاء'  },
+];
+
 function JuzQuickPick({ value, onChange }) {
-  const presets = [0, 0.25, 0.5, 1, 1.5, 2, 3];
   return (
-    <div className="juz-presets">
-      {presets.map((v) => (
-        <button
-          key={v}
-          type="button"
-          className={`juz-btn ${parseFloat(value) === v ? 'juz-btn-active' : ''}`}
-          onClick={() => onChange(v)}
-        >
-          {v === 0 ? 'صفر' : v}
-        </button>
-      ))}
+    <div style={{ display:'flex', gap:'.5rem', flexWrap:'wrap' }}>
+      {JUZ_PRESETS.map(({ value: v, label, sub }) => {
+        const active = parseFloat(value) === v;
+        return (
+          <button
+            key={v}
+            type="button"
+            onClick={() => onChange(v)}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
+              minWidth: 72, padding: '.5rem .9rem',
+              border: `1.5px solid ${active ? '#1B5E8C' : '#d1d5db'}`,
+              borderRadius: '.75rem',
+              background: active ? '#1B5E8C' : '#fff',
+              boxShadow: active ? '0 2px 8px rgba(27,94,140,.2)' : '0 1px 3px rgba(0,0,0,.06)',
+              cursor: 'pointer', transition: 'all .15s',
+              fontFamily: "'Cairo','Tajawal',sans-serif",
+            }}
+          >
+            <span style={{ fontSize: '.82rem', fontWeight: 700, color: active ? '#fff' : '#1f2937', lineHeight: 1.3 }}>
+              {label}
+            </span>
+            <span style={{ fontSize: '.67rem', fontWeight: 500, color: active ? 'rgba(255,255,255,.75)' : '#9ca3af', direction: 'ltr', lineHeight: 1 }}>
+              {sub}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -69,7 +98,7 @@ function ThresholdHint({ threshold, juzValue, age }) {
   const meets = juz >= threshold.min_juz_per_month;
   return (
     <div className={`threshold-hint ${meets ? 'hint-ok' : juz === 0 ? 'hint-neutral' : 'hint-warn'}`}>
-      <span className="hint-icon">{meets ? '✅' : juz === 0 ? 'ℹ' : '⚠'}</span>
+      <span className="hint-icon">{meets ? <CheckCircle2 size={16} /> : juz === 0 ? <Info size={16} /> : <AlertTriangle size={18} />}</span>
       <div>
         <span className="hint-label">{threshold.label}</span>
         <span className="hint-body">
@@ -77,7 +106,7 @@ function ThresholdHint({ threshold, juzValue, age }) {
           <strong>{threshold.min_juz_per_month} جزء/شهر</strong>
           {juz > 0 && (
             meets
-              ? <span className="hint-ok-text"> — يستوفي الشرط ✓</span>
+              ? <span className="hint-ok-text"> — يستوفي الشرط <Check size={16} /></span>
               : <span className="hint-warn-text"> — لا يستوفي الشرط (قد يُوقف الصرف)</span>
           )}
         </span>
@@ -184,60 +213,54 @@ export default function QuranReportSubmissionPage() {
     }
   };
 
-  // ── Success screen ─────────────────────────────────────────────────────────
-  if (submitState === 'success' && submitted) {
-    return (
-      <AppShell>
-        <div className="page" dir="rtl">
-          <div className="success-wrap">
-            <div className="success-card">
-              <div className="success-ico">
-                {submitted.meetsThreshold === true ? '✅' :
-                 submitted.meetsThreshold === false ? '⚠️' : '📋'}
-              </div>
-              <h2 className="success-title">تم رفع التقرير بنجاح</h2>
-              <p className="success-body">
-                تم رفع تقرير حفظ القرآن لـ <strong>{submitted.orphanName}</strong>
-                {' '}عن شهر{' '}
-                <strong>{MONTHS_AR[submitted.month]} {submitted.year}</strong>
-                {' '}بمقدار{' '}
-                <strong>{submitted.juz} جزء</strong>.
-              </p>
-
-              {submitted.meetsThreshold === false && (
-                <div className="success-warning">
-                  ⚠ مقدار الحفظ أقل من الحد الأدنى المطلوب. قد يقرر المشرف تعليق الصرف هذا الشهر.
-                </div>
-              )}
-
-              <p className="success-status">
-                📬 التقرير الآن في قائمة انتظار المشرف للمراجعة.
-              </p>
-
-              <div className="success-actions">
-                <button
-                  className="btn-primary"
-                  onClick={() => setSubmitState('idle')}
-                >
-                  رفع تقرير آخر
-                </button>
-                <button
-                  className="btn-ghost"
-                  onClick={() => router.push('/my-orphans')}
-                >
-                  عرض أيتامي
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </AppShell>
-    );
-  }
-
   // ── Main form ──────────────────────────────────────────────────────────────
   return (
     <AppShell>
+      {/* ── Success modal ──────────────────────────────────────────────── */}
+      {submitState === 'success' && submitted && (
+        <div className="modal-overlay" dir="rtl">
+          <div className="modal-card">
+            <div className="modal-ico">
+              {submitted.meetsThreshold === true
+                ? <CheckCircle2 size={48} color="#10b981" />
+                : submitted.meetsThreshold === false
+                  ? <AlertTriangle size={48} color="#f59e0b" />
+                  : <ClipboardList size={48} color="#1B5E8C" />}
+            </div>
+            <h2 className="modal-title">تم رفع التقرير بنجاح</h2>
+            <p className="modal-body">
+              تم رفع تقرير حفظ القرآن لـ <strong>{submitted.orphanName}</strong>
+              {' '}عن شهر{' '}
+              <strong>{MONTHS_AR[submitted.month]} {submitted.year}</strong>
+              {' '}بمقدار <strong>{submitted.juz} جزء</strong>.
+            </p>
+
+            {submitted.meetsThreshold === false && (
+              <div className="modal-warning">
+                <AlertTriangle size={16} />
+                <span>مقدار الحفظ أقل من الحد الأدنى المطلوب. قد يقرر المشرف تعليق الصرف هذا الشهر.</span>
+              </div>
+            )}
+
+            <p className="modal-status" style={{ display:'flex', alignItems:'center', gap:'.4rem', justifyContent:'center' }}><Send size={14} /> التقرير الآن في قائمة انتظار المشرف للمراجعة.</p>
+
+            <div className="modal-actions">
+              <PrimaryButton
+                onClick={() => {
+                  setSubmitState('idle');
+                  reset({ orphanId: '', month: defaultMonth, year: defaultYear, juzMemorized: '' });
+                }}
+              >
+                رفع تقرير آخر
+              </PrimaryButton>
+              <button className="btn-ghost" onClick={() => router.push('/my-orphans')}>
+                عرض أيتامي
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="page" dir="rtl">
 
         {/* Page header */}
@@ -268,7 +291,7 @@ export default function QuranReportSubmissionPage() {
           </div>
         ) : orphans.length === 0 ? (
           <div className="empty-card">
-            <div style={{ fontSize: '3rem' }}>📋</div>
+            <div><ClipboardList size={48} color="#1B5E8C" /></div>
             <h3>لا يوجد أيتام نشطون</h3>
             <p>لديك حالياً لا أيتام مكفولين. لا يمكن رفع تقارير إلا للأيتام تحت الكفالة.</p>
             <button className="btn-ghost" onClick={() => router.push('/my-orphans')}>
@@ -312,7 +335,7 @@ export default function QuranReportSubmissionPage() {
                           {age != null ? `${age} سنة` : ''}{o.governorate_ar ? ` · ${o.governorate_ar}` : ''}
                         </div>
                       </div>
-                      {isSelected && <span className="orphan-check">✓</span>}
+                      {isSelected && <span className="orphan-check"><Check size={16} /></span>}
                     </label>
                   );
                 })}
@@ -439,7 +462,7 @@ export default function QuranReportSubmissionPage() {
             {/* ── Summary ── */}
             {selectedOrphan && juzValue !== '' && (
               <div className="summary-card">
-                <div className="summary-title">📋 ملخص التقرير</div>
+                <div className="summary-title" style={{ display:'flex', alignItems:'center', gap:'.4rem' }}><ClipboardList size={16} /> ملخص التقرير</div>
                 <div className="summary-grid">
                   <div className="summary-item">
                     <span className="summary-lbl">اليتيم</span>
@@ -464,7 +487,7 @@ export default function QuranReportSubmissionPage() {
             {/* API error */}
             {submitState === 'error' && apiError && (
               <div className="err-banner">
-                <span>⚠</span>
+                <span><AlertTriangle size={18} /></span>
                 <div>
                   <strong>فشل الإرسال</strong>
                   <p>{apiError}</p>
@@ -477,16 +500,14 @@ export default function QuranReportSubmissionPage() {
               <button type="button" className="btn-ghost" onClick={() => router.back()}>
                 إلغاء
               </button>
-              <button
+              <PrimaryButton
                 type="submit"
-                className="btn-primary"
                 disabled={submitState === 'loading'}
-                aria-busy={submitState === 'loading'}
               >
                 {submitState === 'loading'
                   ? <><span className="spin" /> جارٍ الإرسال…</>
                   : 'إرسال التقرير ←'}
-              </button>
+              </PrimaryButton>
             </div>
           </form>
         )}
@@ -590,15 +611,7 @@ export default function QuranReportSubmissionPage() {
         .hint-ok-text   { color: #059669; font-weight: 700; }
         .hint-warn-text { color: #d97706; font-weight: 700; }
 
-        /* ── Juz presets ──────────────────────────────────────────────── */
-        .juz-presets { display: flex; gap: .5rem; flex-wrap: wrap; }
-        .juz-btn {
-          padding: .4rem .85rem; border: 1.5px solid #e5eaf0; border-radius: 2rem;
-          font-size: .8rem; font-weight: 700; font-family: 'Cairo', sans-serif;
-          color: #6b7280; background: #fff; cursor: pointer; transition: all .15s;
-        }
-        .juz-btn:hover { border-color: #1B5E8C; color: #1B5E8C; }
-        .juz-btn-active { border-color: #1B5E8C; background: #1B5E8C; color: #fff; }
+        /* juz-presets: now fully inline-styled */
 
         /* ── Juz input ────────────────────────────────────────────────── */
         .juz-input-wrap { display: flex; align-items: center; gap: .75rem; }
@@ -637,23 +650,33 @@ export default function QuranReportSubmissionPage() {
           border-radius: 1rem;
         }
 
-        /* ── Success ──────────────────────────────────────────────────── */
-        .success-wrap { display: flex; align-items: center; justify-content: center; min-height: 60vh; }
-        .success-card {
-          text-align: center; max-width: 480px; background: #fff; border-radius: 1.25rem;
-          padding: 3rem 2rem; border: 1px solid #e5eaf0;
-          box-shadow: 0 4px 24px rgba(27,94,140,.08);
-          display: flex; flex-direction: column; align-items: center; gap: .85rem;
+        /* ── Success modal ────────────────────────────────────────────── */
+        .modal-overlay {
+          position: fixed; inset: 0; z-index: 1000;
+          background: rgba(0,0,0,.45); backdrop-filter: blur(3px);
+          display: flex; align-items: center; justify-content: center;
+          padding: 1rem;
+          animation: fadeIn .2s ease;
         }
-        .success-ico { font-size: 3.5rem; }
-        .success-title { font-size: 1.4rem; font-weight: 800; color: #0d3d5c; margin: 0; }
-        .success-body { font-size: .9rem; color: #374151; line-height: 1.75; margin: 0; }
-        .success-warning {
+        @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+        .modal-card {
+          background: #fff; border-radius: 1.25rem; padding: 2.5rem 2rem;
+          max-width: 460px; width: 100%; text-align: center;
+          box-shadow: 0 20px 60px rgba(0,0,0,.2);
+          display: flex; flex-direction: column; align-items: center; gap: 1rem;
+          animation: slideUp .25s ease;
+        }
+        @keyframes slideUp { from { transform: translateY(24px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+        .modal-ico { display: flex; align-items: center; justify-content: center; }
+        .modal-title { font-size: 1.35rem; font-weight: 800; color: #0d3d5c; margin: 0; }
+        .modal-body { font-size: .88rem; color: #374151; line-height: 1.8; margin: 0; }
+        .modal-warning {
+          display: flex; align-items: flex-start; gap: .5rem;
           background: #fffbeb; border: 1px solid #fde68a; border-radius: .75rem;
-          padding: .85rem 1rem; font-size: .83rem; color: #92400e; text-align: right;
+          padding: .75rem 1rem; font-size: .82rem; color: #92400e; text-align: right; width: 100%;
         }
-        .success-status { font-size: .83rem; color: #6b7a8d; margin: 0; }
-        .success-actions { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; margin-top: .5rem; }
+        .modal-status { font-size: .82rem; color: #6b7a8d; margin: 0; }
+        .modal-actions { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; margin-top: .25rem; }
 
         /* ── Field helpers ────────────────────────────────────────────── */
         .fg { display: flex; flex-direction: column; gap: .35rem; }
@@ -671,16 +694,6 @@ export default function QuranReportSubmissionPage() {
         .ferr { font-size: .77rem; color: #dc2626; margin: 0; }
         .ferr.mt { margin-top: .25rem; }
 
-        /* ── Buttons ──────────────────────────────────────────────────── */
-        .btn-primary {
-          display: inline-flex; align-items: center; gap: .5rem;
-          padding: .8rem 2rem; background: linear-gradient(135deg, #1B5E8C, #134569);
-          color: #fff; font-family: 'Cairo', sans-serif; font-size: .95rem; font-weight: 700;
-          border: none; border-radius: .75rem; cursor: pointer;
-          box-shadow: 0 2px 8px rgba(27,94,140,.25); transition: all .15s;
-        }
-        .btn-primary:hover:not(:disabled) { background: linear-gradient(135deg, #2E7EB8, #1B5E8C); transform: translateY(-1px); }
-        .btn-primary:disabled { opacity: .65; cursor: not-allowed; }
         .btn-ghost {
           display: inline-flex; align-items: center; gap: .4rem;
           padding: .7rem 1.25rem; background: none; color: #1B5E8C;

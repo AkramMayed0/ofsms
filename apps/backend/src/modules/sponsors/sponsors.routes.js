@@ -19,13 +19,15 @@ const createSponsorRules = [
     .notEmpty()
     .withMessage('اسم الكافل مطلوب')
     .isLength({ min: 3 })
-    .withMessage('الاسم يجب أن يكون 3 أحرف على الأقل'),
+    .withMessage('الاسم يجب أن يكون 3 أحرف على الأقل')
+    .matches(/^[\p{L}\s'-]+$/u)
+    .withMessage('الاسم يجب أن يحتوي على أحرف فقط ولا يمكن أن يحتوي على أرقام'),
   body('email')
-    .optional({ nullable: true })
+    .optional({ checkFalsy: true })
     .isEmail()
     .withMessage('البريد الإلكتروني غير صحيح'),
   body('phone')
-    .optional({ nullable: true })
+    .optional({ checkFalsy: true })
     .isMobilePhone()
     .withMessage('رقم الهاتف غير صحيح'),
   body('portalPassword')
@@ -61,6 +63,29 @@ const transferSponsorshipRules = [
   body('monthlyAmount').isFloat({ min: 1 }),
 ];
 
+const updateSponsorRules = [
+  body('fullName')
+    .trim()
+    .notEmpty()
+    .withMessage('اسم الكافل مطلوب')
+    .isLength({ min: 3 })
+    .withMessage('الاسم يجب أن يكون 3 أحرف على الأقل')
+    .matches(/^[\p{L}\s'-]+$/u)
+    .withMessage('الاسم يجب أن يحتوي على أحرف فقط ولا يمكن أن يحتوي على أرقام'),
+  body('email')
+    .optional({ checkFalsy: true })
+    .isEmail()
+    .withMessage('البريد الإلكتروني غير صحيح'),
+  body('phone')
+    .optional({ checkFalsy: true })
+    .isMobilePhone()
+    .withMessage('رقم الهاتف غير صحيح'),
+  body('portalPassword')
+    .optional({ checkFalsy: true })
+    .isLength({ min: 8 })
+    .withMessage('كلمة المرور يجب أن تكون 8 أحرف على الأقل'),
+];
+
 // ── Routes ────────────────────────────────────────────────────
 
 // GM only: list all sponsors
@@ -78,6 +103,23 @@ router.post(
   authorize('gm'),
   createSponsorRules,
   controller.createSponsor
+);
+
+// GM only: update an existing sponsor
+router.put(
+  '/:id',
+  authenticate,
+  authorize('gm'),
+  updateSponsorRules,
+  controller.updateSponsor
+);
+
+// GM only: delete a sponsor
+router.delete(
+  '/:id',
+  authenticate,
+  authorize('gm'),
+  controller.deleteSponsor
 );
 
 // GM only: transfer a beneficiary between sponsors

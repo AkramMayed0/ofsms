@@ -14,7 +14,7 @@ const router = Router();
 router.post(
   '/',
   authenticate,
-  authorize('agent'),
+  authorize('agent', 'gm'),
   [
     body('orphanId').notEmpty().withMessage('معرّف اليتيم مطلوب'),
     body('month').isInt({ min: 1, max: 12 }).withMessage('الشهر غير صحيح'),

@@ -6,6 +6,7 @@
 const { validationResult } = require('express-validator');
 const { uploadFile } = require('../../config/s3');
 const service = require('./families.service');
+const adsService = require('../ads/ads.service');
 
 const createFamily = async (req, res, next) => {
   try {
@@ -165,6 +166,39 @@ const updateFamilyStatus = async (req, res, next) => {
   }
 };
 
+const shareFamilyToAds = async (req, res, next) => {
+  try {
+    const { targetAll = true, sponsorIds = [] } = req.body || {};
+    const shareWithAll = targetAll === true || targetAll === 'true';
+    if (!shareWithAll && (!Array.isArray(sponsorIds) || sponsorIds.length === 0)) {
+      return res.status(422).json({ error: 'يرجى اختيار كافل واحد على الأقل أو اختيار جميع الكفلاء' });
+    }
+    const family = await service.getFamilyById(req.params.id);
+    if (!family) return res.status(404).json({ error: 'الأسرة غير موجودة' });
+    if (family.status !== 'under_marketing') {
+      return res.status(400).json({ error: 'يمكن مشاركة الأسر تحت التسويق فقط' });
+    }
+    if (family.sponsor_name) {
+      return res.status(400).json({ error: 'لا يمكن مشاركة أسرة لديها كافل حالي' });
+    }
+
+    const ad = await adsService.createAd({
+      beneficiaryType: 'family',
+      beneficiaryId: family.id,
+      createdBy: req.user.id,
+      targetAll: shareWithAll,
+      sponsorIds,
+    });
+
+    return res.status(201).json({
+      message: 'تمت مشاركة بيانات الأسرة مع واجهة الكافل',
+      ad,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   createFamily,
   getFamilies,
@@ -172,4 +206,5 @@ module.exports = {
   getFamiliesUnderMarketing,
   updateFamily,
   updateFamilyStatus,
+  shareFamilyToAds,
 };

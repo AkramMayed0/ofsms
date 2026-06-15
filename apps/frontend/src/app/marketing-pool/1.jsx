@@ -17,6 +17,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { Search, AlertTriangle, X, User, Users, Handshake, CheckCircle2, XCircle, Plus, Check } from 'lucide-react';
+
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 
@@ -39,7 +41,7 @@ function Toast({ message, type, onClose }) {
 
   return (
     <div className={`toast toast-${type}`}>
-      <span>{type === 'success' ? '✅' : '❌'}</span>
+      <span>{type === 'success' ? '<CheckCircle2 size={16} />' : '<XCircle size={16} />'}</span>
       {message}
     </div>
   );
@@ -99,14 +101,17 @@ function AssignModal({ selected, sponsors, onClose, onSuccess }) {
 
       // Step 2: assign each selected beneficiary
       for (const item of selected) {
-        await api.post(`/sponsors/${finalSponsorId}/sponsorships`, {
-          beneficiaryType: item.type,
-          beneficiaryId: item.id,
-          agentId: item.agent_id,
-          intermediary: shared.intermediary.trim() || undefined,
-          startDate: shared.startDate,
-          monthlyAmount: parseFloat(shared.monthlyAmount),
-        });
+if (!item.agent_id) {
+  throw new Error(`لم يتم العثور على مندوب للمستفيد: ${item.name}`);
+}
+await api.post(`/sponsors/${finalSponsorId}/sponsorships`, {
+  beneficiaryType: item.type,
+  beneficiaryId: item.id,
+  agentId: item.agent_id,
+  intermediary: shared.intermediary.trim() || undefined,
+  startDate: shared.startDate,
+  monthlyAmount: parseFloat(shared.monthlyAmount),
+});
       }
 
       onSuccess(selected.length);
@@ -137,7 +142,7 @@ function AssignModal({ selected, sponsors, onClose, onSuccess }) {
               {selected.filter(i => i.type === 'family').length} أسرة
             </p>
           </div>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose}><X size={16} /></button>
         </div>
 
         {/* Tabs */}
@@ -146,7 +151,7 @@ function AssignModal({ selected, sponsors, onClose, onSuccess }) {
             className={`mtab ${tab === 'existing' ? 'mtab-active' : ''}`}
             onClick={() => setTab('existing')}
           >
-            🤝 كافل موجود
+            <Handshake size={32} /> كافل موجود
           </button>
           <button
             className={`mtab ${tab === 'new' ? 'mtab-active' : ''}`}
@@ -185,7 +190,7 @@ function AssignModal({ selected, sponsors, onClose, onSuccess }) {
                       <div className="sponsor-name">{s.full_name}</div>
                       {s.email && <div className="sponsor-email">{s.email}</div>}
                     </div>
-                    {sponsorId === s.id && <span className="sponsor-check">✓</span>}
+                    {sponsorId === s.id && <span className="sponsor-check"><Check size={16} /></span>}
                   </div>
                 ))}
               </div>
@@ -278,7 +283,7 @@ function AssignModal({ selected, sponsors, onClose, onSuccess }) {
             <div className="preview-chips">
               {selected.map((item) => (
                 <span key={item.id} className={`preview-chip chip-${item.type}`}>
-                  {item.type === 'orphan' ? '👦' : '👨‍👩‍👧'} {item.name}
+                  {item.type === 'orphan' ? '<User size={18} />' : '<Users size={18} />'} {item.name}
                 </span>
               ))}
             </div>
@@ -286,7 +291,7 @@ function AssignModal({ selected, sponsors, onClose, onSuccess }) {
 
           {error && (
             <div className="modal-error">
-              <span>⚠</span> {error}
+              <span><AlertTriangle size={18} /></span> {error}
             </div>
           )}
         </div>
@@ -342,17 +347,17 @@ export default function MarketingPoolPage() {
         addedAt: o.created_at,
       }));
 
-      const families = (familiesRes.data.families || []).map(f => ({
-        id: f.id,
-        type: 'family',
-        name: f.family_name,
-        age: `${f.member_count || '—'} فرد`,
-        governorate: f.governorate_ar || '—',
-        agent: f.agent_name || '—',
-        agent_id: f.agent_id,
-        isGifted: false,
-        addedAt: f.created_at,
-      }));
+const families = (familiesRes.data.families || []).map(f => ({
+  id: f.id,
+  type: 'family',
+  name: f.family_name,
+  age: `${f.member_count || '—'} فرد`,
+  governorate: f.governorate_ar || '—',
+  agent: f.agent_name || '—',
+  agent_id: f.agent_id,   // ← this was undefined before the backend fix
+  isGifted: false,
+  addedAt: f.created_at,
+}));
 
       setItems([...orphans, ...families].sort((a, b) => new Date(a.addedAt) - new Date(b.addedAt)));
       setSponsors(sponsorsRes.data.sponsors || []);
@@ -431,7 +436,7 @@ export default function MarketingPoolPage() {
               className="btn-primary"
               onClick={() => setShowModal(true)}
             >
-              🤝 تعيين كفيل ({selected.size})
+              <Handshake size={32} /> تعيين كفيل ({selected.size})
             </button>
           )}
         </div>
@@ -463,7 +468,7 @@ export default function MarketingPoolPage() {
         {/* Search + filter */}
         <div className="toolbar">
           <div className="search-wrap">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><Search size={16} /></span>
             <input
               className="search-inp"
               placeholder="ابحث بالاسم أو المحافظة أو المندوب…"
@@ -471,14 +476,14 @@ export default function MarketingPoolPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
             {search && (
-              <button className="search-clear" onClick={() => setSearch('')}>✕</button>
+              <button className="search-clear" onClick={() => setSearch('')}><X size={16} /></button>
             )}
           </div>
           <div className="type-tabs">
             {[
               { key: 'all', label: 'الكل', emoji: '📋' },
-              { key: 'orphan', label: 'أيتام', emoji: '👦' },
-              { key: 'family', label: 'أسر', emoji: '👨‍👩‍👧' },
+              { key: 'orphan', label: 'أيتام', emoji: '<User size={18} />' },
+              { key: 'family', label: 'أسر', emoji: '<Users size={18} />' },
             ].map(({ key, label, emoji }) => (
               <button
                 key={key}
@@ -493,7 +498,7 @@ export default function MarketingPoolPage() {
 
         {/* Error */}
         {error && (
-          <div className="err-banner">⚠ {error}</div>
+          <div className="err-banner"><AlertTriangle size={18} /> {error}</div>
         )}
 
         {/* Loading skeleton */}
@@ -533,14 +538,14 @@ export default function MarketingPoolPage() {
             {selected.size > 0 && (
               <div className="selection-bar">
                 <span className="sel-count">
-                  ✓ تم تحديد {selected.size} من {filtered.length}
+                  <Check size={16} /> تم تحديد {selected.size} من {filtered.length}
                 </span>
                 <div className="sel-actions">
                   <button className="sel-clear" onClick={() => setSelected(new Set())}>
                     إلغاء التحديد
                   </button>
                   <button className="btn-primary-sm" onClick={() => setShowModal(true)}>
-                    🤝 تعيين كفيل ←
+                    <Handshake size={32} /> تعيين كفيل ←
                   </button>
                 </div>
               </div>
@@ -586,7 +591,7 @@ export default function MarketingPoolPage() {
                     <td>
                       <div className="name-cell">
                         <div className={`name-avatar avatar-${item.type}`}>
-                          {item.type === 'orphan' ? '👦' : '👨‍👩‍👧'}
+                          {item.type === 'orphan' ? '<User size={18} />' : '<Users size={18} />'}
                         </div>
                         <div>
                           <div className="name-text">{item.name}</div>

@@ -11,6 +11,12 @@ const getDisbursementLists = async (_req, res, next) => {
   } catch (err) { next(err); }
 };
 
+const getDisbursementHistory = async (_req, res, next) => {
+  try {
+    return res.json({ lists: await service.getDisbursementHistory() });
+  } catch (err) { next(err); }
+};
+
 const getDisbursementById = async (req, res, next) => {
   try {
     const data = await service.getDisbursementById(req.params.id);
@@ -31,7 +37,7 @@ const generateDisbursementList = async (req, res, next) => {
 
 const supervisorApprove = async (req, res, next) => {
   try {
-    const list = await service.supervisorApprove(req.params.id, req.user.id);
+    const list = await service.supervisorApprove(req.params.id, req.user.id, req.user.role);
     return res.json({ message: 'تم اعتماد كشف الصرف بنجاح', list });
   } catch (err) {
     if (err.status === 400) return res.status(400).json({ error: err.message });
@@ -43,7 +49,7 @@ const supervisorReject = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
-    const list = await service.supervisorReject(req.params.id, req.user.id, req.body.notes);
+    const list = await service.supervisorReject(req.params.id, req.user.id, req.body.notes, req.user.role);
     return res.json({ message: 'تم رفض كشف الصرف', list });
   } catch (err) {
     if (err.status === 400) return res.status(400).json({ error: err.message });
@@ -53,7 +59,7 @@ const supervisorReject = async (req, res, next) => {
 
 const financeApprove = async (req, res, next) => {
   try {
-    const list = await service.financeApprove(req.params.id, req.user.id);
+    const list = await service.financeApprove(req.params.id, req.user.id, req.user.role);
     return res.json({ message: 'تمت المصادقة المالية بنجاح', list });
   } catch (err) {
     if (err.status === 400) return res.status(400).json({ error: err.message });
@@ -65,7 +71,7 @@ const financeReject = async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
-    const list = await service.financeReject(req.params.id, req.user.id, req.body.notes);
+    const list = await service.financeReject(req.params.id, req.user.id, req.body.notes, req.user.role);
     return res.json({ message: 'تم رد الكشف للمشرف', list });
   } catch (err) {
     if (err.status === 400) return res.status(400).json({ error: err.message });
@@ -85,6 +91,7 @@ const gmRelease = async (req, res, next) => {
 
 module.exports = {
   getDisbursementLists,
+  getDisbursementHistory,
   getDisbursementById,
   generateDisbursementList,
   supervisorApprove,

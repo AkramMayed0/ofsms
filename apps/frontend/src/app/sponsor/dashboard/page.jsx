@@ -9,10 +9,12 @@
  */
 
 import { useEffect, useState } from 'react';
+import { Search, AlertTriangle, User, Handshake } from 'lucide-react';
+
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import sponsorApi from '../sponsorApi';
-import useSponsorStore from '../useSponsorStore';
+import sponsorApi from '@/lib/sponsorApi';
+import useSponsorStore from '@/store/useSponsorStore';
 
 const STATUS_CONFIG = {
   under_review:      { label: 'قيد المراجعة', color: '#92400E', bg: '#FEF3C7' },
@@ -38,11 +40,21 @@ export default function SponsorDashboard() {
     }
     Promise.all([
       sponsorApi.get('/sponsor/orphans'),
-      sponsorApi.get('/announcements').catch(() => ({ data: { announcements: [] } })),
+      sponsorApi.get('/ads/sponsor/feed').catch(() => ({ data: { ads: [] } })),
     ])
       .then(([orphansRes, announcementsRes]) => {
         setOrphans(orphansRes.data.orphans || []);
-        setAnnouncements((announcementsRes.data.announcements || []).filter(a => a.is_active));
+        setAnnouncements((announcementsRes.data.ads || []).map(ad => ({
+          id: ad.id,
+          title: ad.beneficiary_type === 'family'
+            ? `طلب كفالة أسرة: ${ad.beneficiary_name}`
+            : `طلب كفالة: ${ad.beneficiary_name}`,
+          body: ad.beneficiary_type === 'family'
+            ? `من سيكفل هذه الأسرة؟ المحافظة: ${ad.governorate_ar || '—'}`
+            : `من سيكفل هذا الطفل؟ المحافظة: ${ad.governorate_ar || '—'}`,
+          published_at: ad.published_at,
+          is_active: true,
+        })));
       })
       .catch(() => setError('تعذّر تحميل البيانات'))
       .finally(() => setLoading(false));
@@ -59,10 +71,10 @@ export default function SponsorDashboard() {
       <header className="header">
         <div className="header-inner">
           <div className="header-brand">
-            <span className="header-icon">🤝</span>
+            <span className="header-icon"><Handshake size={32} /></span>
             <div>
               <span className="header-title">بوابة الكافل</span>
-              <span className="header-org">مؤسسة الأرض الطيبة</span>
+              <span className="header-org">مؤسسة إكرام النعمة الخيرية</span>
             </div>
           </div>
           <div className="header-user">
@@ -74,7 +86,7 @@ export default function SponsorDashboard() {
 
       <main className="main">
 
-        {error && <div className="err-banner">⚠ {error}</div>}
+        {error && <div className="err-banner"><AlertTriangle size={18} /> {error}</div>}
 
         {/* Welcome card */}
         <div className="welcome-card">
@@ -93,7 +105,7 @@ export default function SponsorDashboard() {
           {/* Orphans section */}
           <section className="section orphans-section">
             <h2 className="section-title">
-              <span className="section-icon">👦</span>
+              <span className="section-icon"><User size={18} /></span>
               أيتامك المكفولون
             </h2>
 
@@ -103,7 +115,7 @@ export default function SponsorDashboard() {
               </div>
             ) : orphans.length === 0 ? (
               <div className="empty">
-                <span>🔍</span>
+                <span><Search size={16} /></span>
                 <p>لا يوجد أيتام مرتبطون بكفالتك حالياً</p>
               </div>
             ) : (
@@ -219,7 +231,7 @@ function OrphanCard({ orphan }) {
     <Link href={`/sponsor/orphans/${orphan.id}`} style={{ textDecoration:'none' }}>
       <div className="ocard">
         <div className="ocard-avatar">
-          {orphan.gender === 'female' ? '👧' : '👦'}
+          {orphan.gender === 'female' ? '👧' : '<User size={18} />'}
         </div>
         <div className="ocard-info">
           <div className="ocard-top">

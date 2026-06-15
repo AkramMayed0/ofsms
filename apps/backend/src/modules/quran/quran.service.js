@@ -57,11 +57,15 @@ const getReports = async ({ agentId, status, month, year } = {}) => {
       o.full_name AS orphan_name,
       o.date_of_birth AS orphan_dob,
       g.name_ar AS governorate_ar,
-      u.full_name AS agent_name
+      u.full_name AS agent_name,
+      qt.min_juz_per_month AS threshold
     FROM quran_reports qr
     JOIN orphans o ON o.id = qr.orphan_id
     LEFT JOIN governorates g ON g.id = o.governorate_id
     LEFT JOIN users u ON u.id = qr.agent_id
+    LEFT JOIN quran_thresholds qt
+      ON qt.age_min <= DATE_PART('year', AGE(o.date_of_birth))
+     AND qt.age_max >= DATE_PART('year', AGE(o.date_of_birth))
     ${where}
     ORDER BY qr.submitted_at DESC
   `, params);

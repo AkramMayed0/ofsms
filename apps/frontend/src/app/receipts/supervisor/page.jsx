@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { AlertTriangle, CheckCircle2, Check } from 'lucide-react';
+
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 
@@ -12,7 +14,7 @@ export default function SupervisorBiometricLogPage() {
   const [selectedAgentId, setSelectedAgentId] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
+ //i w
   // 1. Fetch available lists
   useEffect(() => {
     api.get('/disbursements')
@@ -55,14 +57,36 @@ export default function SupervisorBiometricLogPage() {
 
   const activeAgent = logData?.agents?.find(a => a.agent_id === selectedAgentId);
 
+
   return (
     <div className="supervisor-log-page" dir="rtl">
+      <button
+        type="button"
+        onClick={() => router.back()}
+        style={{
+          alignSelf: 'flex-start',
+          marginBottom: '1rem',
+          background: '#f1f5f9',
+          border: 'none',
+          borderRadius: '0.5rem',
+          padding: '0.5rem 1.2rem',
+          fontWeight: 700,
+          color: '#0d3d5c',
+          cursor: 'pointer',
+          fontSize: '1rem',
+          display: 'flex',
+          gap: '0.5rem',
+          alignItems: 'center',
+        }}
+        aria-label="عودة"
+      >
+        <span aria-hidden="true">←</span> عودة
+      </button>
       <div className="header-row">
         <div>
           <h1 className="page-title">متابعة بصمات الصرف</h1>
           <p className="page-sub">عرض تقرير إنجاز المندوبين لتسليم مبالغ الصرف</p>
         </div>
-        
         {lists.length > 0 && (
           <select 
             className="list-select" 
@@ -78,7 +102,7 @@ export default function SupervisorBiometricLogPage() {
         )}
       </div>
 
-      {error && <div className="err-banner">⚠ {error}</div>}
+      {error && <div className="err-banner"><AlertTriangle size={18} /> {error}</div>}
 
       {loading ? (
         <div className="skeleton-box" style={{ height: 300, marginTop: '2rem' }} />
@@ -112,12 +136,12 @@ export default function SupervisorBiometricLogPage() {
                       background: agent.all_confirmed ? '#ecfdf5' : '#fffbeb',
                       color: agent.all_confirmed ? '#059669' : '#d97706'
                     }}>
-                      {agent.all_confirmed ? 'مكتمل ✅' : 'قيد التسليم ⏳'}
+                      {agent.all_confirmed ? 'مكتمل <CheckCircle2 size={16} />' : 'قيد التسليم ⏳'}
                     </span>
                   </div>
                   {agent.batch_confirmed_at && (
                     <div className="batch-confirmed-text">
-                      تم تسليم الكشف ✓
+                      تم تسليم الكشف <Check size={16} />
                     </div>
                   )}
                 </div>
@@ -162,7 +186,7 @@ export default function SupervisorBiometricLogPage() {
                           </td>
                           <td>
                             {item.receipt_id ? (
-                              <span className="status-badge success">✅ تم التسليم</span>
+                              <span className="status-badge success"><CheckCircle2 size={16} /> تم التسليم</span>
                             ) : (
                               <span className="status-badge pending">⏳ قيد التسليم</span>
                             )}

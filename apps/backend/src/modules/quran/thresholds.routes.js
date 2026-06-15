@@ -14,6 +14,25 @@ router.get('/', authenticate, async (_req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// POST /api/quran-thresholds — GM only, create a new threshold
+router.post('/', authenticate, authorize('gm'), async (req, res, next) => {
+  try {
+    const { age_min, age_max, min_juz_per_month, label } = req.body;
+    if (age_min == null || age_max == null || min_juz_per_month == null) {
+      return res.status(422).json({ error: 'age_min, age_max, وmin_juz_per_month مطلوبة' });
+    }
+    if (parseInt(age_max) <= parseInt(age_min)) {
+      return res.status(422).json({ error: 'age_max يجب أن يكون أكبر من age_min' });
+    }
+    const { rows } = await query(
+      `INSERT INTO quran_thresholds (age_min, age_max, min_juz_per_month, label)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [parseInt(age_min), parseInt(age_max), parseFloat(min_juz_per_month), label || null]
+    );
+    res.status(201).json({ threshold: rows[0] });
+  } catch (err) { next(err); }
+});
+
 // PUT /api/quran-thresholds/:id — GM only, update a threshold
 router.put('/:id', authenticate, authorize('gm'), async (req, res, next) => {
   try {

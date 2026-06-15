@@ -8,8 +8,8 @@
 CREATE TABLE IF NOT EXISTS sponsors (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   full_name VARCHAR(150) NOT NULL,
-  phone VARCHAR(20),
-  email VARCHAR(255),
+  phone VARCHAR(20) UNIQUE,
+  email VARCHAR(255) UNIQUE,
   -- Portal access: sponsor logs in via a unique URL token + password
   -- e.g. https://ofsms.org/sponsor/portal?token=<portal_token>
   portal_token VARCHAR(100) NOT NULL UNIQUE,

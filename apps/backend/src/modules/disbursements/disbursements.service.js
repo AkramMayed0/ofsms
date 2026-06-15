@@ -4,7 +4,10 @@
 
 const { query } = require('../../config/db');
 
-// ── List all disbursement lists ────────────────────────────────────────────────
+/**
+ * List all disbursement lists
+ * (used as "history" view in UI)
+ */
 const getDisbursementLists = async () => {
   const { rows } = await query(`
     SELECT
@@ -31,6 +34,13 @@ const getDisbursementLists = async () => {
     ORDER BY dl.year DESC, dl.month DESC
   `);
   return rows;
+};
+
+// ── Disbursement history (compat) ─────────────────────────────────────────────
+// NOTE: UI calls: /api/disbursements/history.
+// We map it to the same data as "list all disbursement lists".
+const getDisbursementHistory = async () => {
+  return getDisbursementLists();
 };
 
 // ── Get single list with all items ────────────────────────────────────────────
@@ -174,13 +184,16 @@ const generateDisbursementList = async (createdBy) => {
 };
 
 // ── Supervisor approve ────────────────────────────────────────────────────────
-const supervisorApprove = async (id, supervisorId) => {
+const supervisorApprove = async (id, supervisorId, role) => {
+  const statusClause = role === 'gm'
+    ? `status NOT IN ('released', 'rejected')`
+    : `status = 'draft'`;
   const { rows: [list] } = await query(
     `UPDATE disbursement_lists
      SET status = 'supervisor_approved',
          approved_by_supervisor = $1,
          supervisor_approved_at = NOW()
-     WHERE id = $2 AND status = 'draft'
+     WHERE id = $2 AND ${statusClause}
      RETURNING *`,
     [supervisorId, id]
   );
@@ -189,11 +202,14 @@ const supervisorApprove = async (id, supervisorId) => {
 };
 
 // ── Supervisor reject ─────────────────────────────────────────────────────────
-const supervisorReject = async (id, supervisorId, notes) => {
+const supervisorReject = async (id, supervisorId, notes, role) => {
+  const statusClause = role === 'gm'
+    ? `status NOT IN ('released', 'rejected')`
+    : `status = 'draft'`;
   const { rows: [list] } = await query(
     `UPDATE disbursement_lists
      SET status = 'rejected', rejection_notes = $1
-     WHERE id = $2 AND status = 'draft'
+     WHERE id = $2 AND ${statusClause}
      RETURNING *`,
     [notes, id]
   );
@@ -202,13 +218,16 @@ const supervisorReject = async (id, supervisorId, notes) => {
 };
 
 // ── Finance approve ───────────────────────────────────────────────────────────
-const financeApprove = async (id, financeId) => {
+const financeApprove = async (id, financeId, role) => {
+  const statusClause = role === 'gm'
+    ? `status NOT IN ('released', 'rejected')`
+    : `status = 'supervisor_approved'`;
   const { rows: [list] } = await query(
     `UPDATE disbursement_lists
      SET status = 'finance_approved',
          approved_by_finance = $1,
          finance_approved_at = NOW()
-     WHERE id = $2 AND status = 'supervisor_approved'
+     WHERE id = $2 AND ${statusClause}
      RETURNING *`,
     [financeId, id]
   );
@@ -217,11 +236,14 @@ const financeApprove = async (id, financeId) => {
 };
 
 // ── Finance reject ────────────────────────────────────────────────────────────
-const financeReject = async (id, financeId, notes) => {
+const financeReject = async (id, financeId, notes, role) => {
+  const statusClause = role === 'gm'
+    ? `status NOT IN ('released', 'rejected')`
+    : `status = 'supervisor_approved'`;
   const { rows: [list] } = await query(
     `UPDATE disbursement_lists
      SET status = 'draft', rejection_notes = $1
-     WHERE id = $2 AND status = 'supervisor_approved'
+     WHERE id = $2 AND ${statusClause}
      RETURNING *`,
     [notes, id]
   );
@@ -236,7 +258,7 @@ const gmRelease = async (id, gmId) => {
      SET status = 'released',
          approved_by_gm = $1,
          gm_approved_at = NOW()
-     WHERE id = $2 AND status = 'finance_approved'
+     WHERE id = $2 AND status NOT IN ('released', 'rejected')
      RETURNING *`,
     [gmId, id]
   );
@@ -246,6 +268,7 @@ const gmRelease = async (id, gmId) => {
 
 module.exports = {
   getDisbursementLists,
+  getDisbursementHistory,
   getDisbursementById,
   generateDisbursementList,
   supervisorApprove,

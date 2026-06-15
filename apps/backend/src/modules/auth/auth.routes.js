@@ -24,10 +24,11 @@ const getUserById = async (id) => {
 
 // ── Helper: set refresh token as httpOnly cookie ─────────────────────────────
 const setRefreshCookie = (res, token) => {
+  const isProd = process.env.NODE_ENV === 'production';
   res.cookie('refreshToken', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'strict',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 };
@@ -79,10 +80,10 @@ router.post('/login', async (req, res, next) => {
     return res.json({
       accessToken,
       user: {
-        id:   user.id,
-        name: user.full_name,
+        id:    user.id,
+        name:  user.full_name,
         email: user.email,
-        role: user.role,
+        role:  user.role,
       },
     });
   } catch (err) {
@@ -97,10 +98,11 @@ router.post('/refresh', refreshAccessToken(getUserById));
 
 // ── POST /api/auth/logout ────────────────────────────────────────────────────
 router.post('/logout', (req, res) => {
+  const isProd = process.env.NODE_ENV === 'production';
   res.clearCookie('refreshToken', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'strict',
   });
   return res.json({ message: 'تم تسجيل الخروج بنجاح' });
 });

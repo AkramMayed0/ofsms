@@ -14,6 +14,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
+import PrimaryButton from '@/components/ui/PrimaryButton';
+import { Users, CheckCircle, Clock, BookOpen, ClipboardList, AlertTriangle, Star, Home, Plus, Fingerprint } from 'lucide-react';
 
 // ── Status config ──────────────────────────────────────────────────────────────
 
@@ -41,13 +43,26 @@ const calcAge = (dob) => {
 
 function StatCard({ icon, label, value, sub, color = '#1B5E8C', onClick }) {
   return (
-    <div className="stat-card" onClick={onClick} style={{ cursor: onClick ? 'pointer' : 'default' }}>
-      <div className="stat-icon" style={{ background: `${color}15`, color }}>{icon}</div>
-      <div className="stat-body">
-        <div className="stat-value" style={{ color }}>{value ?? '—'}</div>
-        <div className="stat-label">{label}</div>
-        {sub && <div className="stat-sub">{sub}</div>}
+    <div
+      onClick={onClick}
+      style={{
+        position: 'relative', background: '#fff', border: '1px solid #edf0f5',
+        borderRadius: '1.1rem', padding: '1.3rem 1.3rem 1.1rem',
+        display: 'flex', flexDirection: 'column', gap: '.35rem',
+        boxShadow: '0 2px 8px rgba(27,94,140,.06)', overflow: 'hidden',
+        cursor: onClick ? 'pointer' : 'default', transition: 'box-shadow .18s, transform .18s',
+        fontFamily: "'Cairo','Tajawal',sans-serif",
+      }}
+      onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 8px 24px rgba(27,94,140,.13)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+      onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 2px 8px rgba(27,94,140,.06)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+    >
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'.25rem' }}>
+        <div style={{ width:46, height:46, borderRadius:'.875rem', background:`${color}18`, color, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{icon}</div>
+        <div className="stat-val" style={{ color }}>{value ?? '—'}</div>
       </div>
+      <div style={{ fontSize:'.82rem', fontWeight:600, color:'#4b5563' }}>{label}</div>
+      {sub && <div style={{ fontSize:'.71rem', color:'#b0bac8' }}>{sub}</div>}
+      <div style={{ position: 'absolute', bottom: 0, right: 0, left: 0, height: 3, background: color, borderRadius: '0 0 1.1rem 1.1rem' }} />
     </div>
   );
 }
@@ -123,15 +138,15 @@ export default function AgentDashboard() {
       {/* Greeting */}
       <div className="greeting">
         <div>
-          <h1 className="greeting-title">مرحباً 👋</h1>
+          <h1 className="greeting-title">مرحباً</h1>
           <p className="greeting-sub">{today}</p>
         </div>
-        <button className="btn-primary" onClick={() => router.push('/orphans/new')}>
+        <PrimaryButton onClick={() => router.push('/orphans/new')} className="max-sm:w-full max-sm:justify-center">
           + تسجيل يتيم جديد
-        </button>
+        </PrimaryButton>
       </div>
 
-      {error && <div className="err-banner">⚠ {error}</div>}
+      {error && <div className="err-banner"><AlertTriangle size={15}/> {error}</div>}
 
       {/* Stat cards */}
       <div className="stats-grid">
@@ -139,13 +154,13 @@ export default function AgentDashboard() {
           [1,2,3,4].map(i => <SkeletonCard key={i} />)
         ) : (
           <>
-            <StatCard icon="👦" label="إجمالي الأيتام" value={orphans.length}
+            <StatCard icon={<Users size={20}/>}       label="إجمالي الأيتام" value={orphans.length}
               sub="المسجّلون باسمك" color="#1B5E8C" onClick={() => router.push('/my-orphans')} />
-            <StatCard icon="✅" label="تحت الكفالة" value={counts.under_sponsorship || 0}
+            <StatCard icon={<CheckCircle size={20}/>} label="تحت الكفالة" value={counts.under_sponsorship || 0}
               sub="يتيم مكفول حالياً" color="#10b981" />
-            <StatCard icon="⏳" label="قيد المراجعة" value={counts.under_review || 0}
+            <StatCard icon={<Clock size={20}/>}       label="قيد المراجعة" value={counts.under_review || 0}
               sub="بانتظار قرار المشرف" color="#f59e0b" />
-            <StatCard icon="📖" label="تقارير معلّقة" value={pendingReports.length}
+            <StatCard icon={<BookOpen size={20}/>}    label="تقارير معلّقة" value={pendingReports.length}
               sub={pendingReports.length > 0 ? 'يرجى رفعها قبل نهاية الشهر' : 'لا تقارير معلّقة'}
               color={pendingReports.length > 0 ? '#ef4444' : '#10b981'} />
           </>
@@ -155,7 +170,7 @@ export default function AgentDashboard() {
       {/* Pending reports alert */}
       {!loading && pendingReports.length > 0 && (
         <div className="alert-card">
-          <div className="alert-icon">📋</div>
+          <div className="alert-icon"><ClipboardList size={24}/></div>
           <div className="alert-body">
             <strong>تقارير الحفظ الشهرية</strong>
             <p>لديك <strong>{pendingReports.length}</strong> يتيم لم يُرفع تقرير حفظ القرآن لهم هذا الشهر. يُرجى الرفع قبل الـ 28.</p>
@@ -177,7 +192,7 @@ export default function AgentDashboard() {
       {/* Rejected submissions alert */}
       {!loading && data?.rejected_submissions?.length > 0 && (
         <div className="alert-card alert-danger">
-          <div className="alert-icon">⚠</div>
+          <div className="alert-icon"><AlertTriangle size={24}/></div>
           <div className="alert-body">
             <strong>طلبات تسجيل مرفوضة</strong>
             <p>لديك <strong>{data.rejected_submissions.length}</strong> طلب تسجيل تم رفضه من قبل المشرف ويحتاج إلى تعديل.</p>
@@ -253,9 +268,9 @@ export default function AgentDashboard() {
           </div>
         ) : orphans.length === 0 ? (
           <div className="empty">
-            <div style={{ fontSize: '2.5rem' }}>👦</div>
+            <Users size={40} color="#9ca3af"/>
             <p style={{ fontSize: '.9rem', color: '#6b7a8d', margin: 0, fontWeight: 600 }}>لا يوجد أيتام مسجّلون بعد</p>
-            <button className="btn-primary" onClick={() => router.push('/orphans/new')}>+ تسجيل يتيم جديد</button>
+            <PrimaryButton onClick={() => router.push('/orphans/new')} className="max-sm:w-full max-sm:justify-center">+ تسجيل يتيم جديد</PrimaryButton>
           </div>
         ) : (
           <div className="table-wrap">
@@ -278,7 +293,7 @@ export default function AgentDashboard() {
                         <div className="avatar">{o.full_name?.charAt(0) || '؟'}</div>
                         <div>
                           <div style={{ fontWeight: 700, color: '#1f2937' }}>{o.full_name}</div>
-                          {o.is_gifted && <span className="gifted">🌟 موهوب</span>}
+                          {o.is_gifted && <span className="gifted"><Star size={10} style={{display:'inline',verticalAlign:'middle'}}/> موهوب</span>}
                         </div>
                       </div>
                     </td>
@@ -306,15 +321,16 @@ export default function AgentDashboard() {
         <SectionTitle>إجراءات سريعة</SectionTitle>
         <div className="actions-grid">
           {[
-            { icon: '👦', label: 'تسجيل يتيم جديد',  href: '/orphans/new',       color: '#1B5E8C' },
-            { icon: '👨‍👩‍👧', label: 'تسجيل أسرة جديدة', href: '/families/new',      color: '#7c3aed' },
-            { icon: '📖', label: 'رفع تقرير حفظ',     href: '/quran-reports/new', color: '#059669' },
-            { icon: '👆', label: 'رفع بصمات الصرف',   href: '/receipts/batch',    color: '#db2777' },
-            { icon: '📋', label: 'عرض أيتامي',         href: '/my-orphans',        color: '#d97706' },
+            { icon: <Users size={20}/>,       label: 'تسجيل يتيم جديد',  href: '/orphans/new',       color: '#1B5E8C' },
+            { icon: <Home size={20}/>,        label: 'تسجيل أسرة جديدة', href: '/families/new',      color: '#7c3aed' },
+            { icon: <BookOpen size={20}/>,    label: 'رفع تقرير حفظ',     href: '/quran-reports/new', color: '#059669' },
+            { icon: <Fingerprint size={20}/>, label: 'رفع بصمات الصرف',   href: '/receipts/batch',    color: '#db2777' },
+            { icon: <ClipboardList size={20}/>, label: 'عرض أيتامي',       href: '/my-orphans',        color: '#d97706' },
           ].map(({ icon, label, href, color }) => (
             <button key={href} className="action-card" onClick={() => router.push(href)}
               style={{ '--ac': color }}>
               <span className="action-icon" style={{ background: `${color}15`, color }}>{icon}</span>
+
               <span style={{ fontSize: '.82rem', fontWeight: 700, color: '#1f2937' }}>{label}</span>
               <span style={{ fontSize: '.82rem', fontWeight: 700, color, alignSelf: 'flex-end', marginTop: 'auto' }}>←</span>
             </button>
@@ -329,13 +345,22 @@ export default function AgentDashboard() {
         .greeting-sub { font-size:.82rem; color:#94a3b8; margin:0; }
         .err-banner { background:#fef2f2; border:1px solid #fecaca; border-radius:.75rem; padding:.85rem 1rem; font-size:.85rem; color:#b91c1c; font-weight:500; }
 
+        /* ── StatCard responsive classes ── */
+        .sc-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:.25rem; }
+        .sc-icon { width:42px; height:42px; border-radius:.75rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .sc-val { font-size:1.8rem; font-weight:800; line-height:1; font-family:'Cairo',sans-serif; }
+        .sc-label { font-size:.82rem; font-weight:600; color:#4b5563; }
+        .sc-sub { font-size:.71rem; color:#b0bac8; }
+
         .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; }
-        .stat-card { background:#fff; border:1px solid #e5eaf0; border-radius:1rem; padding:1.25rem; display:flex; align-items:flex-start; gap:.85rem; box-shadow:0 1px 4px rgba(27,94,140,.05); transition:box-shadow .15s,transform .15s; }
-        .stat-card:hover { box-shadow:0 4px 16px rgba(27,94,140,.1); transform:translateY(-1px); }
-        .stat-icon { width:44px; height:44px; border-radius:.75rem; display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0; }
-        .stat-value { font-size:1.75rem; font-weight:800; line-height:1; margin-bottom:.2rem; font-family:'Cairo',sans-serif; }
-        .stat-label { font-size:.78rem; font-weight:700; color:#374151; }
-        .stat-sub { font-size:.72rem; color:#94a3b8; margin-top:.15rem; }
+        .stat-card { position:relative; background:#fff; border:1px solid #edf0f5; border-radius:1.1rem; padding:1.3rem 1.3rem 1.1rem; display:flex; flex-direction:column; gap:.35rem; box-shadow:0 2px 8px rgba(27,94,140,.06); transition:box-shadow .18s,transform .18s; overflow:hidden; }
+        .stat-card:hover { box-shadow:0 8px 24px rgba(27,94,140,.13); transform:translateY(-2px); }
+        .stat-card-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:.3rem; }
+        .stat-icon { width:46px; height:46px; border-radius:.875rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .stat-value { font-size:1.9rem; font-weight:800; line-height:1; font-family:'Cairo',sans-serif; }
+        .stat-label { font-size:.8rem; font-weight:600; color:#6b7a8d; }
+        .stat-sub { font-size:.71rem; color:#b0bac8; margin-top:.05rem; }
+        .stat-bar { position:absolute; bottom:0; right:0; left:0; height:3px; border-radius:0 0 1.1rem 1.1rem; }
 
         .alert-card { background:#fff7ed; border:1.5px solid #fed7aa; border-radius:1rem; padding:1.25rem 1.5rem; display:flex; align-items:flex-start; gap:1rem; }
         .alert-icon { font-size:1.5rem; flex-shrink:0; }
@@ -399,8 +424,6 @@ export default function AgentDashboard() {
 
         .empty { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:3rem; gap:.75rem; text-align:center; background:#fff; border:1px solid #e5eaf0; border-radius:1rem; }
 
-        .btn-primary { display:inline-flex; align-items:center; gap:.4rem; padding:.7rem 1.4rem; background:linear-gradient(135deg,#1B5E8C,#134569); color:#fff; font-family:'Cairo',sans-serif; font-size:.9rem; font-weight:700; border:none; border-radius:.75rem; cursor:pointer; box-shadow:0 2px 8px rgba(27,94,140,.25); transition:all .15s; }
-        .btn-primary:hover { background:linear-gradient(135deg,#2E7EB8,#1B5E8C); transform:translateY(-1px); }
         .link-btn { background:none; border:none; font-family:'Cairo',sans-serif; font-size:.82rem; font-weight:700; color:#1B5E8C; cursor:pointer; padding:0; transition:opacity .15s; }
         .link-btn:hover { opacity:.7; }
 
@@ -408,9 +431,30 @@ export default function AgentDashboard() {
           .stats-grid, .actions-grid { grid-template-columns:repeat(2,1fr); }
         }
         @media (max-width: 600px) {
-          .greeting { flex-direction:column; align-items:flex-start; }
+          .agent-dash { gap:1.25rem; }
+          .greeting { flex-direction:column; align-items:flex-start; gap:.75rem; }
+          .greeting-title { font-size:1.3rem; }
+.alert-card { flex-direction:column; gap:.75rem; padding:1rem; }
+          .alert-action { width:100%; justify-content:center; }
           .table th:nth-child(3), .table td:nth-child(3),
           .table th:nth-child(5), .table td:nth-child(5) { display:none; }
+          .table-wrap { overflow-x:auto; }
+        }
+        @media (max-width: 600px) {
+          .sc-top { flex-direction:column; align-items:flex-start; gap:.5rem; }
+          .sc-val { font-size:1.5rem; }
+        }
+        @media (max-width: 480px) {
+          .stats-grid { grid-template-columns:1fr 1fr; gap:.6rem; }
+          .actions-grid { grid-template-columns:1fr 1fr; gap:.6rem; }
+          .action-card { padding:.75rem; }
+          .sc-val { font-size:1.3rem; }
+          .sc-icon { width:36px; height:36px; }
+          .table th:nth-child(2), .table td:nth-child(2) { display:none; }
+        }
+        @media (max-width: 360px) {
+          .stats-grid { grid-template-columns:1fr; }
+          .actions-grid { grid-template-columns:1fr; }
         }
       `}</style>
     </div>

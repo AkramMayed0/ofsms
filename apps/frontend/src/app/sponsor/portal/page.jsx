@@ -17,6 +17,8 @@
  */
 
 import { useState, useEffect } from 'react';
+import { AlertTriangle, X, User, Handshake, CheckCircle2, XCircle } from 'lucide-react';
+
 import { useSearchParams } from 'next/navigation';
 import axios from 'axios';
 
@@ -95,13 +97,13 @@ function LoginView({ token, onLogin }) {
       {/* Form panel */}
       <main className="form-panel">
         <div className="form-card">
-          <div className="form-logo">🤝</div>
+          <div className="form-logo"><Handshake size={32} /></div>
           <h2 className="form-title">تسجيل دخول الكافل</h2>
           <p className="form-hint">أدخل كلمة المرور للوصول إلى محفظة كفالاتك</p>
 
           {!token && (
             <div className="err-box">
-              ⚠ رابط البوابة غير صحيح. يرجى استخدام الرابط المُرسَل إليك.
+              <AlertTriangle size={18} /> رابط البوابة غير صحيح. يرجى استخدام الرابط المُرسَل إليك.
             </div>
           )}
 
@@ -128,7 +130,7 @@ function LoginView({ token, onLogin }) {
             </form>
           )}
 
-          <p className="form-footer">مؤسسة الأرض الطيبة · نظام كفالة الأيتام</p>
+          <p className="form-footer">مؤسسة إكرام النعمة الخيرية · نظام كفالة الأيتام</p>
         </div>
       </main>
 
@@ -203,7 +205,7 @@ function OrphanDetailModal({ orphanId, orphanName, token, onClose }) {
       <div className="modal" dir="rtl">
         <div className="modal-head">
           <h3 className="modal-title">تقارير — {orphanName}</h3>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose}><X size={16} /></button>
         </div>
         <div className="modal-body">
           {loading ? (
@@ -248,8 +250,8 @@ function OrphanDetailModal({ orphanId, orphanName, token, onClose }) {
                         background: d.included ? '#ecfdf5' : '#fef2f2',
                       }}>
                         {d.included
-                          ? d.receipt_confirmed_at ? '✅ استُلم' : '🕐 جارٍ التوزيع'
-                          : '❌ مستبعد'}
+                          ? d.receipt_confirmed_at ? '<CheckCircle2 size={16} /> استُلم' : '🕐 جارٍ التوزيع'
+                          : '<XCircle size={16} /> مستبعد'}
                       </span>
                     </div>
                   ))}
@@ -294,11 +296,20 @@ function DashboardView({ token, sponsor, onLogout }) {
   useEffect(() => {
     Promise.all([
       sponsorApi.get('/sponsor/orphans', authHeaders),
-      sponsorApi.get('/announcements', authHeaders).catch(() => ({ data: { announcements: [] } })),
+      sponsorApi.get('/ads/sponsor/feed', authHeaders).catch(() => ({ data: { ads: [] } })),
     ])
       .then(([orphanRes, annRes]) => {
         setOrphans(orphanRes.data.orphans || []);
-        setAnnouncements(annRes.data.announcements || []);
+        setAnnouncements((annRes.data.ads || []).map(ad => ({
+          id: ad.id,
+          title: ad.beneficiary_type === 'family'
+            ? `طلب كفالة أسرة: ${ad.beneficiary_name}`
+            : `طلب كفالة: ${ad.beneficiary_name}`,
+          body: ad.beneficiary_type === 'family'
+            ? `من سيكفل هذه الأسرة؟ المحافظة: ${ad.governorate_ar || '—'}`
+            : `من سيكفل هذا الطفل؟ المحافظة: ${ad.governorate_ar || '—'}`,
+          published_at: ad.published_at,
+        })));
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -311,10 +322,10 @@ function DashboardView({ token, sponsor, onLogout }) {
       {/* Header */}
       <header className="header">
         <div className="header-brand">
-          <span className="header-logo">🤝</span>
+          <span className="header-logo"><Handshake size={32} /></span>
           <div>
             <h1 className="header-title">بوابة الكافل</h1>
-            <p className="header-sub">مؤسسة الأرض الطيبة</p>
+            <p className="header-sub">مؤسسة إكرام النعمة الخيرية</p>
           </div>
         </div>
         <div className="header-user">
@@ -327,7 +338,7 @@ function DashboardView({ token, sponsor, onLogout }) {
         {/* Stats */}
         <div className="stats-row">
           <div className="stat-card">
-            <span className="stat-icon">👦</span>
+            <span className="stat-icon"><User size={18} /></span>
             <div>
               <div className="stat-num">{orphans.length}</div>
               <div className="stat-lbl">أيتام مكفولون</div>
@@ -359,7 +370,7 @@ function DashboardView({ token, sponsor, onLogout }) {
             <div className="loading">⏳ جارٍ التحميل…</div>
           ) : orphans.length === 0 ? (
             <div className="empty-card">
-              <span style={{ fontSize: '2.5rem' }}>👦</span>
+              <span style={{ fontSize: '2.5rem' }}><User size={18} /></span>
               <p>لا يوجد أيتام مكفولون بعد</p>
             </div>
           ) : (

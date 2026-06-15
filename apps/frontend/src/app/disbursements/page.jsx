@@ -1,356 +1,241 @@
 'use client';
 
-/**
- * page.jsx
- * Route: /disbursements  (GM + Supervisor + Finance)
- * API:   GET /api/disbursements → list all disbursement lists
- *
- * Shows all monthly disbursement cycles with status, totals, and
- * a link to the detail page where GM can take approval actions.
- */
+import { useState, useEffect } from 'react';
+import { AlertTriangle, X, DollarSign } from 'lucide-react';
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import api from '../../lib/api';
-import AppShell from '../../components/AppShell';
+import api from '@/lib/api';
+import AppShell from '@/components/AppShell';
+import useAuthStore from '@/store/useAuthStore';
+import { MONTHS_AR, formatDate, formatAmount } from '@/components/disbursements/_constants';
+import StatusBadge from '@/components/disbursements/StatusBadge';
+import ItemsDrawer from '@/components/disbursements/ItemsDrawer';
 
-// ── Status config ─────────────────────────────────────────────────────────────
-const STATUS_CONFIG = {
-  draft: {
-    label: 'مسودة',
-    labelEn: 'Draft',
-    color: '#92400E',
-    bg: '#FEF3C7',
-    border: '#FCD34D',
-    icon: '📝',
-    step: 1,
-  },
-  supervisor_approved: {
-    label: 'اعتمد المشرف',
-    labelEn: 'Supervisor Approved',
-    color: '#1E40AF',
-    bg: '#EFF6FF',
-    border: '#93C5FD',
-    icon: '✅',
-    step: 2,
-  },
-  finance_approved: {
-    label: 'اعتمد المالي',
-    labelEn: 'Finance Approved',
-    color: '#5B21B6',
-    bg: '#F5F3FF',
-    border: '#C4B5FD',
-    icon: '💜',
-    step: 3,
-  },
-  released: {
-    label: 'مُصدَر',
-    labelEn: 'Released',
-    color: '#065F46',
-    bg: '#ECFDF5',
-    border: '#6EE7B7',
-    icon: '🚀',
-    step: 4,
-  },
-  rejected: {
-    label: 'مرفوض',
-    labelEn: 'Rejected',
-    color: '#991B1B',
-    bg: '#FEF2F2',
-    border: '#FCA5A5',
-    icon: '❌',
-    step: 0,
-  },
-};
+export default function DisbursementsPage() {
+  const user = useAuthStore((s) => s.user);
+  const role = user?.role;
 
-// ── Arabic month names ────────────────────────────────────────────────────────
-const ARABIC_MONTHS = [
-  '', 'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-  'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
-];
+  const [lists,      setLists]      = useState([]);
+  const [loading,    setLoading]    = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [error,      setError]      = useState('');
+  const [selected,   setSelected]   = useState(null); // selected list ID
 
-// ── Progress stepper ──────────────────────────────────────────────────────────
-function ApprovalStepper({ status }) {
-  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.draft;
-  const steps = [
-    { label: 'مسودة', step: 1 },
-    { label: 'المشرف', step: 2 },
-    { label: 'المالي', step: 3 },
-    { label: 'مُصدَر', step: 4 },
-  ];
+  const fetchLists = () => {
+    setLoading(true);
+    api.get('/disbursements')
+      .then(({ data }) => setLists(data.lists || []))
+      .catch(() => setError('تعذّر تحميل البيانات'))
+      .finally(() => setLoading(false));
+  };
 
-  if (status === 'rejected') {
+  useEffect(() => { fetchLists(); }, []);
+
+  const handleGenerate = async () => {
+    setGenerating(true);
+    setError('');
+    try {
+      await api.post('/disbursements/generate');
+      fetchLists();
+    } catch (err) {
+      setError(err.response?.data?.error || 'فشل إنشاء الكشف');
+    } finally { setGenerating(false); }
+  };
+
+  const selectedList = lists.find(l => l.id === selected);
+
+  // Count lists that need THIS user's action
+  const pendingCount = lists.filter(l =>
+    (role === 'supervisor' && l.status === 'draft') ||
+    (role === 'finance'    && l.status === 'supervisor_approved') ||
+    (role === 'gm'         && l.status === 'finance_approved')
+  ).length;
+
+  if (!user) {
     return (
-      <div className="stepper-rejected">
-        <span>❌</span>
-        <span>مرفوض</span>
-      </div>
+      <AppShell>
+        <div dir="rtl" className="flex justify-center items-center py-16">
+          <p className="flex items-center gap-2 text-red-600 font-bold text-sm">
+            <AlertTriangle size={18} /> لم يتم التعرف على المستخدم. يرجى تسجيل الخروج وإعادة تسجيل الدخول.
+          </p>
+        </div>
+      </AppShell>
     );
   }
 
   return (
-    <div className="stepper">
-      {steps.map((s, i) => (
-        <div key={s.step} className="stepper-item">
-          <div
-            className={`stepper-dot ${cfg.step >= s.step ? 'active' : ''} ${cfg.step === s.step ? 'current' : ''}`}
-          >
-            {cfg.step > s.step ? '✓' : s.step}
+    <AppShell>
+      <div className="max-w-[1100px] mx-auto pb-16 flex flex-col gap-5" dir="rtl">
+
+        {/* Header */}
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] m-0 mb-1">كشوف الصرف الشهري</h1>
+            <p className="text-[0.85rem] text-slate-500 m-0">
+              {loading ? 'جارٍ التحميل…' : `${lists.length} كشف · دورك: ${role}`}
+            </p>
           </div>
-          <span className={`stepper-label ${cfg.step >= s.step ? 'active-lbl' : ''}`}>
-            {s.label}
-          </span>
-          {i < steps.length - 1 && (
-            <div className={`stepper-line ${cfg.step > s.step ? 'done' : ''}`} />
+          {(role === 'supervisor' || role === 'gm') && (
+            <button
+              className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-br from-primary to-primary-dark text-white text-[0.9rem] font-bold rounded-xl border-none cursor-pointer shadow-[0_2px_8px_rgba(27,94,140,0.25)] hover:from-primary-light hover:to-primary hover:-translate-y-px disabled:opacity-65 disabled:cursor-not-allowed transition-all"
+              onClick={handleGenerate}
+              disabled={generating}
+            >
+              {generating
+                ? <><span className="inline-block w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />جارٍ الإنشاء…</>
+                : '+ إنشاء كشف هذا الشهر'}
+            </button>
           )}
         </div>
-      ))}
-    </div>
-  );
-}
 
-// ── Single disbursement card ──────────────────────────────────────────────────
-function DisbursementCard({ list }) {
-  const cfg = STATUS_CONFIG[list.status] || STATUS_CONFIG.draft;
-  const monthName = ARABIC_MONTHS[list.month] || list.month;
-  const totalAmount = parseFloat(list.total_amount || 0).toLocaleString('ar-YE', {
-    minimumFractionDigits: 0,
-  });
-  const totalItems = parseInt(list.total_items || 0);
+        {error && (
+          <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3.5 text-[0.85rem] text-red-700 font-medium">
+            <AlertTriangle size={18} className="shrink-0" />
+            <span className="flex-1">{error}</span>
+            <button className="bg-transparent border-none cursor-pointer text-red-700 hover:text-red-900 transition-colors" onClick={() => setError('')}>
+              <X size={16} />
+            </button>
+          </div>
+        )}
 
-  const createdAt = new Date(list.created_at).toLocaleDateString('ar-YE', {
-    day: 'numeric', month: 'long', year: 'numeric',
-  });
-
-  return (
-    <Link href={`/disbursements/${list.id}`} className="card-link">
-      <div className="disb-card" style={{ '--border-color': cfg.border }}>
-        {/* Header */}
-        <div className="card-header">
-          <div className="card-period">
-            <span className="period-icon">📅</span>
+        {/* Pending action alert */}
+        {!loading && pendingCount > 0 && (
+          <div className="flex items-start gap-3.5 bg-amber-50 border-[1.5px] border-amber-200 rounded-2xl px-5 py-4">
+            <span className="text-2xl">🔔</span>
             <div>
-              <span className="period-month">{monthName}</span>
-              <span className="period-year">{list.year}</span>
+              <strong className="block text-[0.9rem] font-bold text-amber-800 mb-1">
+                لديك {pendingCount} {pendingCount === 1 ? 'كشف' : 'كشوف'} بانتظار إجراءك
+              </strong>
+              <p className="text-[0.82rem] text-amber-700 m-0">اضغط على أي كشف مميّز بنقطة برتقالية لمراجعته واعتماده.</p>
             </div>
           </div>
+        )}
 
-          <span
-            className="status-badge"
-            style={{ color: cfg.color, background: cfg.bg, borderColor: cfg.border }}
-          >
-            {cfg.icon} {cfg.label}
-          </span>
-        </div>
-
-        {/* Stepper */}
-        <ApprovalStepper status={list.status} />
-
-        {/* Stats row */}
-        <div className="card-stats">
-          <div className="stat-item">
-            <span className="stat-num">{totalItems}</span>
-            <span className="stat-lbl">مستفيد</span>
-          </div>
-          <div className="stat-divider" />
-          <div className="stat-item">
-            <span className="stat-num">{totalAmount}</span>
-            <span className="stat-lbl">ريال إجمالي</span>
-          </div>
-          <div className="stat-divider" />
-          <div className="stat-item">
-            <span className="stat-num">{list.created_by_name || '—'}</span>
-            <span className="stat-lbl">أنشأه</span>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="card-footer">
-          <span className="card-date">{createdAt}</span>
-          <span className="card-arrow">← عرض التفاصيل</span>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-// ── Skeleton card ─────────────────────────────────────────────────────────────
-function SkeletonCard() {
-  return (
-    <div className="skeleton-card">
-      <div className="sk-row">
-        <div className="sk sk-lg" />
-        <div className="sk sk-sm" />
-      </div>
-      <div className="sk sk-stepper" />
-      <div className="sk-row mt">
-        <div className="sk sk-med" />
-        <div className="sk sk-med" />
-        <div className="sk sk-med" />
-      </div>
-    </div>
-  );
-}
-
-// ── Main page ─────────────────────────────────────────────────────────────────
-export default function DisbursementsPage() {
-  const [lists, setLists] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    api.get('/disbursements')
-      .then(({ data }) => setLists(data.lists || []))
-      .catch(() => setError('تعذّر تحميل كشوف الصرف'))
-      .finally(() => setLoading(false));
-  }, []);
-
-  // Summary counts
-  const summary = lists.reduce((acc, l) => {
-    acc[l.status] = (acc[l.status] || 0) + 1;
-    return acc;
-  }, {});
-
-  return (
-    <AppShell>
-      <div className="page" dir="rtl">
-
-        {/* Page header */}
-        <div className="page-top">
-          <div>
-            <h1 className="page-title">كشوف الصرف الشهري</h1>
-            <p className="page-sub">إدارة دورات الصرف من التوليد حتى الإصدار النهائي</p>
-          </div>
-        </div>
-
-        {/* Summary chips */}
-        {!loading && lists.length > 0 && (
-          <div className="summary-row">
-            {Object.entries(summary).map(([status, count]) => {
-              const cfg = STATUS_CONFIG[status];
-              if (!cfg) return null;
-              return (
-                <div
-                  key={status}
-                  className="summary-chip"
-                  style={{ color: cfg.color, background: cfg.bg, borderColor: cfg.border }}
-                >
-                  {cfg.icon} {count} {cfg.label}
+        {/* Loading skeleton */}
+        {loading && (
+          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-[0_1px_4px_rgba(27,94,140,0.05)]">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center gap-4 px-[1.1rem] py-[0.85rem] border-b border-slate-50 last:border-b-0">
+                <div className="h-3.5 w-20 rounded bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-[shimmer_1.4s_infinite]" />
+                <div className="flex-1">
+                  <div className="h-3.5 w-[40%] rounded bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-[shimmer_1.4s_infinite]" />
                 </div>
-              );
-            })}
+                <div className="h-6 w-24 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-[shimmer_1.4s_infinite]" />
+                <div className="h-3.5 w-[90px] rounded bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 bg-[length:200%_100%] animate-[shimmer_1.4s_infinite]" />
+              </div>
+            ))}
           </div>
         )}
 
-        {/* Error */}
-        {error && (
-          <div className="err-banner">⚠ {error}</div>
+        {/* Empty */}
+        {!loading && lists.length === 0 && (
+          <div className="flex flex-col items-center justify-center min-h-[300px] gap-3 text-center bg-white border border-slate-200 rounded-2xl p-8">
+            <div className="w-16 h-16 rounded-full bg-blue-50 border-[1.5px] border-blue-100 flex items-center justify-center">
+              <DollarSign size={32} className="text-primary" />
+            </div>
+            <h3 className="text-[1.05rem] font-bold text-gray-700 m-0">لا توجد كشوف صرف بعد</h3>
+            <p className="text-[0.85rem] text-gray-400 m-0">
+              {role === 'supervisor' || role === 'gm'
+                ? 'اضغط على "إنشاء كشف هذا الشهر" للبدء'
+                : 'لم يتم إنشاء كشف لهذا الشهر بعد'}
+            </p>
+          </div>
         )}
 
-        {/* Grid */}
-        <div className="cards-grid">
-          {loading
-            ? Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
-            : lists.length === 0
-            ? (
-              <div className="empty-state">
-                <span className="empty-ico">💰</span>
-                <p>لا توجد كشوف صرف بعد</p>
-                <p className="empty-sub">سيظهر هنا الكشف بعد توليده من لوحة التحكم</p>
-              </div>
-            )
-            : lists.map((list) => (
-              <DisbursementCard key={list.id} list={list} />
-            ))
-          }
-        </div>
+        {/* Table */}
+        {!loading && lists.length > 0 && (
+          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-[0_1px_4px_rgba(27,94,140,0.05)]">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse min-w-[520px]">
+                <thead>
+                  <tr className="bg-slate-50">
+                    {['الشهر / السنة', 'المستفيدون', 'المبلغ الإجمالي', 'الحالة', 'تاريخ الإنشاء', ''].map((h, i) => (
+                      <th key={i} className="px-[1.1rem] py-3 text-right text-[0.72rem] font-bold text-slate-500 border-b border-slate-200 whitespace-nowrap">
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {lists.map((list) => {
+                    const needsMyAction =
+                      (role === 'supervisor' && list.status === 'draft') ||
+                      (role === 'finance'    && list.status === 'supervisor_approved') ||
+                      (role === 'gm'         && list.status === 'finance_approved');
 
+                    return (
+                      <tr
+                        key={list.id}
+                        onClick={() => setSelected(list.id)}
+                        tabIndex={0}
+                        onKeyDown={(e) => e.key === 'Enter' && setSelected(list.id)}
+                        className={[
+                          'cursor-pointer transition-colors duration-100 last:border-b-0',
+                          'border-b border-slate-50',
+                          needsMyAction  ? 'bg-amber-50 hover:bg-amber-100/60' : 'hover:bg-blue-50/40',
+                          selected === list.id ? '!bg-blue-50 border-r-[3px] border-r-primary' : '',
+                        ].join(' ')}
+                      >
+                        <td className="px-[1.1rem] py-[0.85rem] text-[0.83rem] align-middle whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            {needsMyAction && (
+                              <span
+                                title="يحتاج إجراءك"
+                                className="w-2 h-2 rounded-full bg-amber-400 shrink-0 animate-[pulse_1.5s_infinite]"
+                              />
+                            )}
+                            <span className="text-[0.85rem] font-bold text-[#0d3d5c]">
+                              {MONTHS_AR[list.month]} {list.year}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-[1.1rem] py-[0.85rem] text-[0.83rem] align-middle whitespace-nowrap text-slate-500">
+                          <span className="font-bold text-emerald-500">{list.included_count}</span>
+                          {list.excluded_count > 0 && (
+                            <span className="text-red-500 mr-1.5">(-{list.excluded_count})</span>
+                          )}
+                        </td>
+                        <td className="px-[1.1rem] py-[0.85rem] text-[0.83rem] align-middle whitespace-nowrap font-bold text-primary">
+                          {formatAmount(list.total_amount)}
+                        </td>
+                        <td className="px-[1.1rem] py-[0.85rem] text-[0.83rem] align-middle whitespace-nowrap">
+                          <StatusBadge status={list.status} />
+                        </td>
+                        <td className="px-[1.1rem] py-[0.85rem] text-[0.83rem] align-middle whitespace-nowrap text-slate-500">
+                          {formatDate(list.created_at)}
+                        </td>
+                        <td className="px-[1.1rem] py-[0.85rem] text-[0.83rem] align-middle whitespace-nowrap">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setSelected(list.id); }}
+                            className={[
+                              'bg-transparent border rounded-lg px-2.5 py-1.5 text-[0.78rem] font-semibold cursor-pointer whitespace-nowrap transition-all',
+                              needsMyAction
+                                ? 'border-amber-300 text-amber-700 bg-amber-50 font-bold hover:bg-amber-100'
+                                : 'border-slate-200 text-primary hover:bg-blue-50 hover:border-primary',
+                            ].join(' ')}
+                          >
+                            {needsMyAction ? 'مراجعة واعتماد ←' : 'عرض ←'}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
 
-      <style jsx>{`
-        .page { max-width: 1000px; margin: 0 auto; padding-bottom: 4rem; font-family: 'Cairo','Tajawal',sans-serif; }
-        .page-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem; }
-        .page-title { font-size: 1.6rem; font-weight: 800; color: #0d3d5c; margin: 0 0 .25rem; }
-        .page-sub { font-size: .85rem; color: #6b7a8d; margin: 0; }
+      {/* Detail drawer */}
+      <ItemsDrawer
+        listId={selected}
+        listInfo={selectedList}
+        role={role}
+        onClose={() => setSelected(null)}
+        onAction={fetchLists}
+      />
 
-        .summary-row { display: flex; gap: .6rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
-        .summary-chip { display: inline-flex; align-items: center; gap: .4rem; padding: .3rem .85rem; border-radius: 999px; font-size: .78rem; font-weight: 700; border: 1px solid; }
 
-        .err-banner { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; padding: .75rem 1rem; border-radius: .75rem; font-size: .875rem; margin-bottom: 1rem; }
-
-        .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 1.25rem; }
-        @media (max-width: 640px) { .cards-grid { grid-template-columns: 1fr; } }
-
-        /* Disbursement card */
-        .card-link { text-decoration: none; display: block; }
-        .disb-card {
-          background: #fff;
-          border: 1.5px solid var(--border-color, #e5eaf0);
-          border-radius: 1rem;
-          padding: 1.25rem;
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-          transition: transform .15s, box-shadow .15s;
-          cursor: pointer;
-        }
-        .disb-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(27,94,140,.1); }
-
-        .card-header { display: flex; align-items: center; justify-content: space-between; }
-        .card-period { display: flex; align-items: center; gap: .6rem; }
-        .period-icon { font-size: 1.4rem; }
-        .period-month { display: block; font-size: 1.1rem; font-weight: 800; color: #0d3d5c; line-height: 1; }
-        .period-year { display: block; font-size: .8rem; color: #6b7280; margin-top: .1rem; }
-
-        .status-badge { display: inline-flex; align-items: center; gap: .3rem; padding: .3rem .75rem; border-radius: 999px; font-size: .75rem; font-weight: 700; border: 1px solid; }
-
-        /* Stepper */
-        .stepper { display: flex; align-items: center; gap: 0; background: #f9fafb; border-radius: .625rem; padding: .6rem .8rem; }
-        .stepper-item { display: flex; align-items: center; flex: 1; }
-        .stepper-dot {
-          width: 22px; height: 22px; border-radius: 50%;
-          background: #e5e7eb; color: #9ca3af;
-          font-size: .65rem; font-weight: 700;
-          display: flex; align-items: center; justify-content: center;
-          flex-shrink: 0;
-          transition: all .2s;
-        }
-        .stepper-dot.active { background: #1B5E8C; color: #fff; }
-        .stepper-dot.current { background: #1B5E8C; box-shadow: 0 0 0 3px rgba(27,94,140,.2); }
-        .stepper-label { font-size: .65rem; color: #9ca3af; margin: 0 .3rem; white-space: nowrap; }
-        .stepper-label.active-lbl { color: #1B5E8C; font-weight: 600; }
-        .stepper-line { flex: 1; height: 2px; background: #e5e7eb; margin: 0 .2rem; }
-        .stepper-line.done { background: #1B5E8C; }
-        .stepper-rejected { display: flex; align-items: center; gap: .5rem; font-size: .8rem; font-weight: 600; color: #dc2626; background: #fef2f2; border-radius: .5rem; padding: .5rem .75rem; }
-
-        /* Stats */
-        .card-stats { display: flex; align-items: center; gap: .75rem; }
-        .stat-item { display: flex; flex-direction: column; align-items: center; flex: 1; }
-        .stat-num { font-size: 1rem; font-weight: 700; color: #0d3d5c; }
-        .stat-lbl { font-size: .68rem; color: #9ca3af; }
-        .stat-divider { width: 1px; height: 2rem; background: #e5e7eb; }
-
-        /* Footer */
-        .card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: .6rem; border-top: 1px solid #f3f4f6; }
-        .card-date { font-size: .72rem; color: #9ca3af; }
-        .card-arrow { font-size: .75rem; font-weight: 600; color: #1B5E8C; }
-
-        /* Skeleton */
-        .skeleton-card { background: #fff; border: 1.5px solid #e5eaf0; border-radius: 1rem; padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
-        .sk { border-radius: .4rem; background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
-        .sk-row { display: flex; justify-content: space-between; align-items: center; gap: .75rem; }
-        .mt { margin-top: .25rem; }
-        .sk-lg { height: 2.5rem; width: 40%; }
-        .sk-sm { height: 1.5rem; width: 25%; }
-        .sk-stepper { height: 2.5rem; width: 100%; }
-        .sk-med { height: 1.5rem; flex: 1; }
-        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-
-        /* Empty */
-        .empty-state { grid-column: 1/-1; text-align: center; padding: 4rem 2rem; color: #9ca3af; }
-        .empty-ico { font-size: 3rem; display: block; margin-bottom: .75rem; }
-        .empty-sub { font-size: .82rem; margin-top: .25rem; }
-      `}</style>
     </AppShell>
   );
 }

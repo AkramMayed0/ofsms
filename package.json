@@ -15,5 +15,9 @@
     "concurrently": "^8.2.2",
     "eslint": "^8.57.0",
     "prettier": "^3.2.5"
+  },
+  "dependencies": {
+    "lucide-react": "^1.14.0",
+    "puppeteer": "^25.0.2"
   }
 }

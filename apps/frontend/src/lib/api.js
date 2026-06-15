@@ -13,7 +13,7 @@ import axios from 'axios';
 let getStore;
 if (typeof window !== 'undefined') {
   // Dynamically import to avoid SSR issues with Zustand
-  getStore = () => require('./useAuthStore').default.getState();
+  getStore = () => require('../store/useAuthStore').default.getState();
 }
 
 const api = axios.create({

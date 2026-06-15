@@ -15,7 +15,10 @@ const { logAudit } = require('../../utils/auditLog');
 // ── Validation rules ───────────────────────────────────────────────────────
 
 const createUserRules = [
-  body('fullName').trim().notEmpty().withMessage('الاسم الكامل مطلوب'),
+  body('fullName')
+    .trim()
+    .notEmpty().withMessage('الاسم الكامل مطلوب')
+    .matches(/^[\p{L}\s'-]+$/u).withMessage('الاسم يجب أن يحتوي على أحرف فقط ولا يمكن أن يحتوي على أرقام'),
   body('email').isEmail().withMessage('البريد الإلكتروني غير صحيح'),
   body('password')
     .isLength({ min: 8 }).withMessage('كلمة المرور يجب أن تكون 8 أحرف على الأقل'),
@@ -26,7 +29,11 @@ const createUserRules = [
 ];
 
 const updateUserRules = [
-  body('fullName').optional().trim().notEmpty().withMessage('الاسم لا يمكن أن يكون فارغاً'),
+  body('fullName')
+    .optional()
+    .trim()
+    .notEmpty().withMessage('الاسم لا يمكن أن يكون فارغاً')
+    .matches(/^[\p{L}\s'-]+$/u).withMessage('الاسم يجب أن يحتوي على أحرف فقط ولا يمكن أن يحتوي على أرقام'),
   body('phone').optional({ nullable: true }).isString(),
   body('role')
     .optional()
@@ -62,12 +69,23 @@ router.post('/', authenticate, authorize('gm'), createUserRules, async (req, res
       return res.status(409).json({ error: 'البريد الإلكتروني مستخدم بالفعل' });
     }
 
+    // Check duplicate phone (only if provided)
+    if (phone) {
+      const { rows: phoneExists } = await query(
+        'SELECT id FROM users WHERE phone = $1', [phone]
+      );
+      if (phoneExists.length > 0) {
+        return res.status(409).json({ error: 'رقم الهاتف مستخدم بالفعل' });
+      }
+    }
+
     const passwordHash = await bcrypt.hash(password, 12);
+    const finalPhone = phone ? phone : null;
     const { rows } = await query(
       `INSERT INTO users (full_name, email, password_hash, role, phone)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id, full_name, email, role, phone, is_active, created_at`,
-      [fullName.trim(), email.toLowerCase().trim(), passwordHash, role, phone || null]
+      [fullName.trim(), email.toLowerCase().trim(), passwordHash, role, finalPhone]
     );
 
     await logAudit({
