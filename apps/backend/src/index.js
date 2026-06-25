@@ -56,7 +56,9 @@ app.use('/api/ads',            require('./modules/ads/ads.routes'));
 app.use('/api/reports',        require('./modules/reports/reports.routes'));
 app.use('/api/users',          require('./modules/users/users.routes'));
 app.use('/api/quran-thresholds', require('./modules/quran/thresholds.routes'));
-app.use('/api/supervisor', require('./modules/supervisor/supervisor.routes'));
+app.use('/api/reports',          require('./modules/reports/reports.routes'));
+app.use('/api/supervisor',       require('./modules/supervisor/supervisor.routes'));
+
 // ── Global error handler ──────────────────────────────────────────────────────
 // eslint-disable-next-line no-unused-vars
 app.use((err, _req, res, _next) => {
