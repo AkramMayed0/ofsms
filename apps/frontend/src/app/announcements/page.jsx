@@ -403,7 +403,7 @@ export default function AnnouncementsPage() {
                 />
 
                 {/* body textarea */}
-                <label className="field-label" style={{ marginTop: '0.9rem' }}>
+                <label className="field-label mt-4">
                   النص <span className="req">*</span>
                 </label>
                 <textarea
@@ -441,7 +441,7 @@ export default function AnnouncementsPage() {
               <div className="modal-header modal-header-danger">
                 <div className="modal-icon modal-icon-danger"><Trash2 size={18} /></div>
                 <div>
-                  <h3 className="modal-title" style={{ color: '#b91c1c' }}>حذف الإعلان</h3>
+                  <h3 className="modal-title text-red-700">حذف الإعلان</h3>
                   <p className="modal-sub">«{deleteTarget.title}»</p>
                 </div>
                 <button className="modal-close" onClick={() => setDeleteTarget(null)}><X size={16} /></button>
