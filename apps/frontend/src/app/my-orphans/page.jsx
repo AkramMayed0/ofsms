@@ -11,9 +11,12 @@
  */
 
 import { useState, useEffect, Fragment } from 'react';
+import { Search, AlertTriangle, X, User, CheckCircle2, FileText } from 'lucide-react';
+
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
+import PrimaryButton from '@/components/ui/PrimaryButton';
 
 // ── Status config ──────────────────────────────────────────────────────────────
 
@@ -99,7 +102,7 @@ function DetailDrawer({ orphan, onClose }) {
             <h2 className="drawer-name">{orphan.full_name}</h2>
             <StatusBadge status={orphan.status} />
           </div>
-          <button className="drawer-close" onClick={onClose} aria-label="إغلاق">✕</button>
+          <button className="drawer-close" onClick={onClose} aria-label="إغلاق"><X size={16} /></button>
         </div>
 
         <div className="drawer-body">
@@ -115,7 +118,7 @@ function DetailDrawer({ orphan, onClose }) {
               <InfoRow label="اسم الوصي"   value={orphan.guardian_name || '—'} />
               <InfoRow label="صلة الوصي"   value={RELATION_MAP[orphan.guardian_relation] || '—'} />
               <InfoRow label="تاريخ التسجيل" value={formatDate(orphan.created_at)} />
-              {orphan.is_gifted && <InfoRow label="موهوب" value="✅ نعم" highlight />}
+              {orphan.is_gifted && <InfoRow label="موهوب" value={<span style={{ display:'inline-flex', alignItems:'center', gap:'.3rem' }}><CheckCircle2 size={14} /> نعم</span>} highlight />}
             </div>
           </div>
 
@@ -134,7 +137,7 @@ function DetailDrawer({ orphan, onClose }) {
           {/* Rejection notes */}
           {orphan.status === 'rejected' && orphan.notes && (
             <div className="rejection-box">
-              <span className="rejection-icon">⚠</span>
+              <span className="rejection-icon"><AlertTriangle size={18} /></span>
               <div>
                 <strong>سبب الرفض</strong>
                 <p>{orphan.notes}</p>
@@ -153,7 +156,7 @@ function DetailDrawer({ orphan, onClose }) {
               <div className="doc-list">
                 {docs.map((d) => (
                   <div key={d.id} className="doc-chip">
-                    <span>📄</span>
+                    <span><FileText size={16} /></span>
                     <span className="doc-name">{d.original_name || d.doc_type}</span>
                     <span className="doc-date">{formatDate(d.uploaded_at)}</span>
                   </div>
@@ -166,7 +169,7 @@ function DetailDrawer({ orphan, onClose }) {
         {/* Footer actions */}
         <div className="drawer-foot">
           {orphan.status === 'rejected' && (
-            <a href={`/orphans/${orphan.id}/edit`} className="btn-primary-sm">
+            <a href={`/orphans/${orphan.id}/edit`} className="inline-flex items-center px-4 py-2 bg-gradient-to-br from-[#1B5E8C] to-[#134569] text-white text-[.82rem] font-bold rounded-lg no-underline hover:from-[#2E7EB8] hover:to-[#1B5E8C] transition-all">
               تعديل وإعادة الإرسال
             </a>
           )}
@@ -203,9 +206,7 @@ function DetailDrawer({ orphan, onClose }) {
         .doc-name { flex:1; color:#374151; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; direction:ltr; text-align:left; }
         .doc-date { color:#94a3b8; flex-shrink:0; }
 
-        .btn-primary-sm { display:inline-flex; align-items:center; padding:.55rem 1.1rem; background:linear-gradient(135deg,#1B5E8C,#134569); color:#fff; font-family:'Cairo',sans-serif; font-size:.82rem; font-weight:700; border:none; border-radius:.625rem; cursor:pointer; text-decoration:none; transition:all .15s; }
-        .btn-primary-sm:hover { background:linear-gradient(135deg,#2E7EB8,#1B5E8C); }
-        .btn-ghost-sm { display:inline-flex; align-items:center; padding:.55rem 1.1rem; background:none; color:#1B5E8C; font-family:'Cairo',sans-serif; font-size:.82rem; font-weight:600; border:1.5px solid #dde5f0; border-radius:.625rem; cursor:pointer; transition:all .15s; }
+.btn-ghost-sm { display:inline-flex; align-items:center; padding:.55rem 1.1rem; background:none; color:#1B5E8C; font-family:'Cairo',sans-serif; font-size:.82rem; font-weight:600; border:1.5px solid #dde5f0; border-radius:.625rem; cursor:pointer; transition:all .15s; }
         .btn-ghost-sm:hover { background:#f0f7ff; border-color:#1B5E8C; }
       `}</style>
     </>
@@ -214,9 +215,9 @@ function DetailDrawer({ orphan, onClose }) {
 
 function InfoRow({ label, value, highlight }) {
   return (
-    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'.35rem 0', borderBottom:'1px solid #f8fafc' }}>
-      <span style={{ fontSize:'.8rem', color:'#6b7a8d', fontWeight:500 }}>{label}</span>
-      <span style={{ fontSize:'.83rem', color: highlight ? '#10b981' : '#1f2937', fontWeight: highlight ? 700 : 600 }}>{value}</span>
+    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap: '.75rem', padding:'.35rem 0', borderBottom:'1px solid #f8fafc', minWidth: 0 }}>
+      <span style={{ fontSize:'.8rem', color:'#6b7a8d', fontWeight:500, minWidth: 0 }}>{label}</span>
+      <span style={{ fontSize:'.83rem', color: highlight ? '#10b981' : '#1f2937', fontWeight: highlight ? 700 : 600, minWidth: 0, overflowWrap: 'anywhere', wordBreak: 'break-word', textAlign: 'left' }}>{value}</span>
     </div>
   );
 }
@@ -270,15 +271,15 @@ export default function MyOrphansPage() {
               {loading ? 'جارٍ التحميل…' : `${orphans.length} يتيم مسجّل`}
             </p>
           </div>
-          <button className="btn-primary" onClick={() => router.push('/orphans/new')}>
+          <PrimaryButton onClick={() => router.push('/orphans/new')}>
             + تسجيل يتيم جديد
-          </button>
+          </PrimaryButton>
         </div>
 
         {/* Search + filter bar */}
         <div className="toolbar">
           <div className="search-wrap">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><Search size={16} /></span>
             <input
               className="search-inp"
               placeholder="ابحث بالاسم أو المحافظة أو الوصي…"
@@ -286,7 +287,7 @@ export default function MyOrphansPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
             {search && (
-              <button className="search-clear" onClick={() => setSearch('')}>✕</button>
+              <button className="search-clear" onClick={() => setSearch('')}><X size={16} /></button>
             )}
           </div>
 
@@ -314,7 +315,7 @@ export default function MyOrphansPage() {
         {/* Error state */}
         {error && (
           <div className="err-banner">
-            <span>⚠</span> {error}
+            <span><AlertTriangle size={18} /></span> {error}
           </div>
         )}
 
@@ -335,7 +336,7 @@ export default function MyOrphansPage() {
         {/* Empty state */}
         {!loading && !error && filtered.length === 0 && (
           <div className="empty">
-            <div className="empty-ico">👦</div>
+            <div className="empty-ico"><User size={18} /></div>
             <h3 className="empty-title">
               {search || filterStatus !== 'all' ? 'لا توجد نتائج مطابقة' : 'لا يوجد أيتام مسجّلون بعد'}
             </h3>
@@ -481,11 +482,7 @@ export default function MyOrphansPage() {
 
         .table-footer { padding:.75rem 1.25rem; font-size:.78rem; color:#9ca3af; border-top:1px solid #f0f4f8; text-align:left; }
 
-        /* ── Buttons ──────────────────────────────────────────────────── */
-        .btn-primary { display:inline-flex; align-items:center; gap:.4rem; padding:.7rem 1.4rem; background:linear-gradient(135deg,#1B5E8C,#134569); color:#fff; font-family:'Cairo',sans-serif; font-size:.9rem; font-weight:700; border:none; border-radius:.75rem; cursor:pointer; box-shadow:0 2px 8px rgba(27,94,140,.25); transition:all .15s; text-decoration:none; }
-        .btn-primary:hover { background:linear-gradient(135deg,#2E7EB8,#1B5E8C); box-shadow:0 4px 14px rgba(27,94,140,.35); transform:translateY(-1px); }
-
-        /* ── Responsive ───────────────────────────────────────────────── */
+/* ── Responsive ───────────────────────────────────────────────── */
         @media (max-width: 768px) {
           .page-top { flex-direction:column; }
           .table th:nth-child(3),

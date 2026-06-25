@@ -19,15 +19,49 @@ const generatePortalToken = () => crypto.randomBytes(32).toString('hex');
  * Create a new sponsor record.
  * portal_password_hash must already be bcrypt-hashed by the controller.
  */
-const createSponsor = async ({ fullName, phone, email, portalPasswordHash, createdBy }) => {
+const createSponsor = async ({ fullName, phone, email, portalPasswordHash, portalPasswordPlain, createdBy }) => {
+  // Check for duplicate email or phone before inserting
+  if (email || phone) {
+    const conditions = [];
+    const params = [];
+    if (email) {
+      params.push(email);
+      conditions.push(`email = $${params.length}`);
+    }
+    if (phone) {
+      params.push(phone);
+      conditions.push(`phone = $${params.length}`);
+    }
+    const { rows: existing } = await query(
+      `SELECT email, phone FROM sponsors WHERE ${conditions.join(' OR ')}`,
+      params
+    );
+    if (existing.length > 0) {
+      const match = existing[0];
+      if (email && match.email === email) {
+        const err = new Error('البريد الإلكتروني مستخدم بالفعل لكافل آخر');
+        err.status = 409;
+        throw err;
+      }
+      if (phone && match.phone === phone) {
+        const err = new Error('رقم الهاتف مستخدم بالفعل لكافل آخر');
+        err.status = 409;
+        throw err;
+      }
+    }
+  }
+
   const portalToken = generatePortalToken();
+
+  const finalEmail = email ? email : null;
+  const finalPhone = phone ? phone : null;
 
   const { rows } = await query(
     `INSERT INTO sponsors
-       (full_name, phone, email, portal_token, portal_password_hash, created_by)
-     VALUES ($1, $2, $3, $4, $5, $6)
-     RETURNING id, full_name, phone, email, portal_token, created_at`,
-    [fullName, phone, email, portalToken, portalPasswordHash, createdBy]
+       (full_name, phone, email, portal_token, portal_password_hash, portal_password_plain, created_by)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
+     RETURNING id, full_name, phone, email, portal_token, portal_password_plain, created_at`,
+    [fullName, finalPhone, finalEmail, portalToken, portalPasswordHash, portalPasswordPlain, createdBy]
   );
   return rows[0];
 };
@@ -58,6 +92,7 @@ const getSponsorById = async (id) => {
   const { rows } = await query(
     `SELECT
        s.id, s.full_name, s.phone, s.email, s.portal_token,
+       s.portal_password_plain,
        s.created_at, u.full_name AS created_by_name
      FROM sponsors s
      LEFT JOIN users u ON u.id = s.created_by
@@ -174,10 +209,11 @@ const transferSponsorship = async ({
   agentId,
   monthlyAmount,
   endReason,
+  actorId,          // ← add this param
 }) => {
+  await query('BEGIN');   // ← fix: no destructuring
+
   await query('BEGIN');
-
-
 
   try {
     // 1. Close existing active sponsorship
@@ -203,13 +239,14 @@ const transferSponsorship = async ({
 
     await query('COMMIT');
 
+    // 4. Audit log with real actor
     await logAudit({
-      userId:     null,
-      action:     'sponsorship_transferred',
+      userId: actorId || null,
+      action: 'sponsorship_transferred',
       entityType: 'sponsorship',
-      entityId:   rows[0].id,
-      oldValue:   { beneficiary_type: beneficiaryType, beneficiary_id: beneficiaryId },
-      newValue:   { new_sponsor_id: newSponsorId, monthly_amount: monthlyAmount },
+      entityId: rows[0].id,
+      oldValue: { beneficiary_type: beneficiaryType, beneficiary_id: beneficiaryId },
+      newValue: { new_sponsor_id: newSponsorId, monthly_amount: monthlyAmount },
     });
 
     return rows[0];
@@ -219,12 +256,102 @@ const transferSponsorship = async ({
   }
 };
 
+/**
+ * Update an existing sponsor.
+ */
+const updateSponsor = async (id, { fullName, phone, email, portalPasswordHash, portalPasswordPlain }) => {
+  // Check for duplicates
+  if (email || phone) {
+    const conditions = [];
+    const params = [id];
+    if (email) {
+      params.push(email);
+      conditions.push(`email = $${params.length}`);
+    }
+    if (phone) {
+      params.push(phone);
+      conditions.push(`phone = $${params.length}`);
+    }
+    const { rows: existing } = await query(
+      `SELECT email, phone FROM sponsors WHERE id != $1 AND (${conditions.join(' OR ')})`,
+      params
+    );
+    if (existing.length > 0) {
+      const match = existing[0];
+      if (email && match.email === email) {
+        const err = new Error('البريد الإلكتروني مستخدم بالفعل لكافل آخر');
+        err.status = 409;
+        throw err;
+      }
+      if (phone && match.phone === phone) {
+        const err = new Error('رقم الهاتف مستخدم بالفعل لكافل آخر');
+        err.status = 409;
+        throw err;
+      }
+    }
+  }
+
+  const finalEmail = email ? email : null;
+  const finalPhone = phone ? phone : null;
+
+  let queryStr = `UPDATE sponsors SET full_name = $1, phone = $2, email = $3`;
+  const params = [fullName, finalPhone, finalEmail];
+
+  if (portalPasswordHash) {
+    params.push(portalPasswordHash);
+    queryStr += `, portal_password_hash = $${params.length}`;
+    params.push(portalPasswordPlain);
+    queryStr += `, portal_password_plain = $${params.length}`;
+  }
+
+  params.push(id);
+  queryStr += ` WHERE id = $${params.length} RETURNING id, full_name, phone, email, portal_token, portal_password_plain, created_at`;
+
+  const { rows } = await query(queryStr, params);
+  if (!rows[0]) {
+    const err = new Error('الكافل غير موجود');
+    err.status = 404;
+    throw err;
+  }
+  return rows[0];
+};
+
+/**
+ * Delete a sponsor (must not have active sponsorships).
+ */
+const deleteSponsor = async (id) => {
+  // First check if they have active sponsorships
+  const { rows: activeCheck } = await query(
+    `SELECT COUNT(*) FROM sponsorships WHERE sponsor_id = $1 AND is_active = TRUE`,
+    [id]
+  );
+  
+  if (parseInt(activeCheck[0].count, 10) > 0) {
+    const err = new Error('لا يمكن حذف كافل لديه كفالات نشطة. قم بنقل الكفالات أولاً.');
+    err.status = 400;
+    throw err;
+  }
+
+  // Delete historical sponsorships first
+  await query(`DELETE FROM sponsorships WHERE sponsor_id = $1`, [id]);
+  
+  // Then delete the sponsor
+  const { rowCount } = await query(`DELETE FROM sponsors WHERE id = $1`, [id]);
+  if (rowCount === 0) {
+    const err = new Error('الكافل غير موجود');
+    err.status = 404;
+    throw err;
+  }
+  return true;
+};
+
 module.exports = {
   createSponsor,
   getAllSponsors,
   getSponsorById,
-  getSponsorByToken,
   getSponsorshipsBySponsorId,
   createSponsorship,
   transferSponsorship,
+  updateSponsor,
+  deleteSponsor,
 };

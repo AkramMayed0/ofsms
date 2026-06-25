@@ -27,6 +27,7 @@ const createSponsor = async (req, res, next) => {
       phone,
       email,
       portalPasswordHash,
+      portalPasswordPlain: portalPassword,
       createdBy: req.user.id,
     });
 
@@ -35,6 +36,9 @@ const createSponsor = async (req, res, next) => {
       sponsor,
     });
   } catch (err) {
+    if (err.status === 409) {
+      return res.status(409).json({ error: err.message });
+    }
     next(err);
   }
 };
@@ -124,6 +128,7 @@ const transferSponsorship = async (req, res, next) => {
       agentId,
       monthlyAmount,
       endReason,
+      actorId: req.user.id,
     });
 
     return res.status(200).json({
@@ -135,10 +140,66 @@ const transferSponsorship = async (req, res, next) => {
   }
 };
 
+/**
+ * PUT /api/sponsors/:id
+ * GM only — update a sponsor's information.
+ */
+const updateSponsor = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({ errors: errors.array() });
+    }
+
+    const { fullName, phone, email, portalPassword } = req.body;
+    let portalPasswordHash;
+
+    if (portalPassword) {
+      portalPasswordHash = await bcrypt.hash(portalPassword, 12);
+    }
+
+    const sponsor = await service.updateSponsor(req.params.id, {
+      fullName,
+      phone,
+      email,
+      portalPasswordHash,
+      portalPasswordPlain: portalPassword,
+    });
+
+    return res.status(200).json({
+      message: 'تم تحديث بيانات الكافل بنجاح',
+      sponsor,
+    });
+  } catch (err) {
+    if (err.status === 409) {
+      return res.status(409).json({ error: err.message });
+    }
+    next(err);
+  }
+};
+
+/**
+ * DELETE /api/sponsors/:id
+ * GM only — delete a sponsor completely.
+ */
+const deleteSponsor = async (req, res, next) => {
+  try {
+    await service.deleteSponsor(req.params.id);
+    return res.status(200).json({ message: 'تم حذف الكافل بنجاح' });
+  } catch (err) {
+    if (err.status === 400 || err.status === 404) {
+      return res.status(err.status).json({ error: err.message });
+    }
+    next(err);
+  }
+};
+
 module.exports = {
   createSponsor,
   getAllSponsors,
   getSponsorById,
   createSponsorship,
   transferSponsorship,
+  updateSponsor,
+  deleteSponsor,
 };

@@ -1,76 +1,106 @@
 /**
  * disbursements.routes.js
  * Mounted at: /api/disbursements
+ *
+ * This file contains ONLY route definitions and middleware wiring.
+ * Business logic  → disbursements.service.js
+ * HTTP handling   → disbursements.controller.js
+ * DB queries      → disbursements.repository.js
  */
 
 const { Router } = require('express');
+const { body } = require('express-validator');
 const { authenticate, authorize } = require('../../middleware/rbac');
 const controller = require('./disbursements.controller');
 
 const router = Router();
 
-// GM + Supervisor: generate this month's disbursement list
-router.post(
-  '/generate',
+// ── GET /api/disbursements/agent/released ─────────────────────────────────────
+// Agent only: released lists where this agent has beneficiaries
+// MUST be defined BEFORE /:id to avoid param capture
+router.get(
+  '/agent/released',
   authenticate,
-  authorize('gm', 'supervisor'),
-  controller.generateDisbursementList
+  authorize('agent', 'supervisor', 'gm'),
+  controller.getReleasedByAgent
 );
 
-// GM + Supervisor + Finance: list all disbursement lists
+// ── GET /api/disbursements — list all (supervisor / finance / gm only) ─────────
 router.get(
   '/',
   authenticate,
-  authorize('gm', 'supervisor', 'finance'),
-  controller.getAllDisbursementLists
+  authorize('supervisor', 'finance', 'gm'),
+  controller.getDisbursementLists
 );
 
-// GM + Supervisor + Finance: get a single list with items
+// ── POST /api/disbursements/generate ─────────────────────────────────────────
+router.post(
+  '/generate',
+  authenticate,
+  authorize('supervisor', 'gm'),
+  controller.generateDisbursementList
+);
+
+/**
+ * ── GET /api/disbursements/history ──────────────────────────────────────────
+ * "History" view for UI (must be defined BEFORE /:id to avoid param capture)
+ */
+router.get(
+  '/history',
+  authenticate,
+  authorize('supervisor', 'finance', 'gm', 'agent'),
+  controller.getDisbursementHistory
+);
+
+// ── GET /api/disbursements/:id ────────────────────────────────────────────────
+// Agents can also view a specific list (needed for the batch receipts page)
 router.get(
   '/:id',
   authenticate,
-  authorize('gm', 'supervisor', 'finance'),
-  controller.getDisbursementListById
+  authorize('supervisor', 'finance', 'gm', 'agent'),
+  controller.getDisbursementById
 );
 
-// Supervisor + GM: approve a disbursement list (draft → supervisor_approved)
+// ── PATCH /api/disbursements/:id/approve — supervisor approves ────────────────
 router.patch(
-  '/:id/supervisor-approve',
+  '/:id/approve',
   authenticate,
   authorize('supervisor', 'gm'),
-  controller.supervisorApproveDisbursement
+  controller.supervisorApprove
 );
 
-// Supervisor + GM: reject a disbursement list (draft → rejected)
+// ── PATCH /api/disbursements/:id/reject — supervisor rejects ──────────────────
 router.patch(
-  '/:id/supervisor-reject',
+  '/:id/reject',
   authenticate,
   authorize('supervisor', 'gm'),
-  controller.supervisorRejectDisbursement
+  [body('notes').notEmpty().withMessage('ملاحظات الرفض مطلوبة')],
+  controller.supervisorReject
 );
 
-// Finance + GM: approve (supervisor_approved → finance_approved)
+// ── PATCH /api/disbursements/:id/finance-approve ──────────────────────────────
 router.patch(
   '/:id/finance-approve',
   authenticate,
   authorize('finance', 'gm'),
-  controller.financeApproveDisbursement
+  controller.financeApprove
 );
 
-// Finance + GM: reject (supervisor_approved → rejected), notes required
+// ── PATCH /api/disbursements/:id/finance-reject ───────────────────────────────
 router.patch(
   '/:id/finance-reject',
   authenticate,
   authorize('finance', 'gm'),
-  controller.financeRejectDisbursement
+  [body('notes').notEmpty().withMessage('ملاحظات الرفض مطلوبة')],
+  controller.financeReject
 );
 
-// GM only: final release (finance_approved → released)
+// ── PATCH /api/disbursements/:id/release — GM releases funds ──────────────────
 router.patch(
-  '/:id/gm-release',
+  '/:id/release',
   authenticate,
   authorize('gm'),
-  controller.gmReleaseDisbursement
+  controller.gmRelease
 );
 
 module.exports = router;

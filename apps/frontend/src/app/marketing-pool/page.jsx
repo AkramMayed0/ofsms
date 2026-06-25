@@ -3,351 +3,146 @@
 /**
  * page.jsx
  * Route:  /marketing-pool  (GM only)
- * Task:   feature/ui-marketing-pool
  *
  * Shows all orphans + families with status = under_marketing.
- * GM can multi-select and assign a sponsor via a slide-in modal.
- *
- * API calls used:
- *   GET  /api/orphans/marketing          → list of approved orphans
- *   GET  /api/families/marketing         → list of approved families
- *   GET  /api/sponsors                   → existing sponsors list
- *   POST /api/sponsors                   → create new sponsor
- *   POST /api/sponsors/:id/sponsorships  → assign beneficiary to sponsor
+ * Clicking a row navigates to the profile where a GM can assign a sponsor.
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import api from '@/lib/api';
-import AppShell from '@/components/AppShell';
+import { useRouter } from 'next/navigation';
+import { AlertTriangle, X, User, Users, Download } from 'lucide-react';
+
+import api from '../../lib/api';
+import AppShell from '../../components/AppShell';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
 const calcAge = (dob) => {
   if (!dob) return '—';
   return `${Math.floor((Date.now() - new Date(dob)) / (365.25 * 24 * 60 * 60 * 1000))} سنة`;
 };
 
-const today = () => new Date().toISOString().split('T')[0];
+// ── Icons ─────────────────────────────────────────────────────────────────────
+const IconSearch = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+);
 
-// ── Toast ─────────────────────────────────────────────────────────────────────
+const IconFilter = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+  </svg>
+);
 
-function Toast({ message, type, onClose }) {
-  useEffect(() => {
-    const t = setTimeout(onClose, 3500);
-    return () => clearTimeout(t);
-  }, [onClose]);
+const IconStar = () => (
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+  </svg>
+);
 
+const IconRefresh = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="23 4 23 10 17 10" />
+    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+  </svg>
+);
+
+const IconEmpty = () => (
+  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity=".3">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+);
+
+// ── Stat pill ─────────────────────────────────────────────────────────────────
+function StatPill({ label, count, color }) {
   return (
-    <div className={`toast toast-${type}`}>
-      <span>{type === 'success' ? '✅' : '❌'}</span>
-      {message}
+    <div
+      style={{
+        display: 'inline-flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '2px',
+        padding: '.6rem 1.1rem',
+        background: '#fff',
+        border: '1.5px solid #e5e7eb',
+        borderRadius: '12px',
+        fontFamily: "'Cairo', sans-serif",
+        minWidth: '80px',
+        boxShadow: '0 1px 3px rgba(0,0,0,.04)',
+      }}
+    >
+      <span style={{ fontSize: '1.35rem', fontWeight: 800, lineHeight: 1, color }}>
+        {count}
+      </span>
+      <span style={{ fontSize: '.72rem', fontWeight: 600, color: '#6b7280', whiteSpace: 'nowrap' }}>
+        {label}
+      </span>
     </div>
   );
 }
 
-// ── Assign Modal ──────────────────────────────────────────────────────────────
-
-function AssignModal({ selected, sponsors, onClose, onSuccess }) {
-  const [tab, setTab] = useState('existing'); // 'existing' | 'new'
-  const [sponsorId, setSponsorId] = useState('');
-  const [sponsorSearch, setSponsorSearch] = useState('');
-  const [newSponsor, setNewSponsor] = useState({
-    fullName: '', phone: '', email: '', portalPassword: '',
-  });
-  const [shared, setShared] = useState({
-    intermediary: '',
-    startDate: today(),
-    monthlyAmount: '',
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const filteredSponsors = sponsors.filter((s) =>
-    s.full_name?.includes(sponsorSearch) || s.email?.includes(sponsorSearch)
-  );
-
-  const handleSubmit = async () => {
-    setError('');
-    // Validation
-    if (tab === 'existing' && !sponsorId) {
-      setError('يرجى اختيار كافل'); return;
-    }
-    if (tab === 'new') {
-      if (!newSponsor.fullName.trim()) { setError('اسم الكافل مطلوب'); return; }
-      if (!newSponsor.portalPassword || newSponsor.portalPassword.length < 8) {
-        setError('كلمة مرور البوابة يجب أن تكون 8 أحرف على الأقل'); return;
-      }
-    }
-    if (!shared.startDate) { setError('تاريخ البداية مطلوب'); return; }
-    if (!shared.monthlyAmount || parseFloat(shared.monthlyAmount) <= 0) {
-      setError('المبلغ الشهري مطلوب'); return;
-    }
-
-    setLoading(true);
-    try {
-      // Step 1: resolve sponsor ID
-      let finalSponsorId = sponsorId;
-      if (tab === 'new') {
-        const { data } = await api.post('/sponsors', {
-          fullName: newSponsor.fullName.trim(),
-          phone: newSponsor.phone.trim() || undefined,
-          email: newSponsor.email.trim() || undefined,
-          portalPassword: newSponsor.portalPassword,
-        });
-        finalSponsorId = data.sponsor.id;
-      }
-
-      // Step 2: assign each selected beneficiary
-      for (const item of selected) {
-        await api.post(`/sponsors/${finalSponsorId}/sponsorships`, {
-          beneficiaryType: item.type,
-          beneficiaryId: item.id,
-          agentId: item.agent_id,
-          intermediary: shared.intermediary.trim() || undefined,
-          startDate: shared.startDate,
-          monthlyAmount: parseFloat(shared.monthlyAmount),
-        });
-      }
-
-      onSuccess(selected.length);
-    } catch (err) {
-      setError(
-        err.response?.data?.errors?.[0]?.msg ||
-        err.response?.data?.error ||
-        'حدث خطأ أثناء التعيين'
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
+// ── Skeleton row ──────────────────────────────────────────────────────────────
+function SkeletonRow() {
   return (
-    <>
-      <div className="modal-backdrop" onClick={onClose} />
-      <div className="modal" dir="rtl">
-        {/* Header */}
-        <div className="modal-head">
-          <div>
-            <h2 className="modal-title">تعيين كفيل</h2>
-            <p className="modal-sub">
-              {selected.length} مستفيد مختار
-              {' · '}
-              {selected.filter(i => i.type === 'orphan').length} يتيم
-              {' ، '}
-              {selected.filter(i => i.type === 'family').length} أسرة
-            </p>
-          </div>
-          <button className="modal-close" onClick={onClose}>✕</button>
-        </div>
-
-        {/* Tabs */}
-        <div className="modal-tabs">
-          <button
-            className={`mtab ${tab === 'existing' ? 'mtab-active' : ''}`}
-            onClick={() => setTab('existing')}
-          >
-            🤝 كافل موجود
-          </button>
-          <button
-            className={`mtab ${tab === 'new' ? 'mtab-active' : ''}`}
-            onClick={() => setTab('new')}
-          >
-            ➕ كافل جديد
-          </button>
-        </div>
-
-        <div className="modal-body">
-
-          {/* Existing sponsor */}
-          {tab === 'existing' && (
-            <div className="field-group">
-              <label className="lbl">اختر الكافل <span className="req">*</span></label>
-              <input
-                className="inp"
-                placeholder="ابحث بالاسم أو البريد…"
-                value={sponsorSearch}
-                onChange={(e) => setSponsorSearch(e.target.value)}
-              />
-              <div className="sponsor-list-box">
-                {filteredSponsors.length === 0 && (
-                  <p className="sponsor-empty">لا يوجد كفلاء مطابقون</p>
-                )}
-                {filteredSponsors.map((s) => (
-                  <div
-                    key={s.id}
-                    className={`sponsor-option ${sponsorId === s.id ? 'sponsor-selected' : ''}`}
-                    onClick={() => setSponsorId(s.id)}
-                  >
-                    <div className="sponsor-avatar">
-                      {s.full_name?.charAt(0) || '؟'}
-                    </div>
-                    <div>
-                      <div className="sponsor-name">{s.full_name}</div>
-                      {s.email && <div className="sponsor-email">{s.email}</div>}
-                    </div>
-                    {sponsorId === s.id && <span className="sponsor-check">✓</span>}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* New sponsor */}
-          {tab === 'new' && (
-            <div className="new-sponsor-grid">
-              <div className="fg span2">
-                <label className="lbl">اسم الكافل <span className="req">*</span></label>
-                <input
-                  className="inp"
-                  placeholder="الاسم الكامل للكافل"
-                  value={newSponsor.fullName}
-                  onChange={(e) => setNewSponsor(p => ({ ...p, fullName: e.target.value }))}
-                />
-              </div>
-              <div className="fg">
-                <label className="lbl">رقم الهاتف <span className="opt">(اختياري)</span></label>
-                <input
-                  className="inp ltr"
-                  placeholder="+967700000000"
-                  value={newSponsor.phone}
-                  onChange={(e) => setNewSponsor(p => ({ ...p, phone: e.target.value }))}
-                />
-              </div>
-              <div className="fg">
-                <label className="lbl">البريد الإلكتروني <span className="opt">(اختياري)</span></label>
-                <input
-                  className="inp ltr"
-                  placeholder="sponsor@example.com"
-                  value={newSponsor.email}
-                  onChange={(e) => setNewSponsor(p => ({ ...p, email: e.target.value }))}
-                />
-              </div>
-              <div className="fg span2">
-                <label className="lbl">كلمة مرور البوابة <span className="req">*</span></label>
-                <input
-                  className="inp ltr"
-                  type="password"
-                  placeholder="8 أحرف على الأقل"
-                  value={newSponsor.portalPassword}
-                  onChange={(e) => setNewSponsor(p => ({ ...p, portalPassword: e.target.value }))}
-                />
-                <p className="field-hint">ستُرسَل للكافل للدخول عبر البوابة الخاصة به</p>
-              </div>
-            </div>
-          )}
-
-          {/* Divider */}
-          <div className="section-divider">تفاصيل الكفالة</div>
-
-          {/* Shared sponsorship fields */}
-          <div className="shared-grid">
-            <div className="fg">
-              <label className="lbl">تاريخ البداية <span className="req">*</span></label>
-              <input
-                className="inp ltr"
-                type="date"
-                value={shared.startDate}
-                onChange={(e) => setShared(p => ({ ...p, startDate: e.target.value }))}
-              />
-            </div>
-            <div className="fg">
-              <label className="lbl">المبلغ الشهري (ر.ي) <span className="req">*</span></label>
-              <input
-                className="inp ltr"
-                type="number"
-                min="1"
-                placeholder="مثال: 30000"
-                value={shared.monthlyAmount}
-                onChange={(e) => setShared(p => ({ ...p, monthlyAmount: e.target.value }))}
-              />
-            </div>
-            <div className="fg span2">
-              <label className="lbl">الوسيط <span className="opt">(اختياري)</span></label>
-              <input
-                className="inp"
-                placeholder="اسم الوسيط أو الجهة المسهِّلة للكفالة"
-                value={shared.intermediary}
-                onChange={(e) => setShared(p => ({ ...p, intermediary: e.target.value }))}
-              />
-            </div>
-          </div>
-
-          {/* Selected items preview */}
-          <div className="selected-preview">
-            <p className="preview-label">المستفيدون المختارون:</p>
-            <div className="preview-chips">
-              {selected.map((item) => (
-                <span key={item.id} className={`preview-chip chip-${item.type}`}>
-                  {item.type === 'orphan' ? '👦' : '👨‍👩‍👧'} {item.name}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {error && (
-            <div className="modal-error">
-              <span>⚠</span> {error}
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="modal-foot">
-          <button className="btn-ghost" onClick={onClose} disabled={loading}>
-            إلغاء
-          </button>
-          <button className="btn-primary" onClick={handleSubmit} disabled={loading}>
-            {loading
-              ? <><span className="spin" /> جارٍ التعيين…</>
-              : `تعيين الكفيل لـ ${selected.length} مستفيد ←`}
-          </button>
-        </div>
-      </div>
-    </>
+    <tr className="skeleton-row">
+      {[80, 50, 70, 90, 60].map((w, i) => (
+        <td key={i}><div className="skel-cell" style={{ width: `${w}%` }} /></td>
+      ))}
+    </tr>
   );
 }
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
-
 export default function MarketingPoolPage() {
-  const [items, setItems]         = useState([]);   // combined orphans + families
-  const [sponsors, setSponsors]   = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState('');
-  const [selected, setSelected]   = useState(new Set()); // Set of IDs
-  const [search, setSearch]       = useState('');
-  const [filterType, setFilterType] = useState('all'); // 'all' | 'orphan' | 'family'
-  const [showModal, setShowModal] = useState(false);
-  const [toast, setToast]         = useState(null); // { message, type }
+  const router = useRouter();
+  const [items, setItems] = useState([]);
+  const [governorates, setGovernorates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+  const [filterType, setFilterType] = useState('all');
+  const [govFilter, setGovFilter] = useState('');
+  const [giftedFilter, setGiftedFilter] = useState('');
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [exporting, setExporting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const [orphansRes, familiesRes, sponsorsRes] = await Promise.all([
+      const [oRes, fRes, gRes] = await Promise.all([
         api.get('/orphans/marketing'),
         api.get('/families/marketing'),
-        api.get('/sponsors'),
+        api.get('/governorates').catch(() => ({ data: { data: [] } })),
       ]);
 
-      const orphans = (orphansRes.data.orphans || []).map(o => ({
+      const orphans = (oRes.data.orphans || []).map(o => ({
         id: o.id,
         type: 'orphan',
         name: o.full_name,
         age: calcAge(o.date_of_birth),
         governorate: o.governorate_ar || '—',
+        governorateId: o.governorate_id,
         agent: o.agent_name || '—',
         agent_id: o.agent_id,
         isGifted: o.is_gifted,
         addedAt: o.created_at,
       }));
 
-      const families = (familiesRes.data.families || []).map(f => ({
+      const families = (fRes.data.families || []).map(f => ({
         id: f.id,
         type: 'family',
         name: f.family_name,
         age: `${f.member_count || '—'} فرد`,
         governorate: f.governorate_ar || '—',
+        governorateId: f.governorate_id,
         agent: f.agent_name || '—',
         agent_id: f.agent_id,
         isGifted: false,
@@ -355,9 +150,9 @@ export default function MarketingPoolPage() {
       }));
 
       setItems([...orphans, ...families].sort((a, b) => new Date(a.addedAt) - new Date(b.addedAt)));
-      setSponsors(sponsorsRes.data.sponsors || []);
+      setGovernorates(gRes.data.data || []);
     } catch {
-      setError('تعذّر تحميل قائمة التسويق. يرجى تحديث الصفحة.');
+      setError('تعذّر تحميل قائمة التسويق');
     } finally {
       setLoading(false);
     }
@@ -365,199 +160,212 @@ export default function MarketingPoolPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Filtered view
-  const filtered = items.filter((item) => {
+  const filtered = items.filter(item => {
     const matchSearch = !search ||
       item.name?.includes(search) ||
       item.governorate?.includes(search) ||
       item.agent?.includes(search);
     const matchType = filterType === 'all' || item.type === filterType;
-    return matchSearch && matchType;
+    const matchGov = !govFilter || item.governorate === govFilter;
+    const matchGifted = !giftedFilter || String(item.isGifted) === giftedFilter;
+    return matchSearch && matchType && matchGov && matchGifted;
   });
+  const itemKey = (item) => `${item.type}:${item.id}`;
+  const allFilteredSelected = filtered.length > 0
+    && filtered.every(item => selectedItems.includes(itemKey(item)));
 
-  // Selection helpers
-  const toggleItem = (id) => {
-    setSelected(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+  const downloadBlob = (blob, filename) => {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
   };
 
-  const toggleAll = () => {
-    if (selected.size === filtered.length) {
-      setSelected(new Set());
+  const handleRowClick = (item) => {
+    if (item.type === 'orphan') {
+      router.push(`/orphans/${item.id}`);
     } else {
-      setSelected(new Set(filtered.map(i => i.id)));
+      router.push(`/families/${item.id}`);
     }
   };
 
-  const selectedItems = items.filter(i => selected.has(i.id));
+  const toggleItem = (item) => {
+    const key = itemKey(item);
+    setSelectedItems((current) =>
+      current.includes(key) ? current.filter((selectedKey) => selectedKey !== key) : [...current, key]
+    );
+  };
 
-  const handleSuccess = (count) => {
-    setShowModal(false);
-    setSelected(new Set());
-    setToast({ message: `تم تعيين الكفيل بنجاح لـ ${count} مستفيد`, type: 'success' });
-    // Remove assigned items from local state
-    setItems(prev => prev.filter(i => !selected.has(i.id)));
+  const toggleFilteredItems = () => {
+    if (allFilteredSelected) {
+      setSelectedItems((current) => current.filter((key) => !filtered.some(item => itemKey(item) === key)));
+      return;
+    }
+    setSelectedItems((current) => Array.from(new Set([...current, ...filtered.map(itemKey)])));
+  };
+
+  const exportSelected = async () => {
+    if (selectedItems.length === 0) return;
+    setExporting(true);
+    setError('');
+    try {
+      for (const selectedKey of selectedItems) {
+        const [type, id] = selectedKey.split(':');
+        const item = items.find(i => i.type === type && i.id === id);
+        const res = await api.get(`/reports/${type}/${id}/pdf`, { responseType: 'blob' });
+        const safeName = (item?.name || id).replace(/[\\/:*?"<>|]/g, '-');
+        downloadBlob(res.data, `${type}-${safeName}.pdf`);
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      }
+    } catch {
+      setError('تعذّر تصدير ملفات PDF المحددة');
+    } finally {
+      setExporting(false);
+    }
   };
 
   const orphanCount = items.filter(i => i.type === 'orphan').length;
   const familyCount = items.filter(i => i.type === 'family').length;
+  const hasActiveFilters = search || filterType !== 'all' || govFilter || giftedFilter;
+
+  const clearFilters = () => {
+    setSearch('');
+    setFilterType('all');
+    setGovFilter('');
+    setGiftedFilter('');
+  };
 
   return (
     <AppShell>
-      <div className="page" dir="rtl">
+      <div className="orphans-page" dir="rtl">
 
-        {/* Toast */}
-        {toast && (
-          <Toast
-            message={toast.message}
-            type={toast.type}
-            onClose={() => setToast(null)}
-          />
-        )}
-
-        {/* Page header */}
-        <div className="page-top">
+        {/* ── Page header ─────────────────────────────────────────── */}
+        <div className="page-header">
           <div>
-            <h1 className="page-title">قائمة التسويق</h1>
+            <h1 className="page-title">مجمع التسويق</h1>
             <p className="page-sub">
-              {loading ? 'جارٍ التحميل…' : `${items.length} مستفيد بانتظار تعيين كفيل — ${orphanCount} يتيم ، ${familyCount} أسرة`}
+              {loading ? 'جارٍ التحميل…' : `جميع الحالات بانتظار كافل`}
             </p>
           </div>
-          {selected.size > 0 && (
-            <button
-              className="btn-primary"
-              onClick={() => setShowModal(true)}
-            >
-              🤝 تعيين كفيل ({selected.size})
+          <div className="header-actions">
+            <button className="btn-refresh" onClick={load} title="تحديث">
+              <IconRefresh />
             </button>
-          )}
+          </div>
         </div>
 
-        {/* Stats bar */}
+        {/* ── Stat pills ──────────────────────────────────────────── */}
         {!loading && items.length > 0 && (
-          <div className="stats-bar">
-            <div className="stat-pill">
-              <span className="pill-num">{items.length}</span>
-              <span className="pill-lbl">إجمالي</span>
-            </div>
-            <div className="stat-pill pill-orphan">
-              <span className="pill-num">{orphanCount}</span>
-              <span className="pill-lbl">أيتام</span>
-            </div>
-            <div className="stat-pill pill-family">
-              <span className="pill-num">{familyCount}</span>
-              <span className="pill-lbl">أسر</span>
-            </div>
-            {selected.size > 0 && (
-              <div className="stat-pill pill-selected">
-                <span className="pill-num">{selected.size}</span>
-                <span className="pill-lbl">مختار</span>
-              </div>
-            )}
+          <div className="stat-pills">
+            <StatPill label="الإجمالي" count={items.length} color="#1B5E8C" />
+            <StatPill label="أيتام" count={orphanCount} color="#3B82F6" />
+            <StatPill label="أسر" count={familyCount} color="#10B981" />
           </div>
         )}
 
-        {/* Search + filter */}
-        <div className="toolbar">
+        {/* ── Filters bar ─────────────────────────────────────────── */}
+        <div className="filters-bar">
+          {/* Search */}
           <div className="search-wrap">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><IconSearch /></span>
             <input
+              type="text"
               className="search-inp"
               placeholder="ابحث بالاسم أو المحافظة أو المندوب…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
             {search && (
-              <button className="search-clear" onClick={() => setSearch('')}>✕</button>
+              <button className="search-clear" onClick={() => setSearch('')}><X size={16} /></button>
             )}
           </div>
-          <div className="type-tabs">
-            {[
-              { key: 'all', label: 'الكل', emoji: '📋' },
-              { key: 'orphan', label: 'أيتام', emoji: '👦' },
-              { key: 'family', label: 'أسر', emoji: '👨‍👩‍👧' },
-            ].map(({ key, label, emoji }) => (
-              <button
-                key={key}
-                className={`ttab ${filterType === key ? 'ttab-active' : ''}`}
-                onClick={() => setFilterType(key)}
-              >
-                {emoji} {label}
-              </button>
-            ))}
+
+          {/* Type filter */}
+          <div className="filter-select-wrap">
+            <span className="filter-icon"><IconFilter /></span>
+            <select
+              className="filter-select"
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+            >
+              <option value="all">الكل (أيتام + أسر)</option>
+              <option value="orphan">الأيتام فقط</option>
+              <option value="family">الأسر فقط</option>
+            </select>
           </div>
+
+          {/* Governorate filter */}
+          <div className="filter-select-wrap">
+            <span className="filter-icon"><IconFilter /></span>
+            <select
+              className="filter-select"
+              value={govFilter}
+              onChange={(e) => setGovFilter(e.target.value)}
+            >
+              <option value="">جميع المحافظات</option>
+              {governorates.map((g) => (
+                <option key={g.id} value={g.name_ar}>{g.name_ar}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Gifted filter */}
+          <div className="filter-select-wrap">
+            <span className="filter-icon"><IconFilter /></span>
+            <select
+              className="filter-select"
+              value={giftedFilter}
+              onChange={(e) => setGiftedFilter(e.target.value)}
+            >
+              <option value="">الكل (موهوب + عادي)</option>
+              <option value="true">الموهوبون فقط ⭐</option>
+              <option value="false">غير الموهوبين</option>
+            </select>
+          </div>
+
+          {/* Clear filters */}
+          {hasActiveFilters && (
+            <button className="btn-clear-filters" onClick={clearFilters}>
+              مسح الفلاتر <X size={16} />
+            </button>
+          )}
+
+          <button
+            className="btn-export-selected"
+            onClick={exportSelected}
+            disabled={selectedItems.length === 0 || exporting}
+            title="تصدير ملف PDF منفصل لكل مستفيد محدد"
+          >
+            <Download size={16} />
+            {exporting ? 'جارٍ التصدير…' : `Export (${selectedItems.length})`}
+          </button>
         </div>
 
-        {/* Error */}
+        {/* ── Error ───────────────────────────────────────────────── */}
         {error && (
-          <div className="err-banner">⚠ {error}</div>
-        )}
-
-        {/* Loading skeleton */}
-        {loading && (
-          <div className="skel-wrap">
-            {[1,2,3,4,5].map(i => (
-              <div key={i} className="skel-row">
-                <div className="skel skel-check" />
-                <div className="skel skel-name" />
-                <div className="skel skel-type" />
-                <div className="skel skel-gov" />
-                <div className="skel skel-age" />
-              </div>
-            ))}
+          <div className="error-banner" role="alert">
+            <AlertTriangle size={18} /> {error}
+            <button onClick={load} className="retry-btn">إعادة المحاولة</button>
           </div>
         )}
 
-        {/* Empty state */}
-        {!loading && !error && filtered.length === 0 && (
-          <div className="empty">
-            <div className="empty-ico">🎉</div>
-            <h3 className="empty-title">
-              {items.length === 0 ? 'لا يوجد مستفيدون بانتظار كفيل' : 'لا توجد نتائج مطابقة'}
-            </h3>
-            <p className="empty-sub">
-              {items.length === 0
-                ? 'جميع الأيتام والأسر المعتمدين تم تعيين كفلاء لهم'
-                : 'جرّب تغيير معايير البحث'}
-            </p>
-          </div>
-        )}
-
-        {/* Table */}
-        {!loading && filtered.length > 0 && (
-          <div className="table-wrap">
-            {/* Floating selection bar */}
-            {selected.size > 0 && (
-              <div className="selection-bar">
-                <span className="sel-count">
-                  ✓ تم تحديد {selected.size} من {filtered.length}
-                </span>
-                <div className="sel-actions">
-                  <button className="sel-clear" onClick={() => setSelected(new Set())}>
-                    إلغاء التحديد
-                  </button>
-                  <button className="btn-primary-sm" onClick={() => setShowModal(true)}>
-                    🤝 تعيين كفيل ←
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <table className="table">
+        {/* ── Table ───────────────────────────────────────────────── */}
+        <div className="table-card">
+          <div className="table-scroll">
+            <table className="orphans-table">
               <thead>
                 <tr>
-                  <th className="th-check">
+                  <th className="select-col">
                     <input
                       type="checkbox"
-                      className="checkbox"
-                      checked={selected.size === filtered.length && filtered.length > 0}
-                      ref={el => {
-                        if (el) el.indeterminate = selected.size > 0 && selected.size < filtered.length;
-                      }}
-                      onChange={toggleAll}
+                      checked={allFilteredSelected}
+                      disabled={filtered.length === 0}
+                      onChange={toggleFilteredItems}
+                      aria-label="تحديد كل المستفيدين الظاهرين"
                     />
                   </th>
                   <th>الاسم</th>
@@ -569,260 +377,316 @@ export default function MarketingPoolPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((item) => (
-                  <tr
-                    key={item.id}
-                    className={`trow ${selected.has(item.id) ? 'trow-selected' : ''}`}
-                    onClick={() => toggleItem(item.id)}
-                  >
-                    <td className="td-check" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        className="checkbox"
-                        checked={selected.has(item.id)}
-                        onChange={() => toggleItem(item.id)}
-                      />
-                    </td>
-                    <td>
-                      <div className="name-cell">
-                        <div className={`name-avatar avatar-${item.type}`}>
-                          {item.type === 'orphan' ? '👦' : '👨‍👩‍👧'}
-                        </div>
-                        <div>
-                          <div className="name-text">{item.name}</div>
-                          {item.isGifted && (
-                            <span className="gifted-tag">🌟 موهوب</span>
-                          )}
-                        </div>
+                {loading ? (
+                  Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)
+                ) : !error && filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan="7">
+                      <div className="empty-state">
+                        <IconEmpty />
+                        <p className="empty-title">
+                          {items.length === 0 ? 'لا يوجد مستفيدون بانتظار كافل' : 'لا توجد نتائج مطابقة'}
+                        </p>
+                        <p className="empty-sub">
+                          {items.length === 0 ? 'جميع الحالات المعتمدة تم تعيين كفلاء لها' : 'جرّب تغيير الفلاتر أو مسحها'}
+                        </p>
+                        {hasActiveFilters && (
+                          <button className="btn-clear-filters-sm" onClick={clearFilters}>
+                            مسح الفلاتر
+                          </button>
+                        )}
                       </div>
                     </td>
-                    <td>
-                      <span className={`type-badge badge-${item.type}`}>
-                        {item.type === 'orphan' ? 'يتيم' : 'أسرة'}
-                      </span>
-                    </td>
-                    <td className="cell-muted">{item.governorate}</td>
-                    <td className="cell-muted">{item.age}</td>
-                    <td className="cell-muted">{item.agent}</td>
-                    <td className="cell-muted cell-date">
-                      {item.addedAt
-                        ? new Date(item.addedAt).toLocaleDateString('ar-YE', { dateStyle: 'medium' })
-                        : '—'}
-                    </td>
                   </tr>
-                ))}
+                ) : (
+                  filtered.map((item) => (
+                    <tr
+                      key={item.id}
+                      className="data-row"
+                      onClick={() => handleRowClick(item)}
+                      tabIndex={0}
+                      onKeyDown={(e) => e.key === 'Enter' && handleRowClick(item)}
+                      role="button"
+                    >
+                      <td className="select-col" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={selectedItems.includes(itemKey(item))}
+                          onChange={() => toggleItem(item)}
+                          aria-label={`تحديد ${item.name}`}
+                        />
+                      </td>
+                      {/* Name */}
+                      <td>
+                        <div className="name-cell">
+                          <div className="avatar-sm">
+                            {item.name?.[0] || '؟'}
+                          </div>
+                          <div className="name-info">
+                            <span className="name-text">
+                              {item.name}
+                              {item.isGifted && (
+                                <span className="gifted-tag" title="موهوب">
+                                  <IconStar />
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Type badge */}
+                      <td>
+                        <span className={`badge ${item.type}`}>
+                          {item.type === 'orphan' ? 'يتيم' : 'أسرة'}
+                        </span>
+                      </td>
+
+                      {/* Governorate */}
+                      <td>
+                        <span className="gov-cell">{item.governorate}</span>
+                      </td>
+
+                      {/* Age / Members */}
+                      <td>
+                        <span className="age-cell">{item.age}</span>
+                      </td>
+
+                      {/* Agent */}
+                      <td>
+                        <span className="agent-cell">{item.agent}</span>
+                      </td>
+
+                      {/* Date */}
+                      <td>
+                        <span className="date-cell">
+                          {item.addedAt ? new Date(item.addedAt).toLocaleDateString('ar-YE', { dateStyle: 'medium' }) : '—'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
-
-            <div className="table-footer">
-              عرض {filtered.length} من {items.length} مستفيد
-              {selected.size > 0 && ` · ${selected.size} مختار`}
-            </div>
           </div>
-        )}
+
+          {/* Footer count */}
+          {!loading && filtered.length > 0 && (
+            <div className="table-footer">
+              <span className="result-count">
+                {filtered.length === items.length
+                  ? `${items.length} مستفيد`
+                  : `${filtered.length} من أصل ${items.length} مستفيد`}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Assign Modal */}
-      {showModal && (
-        <AssignModal
-          selected={selectedItems}
-          sponsors={sponsors}
-          onClose={() => setShowModal(false)}
-          onSuccess={handleSuccess}
-        />
-      )}
-
       <style jsx>{`
-        /* ── Page ─────────────────────────────────────────────────────── */
-        .page { max-width:1200px; margin:0 auto; padding-bottom:4rem; font-family:'Cairo','Tajawal',sans-serif; position:relative; }
-
-        /* ── Toast ────────────────────────────────────────────────────── */
-        .toast { position:fixed; top:1.5rem; right:50%; transform:translateX(50%); z-index:100; display:flex; align-items:center; gap:.6rem; padding:.8rem 1.5rem; border-radius:.75rem; font-size:.9rem; font-weight:600; box-shadow:0 4px 20px rgba(0,0,0,.15); animation:slideDown .25s ease; }
-        .toast-success { background:#ecfdf5; color:#065f46; border:1px solid #6ee7b7; }
-        .toast-error   { background:#fef2f2; color:#991b1b; border:1px solid #fca5a5; }
-        @keyframes slideDown { from { opacity:0; transform:translateX(50%) translateY(-10px); } to { opacity:1; transform:translateX(50%) translateY(0); } }
-
-        /* ── Header ───────────────────────────────────────────────────── */
-        .page-top { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; margin-bottom:1.25rem; }
-        .page-title { font-size:1.6rem; font-weight:800; color:#0d3d5c; margin:0 0 .2rem; }
-        .page-sub { font-size:.85rem; color:#6b7a8d; margin:0; }
-
-        /* ── Stats bar ────────────────────────────────────────────────── */
-        .stats-bar { display:flex; gap:.6rem; margin-bottom:1.1rem; flex-wrap:wrap; }
-        .stat-pill { display:inline-flex; align-items:center; gap:.4rem; padding:.4rem .9rem; background:#fff; border:1.5px solid #e5eaf0; border-radius:2rem; }
-        .pill-orphan { border-color:#bfdbfe; background:#eff6ff; }
-        .pill-family { border-color:#d9f99d; background:#f7fee7; }
-        .pill-selected { border-color:#1B5E8C; background:#f0f7ff; }
-        .pill-num { font-size:1rem; font-weight:800; color:#0d3d5c; }
-        .pill-lbl { font-size:.75rem; color:#6b7a8d; font-weight:500; }
-
-        /* ── Toolbar ──────────────────────────────────────────────────── */
-        .toolbar { display:flex; flex-direction:column; gap:.75rem; margin-bottom:1.1rem; }
-        .search-wrap { position:relative; display:flex; align-items:center; }
-        .search-icon { position:absolute; right:.85rem; font-size:.9rem; pointer-events:none; }
-        .search-inp { width:100%; border:1.5px solid #d1d5db; border-radius:.75rem; padding:.65rem .9rem .65rem 2.5rem; padding-right:2.4rem; font-size:.88rem; font-family:'Cairo',sans-serif; color:#1f2937; background:#fafafa; outline:none; transition:border-color .15s,box-shadow .15s; box-sizing:border-box; }
-        .search-inp:focus { border-color:#1B5E8C; background:#fff; box-shadow:0 0 0 3px rgba(27,94,140,.1); }
-        .search-clear { position:absolute; left:.75rem; background:none; border:none; cursor:pointer; color:#9ca3af; font-size:.85rem; }
-        .type-tabs { display:flex; gap:.4rem; }
-        .ttab { display:inline-flex; align-items:center; gap:.35rem; padding:.4rem .9rem; border:1.5px solid #e5eaf0; border-radius:2rem; font-size:.8rem; font-weight:600; color:#6b7280; background:#fff; cursor:pointer; transition:all .15s; font-family:'Cairo',sans-serif; }
-        .ttab:hover { border-color:#1B5E8C; color:#1B5E8C; }
-        .ttab-active { border-color:#1B5E8C; background:#1B5E8C; color:#fff; }
-
-        /* ── Error ────────────────────────────────────────────────────── */
-        .err-banner { background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; padding:.85rem 1rem; border-radius:.75rem; font-size:.85rem; margin-bottom:1rem; }
-
-        /* ── Skeleton ─────────────────────────────────────────────────── */
-        .skel-wrap { display:flex; flex-direction:column; gap:.5rem; }
-        .skel-row { display:flex; gap:1rem; padding:1rem 1.25rem; background:#fff; border:1px solid #e5eaf0; border-radius:.75rem; align-items:center; }
-        .skel { background:linear-gradient(90deg,#f0f4f8 25%,#e5eaf0 50%,#f0f4f8 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:.375rem; }
-        .skel-check { width:18px; height:18px; border-radius:4px; }
-        .skel-name { width:160px; height:16px; }
-        .skel-type { width:55px; height:22px; border-radius:2rem; }
-        .skel-gov { width:80px; height:14px; }
-        .skel-age { width:60px; height:14px; }
-        @keyframes shimmer { to { background-position:-200% 0; } }
-
-        /* ── Empty ────────────────────────────────────────────────────── */
-        .empty { display:flex; flex-direction:column; align-items:center; min-height:320px; justify-content:center; text-align:center; gap:.75rem; }
-        .empty-ico { font-size:3.5rem; }
-        .empty-title { font-size:1.1rem; font-weight:700; color:#374151; margin:0; }
-        .empty-sub { font-size:.85rem; color:#9ca3af; margin:0; }
-
-        /* ── Table wrapper ────────────────────────────────────────────── */
-        .table-wrap { background:#fff; border:1px solid #e5eaf0; border-radius:1rem; overflow:hidden; box-shadow:0 1px 4px rgba(27,94,140,.05); }
-
-        /* ── Selection bar ────────────────────────────────────────────── */
-        .selection-bar { display:flex; align-items:center; justify-content:space-between; padding:.75rem 1.25rem; background:linear-gradient(90deg,#f0f7ff,#e8f4ff); border-bottom:1px solid #bfdbfe; gap:1rem; flex-wrap:wrap; }
-        .sel-count { font-size:.85rem; font-weight:700; color:#1B5E8C; }
-        .sel-actions { display:flex; align-items:center; gap:.6rem; }
-        .sel-clear { background:none; border:1.5px solid #93c5fd; border-radius:.5rem; padding:.3rem .7rem; font-size:.78rem; color:#1B5E8C; cursor:pointer; font-family:'Cairo',sans-serif; font-weight:600; }
-        .btn-primary-sm { display:inline-flex; align-items:center; gap:.35rem; padding:.4rem .9rem; background:linear-gradient(135deg,#1B5E8C,#134569); color:#fff; font-family:'Cairo',sans-serif; font-size:.82rem; font-weight:700; border:none; border-radius:.5rem; cursor:pointer; transition:all .15s; white-space:nowrap; }
-        .btn-primary-sm:hover { background:linear-gradient(135deg,#2E7EB8,#1B5E8C); }
-
-        /* ── Table ────────────────────────────────────────────────────── */
-        .table { width:100%; border-collapse:collapse; }
-        .table thead tr { background:#f8fafc; }
-        .table th { padding:.85rem 1rem; text-align:right; font-size:.75rem; font-weight:700; color:#6b7a8d; white-space:nowrap; border-bottom:1px solid #e5eaf0; }
-        .th-check { width:40px; text-align:center; }
-        .td-check { text-align:center; }
-        .table td { padding:.9rem 1rem; font-size:.85rem; border-bottom:1px solid #f8fafc; vertical-align:middle; }
-        .trow { cursor:pointer; transition:background .1s; }
-        .trow:hover { background:#f8fbff; }
-        .trow-selected { background:#f0f7ff !important; }
-        .trow:last-child td { border-bottom:none; }
-
-        /* Checkbox */
-        .checkbox { width:17px; height:17px; border-radius:4px; accent-color:#1B5E8C; cursor:pointer; }
-
-        .name-cell { display:flex; align-items:center; gap:.65rem; }
-        .name-avatar { width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0; }
-        .avatar-orphan { background:#eff6ff; }
-        .avatar-family { background:#f7fee7; }
-        .name-text { font-weight:700; color:#1f2937; font-size:.87rem; }
-        .gifted-tag { display:inline-block; font-size:.67rem; font-weight:600; color:#f59e0b; background:#fffbeb; border:1px solid #fde68a; border-radius:2rem; padding:.1rem .4rem; margin-top:.1rem; }
-
-        .type-badge { display:inline-flex; padding:.2rem .65rem; border-radius:2rem; font-size:.72rem; font-weight:700; white-space:nowrap; }
-        .badge-orphan { color:#1d4ed8; background:#dbeafe; }
-        .badge-family  { color:#15803d; background:#dcfce7; }
-
-        .cell-muted { color:#6b7a8d; }
-        .cell-date { font-size:.8rem; white-space:nowrap; }
-
-        .table-footer { padding:.75rem 1.25rem; font-size:.78rem; color:#9ca3af; border-top:1px solid #f0f4f8; }
-
-        /* ── Modal ────────────────────────────────────────────────────── */
-        .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:40; animation:fadeIn .2s ease; }
-        .modal { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:min(560px,95vw); max-height:90vh; background:#fff; border-radius:1.25rem; z-index:50; display:flex; flex-direction:column; box-shadow:0 8px 40px rgba(0,0,0,.18); animation:popIn .2s ease; }
-        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-        @keyframes popIn  { from { opacity:0; transform:translate(-50%,-50%) scale(.95); } to { opacity:1; transform:translate(-50%,-50%) scale(1); } }
-
-        .modal-head { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; padding:1.5rem 1.5rem 0; }
-        .modal-title { font-size:1.15rem; font-weight:800; color:#0d3d5c; margin:0 0 .2rem; }
-        .modal-sub { font-size:.8rem; color:#6b7a8d; margin:0; }
-        .modal-close { background:none; border:none; font-size:1.1rem; color:#9ca3af; cursor:pointer; padding:.25rem .4rem; border-radius:6px; flex-shrink:0; transition:all .15s; }
-        .modal-close:hover { background:#f3f4f6; color:#374151; }
-
-        /* Tabs */
-        .modal-tabs { display:flex; gap:.4rem; padding:.75rem 1.5rem 0; }
-        .mtab { flex:1; padding:.55rem 1rem; border:1.5px solid #e5eaf0; border-radius:.625rem; font-family:'Cairo',sans-serif; font-size:.83rem; font-weight:600; color:#6b7280; background:#fafafa; cursor:pointer; transition:all .15s; }
-        .mtab:hover { border-color:#1B5E8C; color:#1B5E8C; }
-        .mtab-active { border-color:#1B5E8C; background:#1B5E8C; color:#fff; }
-
-        /* Body */
-        .modal-body { flex:1; overflow-y:auto; padding:1rem 1.5rem; display:flex; flex-direction:column; gap:.9rem; }
-
-        /* Field helpers */
-        .field-group { display:flex; flex-direction:column; gap:.3rem; }
-        .lbl { font-size:.8rem; font-weight:600; color:#374151; }
-        .req { color:#dc2626; }
-        .opt { color:#94a3b8; font-weight:400; font-size:.72rem; }
-        .inp { width:100%; border:1.5px solid #d1d5db; border-radius:.625rem; padding:.6rem .85rem; font-size:.88rem; font-family:'Cairo',sans-serif; color:#1f2937; background:#fafafa; outline:none; transition:border-color .15s,box-shadow .15s; box-sizing:border-box; }
-        .inp:focus { border-color:#1B5E8C; background:#fff; box-shadow:0 0 0 3px rgba(27,94,140,.1); }
-        .ltr { direction:ltr; text-align:left; }
-        .field-hint { font-size:.72rem; color:#94a3b8; margin:.15rem 0 0; }
-
-        /* Sponsor list box */
-        .sponsor-list-box { border:1.5px solid #e5eaf0; border-radius:.625rem; max-height:180px; overflow-y:auto; background:#fafafa; }
-        .sponsor-empty { font-size:.82rem; color:#9ca3af; text-align:center; padding:1rem; margin:0; }
-        .sponsor-option { display:flex; align-items:center; gap:.65rem; padding:.65rem .85rem; cursor:pointer; transition:background .12s; border-bottom:1px solid #f0f4f8; }
-        .sponsor-option:last-child { border-bottom:none; }
-        .sponsor-option:hover { background:#f0f7ff; }
-        .sponsor-selected { background:#eff6ff; }
-        .sponsor-avatar { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,#1B5E8C,#0d3d5c); color:#fff; display:flex; align-items:center; justify-content:center; font-size:.85rem; font-weight:700; flex-shrink:0; }
-        .sponsor-name { font-size:.85rem; font-weight:600; color:#1f2937; }
-        .sponsor-email { font-size:.73rem; color:#9ca3af; direction:ltr; text-align:left; }
-        .sponsor-check { margin-right:auto; color:#1B5E8C; font-weight:800; }
-
-        /* New sponsor grid */
-        .new-sponsor-grid { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
-        .fg { display:flex; flex-direction:column; gap:.3rem; }
-        .span2 { grid-column:1 / -1; }
-
-        /* Shared grid */
-        .shared-grid { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
-
-        /* Divider */
-        .section-divider { font-size:.75rem; font-weight:700; color:#94a3b8; text-align:center; position:relative; }
-        .section-divider::before, .section-divider::after { content:''; position:absolute; top:50%; width:38%; height:1px; background:#e5eaf0; }
-        .section-divider::before { right:0; }
-        .section-divider::after  { left:0; }
-
-        /* Selected preview */
-        .selected-preview { background:#f8fafc; border:1.5px solid #e5eaf0; border-radius:.625rem; padding:.75rem .9rem; }
-        .preview-label { font-size:.75rem; font-weight:700; color:#94a3b8; margin:0 0 .5rem; }
-        .preview-chips { display:flex; flex-wrap:wrap; gap:.35rem; }
-        .preview-chip { display:inline-flex; align-items:center; gap:.3rem; padding:.2rem .6rem; border-radius:2rem; font-size:.75rem; font-weight:600; }
-        .chip-orphan { background:#dbeafe; color:#1d4ed8; }
-        .chip-family  { background:#dcfce7; color:#15803d; }
-
-        /* Modal error */
-        .modal-error { display:flex; align-items:center; gap:.5rem; background:#fef2f2; border:1px solid #fecaca; border-radius:.5rem; padding:.6rem .85rem; font-size:.82rem; color:#b91c1c; font-weight:500; }
-
-        /* Footer */
-        .modal-foot { display:flex; justify-content:flex-end; gap:.75rem; padding:1rem 1.5rem; border-top:1px solid #f0f4f8; }
-
-        /* ── Buttons ──────────────────────────────────────────────────── */
-        .btn-primary { display:inline-flex; align-items:center; gap:.4rem; padding:.7rem 1.4rem; background:linear-gradient(135deg,#1B5E8C,#134569); color:#fff; font-family:'Cairo',sans-serif; font-size:.9rem; font-weight:700; border:none; border-radius:.75rem; cursor:pointer; box-shadow:0 2px 8px rgba(27,94,140,.25); transition:all .15s; white-space:nowrap; }
-        .btn-primary:hover:not(:disabled) { background:linear-gradient(135deg,#2E7EB8,#1B5E8C); transform:translateY(-1px); }
-        .btn-primary:disabled { opacity:.65; cursor:not-allowed; }
-        .btn-ghost { display:inline-flex; align-items:center; gap:.4rem; padding:.65rem 1.2rem; background:none; color:#6b7280; font-family:'Cairo',sans-serif; font-size:.88rem; font-weight:600; border:1.5px solid #e5eaf0; border-radius:.75rem; cursor:pointer; transition:all .15s; }
-        .btn-ghost:hover:not(:disabled) { border-color:#1B5E8C; color:#1B5E8C; background:#f0f7ff; }
-        .btn-ghost:disabled { opacity:.5; cursor:not-allowed; }
-
-        /* ── Spinner ──────────────────────────────────────────────────── */
-        .spin { display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; flex-shrink:0; }
-        @keyframes spin { to { transform:rotate(360deg); } }
-
-        /* ── Responsive ───────────────────────────────────────────────── */
-        @media (max-width:768px) {
-          .page-top { flex-direction:column; }
-          .table th:nth-child(6),
-          .table td:nth-child(6),
-          .table th:nth-child(7),
-          .table td:nth-child(7) { display:none; }
-          .new-sponsor-grid, .shared-grid { grid-template-columns:1fr; }
-          .span2 { grid-column:1; }
+        .orphans-page {
+          max-width: 1100px; margin: 0 auto; padding-bottom: 3rem;
+          font-family: 'Cairo', 'Tajawal', sans-serif;
+          display: flex; flex-direction: column; gap: 1.25rem;
         }
+
+        /* ── Header ─────────────────────────────────────────────── */
+        .page-header {
+          display: flex; align-items: flex-start; justify-content: space-between;
+          gap: 1rem; flex-wrap: wrap;
+        }
+        .page-title { font-size: 1.6rem; font-weight: 800; color: #0d3d5c; margin: 0 0 .2rem; }
+        .page-sub   { font-size: .82rem; color: #9ca3af; margin: 0; }
+        .header-actions { display: flex; align-items: center; gap: .75rem; flex-shrink: 0; }
+
+        .btn-refresh {
+          display: flex; align-items: center; justify-content: center;
+          width: 2.25rem; height: 2.25rem;
+          border: 1.5px solid #e5e7eb; border-radius: .625rem;
+          background: #fff; color: #6b7280; cursor: pointer;
+          transition: all .15s;
+        }
+        .btn-refresh:hover { border-color: #1B5E8C; color: #1B5E8C; background: #f0f7ff; }
+
+        /* ── Stat pills ─────────────────────────────────────────── */
+        .stat-pills { display: flex; gap: .6rem; flex-wrap: wrap; }
+
+        /* ── Filters bar ────────────────────────────────────────── */
+        .filters-bar {
+          display: flex; gap: .65rem; flex-wrap: wrap; align-items: center;
+          background: #fff; border: 1px solid #e5eaf0; border-radius: .875rem;
+          padding: .875rem 1rem;
+          box-shadow: 0 1px 3px rgba(0,0,0,.04);
+        }
+
+        .search-wrap { position: relative; flex: 1; min-width: 200px; }
+        .search-icon {
+          position: absolute; right: .75rem; top: 50%; transform: translateY(-50%);
+          color: #9ca3af; display: flex; pointer-events: none;
+        }
+        .search-inp {
+          width: 100%; padding: .55rem 2.25rem .55rem 2rem;
+          border: 1.5px solid #e5e7eb; border-radius: .625rem;
+          font-family: 'Cairo', sans-serif; font-size: .875rem; color: #1f2937;
+          background: #fafafa; outline: none; box-sizing: border-box;
+          direction: rtl; transition: border-color .15s, box-shadow .15s;
+        }
+        .search-inp::placeholder { color: #c4cdd8; }
+        .search-inp:focus { border-color: #1B5E8C; box-shadow: 0 0 0 3px rgba(27,94,140,.1); background: #fff; }
+        .search-clear {
+          position: absolute; left: .6rem; top: 50%; transform: translateY(-50%);
+          background: none; border: none; color: #9ca3af; cursor: pointer;
+          font-size: .8rem; padding: .2rem;
+          transition: color .12s;
+        }
+        .search-clear:hover { color: #374151; }
+
+        .filter-select-wrap { position: relative; }
+        .filter-icon {
+          position: absolute; right: .65rem; top: 50%; transform: translateY(-50%);
+          color: #9ca3af; display: flex; pointer-events: none; z-index: 1;
+        }
+        .filter-select {
+          padding: .55rem 2.1rem .55rem 1.75rem;
+          border: 1.5px solid #e5e7eb; border-radius: .625rem;
+          font-family: 'Cairo', sans-serif; font-size: .82rem; color: #374151;
+          background: #fafafa; outline: none; cursor: pointer;
+          appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: left .6rem center;
+          transition: border-color .15s;
+        }
+        .filter-select:focus { border-color: #1B5E8C; }
+
+        .btn-clear-filters {
+          padding: .5rem .875rem;
+          background: #FEF2F2; border: 1px solid #FECACA; border-radius: .625rem;
+          color: #B91C1C; font-family: 'Cairo', sans-serif; font-size: .78rem;
+          font-weight: 600; cursor: pointer; transition: all .12s; white-space: nowrap;
+        }
+        .btn-clear-filters:hover { background: #FEE2E2; }
+        .btn-export-selected {
+          display: inline-flex; align-items: center; gap: .4rem;
+          padding: .55rem .95rem;
+          background: #0f766e; border: 1px solid #0f766e; border-radius: .625rem;
+          color: #fff; font-family: 'Cairo', sans-serif; font-size: .78rem;
+          font-weight: 800; cursor: pointer; transition: all .12s; white-space: nowrap;
+        }
+        .btn-export-selected:hover:not(:disabled) { background: #0d665f; transform: translateY(-1px); }
+        .btn-export-selected:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+        .btn-clear-filters-sm {
+          padding: .4rem .8rem; margin-top: 1rem;
+          background: #fff; border: 1px solid #e5e7eb; border-radius: .5rem;
+          color: #374151; font-family: 'Cairo', sans-serif; font-size: .78rem;
+          font-weight: 600; cursor: pointer; transition: all .12s;
+        }
+        .btn-clear-filters-sm:hover { background: #f9fafb; border-color: #d1d5db; }
+
+        /* ── Error ──────────────────────────────────────────────── */
+        .error-banner {
+          display: flex; align-items: center; justify-content: space-between;
+          background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c;
+          padding: .75rem 1rem; border-radius: .75rem; font-size: .875rem;
+        }
+        .retry-btn {
+          background: none; border: 1px solid #fca5a5; border-radius: .5rem;
+          color: #b91c1c; padding: .3rem .75rem; cursor: pointer; font-size: .78rem;
+          font-family: 'Cairo', sans-serif; font-weight: 600;
+        }
+
+        /* ── Table card ─────────────────────────────────────────── */
+        .table-card {
+          background: #fff; border: 1px solid #e5eaf0; border-radius: 1rem;
+          overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.04);
+        }
+        .table-scroll { overflow-x: auto; }
+
+        .orphans-table {
+          width: 100%; border-collapse: collapse; font-size: .82rem;
+          min-width: 760px;
+        }
+
+        .orphans-table thead tr {
+          background: #f8fafc; border-bottom: 1.5px solid #e5eaf0;
+        }
+        .orphans-table th {
+          padding: .75rem 1rem; font-size: .72rem; font-weight: 700;
+          color: #9ca3af; text-align: right; white-space: nowrap;
+          letter-spacing: .04em; text-transform: uppercase;
+        }
+        .select-col {
+          width: 46px; text-align: center !important;
+        }
+        .select-col input {
+          width: 16px; height: 16px; cursor: pointer; accent-color: #0f766e;
+        }
+        .select-placeholder { color: #cbd5e1; font-weight: 700; }
+
+        /* ── Data rows ──────────────────────────────────────────── */
+        .data-row {
+          border-bottom: 1px solid #f1f5f9; cursor: pointer;
+          transition: background .12s;
+        }
+        .data-row:last-child { border-bottom: none; }
+        .data-row:hover { background: #f8fbff; }
+        .data-row:focus { outline: none; background: #f0f7ff; }
+        .data-row td { padding: .875rem 1rem; vertical-align: middle; }
+
+        /* ── Name cell ──────────────────────────────────────────── */
+        .name-cell { display: flex; align-items: center; gap: .625rem; }
+        .avatar-sm {
+          width: 2rem; height: 2rem; border-radius: 50%; flex-shrink: 0;
+          background: linear-gradient(135deg, #1B5E8C, #134569);
+          color: #fff; font-size: .78rem; font-weight: 700;
+          display: flex; align-items: center; justify-content: center;
+        }
+        .name-info { display: flex; flex-direction: column; }
+        .name-text {
+          font-size: .875rem; font-weight: 700; color: #0d3d5c;
+          display: flex; align-items: center; gap: .3rem;
+        }
+        .gifted-tag {
+          color: #D97706; display: inline-flex; align-items: center;
+          flex-shrink: 0;
+        }
+
+        /* ── Other cells ────────────────────────────────────────── */
+        .age-cell      { font-weight: 600; color: #374151; }
+        .gov-cell      { color: #374151; }
+        .agent-cell    { color: #6b7280; font-size: .78rem; }
+        .date-cell     { color: #9ca3af; font-size: .75rem; white-space: nowrap; }
+
+        .badge {
+          display: inline-flex; padding: .2rem .65rem; border-radius: 2rem;
+          font-size: .72rem; font-weight: 700;
+        }
+        .badge.orphan { background: #dbeafe; color: #1d4ed8; }
+        .badge.family { background: #dcfce7; color: #15803d; }
+
+        /* ── Table Footer ───────────────────────────────────────── */
+        .table-footer {
+          padding: .85rem 1.25rem; background: #fff;
+          border-top: 1px solid #f0f4f8; display: flex; align-items: center;
+        }
+        .result-count {
+          font-size: .78rem; font-weight: 600; color: #9ca3af;
+        }
+
+        /* ── Empty State ────────────────────────────────────────── */
+        .empty-state { padding: 4rem 2rem; text-align: center; color: #9ca3af; display: flex; flex-direction: column; align-items: center; }
+        .empty-title { font-size: 1rem; font-weight: 700; color: #374151; margin: .75rem 0 .4rem; }
+        .empty-sub { font-size: .85rem; margin: 0; }
+
+        /* ── Skeleton ───────────────────────────────────────────── */
+        .skeleton-row td { padding: 1rem; border-bottom: 1px solid #f8fafc; }
+        .skel-cell {
+          height: 16px; border-radius: 4px;
+          background: linear-gradient(90deg, #f0f4f8 25%, #e5eaf0 50%, #f0f4f8 75%);
+          background-size: 200% 100%; animation: shimmer 1.4s infinite;
+        }
+
+        @keyframes shimmer { to { background-position: -200% 0; } }
       `}</style>
     </AppShell>
   );

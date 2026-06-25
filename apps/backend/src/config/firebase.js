@@ -28,11 +28,16 @@ const initFirebase = () => {
     process.env.FIREBASE_PRIVATE_KEY &&
     process.env.FIREBASE_CLIENT_EMAIL;
 
-  if (useInlineCredentials) {
+  if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
+    const serviceAccount = JSON.parse(
+      Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, 'base64').toString('utf8')
+    );
+    app = admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+  } else if (useInlineCredentials) {
     app = admin.initializeApp({
       credential: admin.credential.cert({
         projectId:   process.env.FIREBASE_PROJECT_ID,
-        privateKey:  process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+        privateKey:  process.env.FIREBASE_PRIVATE_KEY.replace(/^"|"$/g, '').replace(/\\n/g, '\n'),
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
       }),
     });
@@ -54,9 +59,15 @@ const initFirebase = () => {
 };
 
 // Initialize immediately when this module is required
-initFirebase();
+try {
+  initFirebase();
+} catch (err) {
+  console.error('[Firebase] Init failed, notifications disabled:', err.message);
+}
 
 module.exports = {
   admin,
-  messaging: admin.messaging(),
+  get messaging() {
+    return admin.apps.length > 0 ? admin.messaging() : null;
+  },
 };

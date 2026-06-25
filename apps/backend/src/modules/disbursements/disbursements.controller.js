@@ -1,198 +1,118 @@
 /**
- * disbursements.controller.js
- * HTTP handlers for the disbursements module.
+ * disbursements.controller.js — OFSMS Disbursements HTTP Handler Layer
+ *
+ * Responsible only for:
+ *   - Reading from req (params, body, query, user)
+ *   - Calling the service layer
+ *   - Writing the HTTP response (status + JSON)
+ *
+ * No business logic lives here.
+ * Errors from the service carry .statusCode and are mapped to HTTP responses.
  */
 
+const { validationResult } = require('express-validator');
 const service = require('./disbursements.service');
 
-/**
- * POST /api/disbursements/generate
- * Creates a DisbursementList for the current month + auto-fills items.
- * GM and Supervisor only.
- */
+// ── Shared: map service errors to HTTP responses ──────────────────────────────
+const handleError = (err, res, next) => {
+  if (err.statusCode) return res.status(err.statusCode).json({ error: err.message });
+  next(err);
+};
+
+// ── GET / ─────────────────────────────────────────────────────────────────────
+const getDisbursementLists = async (_req, res, next) => {
+  try {
+    return res.json({ lists: await service.getDisbursementLists() });
+  } catch (err) { handleError(err, res, next); }
+};
+
+// ── GET /history ──────────────────────────────────────────────────────────────
+const getDisbursementHistory = async (_req, res, next) => {
+  try {
+    return res.json({ lists: await service.getDisbursementHistory() });
+  } catch (err) { handleError(err, res, next); }
+};
+
+// ── GET /:id ──────────────────────────────────────────────────────────────────
+const getDisbursementById = async (req, res, next) => {
+  try {
+    const data = await service.getDisbursementById(req.params.id);
+    if (!data) return res.status(404).json({ error: 'الكشف غير موجود' });
+    return res.json(data);
+  } catch (err) { handleError(err, res, next); }
+};
+
+// ── GET /agent/released ───────────────────────────────────────────────────────
+const getReleasedByAgent = async (req, res, next) => {
+  try {
+    const agentId = req.user.role === 'agent' ? req.user.id : req.query.agentId;
+    if (!agentId) return res.status(400).json({ error: 'agentId مطلوب' });
+    const lists = await service.getReleasedListsByAgent(agentId);
+    return res.json({ lists });
+  } catch (err) { handleError(err, res, next); }
+};
+
+// ── POST /generate ────────────────────────────────────────────────────────────
 const generateDisbursementList = async (req, res, next) => {
   try {
-    const { list, items } = await service.generateDisbursementList(req.user.id);
-
-    return res.status(201).json({
-      message: `تم توليد كشف الصرف لشهر ${list.month}/${list.year} بنجاح`,
-      list,
-      items,
-      total_items:  items.length,
-      total_amount: items.reduce((sum, i) => sum + parseFloat(i.amount), 0),
-    });
-  } catch (err) {
-    // Unique constraint violation = list already exists for this month
-    if (err.code === '23505') {
-      return res.status(409).json({
-        error: `كشف الصرف لهذا الشهر موجود بالفعل. لا يمكن توليد كشفين لنفس الشهر`,
-      });
-    }
-    next(err);
-  }
+    const data = await service.generateDisbursementList(req.user.id);
+    return res.status(201).json({ message: 'تم إنشاء كشف الصرف بنجاح', ...data });
+  } catch (err) { handleError(err, res, next); }
 };
 
-/**
- * GET /api/disbursements
- * List all disbursement lists.
- */
-const getAllDisbursementLists = async (_req, res, next) => {
+// ── PATCH /:id/approve ────────────────────────────────────────────────────────
+const supervisorApprove = async (req, res, next) => {
   try {
-    const lists = await service.getAllDisbursementLists();
-    return res.json({ lists });
-  } catch (err) {
-    next(err);
-  }
+    const list = await service.supervisorApprove(req.params.id, req.user.id, req.user.role);
+    return res.json({ message: 'تم اعتماد كشف الصرف بنجاح', list });
+  } catch (err) { handleError(err, res, next); }
 };
 
-/**
- * GET /api/disbursements/:id
- * Get a single disbursement list with all its items.
- */
-const getDisbursementListById = async (req, res, next) => {
+// ── PATCH /:id/reject ─────────────────────────────────────────────────────────
+const supervisorReject = async (req, res, next) => {
   try {
-    const result = await service.getDisbursementListById(req.params.id);
-    if (!result) {
-      return res.status(404).json({ error: 'كشف الصرف غير موجود' });
-    }
-    return res.json(result);
-  } catch (err) {
-    next(err);
-  }
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
+    const list = await service.supervisorReject(req.params.id, req.user.id, req.body.notes, req.user.role);
+    return res.json({ message: 'تم رفض كشف الصرف', list });
+  } catch (err) { handleError(err, res, next); }
 };
 
-// ADD to apps/backend/src/modules/disbursements/disbursements.controller.js
-
-/**
- * PATCH /api/disbursements/:id/supervisor-approve
- * Supervisor approves → status: supervisor_approved → Finance queue.
- */
-const supervisorApproveDisbursement = async (req, res, next) => {
+// ── PATCH /:id/finance-approve ────────────────────────────────────────────────
+const financeApprove = async (req, res, next) => {
   try {
-    const list = await service.supervisorApproveDisbursement(req.params.id, req.user.id);
-
-    if (!list) {
-      return res.status(404).json({
-        error: 'كشف الصرف غير موجود أو لا يمكن اعتماده في وضعه الحالي (يجب أن يكون في وضع مسودة)',
-      });
-    }
-
-    return res.json({
-      message: `تم اعتماد كشف الصرف لشهر ${list.month}/${list.year} وإرساله للقسم المالي`,
-      list,
-    });
-  } catch (err) {
-    next(err);
-  }
+    const list = await service.financeApprove(req.params.id, req.user.id, req.user.role);
+    return res.json({ message: 'تمت المصادقة المالية بنجاح', list });
+  } catch (err) { handleError(err, res, next); }
 };
 
-/**
- * PATCH /api/disbursements/:id/supervisor-reject
- * Supervisor rejects → status: rejected, notes required.
- */
-const supervisorRejectDisbursement = async (req, res, next) => {
+// ── PATCH /:id/finance-reject ─────────────────────────────────────────────────
+const financeReject = async (req, res, next) => {
   try {
-    const { notes } = req.body;
-
-    if (!notes || !notes.trim()) {
-      return res.status(422).json({ error: 'ملاحظات الرفض مطلوبة' });
-    }
-
-    const list = await service.supervisorRejectDisbursement(req.params.id, req.user.id, notes.trim());
-
-    if (!list) {
-      return res.status(404).json({
-        error: 'كشف الصرف غير موجود أو لا يمكن رفضه في وضعه الحالي (يجب أن يكون في وضع مسودة)',
-      });
-    }
-
-    return res.json({
-      message: `تم رفض كشف الصرف لشهر ${list.month}/${list.year}`,
-      list,
-    });
-  } catch (err) {
-    next(err);
-  }
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
+    const list = await service.financeReject(req.params.id, req.user.id, req.body.notes, req.user.role);
+    return res.json({ message: 'تم رد الكشف للمشرف', list });
+  } catch (err) { handleError(err, res, next); }
 };
 
-/**
- * PATCH /api/disbursements/:id/finance-approve
- * Finance approves → status: finance_approved → GM notified.
- */
-const financeApproveDisbursement = async (req, res, next) => {
+// ── PATCH /:id/release ────────────────────────────────────────────────────────
+const gmRelease = async (req, res, next) => {
   try {
-    const list = await service.financeApproveDisbursement(req.params.id, req.user.id);
-    if (!list) {
-      return res.status(404).json({
-        error: 'كشف الصرف غير موجود أو لا يمكن مصادقته في وضعه الحالي (يجب أن يكون معتمداً من المشرف)',
-      });
-    }
-    return res.json({
-      message: `تمت مصادقة القسم المالي على كشف الصرف لشهر ${list.month}/${list.year} وأُرسل للمدير العام`,
-      list,
-    });
-  } catch (err) {
-    next(err);
-  }
-};
-
-/**
- * PATCH /api/disbursements/:id/finance-reject
- * Finance rejects → status: rejected, back to supervisor. Notes required.
- */
-const financeRejectDisbursement = async (req, res, next) => {
-  try {
-    const { notes } = req.body;
-    if (!notes || !notes.trim()) {
-      return res.status(422).json({ error: 'ملاحظات الرفض مطلوبة' });
-    }
-    const list = await service.financeRejectDisbursement(req.params.id, req.user.id, notes.trim());
-    if (!list) {
-      return res.status(404).json({
-        error: 'كشف الصرف غير موجود أو لا يمكن رفضه في وضعه الحالي (يجب أن يكون معتمداً من المشرف)',
-      });
-    }
-    return res.json({
-      message: `تم رفض كشف الصرف لشهر ${list.month}/${list.year} وإعادته للمشرف`,
-      list,
-    });
-  } catch (err) {
-    next(err);
-  }
-};
-
-/**
- * PATCH /api/disbursements/:id/gm-release
- * GM final release → status: released, agents notified.
- */
-const gmReleaseDisbursement = async (req, res, next) => {
-  try {
-    const result = await service.gmReleaseDisbursement(req.params.id, req.user.id);
-
-    if (!result) {
-      return res.status(404).json({
-        error: 'كشف الصرف غير موجود أو لا يمكن إصداره في وضعه الحالي (يجب أن يكون معتمداً من القسم المالي)',
-      });
-    }
-
-    return res.json({
-      message: `تم إصدار كشف الصرف لشهر ${result.list.month}/${result.list.year} بنجاح. تم إشعار ${result.notified_agents} مندوب.`,
-      list:             result.list,
-      released_items:   result.released_items,
-      notified_agents:  result.notified_agents,
-    });
-  } catch (err) {
-    next(err);
-  }
+    const list = await service.gmRelease(req.params.id, req.user.id);
+    return res.json({ message: 'تم إصدار الأموال بنجاح', list });
+  } catch (err) { handleError(err, res, next); }
 };
 
 module.exports = {
+  getDisbursementLists,
+  getDisbursementHistory,
+  getDisbursementById,
+  getReleasedByAgent,
   generateDisbursementList,
-  getAllDisbursementLists,
-  getDisbursementListById,
-  supervisorApproveDisbursement,
-  supervisorRejectDisbursement,
-  financeApproveDisbursement,
-  financeRejectDisbursement,
-  gmReleaseDisbursement,    
+  supervisorApprove,
+  supervisorReject,
+  financeApprove,
+  financeReject,
+  gmRelease,
 };

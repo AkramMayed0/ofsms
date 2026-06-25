@@ -37,7 +37,18 @@ router.post('/', authenticate, authorize('gm'), createUserRules, validateRequest
       return res.status(409).json({ error: 'البريد الإلكتروني مستخدم بالفعل' });
     }
 
+    // Check duplicate phone (only if provided)
+    if (phone) {
+      const { rows: phoneExists } = await query(
+        'SELECT id FROM users WHERE phone = $1', [phone]
+      );
+      if (phoneExists.length > 0) {
+        return res.status(409).json({ error: 'رقم الهاتف مستخدم بالفعل' });
+      }
+    }
+
     const passwordHash = await bcrypt.hash(password, 12);
+    const finalPhone = phone ? phone : null;
     const { rows } = await query(
       `INSERT INTO users (full_name, email, password_hash, role, phone)
        VALUES ($1, $2, $3, $4, $5)

@@ -68,10 +68,14 @@ const getFamilyById = async (id) => {
        f.*,
        g.name_ar AS governorate_ar, g.name_en AS governorate_en,
        u.full_name AS agent_name,
-       u.id AS agent_id
+       u.id AS agent_id,
+       sp.monthly_amount, sp.start_date AS sponsorship_start,
+       s.full_name AS sponsor_name
      FROM families f
      LEFT JOIN governorates g ON g.id = f.governorate_id
      LEFT JOIN users u ON u.id = f.agent_id
+     LEFT JOIN sponsorships sp ON sp.beneficiary_id = f.id AND sp.beneficiary_type = 'family' AND sp.is_active = TRUE
+     LEFT JOIN sponsors s ON s.id = sp.sponsor_id
      WHERE f.id = $1`,
     [id]
   );
@@ -148,7 +152,8 @@ const updateFamily = async (id, { familyName, headOfFamily, memberCount, governo
        head_of_family = COALESCE($2, head_of_family),
        member_count   = COALESCE($3, member_count),
        governorate_id = COALESCE($4, governorate_id),
-       notes          = COALESCE($5, notes)
+       notes          = COALESCE($5, notes),
+       status         = 'under_review'
      WHERE id = $6
      RETURNING *`,
     [familyName, headOfFamily, memberCount, governorateId, notes, id]
@@ -164,6 +169,7 @@ const getFamiliesUnderMarketing = async () => {
     `SELECT
        f.id, f.family_name, f.head_of_family, f.member_count,
        f.created_at,
+       f.agent_id,
        g.name_ar AS governorate_ar,
        u.full_name AS agent_name
      FROM families f

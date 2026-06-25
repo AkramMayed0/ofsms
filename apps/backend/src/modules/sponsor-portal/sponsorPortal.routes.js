@@ -11,6 +11,7 @@ const bcrypt = require('bcryptjs');
 const { body, validationResult } = require('express-validator');
 const { query } = require('../../config/db');
 const { generateSponsorToken, authenticateSponsor } = require('../../middleware/sponsorAuth');
+const announcementsService = require('../announcements/announcements.service');
 
 const router = Router();
 
@@ -79,6 +80,16 @@ router.get('/me', authenticateSponsor, async (req, res, next) => {
     }
 
     return res.json({ sponsor: rows[0] });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Sponsor-only ads/announcements board.
+router.get('/announcements', authenticateSponsor, async (_req, res, next) => {
+  try {
+    const announcements = await announcementsService.getActiveSponsorAnnouncements();
+    return res.json({ announcements });
   } catch (err) {
     next(err);
   }

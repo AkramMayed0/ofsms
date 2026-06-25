@@ -23,14 +23,15 @@ const createOrphan = async ({
   agentId,
   isGifted = false,
   notes,
+  profile = {},
 }) => {
   const { rows } = await query(
     `INSERT INTO orphans
        (full_name, date_of_birth, gender, governorate_id,
-        guardian_name, guardian_relation, agent_id, is_gifted, notes)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        guardian_name, guardian_relation, agent_id, is_gifted, notes, profile)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
      RETURNING *`,
-    [fullName, dateOfBirth, gender, governorateId, guardianName, guardianRelation, agentId, isGifted, notes || null]
+    [fullName, dateOfBirth, gender, governorateId, guardianName, guardianRelation, agentId, isGifted, notes || null, JSON.stringify(profile)]
   );
   return rows[0];
 };
@@ -65,7 +66,7 @@ const getOrphans = async ({ status, agentId, governorateId, isGifted } = {}) => 
     `SELECT
        o.id, o.full_name, o.date_of_birth, o.gender, o.status,
        o.guardian_name, o.guardian_relation, o.is_gifted, o.notes,
-       o.created_at,
+       o.created_at, o.agent_id,
        g.name_ar AS governorate_ar, g.name_en AS governorate_en,
        u.full_name AS agent_name
      FROM orphans o
@@ -175,8 +176,8 @@ const updateOrphanStatus = async (id, status, notes, reviewerName = 'المشر�
 /**
  * Update orphan details (agent can edit while under_review).
  */
-const updateOrphan = async (id, fields) => {
-  const { fullName, dateOfBirth, gender, governorateId, guardianName, guardianRelation, isGifted, notes } = fields;
+const updateOrphan = async (id, fields, resetStatus = false) => {
+  const { fullName, dateOfBirth, gender, governorateId, guardianName, guardianRelation, isGifted, notes, profile } = fields;
   const { rows } = await query(
     `UPDATE orphans
      SET
@@ -187,10 +188,13 @@ const updateOrphan = async (id, fields) => {
        guardian_name     = COALESCE($5, guardian_name),
        guardian_relation = COALESCE($6, guardian_relation),
        is_gifted         = COALESCE($7, is_gifted),
-       notes             = COALESCE($8, notes)
+       notes             = COALESCE($8, notes),
+       profile           = COALESCE($10, profile),
+       status            = CASE WHEN $11 THEN 'under_review' ELSE status END
      WHERE id = $9
      RETURNING *`,
-    [fullName, dateOfBirth, gender, governorateId, guardianName, guardianRelation, isGifted, notes, id]
+    [fullName, dateOfBirth, gender, governorateId, guardianName, guardianRelation, isGifted, notes, id,
+     profile ? JSON.stringify(profile) : null, resetStatus]
   );
   return rows[0] || null;
 };
@@ -203,6 +207,7 @@ const getOrphansUnderMarketing = async () => {
     `SELECT
        o.id, o.full_name, o.date_of_birth, o.gender,
        o.guardian_name, o.is_gifted, o.created_at,
+       o.agent_id, 
        g.name_ar AS governorate_ar,
        u.full_name AS agent_name
      FROM orphans o
@@ -242,6 +247,24 @@ const getOrphanDocuments = async (orphanId) => {
   return rows;
 };
 
+/**
+ * Delete an orphan record and their documents.
+ * Blocked if orphan has an active sponsorship.
+ */
+const deleteOrphan = async (id) => {
+  const { rows: activeRows } = await query(
+    `SELECT id FROM sponsorships WHERE beneficiary_id = $1 AND beneficiary_type = 'orphan' AND is_active = TRUE LIMIT 1`,
+    [id]
+  );
+  if (activeRows.length > 0) {
+    throw Object.assign(new Error('لا يمكن حذف يتيم لديه كفالة نشطة'), { status: 409 });
+  }
+
+  await query(`DELETE FROM documents WHERE entity_type = 'orphan' AND entity_id = $1`, [id]);
+  const { rows } = await query(`DELETE FROM orphans WHERE id = $1 RETURNING *`, [id]);
+  return rows[0] || null;
+};
+
 module.exports = {
   createOrphan,
   getOrphans,
@@ -251,4 +274,5 @@ module.exports = {
   getOrphansUnderMarketing,
   addDocument,
   getOrphanDocuments,
+  deleteOrphan,
 };

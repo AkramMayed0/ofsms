@@ -10,6 +10,7 @@ const { Router } = require('express');
 const { body } = require('express-validator');
 const multer = require('multer');
 const { authenticate, authorize } = require('../../middleware/rbac');
+const { scanUploadedFiles } = require('../../middleware/fileScanner');
 const controller = require('./orphans.controller');
 const giftedRouter = require('./gifted.routes');
 
@@ -46,7 +47,7 @@ const uploadFields = upload.fields([
 const createOrphanRules = [
   body('fullName')
     .notEmpty().withMessage('الاسم الكامل مطلوب')
-    .isLength({ min: 3 }).withMessage('الاسم يجب أن يكون 3 أحرف على الأقل'),
+    .matches(/^[\p{L}]+(?:[\s'-][\p{L}]+)+$/u).withMessage('الاسم يجب أن يكون ثنائياً على الأقل، ويحتوي على أحرف فقط'),
 
   body('dateOfBirth')
     .notEmpty().withMessage('تاريخ الميلاد مطلوب')
@@ -112,6 +113,7 @@ router.post(
   authenticate,
   authorize('agent', 'gm'),
   uploadFields,
+  scanUploadedFiles,
   createOrphanRules,
   controller.createOrphan
 );
@@ -139,6 +141,22 @@ router.patch(
   authorize('supervisor', 'gm'),
   updateStatusRules,
   controller.updateOrphanStatus
+);
+
+// GM only: share orphan profile as a sponsor-facing ad/request
+router.post(
+  '/:id/share',
+  authenticate,
+  authorize('gm'),
+  controller.shareOrphanToAds
+);
+
+// GM only: delete orphan (blocked if active sponsorship exists)
+router.delete(
+  '/:id',
+  authenticate,
+  authorize('gm'),
+  controller.deleteOrphan
 );
 
 // ── Multer error handler (must be last in this router) ────────────────────────
