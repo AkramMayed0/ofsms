@@ -46,11 +46,12 @@ export default function GovernoratesPage() {
   }, []);
 
   useEffect(() => {
-    Promise.all([
-      api.get('/dashboard/gm'),
-      api.get('/governorates'),
-    ])
-      .then(([dashRes, govsRes]) => {
+    async function loadData() {
+      try {
+        const [dashRes, govsRes] = await Promise.all([
+          api.get('/dashboard/gm'),
+          api.get('/governorates'),
+        ]);
         const stats = dashRes.data.orphans_per_governorate || [];
         const govs  = govsRes.data.data || [];
         const merged = govs.map(g => {
@@ -58,12 +59,17 @@ export default function GovernoratesPage() {
           return { id: g.id, name: g.name_ar, nameEn: g.name_en, count: stat ? parseInt(stat.count) : 0 };
         }).sort((a, b) => b.count - a.count);
         setGovStats(merged);
-      })
-      .catch(() => setErrorLeft('تعذّر تحميل بيانات المحافظات'))
-      .finally(() => setLoadingLeft(false));
+      } catch (err) {
+        console.error('Failed to load initial governorate data:', err);
+        setErrorLeft('تعذّر تحميل بيانات المحافظات');
+      } finally {
+        setLoadingLeft(false);
+      }
+    }
+    loadData();
   }, []);
 
-  const selectGovernorate = useCallback((gov) => {
+  const selectGovernorate = useCallback(async (gov) => {
     if (selected?.id === gov.id) return;
     setSelected(gov);
     setOrphans([]);
@@ -71,10 +77,15 @@ export default function GovernoratesPage() {
     setStatusFilter('all');
     setErrorRight('');
     setLoadingRight(true);
-    api.get(`/governorates/${gov.id}/orphans`)
-      .then(({ data }) => setOrphans(data.orphans || []))
-      .catch(() => setErrorRight(`تعذّر تحميل أيتام ${gov.name}`))
-      .finally(() => setLoadingRight(false));
+    try {
+      const { data } = await api.get(`/governorates/${gov.id}/orphans`);
+      setOrphans(data.orphans || []);
+    } catch (err) {
+      console.error(`Failed to load orphans for governorate ${gov.name} (ID: ${gov.id}):`, err);
+      setErrorRight(`تعذّر تحميل أيتام ${gov.name}`);
+    } finally {
+      setLoadingRight(false);
+    }
   }, [selected]);
 
   const maxCount = Math.max(...govStats.map(g => g.count), 1);
