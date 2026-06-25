@@ -1,12 +1,16 @@
 /**
  * disbursements.routes.js
  * Mounted at: /api/disbursements
+ *
+ * This file contains ONLY route definitions and middleware wiring.
+ * Business logic  → disbursements.service.js
+ * HTTP handling   → disbursements.controller.js
+ * DB queries      → disbursements.repository.js
  */
 
 const { Router } = require('express');
 const { body } = require('express-validator');
 const { authenticate, authorize } = require('../../middleware/rbac');
-const { query } = require('../../config/db');
 const controller = require('./disbursements.controller');
 
 const router = Router();
@@ -18,43 +22,7 @@ router.get(
   '/agent/released',
   authenticate,
   authorize('agent', 'supervisor', 'gm'),
-  async (req, res, next) => {
-    try {
-      const agentId = req.user.role === 'agent' ? req.user.id : req.query.agentId;
-
-      if (!agentId) {
-        return res.status(400).json({ error: 'agentId مطلوب' });
-      }
-
-      const { rows } = await query(
-        `SELECT DISTINCT
-           dl.id,
-           dl.month,
-           dl.year,
-           dl.status,
-           dl.gm_approved_at                                          AS released_at,
-           COUNT(di.id) FILTER (WHERE di.included = TRUE)            AS total_items,
-           COUNT(br.id)                                               AS confirmed_items,
-           COUNT(di.id) FILTER (WHERE di.included = TRUE)
-             - COUNT(br.id)                                           AS pending_items
-         FROM disbursement_lists dl
-         JOIN disbursement_items di ON di.list_id = dl.id
-         LEFT JOIN orphans  o ON o.id  = di.orphan_id
-         LEFT JOIN families f ON f.id  = di.family_id
-         LEFT JOIN biometric_receipts br ON br.item_id = di.id
-         WHERE dl.status = 'released'
-           AND di.included = TRUE
-           AND (o.agent_id = $1 OR f.agent_id = $1)
-         GROUP BY dl.id
-         ORDER BY dl.year DESC, dl.month DESC`,
-        [agentId]
-      );
-
-      return res.json({ lists: rows });
-    } catch (err) {
-      next(err);
-    }
-  }
+  controller.getReleasedByAgent
 );
 
 // ── GET /api/disbursements — list all (supervisor / finance / gm only) ─────────

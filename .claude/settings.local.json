@@ -62,7 +62,10 @@
       "Bash(xargs grep -l \"biometric\\\\|receipt\")",
       "Bash(xargs grep -l \"agent_batch_confirmations\")",
       "Bash(Move-Item \"d:\\\\NawaDev\\\\ofsms\\\\apps\\\\frontend\\\\src\\\\components\\\\general\\\\RejectModal.jsx\" \"d:\\\\NawaDev\\\\ofsms\\\\apps\\\\frontend\\\\src\\\\components\\\\RejectModal.jsx\")",
-      "Bash(Remove-Item \"d:\\\\NawaDev\\\\ofsms\\\\apps\\\\frontend\\\\src\\\\components\\\\general\" -Recurse -Force)"
+      "Bash(Remove-Item \"d:\\\\NawaDev\\\\ofsms\\\\apps\\\\frontend\\\\src\\\\components\\\\general\" -Recurse -Force)",
+      "Read(//c/Program Files \\(x86\\)/Microsoft/Edge/Application/**)",
+      "Read(//c/Program Files/Microsoft/Edge/Application/**)",
+      "Read(//c/Program Files/Google/Chrome/Application/**)"
     ]
   }
 }
