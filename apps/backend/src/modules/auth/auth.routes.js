@@ -12,6 +12,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const { query } = require('../../config/db');
 const { generateTokens, refreshAccessToken, authenticate } = require('../../middleware/rbac');
+const { loginValidation } = require('./auth.validator');
 
 // ── Helper: fetch user by ID (used by refreshAccessToken) ────────────────────
 const getUserById = async (id) => {
@@ -34,33 +35,28 @@ const setRefreshCookie = (res, token) => {
 };
 
 // ── POST /api/auth/login ─────────────────────────────────────────────────────
-router.post('/login', async (req, res, next) => {
+router.post('/login', loginValidation, async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    // 1. Validate input presence
-    if (!email || !password) {
-      return res.status(400).json({ error: 'البريد الإلكتروني وكلمة المرور مطلوبان' });
-    }
-
-    // 2. Look up user by email
+    // 1. Look up user by email (email is already normalised by the validator)
     const { rows } = await query(
       'SELECT id, full_name, email, password_hash, role, is_active FROM users WHERE email = $1',
       [email.toLowerCase().trim()]
     );
     const user = rows[0];
 
-    // 3. User not found — use same error message as wrong password (security: no enumeration)
+    // 2. User not found — use same error message as wrong password (security: no enumeration)
     if (!user) {
       return res.status(401).json({ error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' });
     }
 
-    // 4. Check account is active
+    // 3. Check account is active
     if (!user.is_active) {
       return res.status(403).json({ error: 'الحساب موقوف. تواصل مع المدير العام' });
     }
 
-    // 5. Verify password
+    // 4. Verify password
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
     if (!passwordMatch) {
       return res.status(401).json({ error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' });
