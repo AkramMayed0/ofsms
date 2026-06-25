@@ -5,30 +5,58 @@
  * Route:  /quran-thresholds  (GM only)
  * API:    GET /api/quran-thresholds        → load all thresholds
  *         PUT /api/quran-thresholds/:id    → update a single threshold
+ *         POST /api/quran-thresholds       → create a new threshold
  *
  * Lets the GM view and edit the age-based Quran memorization thresholds.
  * Each row is independently editable with inline save + visual feedback.
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { AlertTriangle, X, User, Info, Check, Plus } from 'lucide-react';
+import { AlertTriangle, X, Info, Check, Plus } from 'lucide-react';
 
-import api from '../../lib/api';
-import AppShell from '../../components/AppShell';
+import api from '@/lib/api';
+import AppShell from '@/components/AppShell';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 
-// ── Save state indicator ──────────────────────────────────────────────────────
+// ── Constants ──────────────────────────────────────────────────────────────────
+
+const API_ENDPOINTS = {
+  THRESHOLDS: '/quran-thresholds',
+  THRESHOLD: (id) => `/quran-thresholds/${id}`,
+};
+
+const JUZ_PRESETS = [0.25, 0.5, 1, 1.5, 2];
+
+/** How long (ms) the "saved" indicator stays visible before resetting. */
+const SAVE_FEEDBACK_DELAY = 2500;
+
+/** Skeleton placeholder widths for the label / age / juz fields. */
+const SKELETON_WIDTHS = [220, 160, 130];
+
+// ── SaveIndicator ──────────────────────────────────────────────────────────────
+
 function SaveIndicator({ state }) {
-  if (state === 'idle')    return null;
-  if (state === 'saving')  return <span className="save-saving">جارٍ الحفظ…</span>;
-  if (state === 'saved')   return <span className="save-done"><Check size={16} /> تم الحفظ</span>;
-  if (state === 'error')   return <span className="save-err"><X size={16} /> فشل الحفظ</span>;
+  if (state === 'idle') return null;
+  if (state === 'saving') return (
+    <span className="text-[0.72rem] font-semibold text-gray-500">جارٍ الحفظ…</span>
+  );
+  if (state === 'saved') return (
+    <span className="text-[0.72rem] font-bold text-emerald-600 flex items-center gap-1 animate-[fadeInScale_0.2s_ease]">
+      <Check size={14} /> تم الحفظ
+    </span>
+  );
+  if (state === 'error') return (
+    <span className="text-[0.72rem] font-bold text-red-600 flex items-center gap-1">
+      <X size={14} /> فشل الحفظ
+    </span>
+  );
   return null;
 }
 
-// ── Threshold row (independently editable) ────────────────────────────────────
+// ── ThresholdRow (independently editable) ────────────────────────────────────
+
 function ThresholdRow({ threshold, index }) {
-  const [form, setForm]       = useState({
+  const [form, setForm] = useState({
     age_min:           threshold.age_min,
     age_max:           threshold.age_max,
     min_juz_per_month: threshold.min_juz_per_month,
@@ -46,7 +74,7 @@ function ThresholdRow({ threshold, index }) {
   const handleSave = useCallback(async () => {
     setSaveState('saving');
     try {
-      await api.put(`/quran-thresholds/${threshold.id}`, {
+      await api.put(API_ENDPOINTS.THRESHOLD(threshold.id), {
         age_min:           parseInt(form.age_min),
         age_max:           parseInt(form.age_max),
         min_juz_per_month: parseFloat(form.min_juz_per_month),
@@ -54,7 +82,7 @@ function ThresholdRow({ threshold, index }) {
       });
       setSaveState('saved');
       setDirty(false);
-      setTimeout(() => setSaveState('idle'), 2500);
+      setTimeout(() => setSaveState('idle'), SAVE_FEEDBACK_DELAY);
     } catch {
       setSaveState('error');
     }
@@ -78,20 +106,22 @@ function ThresholdRow({ threshold, index }) {
 
   return (
     <div
-      className={`threshold-row ${dirty ? 'row-dirty' : ''}`}
+      className={`flex items-start gap-4 py-5 px-6 border-b border-gray-100 transition-colors last:border-b-0 animate-[rowIn_0.35s_ease_both] ${dirty ? 'bg-amber-50 !border-r-[3px] border-r-amber-400 shadow-[inset_3px_0_0_theme(colors.amber.400)]' : 'hover:bg-blue-50/40'}`}
       style={{ animationDelay: `${index * 60}ms` }}
     >
       {/* ── Index badge ── */}
-      <div className="row-index">{index + 1}</div>
+      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1B5E8C] to-[#134569] text-white text-[0.78rem] font-extrabold flex items-center justify-center shrink-0 mt-6 shadow-[0_2px_6px_rgba(27,94,140,0.25)]">
+        {index + 1}
+      </div>
 
       {/* ── Fields ── */}
-      <div className="row-fields">
+      <div className="flex-1 grid grid-cols-1 sm:grid-cols-[2fr_1.6fr_1.4fr] gap-4 min-w-0">
 
         {/* Label */}
-        <div className="field-group">
-          <label className="field-label">التسمية</label>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[0.72rem] font-bold text-gray-500 tracking-wide">التسمية</label>
           <input
-            className="field-input"
+            className="w-full border-[1.5px] border-gray-200 rounded-xl py-2 px-3 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-colors focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10"
             value={form.label}
             onChange={(e) => handleChange('label', e.target.value)}
             placeholder="مثال: أطفال صغار (5-9)"
@@ -99,11 +129,11 @@ function ThresholdRow({ threshold, index }) {
         </div>
 
         {/* Age range */}
-        <div className="field-group field-age">
-          <label className="field-label">الفئة العمرية (سنة)</label>
-          <div className="age-inputs">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[0.72rem] font-bold text-gray-500 tracking-wide">الفئة العمرية (سنة)</label>
+          <div className="flex items-center gap-2">
             <input
-              className="field-input age-inp"
+              className="flex-1 text-center border-[1.5px] border-gray-200 rounded-xl py-2 px-2 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-colors focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10"
               type="number"
               min={0}
               max={98}
@@ -111,9 +141,9 @@ function ThresholdRow({ threshold, index }) {
               onChange={(e) => handleChange('age_min', e.target.value)}
               placeholder="من"
             />
-            <span className="age-sep">—</span>
+            <span className="text-gray-400 text-[0.85rem] shrink-0">—</span>
             <input
-              className="field-input age-inp"
+              className="flex-1 text-center border-[1.5px] border-gray-200 rounded-xl py-2 px-2 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-colors focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10"
               type="number"
               min={1}
               max={99}
@@ -125,26 +155,26 @@ function ThresholdRow({ threshold, index }) {
         </div>
 
         {/* Min juz */}
-        <div className="field-group field-juz">
-          <label className="field-label">الحد الأدنى للحفظ (جزء/شهر)</label>
-          <div className="juz-wrap">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[0.72rem] font-bold text-gray-500 tracking-wide">الحد الأدنى (جزء/شهر)</label>
+          <div className="flex items-center gap-2">
             <input
-              className="field-input juz-inp"
+              className="flex-1 text-center border-[1.5px] border-gray-200 rounded-xl py-2 px-2 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-colors focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10"
               type="number"
               min={0}
               step={0.25}
               value={form.min_juz_per_month}
               onChange={(e) => handleChange('min_juz_per_month', e.target.value)}
             />
-            <span className="juz-unit">جزء</span>
+            <span className="text-[0.78rem] font-semibold text-gray-500 shrink-0">جزء</span>
           </div>
-          {/* Visual juz scale */}
-          <div className="juz-scale">
-            {[0.25, 0.5, 1, 1.5, 2].map((v) => (
+          {/* Quick-pick presets */}
+          <div className="flex gap-1.5 flex-wrap mt-0.5">
+            {JUZ_PRESETS.map((v) => (
               <button
                 key={v}
                 type="button"
-                className={`juz-preset ${parseFloat(form.min_juz_per_month) === v ? 'juz-preset-active' : ''}`}
+                className={`py-0.5 px-2 border-[1.5px] rounded-full text-[0.72rem] font-bold font-sans cursor-pointer transition-colors ${parseFloat(form.min_juz_per_month) === v ? 'border-[#1B5E8C] bg-[#1B5E8C] text-white' : 'border-gray-200 bg-white text-gray-500 hover:border-[#1B5E8C] hover:text-[#1B5E8C]'}`}
                 onClick={() => handleChange('min_juz_per_month', v)}
               >
                 {v}
@@ -152,24 +182,27 @@ function ThresholdRow({ threshold, index }) {
             ))}
           </div>
         </div>
-
       </div>
 
       {/* ── Actions ── */}
-      <div className="row-actions">
+      <div className="flex flex-col items-end gap-2 pt-6 shrink-0">
         <SaveIndicator state={saveState} />
         {dirty && (
-          <button className="btn-reset" onClick={handleReset} title="تراجع عن التغييرات">
+          <button
+            className="bg-transparent border-none cursor-pointer text-[1rem] text-gray-400 p-0.5 transition-all hover:text-gray-700 hover:rotate-[-45deg]"
+            onClick={handleReset}
+            title="تراجع عن التغييرات"
+          >
             ↺
           </button>
         )}
         <button
-          className={`btn-save ${!dirty || !isValid ? 'btn-save-disabled' : ''}`}
+          className={`py-2 px-4 bg-gradient-to-br from-[#1B5E8C] to-[#134569] text-white font-sans text-[0.82rem] font-bold border-none rounded-xl min-w-[64px] flex items-center justify-center shadow-[0_2px_6px_rgba(27,94,140,0.2)] transition-all ${(!dirty || !isValid) ? 'opacity-40 cursor-not-allowed shadow-none' : 'hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(27,94,140,0.3)]'}`}
           onClick={handleSave}
           disabled={!dirty || !isValid || saveState === 'saving'}
         >
           {saveState === 'saving' ? (
-            <span className="spin" />
+            <span className="inline-block w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-[spin_0.6s_linear_infinite]" />
           ) : (
             'حفظ'
           )}
@@ -179,10 +212,13 @@ function ThresholdRow({ threshold, index }) {
   );
 }
 
-// ── Add Threshold Modal ───────────────────────────────────────────────────────
+// ── AddThresholdModal ─────────────────────────────────────────────────────────
+
 function AddThresholdModal({ onClose, onSaved }) {
-  const [form, setForm] = useState({ label: '', age_min: '', age_max: '', min_juz_per_month: '' });
+  const [form, setForm]   = useState({ label: '', age_min: '', age_max: '', min_juz_per_month: '' });
   const [saving, setSaving] = useState(false);
+  const [apiErr, setApiErr] = useState('');
+
   const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
   const isValid =
@@ -192,8 +228,9 @@ function AddThresholdModal({ onClose, onSaved }) {
 
   const handleSubmit = async () => {
     setSaving(true);
+    setApiErr('');
     try {
-      const { data } = await api.post('/quran-thresholds', {
+      const { data } = await api.post(API_ENDPOINTS.THRESHOLDS, {
         label:             form.label.trim() || null,
         age_min:           parseInt(form.age_min),
         age_max:           parseInt(form.age_max),
@@ -201,6 +238,12 @@ function AddThresholdModal({ onClose, onSaved }) {
       });
       onSaved(data.threshold);
       onClose();
+    } catch (err) {
+      setApiErr(
+        err.response?.data?.error ||
+        err.response?.data?.errors?.[0]?.msg ||
+        'حدث خطأ أثناء الحفظ. يرجى المحاولة مجدداً'
+      );
     } finally {
       setSaving(false);
     }
@@ -208,85 +251,117 @@ function AddThresholdModal({ onClose, onSaved }) {
 
   return (
     <>
-      <div className="m-backdrop" onClick={onClose} />
-      <div className="m-box" dir="rtl">
-        <div className="m-head">
-          <h2 className="m-title">إضافة فئة عمرية جديدة</h2>
-          <button className="m-close" onClick={onClose}><X size={16} /></button>
+      <div className="fixed inset-0 bg-black/45 z-[100] animate-[fadeIn_0.2s]" onClick={onClose} />
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[440px] max-w-[94vw] bg-white rounded-2xl z-[101] shadow-[0_24px_64px_rgba(0,0,0,0.2)] font-sans animate-[slideUp_0.22s_ease]" dir="rtl">
+
+        {/* Header */}
+        <div className="flex items-center justify-between py-4 px-5 border-b border-gray-100">
+          <h2 className="text-[0.97rem] font-extrabold text-[#0d3d5c] m-0">إضافة فئة عمرية جديدة</h2>
+          <button className="flex items-center p-1 rounded-md text-gray-400 hover:text-gray-700 transition-colors bg-transparent border-none cursor-pointer" onClick={onClose} aria-label="إغلاق">
+            <X size={16} />
+          </button>
         </div>
-        <div className="m-body">
-          <div className="m-fg">
-            <label className="m-lbl">التسمية</label>
-            <input className="m-inp" value={form.label} onChange={e => set('label', e.target.value)} placeholder="مثال: أطفال صغار (5-9)" />
-          </div>
-          <div className="m-row">
-            <div className="m-fg">
-              <label className="m-lbl">من (سنة)</label>
-              <input className="m-inp" type="number" min={0} value={form.age_min} onChange={e => set('age_min', e.target.value)} placeholder="0" />
+
+        {/* Body */}
+        <div className="flex flex-col gap-3.5 p-5">
+          {apiErr && (
+            <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl py-2.5 px-3.5 text-[0.82rem] text-red-700">
+              <AlertTriangle size={16} className="shrink-0" /> {apiErr}
             </div>
-            <div className="m-fg">
-              <label className="m-lbl">إلى (سنة)</label>
-              <input className="m-inp" type="number" min={1} value={form.age_max} onChange={e => set('age_max', e.target.value)} placeholder="18" />
+          )}
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[0.82rem] font-semibold text-gray-700">التسمية</label>
+            <input
+              className="w-full border-[1.5px] border-gray-300 rounded-xl py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-colors focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10"
+              value={form.label}
+              onChange={e => set('label', e.target.value)}
+              placeholder="مثال: أطفال صغار (5-9)"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[0.82rem] font-semibold text-gray-700">من (سنة)</label>
+              <input
+                className="w-full border-[1.5px] border-gray-300 rounded-xl py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-colors focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10"
+                type="number"
+                min={0}
+                value={form.age_min}
+                onChange={e => set('age_min', e.target.value)}
+                placeholder="0"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[0.82rem] font-semibold text-gray-700">إلى (سنة)</label>
+              <input
+                className="w-full border-[1.5px] border-gray-300 rounded-xl py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-colors focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10"
+                type="number"
+                min={1}
+                value={form.age_max}
+                onChange={e => set('age_max', e.target.value)}
+                placeholder="18"
+              />
             </div>
           </div>
-          <div className="m-fg">
-            <label className="m-lbl">الحد الأدنى (جزء/شهر)</label>
-            <input className="m-inp" type="number" min={0} step={0.25} value={form.min_juz_per_month} onChange={e => set('min_juz_per_month', e.target.value)} placeholder="1" />
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[0.82rem] font-semibold text-gray-700">الحد الأدنى (جزء/شهر)</label>
+            <input
+              className="w-full border-[1.5px] border-gray-300 rounded-xl py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-colors focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10"
+              type="number"
+              min={0}
+              step={0.25}
+              value={form.min_juz_per_month}
+              onChange={e => set('min_juz_per_month', e.target.value)}
+              placeholder="1"
+            />
           </div>
         </div>
-        <div className="m-foot">
-          <button className="m-btn-ghost" onClick={onClose}>إلغاء</button>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-2.5 py-3.5 px-5 border-t border-gray-100">
+          <button
+            className="inline-flex items-center py-2 px-5 bg-transparent text-gray-500 font-semibold text-[0.85rem] font-sans border-[1.5px] border-gray-200 rounded-xl cursor-pointer transition-colors hover:border-gray-400 hover:text-gray-700"
+            onClick={onClose}
+          >
+            إلغاء
+          </button>
           <PrimaryButton disabled={!isValid || saving} onClick={handleSubmit}>
-            {saving ? <span className="m-spin" /> : 'إضافة'}
+            {saving
+              ? <span className="inline-block w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-[spin_0.6s_linear_infinite]" />
+              : 'إضافة'}
           </PrimaryButton>
         </div>
       </div>
-      <style jsx>{`
-        .m-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:100; animation:mFade .2s; }
-        @keyframes mFade { from{opacity:0} to{opacity:1} }
-        .m-box { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:440px; max-width:94vw; background:#fff; border-radius:1.25rem; z-index:101; box-shadow:0 24px 64px rgba(0,0,0,.2); font-family:'Cairo','Tajawal',sans-serif; animation:mUp .22s ease; }
-        @keyframes mUp { from{opacity:0;transform:translate(-50%,-44%)} to{opacity:1;transform:translate(-50%,-50%)} }
-        .m-head { display:flex; align-items:center; justify-content:space-between; padding:1.1rem 1.4rem; border-bottom:1px solid #f0f4f8; }
-        .m-title { font-size:.97rem; font-weight:800; color:#0d3d5c; margin:0; }
-        .m-close { background:none; border:none; color:#9ca3af; cursor:pointer; display:flex; align-items:center; padding:.2rem; border-radius:.4rem; transition:color .15s; }
-        .m-close:hover { color:#374151; }
-        .m-body { padding:1.4rem; display:flex; flex-direction:column; gap:.85rem; }
-        .m-row { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
-        .m-fg { display:flex; flex-direction:column; gap:.3rem; }
-        .m-lbl { font-size:.82rem; font-weight:600; color:#374151; }
-        .m-inp { border:1.5px solid #d1d5db; border-radius:.625rem; padding:.65rem .9rem; font-size:.88rem; font-family:'Cairo',sans-serif; color:#1f2937; background:#fafafa; outline:none; width:100%; box-sizing:border-box; transition:border-color .15s; }
-        .m-inp:focus { border-color:#1B5E8C; box-shadow:0 0 0 3px rgba(27,94,140,.1); }
-        .m-foot { display:flex; align-items:center; justify-content:flex-end; gap:.6rem; padding:.9rem 1.4rem; border-top:1px solid #f0f4f8; }
-        .m-btn-ghost { display:inline-flex; align-items:center; padding:.6rem 1.2rem; background:none; color:#6b7280; font-family:'Cairo',sans-serif; font-size:.85rem; font-weight:600; border:1.5px solid #e5eaf0; border-radius:.75rem; cursor:pointer; transition:all .15s; }
-        .m-btn-ghost:hover { border-color:#9ca3af; color:#374151; }
-.m-spin { display:inline-block; width:13px; height:13px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:mSpin .6s linear infinite; }
-        @keyframes mSpin { to{transform:rotate(360deg)} }
-      `}</style>
     </>
   );
 }
 
-// ── Skeleton ──────────────────────────────────────────────────────────────────
+// ── SkeletonRow ───────────────────────────────────────────────────────────────
+
 function SkeletonRow({ index }) {
+  const shimmer = 'bg-gradient-to-r from-gray-100 to-gray-200 animate-[shimmer_1.4s_infinite] bg-[length:200%_100%]';
   return (
-    <div className="threshold-row sk-row" style={{ animationDelay: `${index * 60}ms` }}>
-      <div className="row-index sk-num" />
-      <div className="row-fields">
-        {[220, 160, 130].map((w, i) => (
-          <div key={i} className="field-group">
-            <div className="sk-label" />
-            <div className="sk-input" style={{ width: w }} />
+    <div className="flex items-start gap-4 py-5 px-6 border-b border-gray-100 last:border-b-0 pointer-events-none" style={{ animationDelay: `${index * 60}ms` }}>
+      <div className={`w-7 h-7 rounded-lg shrink-0 mt-6 ${shimmer}`} />
+      <div className="flex-1 grid grid-cols-[2fr_1.6fr_1.4fr] gap-4">
+        {SKELETON_WIDTHS.map((w, i) => (
+          <div key={i} className="flex flex-col gap-2">
+            <div className={`h-2.5 w-20 rounded-full ${shimmer}`} />
+            <div className={`h-9 rounded-xl ${shimmer}`} style={{ width: w }} />
           </div>
         ))}
       </div>
-      <div className="row-actions">
-        <div className="sk-btn" />
+      <div className="pt-6 shrink-0">
+        <div className={`w-16 h-8 rounded-xl ${shimmer}`} />
       </div>
     </div>
   );
 }
 
 // ── Main page ─────────────────────────────────────────────────────────────────
+
 export default function QuranThresholdsPage() {
   const [thresholds, setThresholds] = useState([]);
   const [loading, setLoading]       = useState(true);
@@ -294,7 +369,7 @@ export default function QuranThresholdsPage() {
   const [showAdd, setShowAdd]       = useState(false);
 
   useEffect(() => {
-    api.get('/quran-thresholds')
+    api.get(API_ENDPOINTS.THRESHOLDS)
       .then((res) => setThresholds(res.data.thresholds || []))
       .catch(() => setError('تعذّر تحميل الإعدادات. يرجى تحديث الصفحة.'))
       .finally(() => setLoading(false));
@@ -302,29 +377,30 @@ export default function QuranThresholdsPage() {
 
   return (
     <AppShell>
-      <div className="page" dir="rtl">
+      <div className="max-w-[860px] mx-auto flex flex-col gap-5 font-sans pb-12" dir="rtl">
 
         {/* ── Page header ── */}
-        <div className="page-header">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="page-title">إعدادات حفظ القرآن</h1>
-            <p className="page-sub">
+            <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] m-0 mb-1">إعدادات حفظ القرآن</h1>
+            <p className="text-[0.82rem] text-gray-400 m-0">
               حدّد الحد الأدنى لعدد الأجزاء المطلوبة شهرياً لكل فئة عمرية
             </p>
           </div>
-          <button className="btn-add-threshold" onClick={() => setShowAdd(true)}>
+          <button
+            className="inline-flex items-center gap-1.5 py-2.5 px-4 bg-gradient-to-br from-[#1B5E8C] to-[#134569] text-white font-sans text-[0.85rem] font-bold border-none rounded-xl cursor-pointer shadow-[0_2px_8px_rgba(27,94,140,0.25)] transition-all shrink-0 self-center hover:from-[#2E7EB8] hover:to-[#1B5E8C] hover:-translate-y-px"
+            onClick={() => setShowAdd(true)}
+          >
             <Plus size={16} /> إضافة فئة جديدة
           </button>
         </div>
 
         {/* ── Info banner ── */}
-        <div className="info-banner">
-          <div className="info-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
+        <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-[0.875rem] py-3.5 px-4 shadow-[0_1px_3px_rgba(37,99,235,0.06)]">
+          <div className="flex shrink-0 mt-0.5 text-blue-600">
+            <Info size={16} />
           </div>
-          <p>
+          <p className="text-[0.82rem] text-blue-700 m-0 leading-relaxed">
             عند رفع تقرير الحفظ، يقارن النظام تلقائياً عدد الأجزاء المحفوظة بالحد الأدنى المقابل لعمر اليتيم.
             إذا لم يُستوفَ الحد ← يُوقَف الصرف لذلك الشهر فقط مع بقاء الكفالة سارية.
           </p>
@@ -332,67 +408,61 @@ export default function QuranThresholdsPage() {
 
         {/* ── Error ── */}
         {error && (
-          <div className="err-banner"><AlertTriangle size={18} /> {error}</div>
+          <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 py-3 px-4 rounded-xl text-[0.85rem]">
+            <AlertTriangle size={18} /> {error}
+          </div>
         )}
 
-        {/* ── Thresholds list ── */}
-        <div className="thresholds-card">
-          <div className="card-header">
-            <span className="card-title">الفئات العمرية</span>
-            <span className="card-hint">
+        {/* ── Thresholds card ── */}
+        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          {/* Card header */}
+          <div className="flex items-center justify-between py-4 px-6 bg-gradient-to-r from-[#0d3d5c] to-[#1B5E8C] text-white">
+            <span className="text-[0.9rem] font-bold tracking-wide flex items-center gap-2">الفئات العمرية</span>
+            <span className="text-[0.78rem] text-white/60 bg-white/[0.12] py-0.5 px-2.5 rounded-full">
               {loading ? '…' : `${thresholds.length} فئات`}
             </span>
           </div>
 
-          <div className="thresholds-list">
+          {/* Rows */}
+          <div className="flex flex-col">
             {loading
               ? Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} index={i} />)
               : thresholds.length === 0
-              ? (
-                <div className="empty-state">
-                  <span>📋</span>
-                  <p>لا توجد فئات محددة بعد</p>
-                </div>
-              )
-              : thresholds.map((t, i) => (
+                ? (
+                  <div className="flex flex-col items-center gap-2 py-12 px-4 text-[0.85rem] text-gray-400">
+                    <span className="text-[2rem]">📋</span>
+                    <p className="m-0">لا توجد فئات محددة بعد</p>
+                  </div>
+                )
+                : thresholds.map((t, i) => (
                   <ThresholdRow key={t.id} threshold={t} index={i} />
                 ))
             }
           </div>
         </div>
 
-        {/* ── Help section ── */}
-        <div className="help-card">
-          <h3 className="help-title">كيف تعمل هذه الإعدادات؟</h3>
-          <div className="help-grid">
-            <div className="help-item">
-              <span className="help-num">١</span>
-              <div>
-                <strong>المندوب يرفع التقرير</strong>
-                <p>يُدخل عدد الأجزاء المحفوظة لكل يتيم في نهاية الشهر.</p>
+        {/* ── Help card ── */}
+        <div className="bg-white border border-gray-200 rounded-2xl py-5 px-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <h3 className="text-[0.9rem] font-extrabold text-[#0d3d5c] m-0 mb-4 flex items-center gap-2 before:content-[''] before:inline-block before:w-[3px] before:h-4 before:bg-gradient-to-b before:from-[#1B5E8C] before:to-[#134569] before:rounded-sm">
+            كيف تعمل هذه الإعدادات؟
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {[
+              { num: '١', title: 'المندوب يرفع التقرير',     body: 'يُدخل عدد الأجزاء المحفوظة لكل يتيم في نهاية الشهر.' },
+              { num: '٢', title: 'النظام يحسب العمر',        body: 'يُحدد الفئة العمرية للطفل ويستخرج الحد الأدنى المقابل من هذه القائمة.' },
+              { num: '٣', title: 'المشرف يراجع ويقرر',       body: 'يرى الحد الأدنى بجانب التقرير ويقرر القبول أو الرفض.' },
+              { num: '٤', title: 'الأثر المالي',              body: 'القبول → يُصرف المبلغ. الرفض → يُوقف صرف هذا الشهر فقط.' },
+            ].map(({ num, title, body }) => (
+              <div key={num} className="flex gap-3 items-start bg-gray-50 border border-gray-200 rounded-xl py-3.5 px-4 transition-colors hover:border-[#1B5E8C]/30">
+                <span className="w-7 h-7 rounded-full bg-gradient-to-br from-[#1B5E8C] to-[#134569] text-white text-[0.75rem] font-extrabold flex items-center justify-center shrink-0 font-sans shadow-[0_2px_6px_rgba(27,94,140,0.25)]">
+                  {num}
+                </span>
+                <div>
+                  <strong className="block text-[0.82rem] font-bold text-gray-800 mb-1">{title}</strong>
+                  <p className="text-[0.78rem] text-gray-500 m-0 leading-relaxed">{body}</p>
+                </div>
               </div>
-            </div>
-            <div className="help-item">
-              <span className="help-num">٢</span>
-              <div>
-                <strong>النظام يحسب العمر</strong>
-                <p>يُحدد الفئة العمرية للطفل ويستخرج الحد الأدنى المقابل من هذه القائمة.</p>
-              </div>
-            </div>
-            <div className="help-item">
-              <span className="help-num">٣</span>
-              <div>
-                <strong>المشرف يراجع ويقرر</strong>
-                <p>يرى الحد الأدنى بجانب التقرير ويقرر القبول أو الرفض.</p>
-              </div>
-            </div>
-            <div className="help-item">
-              <span className="help-num">٤</span>
-              <div>
-                <strong>الأثر المالي</strong>
-                <p>القبول → يُصرف المبلغ. الرفض → يُوقف صرف هذا الشهر فقط.</p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
@@ -404,469 +474,6 @@ export default function QuranThresholdsPage() {
           onSaved={(t) => setThresholds((prev) => [...prev, t])}
         />
       )}
-
-      <style jsx global>{`
-        /* ── Page ─────────────────────────────────────────────────────── */
-        .page {
-          max-width: 860px;
-          margin: 0 auto;
-          display: flex;
-          flex-direction: column;
-          gap: 1.25rem;
-          font-family: 'Cairo', 'Tajawal', sans-serif;
-          padding-bottom: 3rem;
-        }
-
-        /* ── Page header ──────────────────────────────────────────────── */
-        .page-header {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: 1rem;
-          flex-wrap: wrap;
-        }
-        .page-title {
-          font-size: 1.6rem;
-          font-weight: 800;
-          color: #0d3d5c;
-          margin: 0 0 0.2rem;
-        }
-        .page-sub {
-          font-size: 0.82rem;
-          color: #9ca3af;
-          margin: 0;
-        }
-        /* ── Add button ───────────────────────────────────────────────── */
-        .btn-add-threshold {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.4rem;
-          padding: 0.6rem 1.1rem;
-          background: linear-gradient(135deg, #1B5E8C, #134569);
-          color: #fff;
-          font-family: 'Cairo', sans-serif;
-          font-size: 0.85rem;
-          font-weight: 700;
-          border: none;
-          border-radius: 0.75rem;
-          cursor: pointer;
-          box-shadow: 0 2px 8px rgba(27,94,140,.25);
-          transition: all 0.15s;
-          flex-shrink: 0;
-          align-self: center;
-        }
-        .btn-add-threshold:hover {
-          background: linear-gradient(135deg, #2E7EB8, #1B5E8C);
-          transform: translateY(-1px);
-        }
-
-        /* ── Info banner ──────────────────────────────────────────────── */
-        .info-banner {
-          display: flex;
-          align-items: flex-start;
-          gap: 0.75rem;
-          background: #eff6ff;
-          border: 1px solid #bfdbfe;
-          border-radius: 0.875rem;
-          padding: 0.9rem 1.1rem;
-          box-shadow: 0 1px 3px rgba(37,99,235,.06);
-        }
-        .info-icon {
-          display: flex;
-          flex-shrink: 0;
-          margin-top: 2px;
-        }
-        .info-banner p {
-          font-size: 0.82rem;
-          color: #1d4ed8;
-          margin: 0;
-          line-height: 1.75;
-        }
-
-        /* ── Error ────────────────────────────────────────────────────── */
-        .err-banner {
-          background: #fef2f2;
-          border: 1px solid #fecaca;
-          color: #b91c1c;
-          padding: 0.75rem 1rem;
-          border-radius: 0.75rem;
-          font-size: 0.85rem;
-        }
-
-        /* ── Thresholds card ──────────────────────────────────────────── */
-        .thresholds-card {
-          background: #fff;
-          border: 1px solid #e5eaf0;
-          border-radius: 1rem;
-          overflow: hidden;
-          box-shadow: 0 1px 3px rgba(0,0,0,.04);
-        }
-        .card-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 1rem 1.5rem;
-          background: linear-gradient(135deg, #0d3d5c 0%, #1B5E8C 100%);
-          color: #fff;
-        }
-        .card-title {
-          font-size: 0.9rem;
-          font-weight: 700;
-          letter-spacing: 0.03em;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-        .card-hint {
-          font-size: 0.78rem;
-          color: rgba(255,255,255,0.6);
-          background: rgba(255,255,255,0.12);
-          padding: 0.2rem 0.65rem;
-          border-radius: 2rem;
-        }
-
-        .thresholds-list {
-          display: flex;
-          flex-direction: column;
-        }
-
-        /* ── Threshold row ────────────────────────────────────────────── */
-        .threshold-row {
-          display: flex;
-          align-items: flex-start;
-          gap: 1.1rem;
-          padding: 1.35rem 1.5rem;
-          border-bottom: 1px solid #f1f5f9;
-          transition: background 0.15s;
-          animation: rowIn 0.35s ease both;
-        }
-        @keyframes rowIn {
-          from { opacity: 0; transform: translateY(8px); }
-          to   { opacity: 1; transform: none; }
-        }
-        .threshold-row:last-child { border-bottom: none; }
-        .threshold-row:hover { background: #f8fbff; }
-        .row-dirty {
-          background: #fffbeb !important;
-          border-right: 3px solid #F59E0B;
-          box-shadow: inset 3px 0 0 #F59E0B;
-        }
-
-        /* ── Row index badge ──────────────────────────────────────────── */
-        .row-index {
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #1B5E8C, #134569);
-          color: #fff;
-          font-size: 0.78rem;
-          font-weight: 800;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-          margin-top: 1.6rem;
-          box-shadow: 0 2px 6px rgba(27,94,140,.25);
-        }
-
-        /* ── Fields layout ────────────────────────────────────────────── */
-        .row-fields {
-          flex: 1;
-          display: grid;
-          grid-template-columns: 2fr 1.6fr 1.4fr;
-          gap: 1rem;
-          min-width: 0;
-        }
-        @media (max-width: 680px) {
-          .row-fields { grid-template-columns: 1fr; }
-          .threshold-row { flex-wrap: wrap; }
-        }
-
-        /* ── Field group ──────────────────────────────────────────────── */
-        .field-group {
-          display: flex;
-          flex-direction: column;
-          gap: 0.35rem;
-        }
-        .field-label {
-          font-size: 0.72rem;
-          font-weight: 700;
-          color: #6b7280;
-          letter-spacing: 0.03em;
-        }
-        .field-input {
-          border: 1.5px solid #e5e7eb;
-          border-radius: 0.625rem;
-          padding: 0.55rem 0.8rem;
-          font-size: 0.88rem;
-          font-family: 'Cairo', sans-serif;
-          color: #1f2937;
-          background: #fafafa;
-          outline: none;
-          transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
-          width: 100%;
-          box-sizing: border-box;
-        }
-        .field-input:focus {
-          border-color: #1B5E8C;
-          background: #fff;
-          box-shadow: 0 0 0 3px rgba(27,94,140,.1);
-        }
-
-        /* ── Age inputs ───────────────────────────────────────────────── */
-        .age-inputs {
-          display: flex;
-          align-items: center;
-          gap: 0.4rem;
-        }
-        .age-inp { flex: 1; text-align: center; }
-        .age-sep { color: #9ca3af; font-size: 0.85rem; flex-shrink: 0; }
-
-        /* ── Juz field ────────────────────────────────────────────────── */
-        .juz-wrap {
-          display: flex;
-          align-items: center;
-          gap: 0.4rem;
-        }
-        .juz-inp { flex: 1; text-align: center; }
-        .juz-unit {
-          font-size: 0.78rem;
-          color: #6b7280;
-          font-weight: 600;
-          flex-shrink: 0;
-        }
-        .juz-scale {
-          display: flex;
-          gap: 0.3rem;
-          flex-wrap: wrap;
-          margin-top: 0.15rem;
-        }
-        .juz-preset {
-          padding: 0.15rem 0.5rem;
-          border: 1.5px solid #e5e7eb;
-          border-radius: 999px;
-          font-size: 0.72rem;
-          font-weight: 700;
-          font-family: 'Cairo', sans-serif;
-          color: #6b7280;
-          background: #fff;
-          cursor: pointer;
-          transition: all 0.12s;
-        }
-        .juz-preset:hover { border-color: #1B5E8C; color: #1B5E8C; }
-        .juz-preset-active {
-          border-color: #1B5E8C;
-          background: #1B5E8C;
-          color: #fff;
-        }
-
-        /* ── Row actions ──────────────────────────────────────────────── */
-        .row-actions {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          gap: 0.5rem;
-          padding-top: 1.6rem;
-          flex-shrink: 0;
-        }
-        .btn-save {
-          padding: 0.55rem 1.1rem;
-          background: linear-gradient(135deg, #1B5E8C, #134569);
-          color: #fff;
-          font-family: 'Cairo', sans-serif;
-          font-size: 0.82rem;
-          font-weight: 700;
-          border: none;
-          border-radius: 0.625rem;
-          cursor: pointer;
-          min-width: 64px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: transform 0.12s, box-shadow 0.12s;
-          box-shadow: 0 2px 6px rgba(27,94,140,.2);
-        }
-        .btn-save:hover:not(.btn-save-disabled) {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(27,94,140,.3);
-        }
-        .btn-save-disabled {
-          opacity: 0.4;
-          cursor: not-allowed;
-          box-shadow: none;
-        }
-        .btn-reset {
-          background: none;
-          border: none;
-          cursor: pointer;
-          font-size: 1rem;
-          color: #9ca3af;
-          padding: 0.15rem;
-          transition: color 0.12s, transform 0.2s;
-        }
-        .btn-reset:hover {
-          color: #374151;
-          transform: rotate(-45deg);
-        }
-
-        /* ── Save indicators ──────────────────────────────────────────── */
-        .save-saving {
-          font-size: 0.72rem;
-          color: #6b7280;
-          font-weight: 600;
-        }
-        .save-done {
-          font-size: 0.72rem;
-          color: #059669;
-          font-weight: 700;
-          animation: fadeIn 0.2s ease;
-        }
-        .save-err {
-          font-size: 0.72rem;
-          color: #DC2626;
-          font-weight: 700;
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; transform: scale(0.9); }
-          to   { opacity: 1; transform: none; }
-        }
-
-        /* ── Spinner ──────────────────────────────────────────────────── */
-        .spin {
-          display: inline-block;
-          width: 13px;
-          height: 13px;
-          border: 2px solid rgba(255,255,255,.4);
-          border-top-color: #fff;
-          border-radius: 50%;
-          animation: spin .6s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* ── Skeleton ─────────────────────────────────────────────────── */
-        .sk-row { pointer-events: none; }
-        .sk-num {
-          width: 28px;
-          height: 28px;
-          border-radius: 8px;
-          background: linear-gradient(90deg, #f3f4f6 25%, #e9ecef 50%, #f3f4f6 75%);
-          background-size: 200% 100%;
-          animation: shimmer 1.4s infinite;
-        }
-        .sk-label {
-          height: 10px;
-          width: 80px;
-          border-radius: 5px;
-          margin-bottom: 0.35rem;
-          background: linear-gradient(90deg, #f3f4f6 25%, #e9ecef 50%, #f3f4f6 75%);
-          background-size: 200% 100%;
-          animation: shimmer 1.4s infinite;
-        }
-        .sk-input {
-          height: 36px;
-          border-radius: 0.625rem;
-          background: linear-gradient(90deg, #f3f4f6 25%, #e9ecef 50%, #f3f4f6 75%);
-          background-size: 200% 100%;
-          animation: shimmer 1.4s infinite;
-        }
-        .sk-btn {
-          width: 64px;
-          height: 34px;
-          border-radius: 0.625rem;
-          margin-top: 1.6rem;
-          background: linear-gradient(90deg, #f3f4f6 25%, #e9ecef 50%, #f3f4f6 75%);
-          background-size: 200% 100%;
-          animation: shimmer 1.4s infinite;
-        }
-        @keyframes shimmer {
-          0%   { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-
-        /* ── Empty state ──────────────────────────────────────────────── */
-        .empty-state {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 3rem 1rem;
-          color: #9ca3af;
-          font-size: 0.85rem;
-        }
-        .empty-state span { font-size: 2rem; }
-        .empty-state p { margin: 0; }
-
-        /* ── Help card ────────────────────────────────────────────────── */
-        .help-card {
-          background: #fff;
-          border: 1px solid #e5eaf0;
-          border-radius: 1rem;
-          padding: 1.4rem 1.5rem;
-          box-shadow: 0 1px 3px rgba(0,0,0,.04);
-        }
-        .help-title {
-          font-size: 0.9rem;
-          font-weight: 800;
-          color: #0d3d5c;
-          margin: 0 0 1.1rem;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-        .help-title::before {
-          content: '';
-          display: inline-block;
-          width: 3px;
-          height: 1rem;
-          background: linear-gradient(135deg, #1B5E8C, #134569);
-          border-radius: 2px;
-        }
-        .help-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1rem;
-        }
-        @media (max-width: 600px) { .help-grid { grid-template-columns: 1fr; } }
-        .help-item {
-          display: flex;
-          gap: 0.75rem;
-          align-items: flex-start;
-          background: #f8fafc;
-          border: 1px solid #e5eaf0;
-          border-radius: 0.75rem;
-          padding: 0.85rem 1rem;
-          transition: border-color 0.15s;
-        }
-        .help-item:hover { border-color: #1B5E8C30; }
-        .help-num {
-          width: 28px;
-          height: 28px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #1B5E8C, #134569);
-          color: #fff;
-          font-size: 0.75rem;
-          font-weight: 800;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-          font-family: 'Cairo', sans-serif;
-          box-shadow: 0 2px 6px rgba(27,94,140,.25);
-        }
-        .help-item strong {
-          display: block;
-          font-size: 0.82rem;
-          font-weight: 700;
-          color: #1f2937;
-          margin-bottom: 0.25rem;
-        }
-        .help-item p {
-          font-size: 0.78rem;
-          color: #6b7280;
-          margin: 0;
-          line-height: 1.6;
-        }
-      `}</style>
     </AppShell>
   );
 }
