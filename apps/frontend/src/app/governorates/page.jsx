@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import { Search, AlertTriangle, X, User, ChevronRight, MapPin, Map, Users, Star, ArrowRight } from 'lucide-react';
+import { Search, AlertTriangle, X, User, MapPin, Map, Users, Star, ArrowRight } from 'lucide-react';
 
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
