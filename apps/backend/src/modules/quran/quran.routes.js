@@ -1,6 +1,11 @@
 /**
  * quran.routes.js
  * Mounted at: /api/quran-reports
+ *
+ * This file contains ONLY route definitions and middleware wiring.
+ * Business logic  → quran.service.js
+ * HTTP handling   → quran.controller.js
+ * DB queries      → quran.repository.js
  */
 
 const { Router } = require('express');
@@ -10,31 +15,39 @@ const controller = require('./quran.controller');
 
 const router = Router();
 
-// Agent: submit monthly report for an orphan
+// POST /api/quran-reports — agent submits a report
 router.post(
   '/',
   authenticate,
   authorize('agent', 'gm'),
   [
-    body('orphanId').notEmpty().withMessage('معرّف اليتيم مطلوب'),
-    body('month').isInt({ min: 1, max: 12 }).withMessage('الشهر غير صحيح'),
+    body('orphanId').isUUID().withMessage('معرّف اليتيم غير صحيح'),
+    body('month').isInt({ min: 1, max: 12 }).withMessage('الشهر يجب أن يكون بين 1 و 12'),
     body('year').isInt({ min: 2020 }).withMessage('السنة غير صحيحة'),
     body('juzMemorized')
-      .isFloat({ min: 0, max: 30 })
-      .withMessage('عدد الأجزاء يجب أن يكون بين 0 و 30'),
+      .isFloat({ min: 0 })
+      .withMessage('عدد الأجزاء يجب أن يكون صفرًا أو أكثر'),
   ],
   controller.submitReport
 );
 
-// Agent/Supervisor/GM: list reports
+// GET /api/quran-reports/pending — supervisor sees all pending reports
 router.get(
-  '/',
+  '/pending',
   authenticate,
-  authorize('agent', 'supervisor', 'gm'),
-  controller.getReports
+  authorize('supervisor', 'gm'),
+  controller.getPendingReports
 );
 
-// Supervisor/GM: get single report
+// GET /api/quran-reports/mine — agent sees their own submitted reports
+router.get(
+  '/mine',
+  authenticate,
+  authorize('agent'),
+  controller.getReportsByAgent
+);
+
+// GET /api/quran-reports/:id — supervisor/gm gets single report
 router.get(
   '/:id',
   authenticate,
@@ -42,21 +55,20 @@ router.get(
   controller.getReportById
 );
 
-// Supervisor/GM: approve report → orphan included in disbursement
+// PATCH /api/quran-reports/:id/review — supervisor approves or rejects
 router.patch(
-  '/:id/approve',
+  '/:id/review',
   authenticate,
   authorize('supervisor', 'gm'),
-  controller.approveReport
-);
-
-// Supervisor/GM: reject report → orphan excluded from disbursement
-router.patch(
-  '/:id/reject',
-  authenticate,
-  authorize('supervisor', 'gm'),
-  [body('notes').optional().isString()],
-  controller.rejectReport
+  [
+    body('action')
+      .isIn(['approved', 'rejected'])
+      .withMessage('الإجراء يجب أن يكون approved أو rejected'),
+    body('notes')
+      .if(body('action').equals('rejected'))
+      .notEmpty().withMessage('ملاحظات الرفض مطلوبة عند الرفض'),
+  ],
+  controller.reviewReport
 );
 
 module.exports = router;
