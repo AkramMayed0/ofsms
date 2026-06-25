@@ -7,6 +7,11 @@ import AppShell from '../../components/AppShell';
 import useAuthStore from '../../store/useAuthStore';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 
+// ── Constants ─────────────────────────────────────────────────────────────────
+const TOAST_DURATION   = 3000; // ms
+const SKELETON_COUNT   = 4;
+const TITLE_MAX_LENGTH = 120;
+
 // ── SkeletonCard ──────────────────────────────────────────────────────────────
 function SkeletonCard() {
   return (
@@ -149,13 +154,13 @@ export default function AnnouncementsPage() {
   const [deleting, setDeleting]         = useState(false);
 
   // toggle loading per-row
-  const [togglingId, setTogglingId] = useState(null);
-  const [deletingAdId, setDeletingAdId] = useState('');
+  const [togglingId, setTogglingId]     = useState(null);
+  const [deletingAdId, setDeletingAdId] = useState(null);
 
   // ── Helpers ──────────────────────────────────────────────────────────────
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
+    setTimeout(() => setToast(null), TOAST_DURATION);
   };
 
   // ── Data fetch ───────────────────────────────────────────────────────────
@@ -272,7 +277,7 @@ export default function AnnouncementsPage() {
     } catch (err) {
       showToast(err.response?.data?.error || 'فشل حذف الإعلان.', 'error');
     } finally {
-      setDeletingAdId('');
+      setDeletingAdId(null);
     }
   };
 
@@ -311,7 +316,7 @@ export default function AnnouncementsPage() {
         {/* ── Skeleton loader ── */}
         {loading && (
           <div className="list">
-            {Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)}
+            {Array.from({ length: SKELETON_COUNT }).map((_, i) => <SkeletonCard key={i} />)}
           </div>
         )}
 
@@ -384,7 +389,7 @@ export default function AnnouncementsPage() {
                   placeholder="عنوان الإعلان…"
                   value={form.title}
                   onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                  maxLength={120}
+                  maxLength={TITLE_MAX_LENGTH}
                   autoFocus
                 />
 
