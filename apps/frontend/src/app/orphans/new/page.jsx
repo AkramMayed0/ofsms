@@ -14,7 +14,7 @@
 import { useState, useEffect, useRef, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import { Upload, FileText, Image, X, Plus, AlertCircle, CheckCircle2, File, AlertTriangle, User, Check } from 'lucide-react';
+import { Upload, FileText, Image, X, Plus, AlertCircle, CheckCircle2, File, AlertTriangle, Check } from 'lucide-react';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import PrimaryButton from '@/components/ui/PrimaryButton';
@@ -43,6 +43,23 @@ const VALID_GENDERS   = ['male', 'female'];
 const ALLOWED_TYPES   = ['application/pdf', 'image/jpeg', 'image/png'];
 const MAX_FILE_BYTES  = 5 * 1024 * 1024;
 
+// ── Tailwind shorthand constants ───────────────────────────────────────────────
+
+const CLS_CARD  = 'bg-white border border-[#e5eaf0] rounded-2xl p-7 shadow-sm shadow-sky-900/5';
+const CLS_GRID  = 'grid grid-cols-1 sm:grid-cols-2 gap-[1.1rem]';
+const CLS_FG    = 'flex flex-col gap-1';
+const CLS_FG2   = 'flex flex-col gap-1 col-span-1 sm:col-span-full';
+const CLS_LBL   = 'text-[0.82rem] font-semibold text-[#374151]';
+const CLS_REQ   = 'text-[#dc2626] mr-0.5';
+const CLS_OPT   = 'text-[#94a3b8] font-normal text-[0.75rem]';
+const CLS_INP   = 'w-full border-[1.5px] border-gray-300 rounded-xl px-3.5 py-2.5 text-sm font-cairo text-gray-800 bg-gray-50 outline-none transition-all duration-150 focus:border-[#1B5E8C] focus:bg-white focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)]';
+const CLS_INP_E = 'w-full border-[1.5px] border-red-500 rounded-xl px-3.5 py-2.5 text-sm font-cairo text-gray-800 bg-red-50 outline-none transition-all duration-150 focus:border-red-600 focus:shadow-[0_0_0_3px_rgba(220,38,38,0.08)]';
+const CLS_FERR  = "text-[0.77rem] text-[#dc2626] m-0 flex items-center gap-1 before:content-['•'] before:ml-1";
+const CLS_CHIP  = (sel) => `flex items-center px-4 py-2.5 border-[1.5px] rounded-[2rem] text-[0.83rem] font-semibold cursor-pointer transition-all duration-150 select-none ${sel ? 'border-[#1B5E8C] bg-[#1B5E8C] text-white' : 'border-gray-300 bg-gray-50 text-[#6b7280] hover:border-[#1B5E8C] hover:text-[#1B5E8C]'}`;
+const CLS_RADIO = (err) => `flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border-[1.5px] rounded-xl text-sm font-semibold cursor-pointer transition-all duration-150 bg-gray-50 select-none hover:border-[#1B5E8C] has-[:checked]:border-[#1B5E8C] has-[:checked]:bg-[#f0f7ff] has-[:checked]:text-[#1B5E8C] has-[:checked]:shadow-[0_0_0_2px_rgba(27,94,140,0.12)] ${err ? 'border-red-500' : 'border-gray-300 text-gray-500'}`;
+const CLS_RADIO_STATE = (sel) => `flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border-[1.5px] rounded-xl text-sm font-semibold cursor-pointer transition-all duration-150 select-none ${sel ? 'border-[#1B5E8C] bg-[#f0f7ff] text-[#1B5E8C] shadow-[0_0_0_2px_rgba(27,94,140,0.12)]' : 'border-gray-300 bg-gray-50 text-gray-500 hover:border-[#1B5E8C]'}`;
+const CLS_GHOST = 'inline-flex items-center gap-1.5 px-5 py-3 bg-transparent text-[#1B5E8C] font-cairo text-sm font-semibold border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-all duration-150 hover:bg-[#f0f7ff] hover:border-[#1B5E8C]';
+
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 const formatBytes = (b) =>
@@ -68,7 +85,6 @@ const FileTypeIcon = ({ type, size = 18 }) =>
 function FileDropZone({ label, hint, accept, multiple = false, onChange, error, value }) {
   const inputRef = useRef(null);
   const [dragging, setDragging] = useState(false);
-  const [btnHover, setBtnHover] = useState(false);
 
   const handleFiles = (files) => {
     const arr = Array.from(files);
@@ -86,9 +102,9 @@ function FileDropZone({ label, hint, accept, multiple = false, onChange, error, 
   const hasFiles = files.length > 0;
 
   return (
-    <div className="dz-wrapper">
+    <div className="flex flex-col gap-1.5">
       <div
-        className={`dz ${dragging ? 'dz-drag' : ''} ${error ? 'dz-err' : ''} ${hasFiles ? 'dz-filled' : ''}`}
+        className={`border-2 border-dashed rounded-xl p-5 transition-all duration-150 bg-white min-h-[110px] flex items-center justify-center ${dragging ? 'border-[#1B5E8C] bg-[#f0f7ff]' : 'border-[#cbd5e1] hover:border-[#1B5E8C] hover:bg-[#f0f7ff]'} ${error ? 'border-red-500 bg-red-50' : ''} ${hasFiles ? 'border-solid border-[#93c5fd] bg-[#f8fbff]' : ''}`}
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
         onDrop={(e) => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files); }}
@@ -104,55 +120,30 @@ function FileDropZone({ label, hint, accept, multiple = false, onChange, error, 
         />
 
         {!hasFiles ? (
-          <div className="dz-empty">
-            <p className="dz-cta">اسحب الملف هنا</p>
-            <p className="dz-hint">{hint}</p>
+          <div className="flex flex-col items-center gap-1.5 text-center" dir="rtl">
+            <p className="text-[0.82rem] font-semibold text-[#334155] m-0">اسحب الملف هنا</p>
+            <p className="text-[0.72rem] text-[#94a3b8] m-0">{hint}</p>
             <button
               type="button"
-              onMouseEnter={() => setBtnHover(true)}
-              onMouseLeave={() => setBtnHover(false)}
               onClick={() => inputRef.current?.click()}
-              style={{
-                display: 'inline-flex',
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: '0.4rem',
-                marginTop: '0.85rem',
-                padding: '0.55rem 1.25rem',
-                background: btnHover
-                  ? 'linear-gradient(135deg,#2E7EB8,#1B5E8C)'
-                  : 'linear-gradient(135deg,#1B5E8C,#134569)',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '0.75rem',
-                fontSize: '0.83rem',
-                fontWeight: 700,
-                fontFamily: "'Cairo', sans-serif",
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                boxShadow: btnHover
-                  ? '0 4px 14px rgba(27,94,140,.35)'
-                  : '0 2px 8px rgba(27,94,140,.2)',
-                transform: btnHover ? 'translateY(-1px)' : 'none',
-                transition: 'all .15s',
-              }}
+              className="inline-flex items-center gap-1.5 mt-3.5 px-5 py-2 bg-gradient-to-br from-[#1B5E8C] to-[#134569] text-white border-none rounded-xl text-[0.83rem] font-bold font-cairo cursor-pointer whitespace-nowrap shadow-sm shadow-[#1B5E8C]/20 transition-all duration-150 hover:from-[#2E7EB8] hover:to-[#1B5E8C] hover:shadow-md hover:shadow-[#1B5E8C]/35 hover:-translate-y-0.5 active:translate-y-0"
             >
               <Upload size={15} strokeWidth={2} />
               اختر ملفاً
             </button>
           </div>
         ) : (
-          <div className="dz-files" onClick={(e) => e.stopPropagation()}>
+          <div className="flex flex-col gap-2 w-full" onClick={(e) => e.stopPropagation()}>
             {files.map((f, i) => (
-              <div key={`${f.name}-${i}`} className="chip">
-                <span className="chip-ico"><FileTypeIcon type={f.type} /></span>
-                <div className="chip-info">
-                  <span className="chip-name" title={f.name}>{f.name}</span>
-                  <span className="chip-size">{formatBytes(f.size)}</span>
+              <div key={`${f.name}-${i}`} className="flex items-center gap-2.5 p-2 px-3 bg-white border border-[#e2e8f0] rounded-xl transition-all hover:border-[#93c5fd]">
+                <span className="text-[#1B5E8C] shrink-0 flex"><FileTypeIcon type={f.type} /></span>
+                <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                  <span className="text-[0.78rem] font-semibold text-[#1e293b] overflow-hidden text-ellipsis whitespace-nowrap" dir="ltr" title={f.name}>{f.name}</span>
+                  <span className="text-[0.7rem] text-[#94a3b8]">{formatBytes(f.size)}</span>
                 </div>
                 <button
                   type="button"
-                  className="chip-rm"
+                  className="flex items-center justify-center w-[22px] h-[22px] bg-[#f1f5f9] border-none rounded-md cursor-pointer text-[#64748b] transition-all hover:bg-red-100 hover:text-red-600 shrink-0"
                   onClick={() => removeFile(i)}
                   aria-label="حذف الملف"
                 >
@@ -163,7 +154,7 @@ function FileDropZone({ label, hint, accept, multiple = false, onChange, error, 
             {multiple && files.length < 5 && (
               <button
                 type="button"
-                className="add-more"
+                className="inline-flex items-center gap-1.5 bg-transparent border-[1.5px] border-dashed border-[#93c5fd] rounded-lg px-3.5 py-1.5 text-[0.78rem] text-[#1B5E8C] cursor-pointer font-cairo font-semibold transition-all duration-150 hover:bg-[#eff6ff] hover:border-[#1B5E8C] self-start mt-1"
                 onClick={() => inputRef.current?.click()}
               >
                 <Plus size={14} strokeWidth={2.5} />
@@ -174,7 +165,7 @@ function FileDropZone({ label, hint, accept, multiple = false, onChange, error, 
         )}
       </div>
       {error && (
-        <p className="ferr">
+        <p className={CLS_FERR}>
           <AlertCircle size={13} strokeWidth={2} style={{ flexShrink: 0 }} />
           {error}
         </p>
@@ -187,11 +178,13 @@ function FileDropZone({ label, hint, accept, multiple = false, onChange, error, 
 
 function SectionHeader({ number, title, subtitle }) {
   return (
-    <div className="sec-head">
-      <div className="sec-num">{number}</div>
+    <div className="flex items-start gap-4 mb-6 pb-4 border-b-[1.5px] border-[#f0f4f8]">
+      <div className="w-[38px] h-[38px] rounded-xl bg-gradient-to-br from-[#1B5E8C] to-[#0d3d5c] text-white flex items-center justify-center text-[1.1rem] font-bold shrink-0 font-cairo">
+        {number}
+      </div>
       <div>
-        <h2 className="sec-title">{title}</h2>
-        {subtitle && <p className="sec-sub">{subtitle}</p>}
+        <h2 className="text-[1.05rem] font-bold text-[#0d3d5c] m-0 mb-0.5">{title}</h2>
+        {subtitle && <p className="text-[0.78rem] text-[#94a3b8] m-0">{subtitle}</p>}
       </div>
     </div>
   );
@@ -274,10 +267,18 @@ export default function OrphanRegistrationPage() {
 
   // Fetch governorates on mount
   useEffect(() => {
-    api.get('/governorates')
-      .then(({ data }) => setGovernorates(data.data || []))
-      .catch(() => setGovernorates([]))
-      .finally(() => setGovLoading(false));
+    const fetchGovernorates = async () => {
+      try {
+        const { data } = await api.get('/governorates');
+        setGovernorates(data.data || []);
+      } catch (err) {
+        console.error('Error fetching governorates:', err);
+        setGovernorates([]);
+      } finally {
+        setGovLoading(false);
+      }
+    };
+    fetchGovernorates();
   }, []);
 
   // Validate file fields (outside RHF)
@@ -343,9 +344,6 @@ export default function OrphanRegistrationPage() {
 
   const onSubmit = async (data) => {
     // ── [Fix 3b] Guard radio fields before touching FormData ──────────────────
-    // RHF's required rule fires on submit, but we add an extra check here
-    // because multipart radio values can sometimes arrive as empty string
-    // when nothing is selected, bypassing the required check silently.
     let hasRadioError = false;
 
     if (!data.gender || !VALID_GENDERS.includes(data.gender)) {
@@ -488,6 +486,7 @@ export default function OrphanRegistrationPage() {
       setAdditionalFiles([]);
       setFileErrors({});
     } catch (err) {
+      console.error('Error submitting orphan registration:', err);
       setSubmitState('error');
       setApiError(
         err.response?.data?.errors?.[0]?.msg ||
@@ -506,23 +505,30 @@ export default function OrphanRegistrationPage() {
 
   return (
     <AppShell>
+      <style jsx global>{`
+        @keyframes scaleIn { from { opacity:0; transform:scale(.93); } to { opacity:1; transform:none; } }
+        @keyframes fadeIn  { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
+      `}</style>
 
       {/* ── Success toast popup ─────────────────────────────────────────── */}
       {submitState === 'success' && (
-        <div className="toast-backdrop">
-          <div className="toast-box" dir="rtl">
-            <div className="toast-icon-wrap">
+        <div className="fixed inset-0 bg-black/45 flex items-center justify-center z-[1000] p-4 animate-[fadeIn_0.2s_ease]">
+          <div className="bg-white rounded-[1.25rem] p-9 px-8 max-w-[420px] w-full text-center shadow-2xl animate-[scaleIn_0.2s_ease]" dir="rtl">
+            <div className="flex justify-center mb-4">
               <CheckCircle2 size={40} color="#10B981" strokeWidth={1.8} />
             </div>
-            <h3 className="toast-title">تم التسجيل بنجاح</h3>
-            <p className="toast-body">
+            <h3 className="text-[1.2rem] font-extrabold text-[#0d3d5c] m-0 mb-2.5">تم التسجيل بنجاح</h3>
+            <p className="text-[0.875rem] text-gray-500 leading-[1.7] m-0 mb-6">
               تم إرسال بيانات اليتيم إلى قائمة انتظار مراجعة المشرف.
             </p>
-            <div className="toast-actions">
+            <div className="flex gap-3 justify-center flex-wrap">
               <PrimaryButton onClick={handleRegisterAnother}>
                 تسجيل يتيم آخر
               </PrimaryButton>
-              <button className="toast-btn-ghost" onClick={() => router.push('/my-orphans')}>
+              <button
+                className="px-6 py-3 bg-transparent text-[#1B5E8C] border-[1.5px] border-[#dde5f0] rounded-xl font-cairo text-[0.9rem] font-semibold cursor-pointer transition-all duration-150 hover:bg-[#f0f7ff] hover:border-[#1B5E8C]"
+                onClick={() => router.push('/my-orphans')}
+              >
                 عرض أيتامي
               </button>
             </div>
@@ -530,21 +536,21 @@ export default function OrphanRegistrationPage() {
         </div>
       )}
 
-      <div className="page" dir="rtl">
+      <div className="max-w-[860px] mx-auto pb-16 font-cairo" dir="rtl">
 
         {/* Page header */}
-        <div className="page-top">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
           <div>
-            <h1 className="page-title">تسجيل يتيم جديد</h1>
-            <p className="page-sub">أدخل بيانات اليتيم والمستندات المطلوبة لإرسالها للمراجعة</p>
+            <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] m-0 mb-1">تسجيل يتيم جديد</h1>
+            <p className="text-[0.85rem] text-[#6b7a8d] m-0">أدخل بيانات اليتيم والمستندات المطلوبة لإرسالها للمراجعة</p>
           </div>
-          <button type="button" className="btn-ghost" onClick={() => router.back()}>
+          <button type="button" className={CLS_GHOST} onClick={() => router.back()}>
             ← رجوع
           </button>
         </div>
 
         {/* Progress bar — 5 steps */}
-        <div className="progress">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 p-3.5 px-5 bg-white border border-[#e5eaf0] rounded-[0.875rem] mb-7 text-xs font-semibold">
           {[
             ['١', 'البيانات الأساسية'],
             ['٢', 'الأسرة والتعليم'],
@@ -557,32 +563,34 @@ export default function OrphanRegistrationPage() {
             const active  = stepNum === currentPage;
             return (
               <Fragment key={n}>
-                <div className={`p-step ${active ? 'p-active' : ''} ${done ? 'p-done' : ''}`}>
-                  <span className="p-num">{done ? '<Check size={16} />' : n}</span>
-                  <span className="p-lbl">{lbl}</span>
+                <div className={`flex items-center gap-1.5 ${active ? 'text-[#1B5E8C]' : done ? 'text-[#16a34a]' : 'text-gray-400'}`}>
+                  <span className={`inline-flex items-center justify-center w-[22px] h-[22px] rounded-full text-[0.72rem] font-bold text-white ${active ? 'bg-[#1B5E8C]' : done ? 'bg-[#16a34a]' : 'bg-gray-300'}`}>
+                    {done ? <Check size={14} strokeWidth={2.5} /> : n}
+                  </span>
+                  <span className="whitespace-nowrap">{lbl}</span>
                 </div>
-                {i < 4 && <div className="p-sep" />}
+                {i < 4 && <div className="flex-1 border-t-[1.5px] border-dashed border-[#dde2e8] mx-1 hidden sm:block" />}
               </Fragment>
             );
           })}
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} noValidate className="form">
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-5">
 
           {/* ══ PAGE 1: البيانات الأساسية والتواصل ══ */}
           {currentPage === 1 && <Fragment>
-          <div className="card">
+          <div className={CLS_CARD}>
             <SectionHeader number="١" title="البيانات الأساسية" subtitle="معلومات اليتيم الشخصية" />
-            <div className="grid">
+            <div className={CLS_GRID}>
 
               {/* Full name */}
-              <div className="fg span2">
-                <label className="lbl" htmlFor="fullName">
-                  الاسم الكامل <span className="req">*</span>
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL} htmlFor="fullName">
+                  الاسم الكامل <span className={CLS_REQ}>*</span>
                 </label>
                 <input
                   id="fullName"
-                  className={`inp ${errors.fullName ? 'inp-err' : ''}`}
+                  className={errors.fullName ? CLS_INP_E : CLS_INP}
                   placeholder="مثال: محمد أحمد علي"
                   {...register('fullName', {
                     required: 'الاسم الكامل مطلوب',
@@ -592,53 +600,54 @@ export default function OrphanRegistrationPage() {
                     }
                   })}
                 />
-                {errors.fullName && <p className="ferr">{errors.fullName.message}</p>}
+                {errors.fullName && <p className={CLS_FERR}>{errors.fullName.message}</p>}
               </div>
 
               {/* Date of birth */}
-              <div className="fg">
-                <label className="lbl" htmlFor="dateOfBirth">
-                  تاريخ الميلاد <span className="req">*</span>
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="dateOfBirth">
+                  تاريخ الميلاد <span className={CLS_REQ}>*</span>
                 </label>
                 <input
                   id="dateOfBirth"
                   type="date"
-                  className={`inp ltr ${errors.dateOfBirth ? 'inp-err' : ''}`}
+                  className={`${errors.dateOfBirth ? CLS_INP_E : CLS_INP} direction-ltr text-left`}
                   max={new Date().toISOString().split('T')[0]}
                   {...register('dateOfBirth', {
                     required: 'تاريخ الميلاد مطلوب',
                     validate: (v) => new Date(v) < new Date() || 'يجب أن يكون في الماضي',
                   })}
                 />
-                {errors.dateOfBirth && <p className="ferr">{errors.dateOfBirth.message}</p>}
+                {errors.dateOfBirth && <p className={CLS_FERR}>{errors.dateOfBirth.message}</p>}
               </div>
 
               {/* Gender */}
-              <div className="fg">
-                <label className="lbl">الجنس <span className="req">*</span></label>
-                <div className="radio-row">
+              <div className={CLS_FG}>
+                <label className={CLS_LBL}>الجنس <span className={CLS_REQ}>*</span></label>
+                <div className="flex gap-3">
                   {[['male', 'ذكر'], ['female', 'أنثى']].map(([val, lbl]) => (
-                    <label key={val} className={`radio-card ${errors.gender ? 'rc-err' : ''}`}>
+                    <label key={val} className={CLS_RADIO(errors.gender)}>
                       <input
                         type="radio"
                         value={val}
+                        className="hidden"
                         {...register('gender', { required: 'يرجى اختيار الجنس' })}
                       />
                       <span>{lbl}</span>
                     </label>
                   ))}
                 </div>
-                {errors.gender && <p className="ferr">{errors.gender.message}</p>}
+                {errors.gender && <p className={CLS_FERR}>{errors.gender.message}</p>}
               </div>
 
               {/* Governorate */}
-              <div className="fg">
-                <label className="lbl" htmlFor="governorateId">
-                  المحافظة <span className="req">*</span>
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="governorateId">
+                  المحافظة <span className={CLS_REQ}>*</span>
                 </label>
                 <select
                   id="governorateId"
-                  className={`inp sel ${errors.governorateId ? 'inp-err' : ''}`}
+                  className={`${errors.governorateId ? CLS_INP_E : CLS_INP} appearance-none cursor-pointer`}
                   disabled={govLoading}
                   {...register('governorateId', { required: 'المحافظة مطلوبة' })}
                 >
@@ -647,45 +656,45 @@ export default function OrphanRegistrationPage() {
                     <option key={g.id} value={g.id}>{g.name_ar}</option>
                   ))}
                 </select>
-                {errors.governorateId && <p className="ferr">{errors.governorateId.message}</p>}
+                {errors.governorateId && <p className={CLS_FERR}>{errors.governorateId.message}</p>}
               </div>
 
               {/* Birth place */}
-              <div className="fg">
-                <label className="lbl" htmlFor="birthPlace">
-                  محل الميلاد <span className="req">*</span>
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="birthPlace">
+                  محل الميلاد <span className={CLS_REQ}>*</span>
                 </label>
                 <input
                   id="birthPlace"
-                  className={`inp ${errors.birthPlace ? 'inp-err' : ''}`}
+                  className={errors.birthPlace ? CLS_INP_E : CLS_INP}
                   placeholder="المدينة أو المنطقة"
                   {...register('birthPlace', { required: 'محل الميلاد مطلوب' })}
                 />
-                {errors.birthPlace && <p className="ferr">{errors.birthPlace.message}</p>}
+                {errors.birthPlace && <p className={CLS_FERR}>{errors.birthPlace.message}</p>}
               </div>
 
               {/* Residence */}
-              <div className="fg">
-                <label className="lbl" htmlFor="residence">
-                  مكان السكن <span className="req">*</span>
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="residence">
+                  مكان السكن <span className={CLS_REQ}>*</span>
                 </label>
                 <input
                   id="residence"
-                  className={`inp ${errors.residence ? 'inp-err' : ''}`}
+                  className={errors.residence ? CLS_INP_E : CLS_INP}
                   placeholder="العنوان الحالي"
                   {...register('residence', { required: 'مكان السكن مطلوب' })}
                 />
-                {errors.residence && <p className="ferr">{errors.residence.message}</p>}
+                {errors.residence && <p className={CLS_FERR}>{errors.residence.message}</p>}
               </div>
 
               {/* Mother's governorate */}
-              <div className="fg">
-                <label className="lbl" htmlFor="motherGovernorate">
-                  المحافظة الأم <span className="req">*</span>
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="motherGovernorate">
+                  المحافظة الأم <span className={CLS_REQ}>*</span>
                 </label>
                 <select
                   id="motherGovernorate"
-                  className={`inp sel ${errors.motherGovernorate ? 'inp-err' : ''}`}
+                  className={`${errors.motherGovernorate ? CLS_INP_E : CLS_INP} appearance-none cursor-pointer`}
                   disabled={govLoading}
                   {...register('motherGovernorate', { required: 'المحافظة الأم مطلوبة' })}
                 >
@@ -694,17 +703,17 @@ export default function OrphanRegistrationPage() {
                     <option key={g.id} value={g.id}>{g.name_ar}</option>
                   ))}
                 </select>
-                {errors.motherGovernorate && <p className="ferr">{errors.motherGovernorate.message}</p>}
+                {errors.motherGovernorate && <p className={CLS_FERR}>{errors.motherGovernorate.message}</p>}
               </div>
 
               {/* Notes */}
-              <div className="fg span2">
-                <label className="lbl" htmlFor="notes">
-                  ملاحظات <span className="opt">(اختياري)</span>
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL} htmlFor="notes">
+                  ملاحظات <span className={CLS_OPT}>(اختياري)</span>
                 </label>
                 <textarea
                   id="notes"
-                  className="inp ta"
+                  className={`${CLS_INP} resize-y min-h-[80px]`}
                   rows={3}
                   placeholder="أي معلومات إضافية مفيدة عن اليتيم…"
                   {...register('notes')}
@@ -713,85 +722,83 @@ export default function OrphanRegistrationPage() {
             </div>
           </div>
 
-          {/* ── Section 2: Contact Info ──────────────────────────────────── */}
-          <div className="card">
+          {/* ── Section 2: Contact Info ──────────────────────────────────────── */}
+          <div className={CLS_CARD}>
             <SectionHeader number="٢" title="معلومات التواصل" subtitle="أرقام التواصل والعنوان" />
-            <div className="grid">
+            <div className={CLS_GRID}>
 
               {/* Phone 1 */}
-              <div className="fg">
-                <label className="lbl" htmlFor="phone1">
-                  الرقم الأول <span className="req">*</span>
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="phone1">
+                  الرقم الأول <span className={CLS_REQ}>*</span>
                 </label>
                 <input
                   id="phone1"
-                  className={`inp ltr ${errors.phone1 ? 'inp-err' : ''}`}
+                  className={`${errors.phone1 ? CLS_INP_E : CLS_INP} direction-ltr text-left`}
                   placeholder="07XXXXXXXX"
                   {...register('phone1', { required: 'الرقم الأول مطلوب' })}
                 />
-                {errors.phone1 && <p className="ferr">{errors.phone1.message}</p>}
+                {errors.phone1 && <p className={CLS_FERR}>{errors.phone1.message}</p>}
               </div>
 
               {/* Phone 1 relation */}
-              <div className="fg">
-                <label className="lbl" htmlFor="phone1Relation">
-                  صلة القرابة <span className="req">*</span>
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="phone1Relation">
+                  صلة القرابة <span className={CLS_REQ}>*</span>
                 </label>
                 <input
                   id="phone1Relation"
-                  className={`inp ${errors.phone1Relation ? 'inp-err' : ''}`}
+                  className={errors.phone1Relation ? CLS_INP_E : CLS_INP}
                   placeholder="مثال: عم، خال، جد"
-                  {...register('phone1Relation', { 
+                  {...register('phone1Relation', {
                     required: 'صلة القرابة مطلوبة',
                     pattern: { value: /^[\p{L}\s]+$/u, message: 'يجب أن تحتوي على أحرف فقط' }
                   })}
                 />
-                {errors.phone1Relation && <p className="ferr">{errors.phone1Relation.message}</p>}
+                {errors.phone1Relation && <p className={CLS_FERR}>{errors.phone1Relation.message}</p>}
               </div>
 
               {/* Phone 2 */}
-              <div className="fg">
-                <label className="lbl" htmlFor="phone2">
-                  الرقم الثاني
-                </label>
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="phone2">الرقم الثاني</label>
                 <input
                   id="phone2"
-                  className={`inp ltr ${errors.phone2 ? 'inp-err' : ''}`}
+                  className={`${errors.phone2 ? CLS_INP_E : CLS_INP} direction-ltr text-left`}
                   placeholder="07XXXXXXXX"
                   {...register('phone2')}
                 />
-                {errors.phone2 && <p className="ferr">{errors.phone2.message}</p>}
+                {errors.phone2 && <p className={CLS_FERR}>{errors.phone2.message}</p>}
               </div>
 
               {/* Phone 2 relation */}
-              <div className="fg">
-                <label className="lbl" htmlFor="phone2Relation">
-                  صلة القرابة <span className="req">*</span>
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="phone2Relation">
+                  صلة القرابة <span className={CLS_REQ}>*</span>
                 </label>
                 <input
                   id="phone2Relation"
-                  className={`inp ${errors.phone2Relation ? 'inp-err' : ''}`}
+                  className={errors.phone2Relation ? CLS_INP_E : CLS_INP}
                   placeholder="مثال: عم، خال، جد"
-                  {...register('phone2Relation', { 
+                  {...register('phone2Relation', {
                     validate: (val) => !watch('phone2') || !!val || 'صلة القرابة مطلوبة',
                     pattern: { value: /^[\p{L}\s]*$/u, message: 'يجب أن تحتوي على أحرف فقط' }
                   })}
                 />
-                {errors.phone2Relation && <p className="ferr">{errors.phone2Relation.message}</p>}
+                {errors.phone2Relation && <p className={CLS_FERR}>{errors.phone2Relation.message}</p>}
               </div>
 
               {/* Address */}
-              <div className="fg span2">
-                <label className="lbl" htmlFor="address">
-                  العنوان <span className="req">*</span>
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL} htmlFor="address">
+                  العنوان <span className={CLS_REQ}>*</span>
                 </label>
                 <input
                   id="address"
-                  className={`inp ${errors.address ? 'inp-err' : ''}`}
+                  className={errors.address ? CLS_INP_E : CLS_INP}
                   placeholder="الحي، الشارع، رقم المنزل…"
                   {...register('address', { required: 'العنوان مطلوب' })}
                 />
-                {errors.address && <p className="ferr">{errors.address.message}</p>}
+                {errors.address && <p className={CLS_FERR}>{errors.address.message}</p>}
               </div>
 
             </div>
@@ -801,229 +808,229 @@ export default function OrphanRegistrationPage() {
           {/* ══ PAGE 2: الأسرة والتعليم ══ */}
           {currentPage === 2 && <Fragment>
           {/* ── Section 3: Guardian + Family ─────────────────────────────── */}
-          <div className="card">
+          <div className={CLS_CARD}>
             <SectionHeader number="٣" title="معلومات الأسرة" subtitle="بيانات ولي الأمر وأفراد الأسرة" />
-            <div className="grid">
+            <div className={CLS_GRID}>
 
               {/* Guardian name */}
-              <div className="fg span2">
-                <label className="lbl" htmlFor="guardianName">
-                  اسم ولي الأمر <span className="req">*</span>
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL} htmlFor="guardianName">
+                  اسم ولي الأمر <span className={CLS_REQ}>*</span>
                 </label>
                 <input
                   id="guardianName"
-                  className={`inp ${errors.guardianName ? 'inp-err' : ''}`}
+                  className={errors.guardianName ? CLS_INP_E : CLS_INP}
                   placeholder="الأم / الجد / العم / غيره"
                   {...register('guardianName', { required: 'اسم الوصي مطلوب' })}
                 />
-                {errors.guardianName && <p className="ferr">{errors.guardianName.message}</p>}
+                {errors.guardianName && <p className={CLS_FERR}>{errors.guardianName.message}</p>}
               </div>
 
               {/* Guardian relation */}
-              <div className="fg span2">
-                <label className="lbl">صلة القرابة باليتيم <span className="req">*</span></label>
-                <div className="rel-row">
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL}>صلة القرابة باليتيم <span className={CLS_REQ}>*</span></label>
+                <div className="flex gap-2.5 flex-wrap">
                   {GUARDIAN_RELATIONS.map(({ value, label }) => (
-                    <label key={value} className={`rel-chip ${errors.guardianRelation ? 'rc-err' : ''}`}>
-                      <input type="radio" value={value}
+                    <label key={value} className={`flex items-center px-4 py-2.5 border-[1.5px] rounded-[2rem] text-[0.83rem] font-semibold cursor-pointer transition-all duration-150 select-none ${errors.guardianRelation ? 'border-red-400' : ''} has-[:checked]:border-[#1B5E8C] has-[:checked]:bg-[#1B5E8C] has-[:checked]:text-white border-gray-300 bg-gray-50 text-[#6b7280] hover:border-[#1B5E8C] hover:text-[#1B5E8C]`}>
+                      <input type="radio" value={value} className="hidden"
                         {...register('guardianRelation', { required: 'يرجى اختيار صلة الوصي' })} />
                       <span>{label}</span>
                     </label>
                   ))}
                 </div>
-                {errors.guardianRelation && <p className="ferr">{errors.guardianRelation.message}</p>}
+                {errors.guardianRelation && <p className={CLS_FERR}>{errors.guardianRelation.message}</p>}
               </div>
 
               {/* Guardian age */}
-              <div className="fg">
-                <label className="lbl" htmlFor="guardianAge">عمر ولي الأمر <span className="req">*</span></label>
-                <input id="guardianAge" className={`inp ltr ${errors.guardianAge ? 'inp-err' : ''}`} placeholder="مثال: 45" {...register('guardianAge', { required: 'عمر ولي الأمر مطلوب' })} />
-                {errors.guardianAge && <p className="ferr">{errors.guardianAge.message}</p>}
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="guardianAge">عمر ولي الأمر <span className={CLS_REQ}>*</span></label>
+                <input id="guardianAge" className={`${errors.guardianAge ? CLS_INP_E : CLS_INP} direction-ltr text-left`} placeholder="مثال: 45" {...register('guardianAge', { required: 'عمر ولي الأمر مطلوب' })} />
+                {errors.guardianAge && <p className={CLS_FERR}>{errors.guardianAge.message}</p>}
               </div>
 
               {/* Guardian education level */}
-              <div className="fg">
-                <label className="lbl" htmlFor="guardianEduLevel">المستوى التعليمي <span className="req">*</span></label>
-                <input id="guardianEduLevel" className={`inp ${errors.guardianEduLevel ? 'inp-err' : ''}`} placeholder="مثال: ثانوية، جامعي" {...register('guardianEduLevel', { required: 'المستوى التعليمي مطلوب' })} />
-                {errors.guardianEduLevel && <p className="ferr">{errors.guardianEduLevel.message}</p>}
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="guardianEduLevel">المستوى التعليمي <span className={CLS_REQ}>*</span></label>
+                <input id="guardianEduLevel" className={errors.guardianEduLevel ? CLS_INP_E : CLS_INP} placeholder="مثال: ثانوية، جامعي" {...register('guardianEduLevel', { required: 'المستوى التعليمي مطلوب' })} />
+                {errors.guardianEduLevel && <p className={CLS_FERR}>{errors.guardianEduLevel.message}</p>}
               </div>
 
               {/* Guardian job */}
-              <div className="fg">
-                <label className="lbl" htmlFor="guardianJob">المهنة <span className="req">*</span></label>
-                <input id="guardianJob" className={`inp ${errors.guardianJob ? 'inp-err' : ''}`} placeholder="مثال: موظف، تاجر" {...register('guardianJob', { required: 'المهنة مطلوبة' })} />
-                {errors.guardianJob && <p className="ferr">{errors.guardianJob.message}</p>}
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="guardianJob">المهنة <span className={CLS_REQ}>*</span></label>
+                <input id="guardianJob" className={errors.guardianJob ? CLS_INP_E : CLS_INP} placeholder="مثال: موظف، تاجر" {...register('guardianJob', { required: 'المهنة مطلوبة' })} />
+                {errors.guardianJob && <p className={CLS_FERR}>{errors.guardianJob.message}</p>}
               </div>
 
               {/* Guardian health */}
-              <div className="fg">
-                <label className="lbl" htmlFor="guardianHealth">الحالة الصحية <span className="req">*</span></label>
-                <input id="guardianHealth" className={`inp ${errors.guardianHealth ? 'inp-err' : ''}`} placeholder="مثال: جيدة، مريض" {...register('guardianHealth', { required: 'الحالة الصحية مطلوبة' })} />
-                {errors.guardianHealth && <p className="ferr">{errors.guardianHealth.message}</p>}
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="guardianHealth">الحالة الصحية <span className={CLS_REQ}>*</span></label>
+                <input id="guardianHealth" className={errors.guardianHealth ? CLS_INP_E : CLS_INP} placeholder="مثال: جيدة، مريض" {...register('guardianHealth', { required: 'الحالة الصحية مطلوبة' })} />
+                {errors.guardianHealth && <p className={CLS_FERR}>{errors.guardianHealth.message}</p>}
               </div>
 
               {/* Family members count */}
-              <div className="fg">
-                <label className="lbl" htmlFor="familyMaleCount">عدد الذكور في الأسرة <span className="req">*</span></label>
-                <input id="familyMaleCount" className={`inp ltr ${errors.familyMaleCount ? 'inp-err' : ''}`} type="number" min="0" placeholder="0" {...register('familyMaleCount', { required: 'عدد الذكور مطلوب' })} />
-                {errors.familyMaleCount && <p className="ferr">{errors.familyMaleCount.message}</p>}
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="familyMaleCount">عدد الذكور في الأسرة <span className={CLS_REQ}>*</span></label>
+                <input id="familyMaleCount" className={`${errors.familyMaleCount ? CLS_INP_E : CLS_INP} direction-ltr text-left`} type="number" min="0" placeholder="0" {...register('familyMaleCount', { required: 'عدد الذكور مطلوب' })} />
+                {errors.familyMaleCount && <p className={CLS_FERR}>{errors.familyMaleCount.message}</p>}
               </div>
 
-              <div className="fg">
-                <label className="lbl" htmlFor="familyFemaleCount">عدد الإناث في الأسرة <span className="req">*</span></label>
-                <input id="familyFemaleCount" className={`inp ltr ${errors.familyFemaleCount ? 'inp-err' : ''}`} type="number" min="0" placeholder="0" {...register('familyFemaleCount', { required: 'عدد الإناث مطلوب' })} />
-                {errors.familyFemaleCount && <p className="ferr">{errors.familyFemaleCount.message}</p>}
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="familyFemaleCount">عدد الإناث في الأسرة <span className={CLS_REQ}>*</span></label>
+                <input id="familyFemaleCount" className={`${errors.familyFemaleCount ? CLS_INP_E : CLS_INP} direction-ltr text-left`} type="number" min="0" placeholder="0" {...register('familyFemaleCount', { required: 'عدد الإناث مطلوب' })} />
+                {errors.familyFemaleCount && <p className={CLS_FERR}>{errors.familyFemaleCount.message}</p>}
               </div>
 
               {/* Family problems */}
-              <div className="fg span2">
-                <label className="lbl" htmlFor="familyProblems">أهم المشاكل التي تواجهها الأسرة <span className="req">*</span></label>
-                <textarea id="familyProblems" className={`inp ta ${errors.familyProblems ? 'inp-err' : ''}`} rows={3}
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL} htmlFor="familyProblems">أهم المشاكل التي تواجهها الأسرة <span className={CLS_REQ}>*</span></label>
+                <textarea id="familyProblems" className={`${errors.familyProblems ? CLS_INP_E : CLS_INP} resize-y min-h-[80px]`} rows={3}
                   placeholder="اذكر أبرز المشاكل والتحديات…" {...register('familyProblems', { required: 'هذا الحقل مطلوب' })} />
-                {errors.familyProblems && <p className="ferr">{errors.familyProblems.message}</p>}
+                {errors.familyProblems && <p className={CLS_FERR}>{errors.familyProblems.message}</p>}
               </div>
 
             </div>
           </div>
 
           {/* ── Section 4: Educational Data ──────────────────────────────── */}
-          <div className="card">
+          <div className={CLS_CARD}>
             <SectionHeader number="٤" title="البيانات الدراسية" subtitle="معلومات عن المستوى التعليمي للأيتام" />
-            <div className="grid">
+            <div className={CLS_GRID}>
 
               {/* Grade */}
-              <div className="fg">
-                <label className="lbl" htmlFor="schoolGrade">الصف <span className="req">*</span></label>
-                <input id="schoolGrade" className={`inp ${errors.schoolGrade ? 'inp-err' : ''}`} placeholder="مثال: السادس الابتدائي" {...register('schoolGrade', { required: 'الصف مطلوب' })} />
-                {errors.schoolGrade && <p className="ferr">{errors.schoolGrade.message}</p>}
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="schoolGrade">الصف <span className={CLS_REQ}>*</span></label>
+                <input id="schoolGrade" className={errors.schoolGrade ? CLS_INP_E : CLS_INP} placeholder="مثال: السادس الابتدائي" {...register('schoolGrade', { required: 'الصف مطلوب' })} />
+                {errors.schoolGrade && <p className={CLS_FERR}>{errors.schoolGrade.message}</p>}
               </div>
 
               {/* Sector type */}
-              <div className="fg">
-                <label className="lbl">نوع القطاع <span className="req">*</span></label>
-                <div className="radio-row">
+              <div className={CLS_FG}>
+                <label className={CLS_LBL}>نوع القطاع <span className={CLS_REQ}>*</span></label>
+                <div className="flex gap-3">
                   {[['government', 'حكومي'], ['private', 'خاص']].map(([val, lbl]) => (
-                    <label key={val} className={`radio-card ${errors.sectorType ? 'rc-err' : ''}`}>
-                      <input type="radio" value={val} {...register('sectorType', { required: 'نوع القطاع مطلوب' })} />
+                    <label key={val} className={CLS_RADIO(errors.sectorType)}>
+                      <input type="radio" value={val} className="hidden" {...register('sectorType', { required: 'نوع القطاع مطلوب' })} />
                       <span>{lbl}</span>
                     </label>
                   ))}
                 </div>
-                {errors.sectorType && <p className="ferr">{errors.sectorType.message}</p>}
+                {errors.sectorType && <p className={CLS_FERR}>{errors.sectorType.message}</p>}
               </div>
 
               {/* Directorate */}
-              <div className="fg">
-                <label className="lbl" htmlFor="directorate">المديرية <span className="req">*</span></label>
-                <input id="directorate" className={`inp ${errors.directorate ? 'inp-err' : ''}`} placeholder="اسم المديرية" {...register('directorate', { required: 'المديرية مطلوبة' })} />
-                {errors.directorate && <p className="ferr">{errors.directorate.message}</p>}
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="directorate">المديرية <span className={CLS_REQ}>*</span></label>
+                <input id="directorate" className={errors.directorate ? CLS_INP_E : CLS_INP} placeholder="اسم المديرية" {...register('directorate', { required: 'المديرية مطلوبة' })} />
+                {errors.directorate && <p className={CLS_FERR}>{errors.directorate.message}</p>}
               </div>
 
               {/* Organization */}
-              <div className="fg">
-                <label className="lbl" htmlFor="schoolOrg">الجهة <span className="req">*</span></label>
-                <input id="schoolOrg" className={`inp ${errors.schoolOrg ? 'inp-err' : ''}`} placeholder="اسم المدرسة أو الجهة" {...register('schoolOrg', { required: 'الجهة مطلوبة' })} />
-                {errors.schoolOrg && <p className="ferr">{errors.schoolOrg.message}</p>}
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="schoolOrg">الجهة <span className={CLS_REQ}>*</span></label>
+                <input id="schoolOrg" className={errors.schoolOrg ? CLS_INP_E : CLS_INP} placeholder="اسم المدرسة أو الجهة" {...register('schoolOrg', { required: 'الجهة مطلوبة' })} />
+                {errors.schoolOrg && <p className={CLS_FERR}>{errors.schoolOrg.message}</p>}
               </div>
 
               {/* Favorite subject */}
-              <div className="fg">
-                <label className="lbl" htmlFor="favoriteSubject">المادة المفضلة <span className="req">*</span></label>
-                <input id="favoriteSubject" className={`inp ${errors.favoriteSubject ? 'inp-err' : ''}`} placeholder="مثال: الرياضيات" {...register('favoriteSubject', { required: 'المادة المفضلة مطلوبة' })} />
-                {errors.favoriteSubject && <p className="ferr">{errors.favoriteSubject.message}</p>}
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="favoriteSubject">المادة المفضلة <span className={CLS_REQ}>*</span></label>
+                <input id="favoriteSubject" className={errors.favoriteSubject ? CLS_INP_E : CLS_INP} placeholder="مثال: الرياضيات" {...register('favoriteSubject', { required: 'المادة المفضلة مطلوبة' })} />
+                {errors.favoriteSubject && <p className={CLS_FERR}>{errors.favoriteSubject.message}</p>}
               </div>
 
               {/* Difficulty subject */}
-              <div className="fg">
-                <label className="lbl" htmlFor="difficultySubject">يواجه صعوبة في <span className="req">*</span></label>
-                <input id="difficultySubject" className={`inp ${errors.difficultySubject ? 'inp-err' : ''}`} placeholder="مثال: اللغة الإنجليزية" {...register('difficultySubject', { required: 'هذا الحقل مطلوب' })} />
-                {errors.difficultySubject && <p className="ferr">{errors.difficultySubject.message}</p>}
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="difficultySubject">يواجه صعوبة في <span className={CLS_REQ}>*</span></label>
+                <input id="difficultySubject" className={errors.difficultySubject ? CLS_INP_E : CLS_INP} placeholder="مثال: اللغة الإنجليزية" {...register('difficultySubject', { required: 'هذا الحقل مطلوب' })} />
+                {errors.difficultySubject && <p className={CLS_FERR}>{errors.difficultySubject.message}</p>}
               </div>
 
               {/* General level */}
-              <div className="fg">
-                <label className="lbl" htmlFor="generalLevel">المستوى العام <span className="req">*</span></label>
-                <input id="generalLevel" className={`inp ${errors.generalLevel ? 'inp-err' : ''}`} placeholder="مثال: جيد، متوسط، ضعيف" {...register('generalLevel', { required: 'المستوى العام مطلوب' })} />
-                {errors.generalLevel && <p className="ferr">{errors.generalLevel.message}</p>}
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="generalLevel">المستوى العام <span className={CLS_REQ}>*</span></label>
+                <input id="generalLevel" className={errors.generalLevel ? CLS_INP_E : CLS_INP} placeholder="مثال: جيد، متوسط، ضعيف" {...register('generalLevel', { required: 'المستوى العام مطلوب' })} />
+                {errors.generalLevel && <p className={CLS_FERR}>{errors.generalLevel.message}</p>}
               </div>
 
               {/* General grade */}
-              <div className="fg">
-                <label className="lbl" htmlFor="generalGrade">التقدير العام <span className="req">*</span></label>
-                <input id="generalGrade" className={`inp ${errors.generalGrade ? 'inp-err' : ''}`} placeholder="مثال: جيد جداً" {...register('generalGrade', { required: 'التقدير العام مطلوب' })} />
-                {errors.generalGrade && <p className="ferr">{errors.generalGrade.message}</p>}
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="generalGrade">التقدير العام <span className={CLS_REQ}>*</span></label>
+                <input id="generalGrade" className={errors.generalGrade ? CLS_INP_E : CLS_INP} placeholder="مثال: جيد جداً" {...register('generalGrade', { required: 'التقدير العام مطلوب' })} />
+                {errors.generalGrade && <p className={CLS_FERR}>{errors.generalGrade.message}</p>}
               </div>
 
               {/* Repeated year */}
-              <div className="fg span2">
-                <label className="lbl">هل أعاد سنة مسبقة؟ <span className="req">*</span></label>
-                <div className="radio-row" style={{ maxWidth: '200px' }}>
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL}>هل أعاد سنة مسبقة؟ <span className={CLS_REQ}>*</span></label>
+                <div className="flex gap-3 max-w-[200px]">
                   {[['yes', 'نعم'], ['no', 'لا']].map(([val, lbl]) => (
-                    <label key={val} className="radio-card">
-                      <input type="radio" value={val} checked={repeatedYear === val}
+                    <label key={val} className={CLS_RADIO_STATE(repeatedYear === val)}>
+                      <input type="radio" value={val} checked={repeatedYear === val} className="hidden"
                         onChange={() => setRepeatedYear(val)} />
                       <span>{lbl}</span>
                     </label>
                   ))}
                 </div>
-                {stateErrors.repeatedYear && <p className="ferr">{stateErrors.repeatedYear}</p>}
+                {stateErrors.repeatedYear && <p className={CLS_FERR}>{stateErrors.repeatedYear}</p>}
               </div>
 
               {/* Reason — only if repeated */}
               {repeatedYear === 'yes' && (
-                <div className="fg span2">
-                  <label className="lbl" htmlFor="repeatedYearReason">السبب</label>
-                  <input id="repeatedYearReason" className="inp" placeholder="سبب الإعادة" {...register('repeatedYearReason')} />
+                <div className={CLS_FG2}>
+                  <label className={CLS_LBL} htmlFor="repeatedYearReason">السبب</label>
+                  <input id="repeatedYearReason" className={CLS_INP} placeholder="سبب الإعادة" {...register('repeatedYearReason')} />
                 </div>
               )}
 
               {/* Last result average */}
-              <div className="fg">
-                <label className="lbl" htmlFor="lastResultAvg">معدل آخر نتيجة <span className="req">*</span></label>
-                <input id="lastResultAvg" className={`inp ltr ${errors.lastResultAvg ? 'inp-err' : ''}`} placeholder="مثال: 85%" {...register('lastResultAvg', { required: 'معدل آخر نتيجة مطلوب' })} />
-                {errors.lastResultAvg && <p className="ferr">{errors.lastResultAvg.message}</p>}
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="lastResultAvg">معدل آخر نتيجة <span className={CLS_REQ}>*</span></label>
+                <input id="lastResultAvg" className={`${errors.lastResultAvg ? CLS_INP_E : CLS_INP} direction-ltr text-left`} placeholder="مثال: 85%" {...register('lastResultAvg', { required: 'معدل آخر نتيجة مطلوب' })} />
+                {errors.lastResultAvg && <p className={CLS_FERR}>{errors.lastResultAvg.message}</p>}
               </div>
 
               {/* Grade detail */}
-              <div className="fg">
-                <label className="lbl" htmlFor="gradeDetail">التفصيل <span className="req">*</span></label>
-                <input id="gradeDetail" className={`inp ${errors.gradeDetail ? 'inp-err' : ''}`} placeholder="تفاصيل النتيجة" {...register('gradeDetail', { required: 'التفصيل مطلوب' })} />
-                {errors.gradeDetail && <p className="ferr">{errors.gradeDetail.message}</p>}
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="gradeDetail">التفصيل <span className={CLS_REQ}>*</span></label>
+                <input id="gradeDetail" className={errors.gradeDetail ? CLS_INP_E : CLS_INP} placeholder="تفاصيل النتيجة" {...register('gradeDetail', { required: 'التفصيل مطلوب' })} />
+                {errors.gradeDetail && <p className={CLS_FERR}>{errors.gradeDetail.message}</p>}
               </div>
 
               {/* Highest grade */}
-              <div className="fg">
-                <label className="lbl" htmlFor="highestGrade">أعلى درجة في مادة <span className="req">*</span></label>
-                <input id="highestGrade" className={`inp ${errors.highestGrade ? 'inp-err' : ''}`} placeholder="المادة والدرجة" {...register('highestGrade', { required: 'هذا الحقل مطلوب' })} />
-                {errors.highestGrade && <p className="ferr">{errors.highestGrade.message}</p>}
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="highestGrade">أعلى درجة في مادة <span className={CLS_REQ}>*</span></label>
+                <input id="highestGrade" className={errors.highestGrade ? CLS_INP_E : CLS_INP} placeholder="المادة والدرجة" {...register('highestGrade', { required: 'هذا الحقل مطلوب' })} />
+                {errors.highestGrade && <p className={CLS_FERR}>{errors.highestGrade.message}</p>}
               </div>
 
               {/* Lowest grade */}
-              <div className="fg">
-                <label className="lbl" htmlFor="lowestGrade">أدنى درجة في مادة <span className="req">*</span></label>
-                <input id="lowestGrade" className={`inp ${errors.lowestGrade ? 'inp-err' : ''}`} placeholder="المادة والدرجة" {...register('lowestGrade', { required: 'هذا الحقل مطلوب' })} />
-                {errors.lowestGrade && <p className="ferr">{errors.lowestGrade.message}</p>}
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="lowestGrade">أدنى درجة في مادة <span className={CLS_REQ}>*</span></label>
+                <input id="lowestGrade" className={errors.lowestGrade ? CLS_INP_E : CLS_INP} placeholder="المادة والدرجة" {...register('lowestGrade', { required: 'هذا الحقل مطلوب' })} />
+                {errors.lowestGrade && <p className={CLS_FERR}>{errors.lowestGrade.message}</p>}
               </div>
 
               {/* Edu responsible */}
-              <div className="fg">
-                <label className="lbl" htmlFor="eduResponsible">المسؤول تعليمياً <span className="req">*</span></label>
-                <input id="eduResponsible" className={`inp ${errors.eduResponsible ? 'inp-err' : ''}`} placeholder="الاسم" {...register('eduResponsible', { required: 'المسؤول التعليمي مطلوب' })} />
-                {errors.eduResponsible && <p className="ferr">{errors.eduResponsible.message}</p>}
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="eduResponsible">المسؤول تعليمياً <span className={CLS_REQ}>*</span></label>
+                <input id="eduResponsible" className={errors.eduResponsible ? CLS_INP_E : CLS_INP} placeholder="الاسم" {...register('eduResponsible', { required: 'المسؤول التعليمي مطلوب' })} />
+                {errors.eduResponsible && <p className={CLS_FERR}>{errors.eduResponsible.message}</p>}
               </div>
 
               {/* Edu responsible phone */}
-              <div className="fg">
-                <label className="lbl" htmlFor="eduResponsiblePhone">رقم هاتفه <span className="req">*</span></label>
-                <input id="eduResponsiblePhone" className={`inp ltr ${errors.eduResponsiblePhone ? 'inp-err' : ''}`} placeholder="07XXXXXXXX" {...register('eduResponsiblePhone', { required: 'رقم الهاتف مطلوب' })} />
-                {errors.eduResponsiblePhone && <p className="ferr">{errors.eduResponsiblePhone.message}</p>}
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="eduResponsiblePhone">رقم هاتفه <span className={CLS_REQ}>*</span></label>
+                <input id="eduResponsiblePhone" className={`${errors.eduResponsiblePhone ? CLS_INP_E : CLS_INP} direction-ltr text-left`} placeholder="07XXXXXXXX" {...register('eduResponsiblePhone', { required: 'رقم الهاتف مطلوب' })} />
+                {errors.eduResponsiblePhone && <p className={CLS_FERR}>{errors.eduResponsiblePhone.message}</p>}
               </div>
 
               {/* Edu level */}
-              <div className="fg span2">
-                <label className="lbl" htmlFor="eduLevel">المستوى التعليمي للمسؤول <span className="req">*</span></label>
-                <input id="eduLevel" className={`inp ${errors.eduLevel ? 'inp-err' : ''}`} placeholder="مثال: ثانوية، جامعي" {...register('eduLevel', { required: 'المستوى التعليمي مطلوب' })} />
-                {errors.eduLevel && <p className="ferr">{errors.eduLevel.message}</p>}
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL} htmlFor="eduLevel">المستوى التعليمي للمسؤول <span className={CLS_REQ}>*</span></label>
+                <input id="eduLevel" className={errors.eduLevel ? CLS_INP_E : CLS_INP} placeholder="مثال: ثانوية، جامعي" {...register('eduLevel', { required: 'المستوى التعليمي مطلوب' })} />
+                {errors.eduLevel && <p className={CLS_FERR}>{errors.eduLevel.message}</p>}
               </div>
 
             </div>
@@ -1033,212 +1040,207 @@ export default function OrphanRegistrationPage() {
           {/* ══ PAGE 3: السكن والصحة والاقتصاد ══ */}
           {currentPage === 3 && <Fragment>
           {/* ── Section 5: Housing ───────────────────────────────────────── */}
-          <div className="card">
+          <div className={CLS_CARD}>
             <SectionHeader number="٥" title="الوضع السكني" subtitle="معلومات عن السكن والمرافق" />
-            <div className="grid">
+            <div className={CLS_GRID}>
 
               {/* Ownership type */}
-              <div className="fg span2">
-                <label className="lbl">نوع السكن <span className="req">*</span></label>
-                <div className="rel-row">
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL}>نوع السكن <span className={CLS_REQ}>*</span></label>
+                <div className="flex gap-2.5 flex-wrap">
                   {[['owned', 'ملك'], ['rented', 'إيجار'], ['free', 'سكن مجاني']].map(([val, lbl]) => (
-                    <label key={val} className="rel-chip">
-                      <input type="radio" value={val} checked={ownershipType === val}
+                    <label key={val} className={CLS_CHIP(ownershipType === val)}>
+                      <input type="radio" value={val} checked={ownershipType === val} className="hidden"
                         onChange={() => setOwnershipType(val)} />
                       <span>{lbl}</span>
                     </label>
                   ))}
                 </div>
-                {stateErrors.ownershipType && <p className="ferr">{stateErrors.ownershipType}</p>}
+                {stateErrors.ownershipType && <p className={CLS_FERR}>{stateErrors.ownershipType}</p>}
               </div>
 
               {/* Building type */}
-              <div className="fg span2">
-                <label className="lbl">نوع البناء <span className="req">*</span></label>
-                <div className="rel-row">
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL}>نوع البناء <span className={CLS_REQ}>*</span></label>
+                <div className="flex gap-2.5 flex-wrap">
                   {[['popular', 'شعبي'], ['reinforced', 'مسلح'], ['other', 'آخر']].map(([val, lbl]) => (
-                    <label key={val} className="rel-chip">
-                      <input type="radio" value={val} checked={buildingType === val}
+                    <label key={val} className={CLS_CHIP(buildingType === val)}>
+                      <input type="radio" value={val} checked={buildingType === val} className="hidden"
                         onChange={() => setBuildingType(val)} />
                       <span>{lbl}</span>
                     </label>
                   ))}
                 </div>
-                {stateErrors.buildingType && <p className="ferr">{stateErrors.buildingType}</p>}
+                {stateErrors.buildingType && <p className={CLS_FERR}>{stateErrors.buildingType}</p>}
               </div>
 
               {/* Floors */}
-              <div className="fg">
-                <label className="lbl" htmlFor="floorsCount">عدد الطوابق <span className="req">*</span></label>
-                <input id="floorsCount" className={`inp ltr ${errors.floorsCount ? 'inp-err' : ''}`} type="number" min="1" placeholder="1" {...register('floorsCount', { required: 'عدد الطوابق مطلوب' })} />
-                {errors.floorsCount && <p className="ferr">{errors.floorsCount.message}</p>}
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="floorsCount">عدد الطوابق <span className={CLS_REQ}>*</span></label>
+                <input id="floorsCount" className={`${errors.floorsCount ? CLS_INP_E : CLS_INP} direction-ltr text-left`} type="number" min="1" placeholder="1" {...register('floorsCount', { required: 'عدد الطوابق مطلوب' })} />
+                {errors.floorsCount && <p className={CLS_FERR}>{errors.floorsCount.message}</p>}
               </div>
 
               {/* Rooms */}
-              <div className="fg">
-                <label className="lbl" htmlFor="roomsCount">عدد الغرف <span className="req">*</span></label>
-                <input id="roomsCount" className={`inp ltr ${errors.roomsCount ? 'inp-err' : ''}`} type="number" min="1" placeholder="1" {...register('roomsCount', { required: 'عدد الغرف مطلوب' })} />
-                {errors.roomsCount && <p className="ferr">{errors.roomsCount.message}</p>}
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="roomsCount">عدد الغرف <span className={CLS_REQ}>*</span></label>
+                <input id="roomsCount" className={`${errors.roomsCount ? CLS_INP_E : CLS_INP} direction-ltr text-left`} type="number" min="1" placeholder="1" {...register('roomsCount', { required: 'عدد الغرف مطلوب' })} />
+                {errors.roomsCount && <p className={CLS_FERR}>{errors.roomsCount.message}</p>}
               </div>
 
               {/* Water */}
-              <div className="fg">
-                <label className="lbl" htmlFor="water">الماء <span className="req">*</span></label>
-                <input id="water" className={`inp ${errors.water ? 'inp-err' : ''}`} placeholder="مثال: شبكة عامة، خزان" {...register('water', { required: 'مصدر الماء مطلوب' })} />
-                {errors.water && <p className="ferr">{errors.water.message}</p>}
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="water">الماء <span className={CLS_REQ}>*</span></label>
+                <input id="water" className={errors.water ? CLS_INP_E : CLS_INP} placeholder="مثال: شبكة عامة، خزان" {...register('water', { required: 'مصدر الماء مطلوب' })} />
+                {errors.water && <p className={CLS_FERR}>{errors.water.message}</p>}
               </div>
 
               {/* Electricity */}
-              <div className="fg">
-                <label className="lbl" htmlFor="electricity">الكهرباء <span className="req">*</span></label>
-                <input id="electricity" className={`inp ${errors.electricity ? 'inp-err' : ''}`} placeholder="مثال: متصل، مولد" {...register('electricity', { required: 'مصدر الكهرباء مطلوب' })} />
-                {errors.electricity && <p className="ferr">{errors.electricity.message}</p>}
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="electricity">الكهرباء <span className={CLS_REQ}>*</span></label>
+                <input id="electricity" className={errors.electricity ? CLS_INP_E : CLS_INP} placeholder="مثال: متصل، مولد" {...register('electricity', { required: 'مصدر الكهرباء مطلوب' })} />
+                {errors.electricity && <p className={CLS_FERR}>{errors.electricity.message}</p>}
               </div>
 
               {/* Rent amount — only if rented */}
               {ownershipType === 'rented' && (
-                <div className="fg">
-                  <label className="lbl" htmlFor="rentAmount">مقدار الإيجار <span className="opt">(اختياري)</span></label>
-                  <input id="rentAmount" className="inp ltr" placeholder="بالريال" {...register('rentAmount')} />
+                <div className={CLS_FG}>
+                  <label className={CLS_LBL} htmlFor="rentAmount">مقدار الإيجار <span className={CLS_OPT}>(اختياري)</span></label>
+                  <input id="rentAmount" className={`${CLS_INP} direction-ltr text-left`} placeholder="بالريال" {...register('rentAmount')} />
                 </div>
               )}
 
               {/* Other details */}
-              <div className={`fg ${ownershipType === 'rented' ? '' : 'span2'}`}>
-                <label className="lbl" htmlFor="housingDetails">تفاصيل أخرى <span className="opt">(اختياري)</span></label>
-                <input id="housingDetails" className="inp" placeholder="أي تفاصيل إضافية" {...register('housingDetails')} />
+              <div className={ownershipType === 'rented' ? CLS_FG : CLS_FG2}>
+                <label className={CLS_LBL} htmlFor="housingDetails">تفاصيل أخرى <span className={CLS_OPT}>(اختياري)</span></label>
+                <input id="housingDetails" className={CLS_INP} placeholder="أي تفاصيل إضافية" {...register('housingDetails')} />
               </div>
 
             </div>
           </div>
 
           {/* ── Section 6: Health ────────────────────────────────────────── */}
-          <div className="card">
+          <div className={CLS_CARD}>
             <SectionHeader number="٦" title="الحالة الصحية" subtitle="معلومات عن الوضع الصحي لليتيم" />
-            <div className="grid">
+            <div className={CLS_GRID}>
 
               {/* Chronic disease */}
-              <div className="fg span2">
-                <label className="lbl">هل يعاني من أمراض مزمنة؟ <span className="req">*</span></label>
-                <div className="radio-row" style={{ maxWidth: '200px' }}>
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL}>هل يعاني من أمراض مزمنة؟ <span className={CLS_REQ}>*</span></label>
+                <div className="flex gap-3 max-w-[200px]">
                   {[['yes', 'نعم'], ['no', 'لا']].map(([val, lbl]) => (
-                    <label key={val} className="radio-card">
-                      <input type="radio" value={val} checked={hasChronicDisease === val}
+                    <label key={val} className={CLS_RADIO_STATE(hasChronicDisease === val)}>
+                      <input type="radio" value={val} checked={hasChronicDisease === val} className="hidden"
                         onChange={() => setHasChronicDisease(val)} />
                       <span>{lbl}</span>
                     </label>
                   ))}
                 </div>
-                {stateErrors.hasChronicDisease && <p className="ferr">{stateErrors.hasChronicDisease}</p>}
+                {stateErrors.hasChronicDisease && <p className={CLS_FERR}>{stateErrors.hasChronicDisease}</p>}
               </div>
 
               {/* Disease details — only if yes */}
               {hasChronicDisease === 'yes' && (
-                <div className="fg span2">
-                  <label className="lbl" htmlFor="chronicDiseaseDetails">التفاصيل</label>
-                  <input id="chronicDiseaseDetails" className="inp"
+                <div className={CLS_FG2}>
+                  <label className={CLS_LBL} htmlFor="chronicDiseaseDetails">التفاصيل</label>
+                  <input id="chronicDiseaseDetails" className={CLS_INP}
                     placeholder="اذكر الأمراض المزمنة…" {...register('chronicDiseaseDetails')} />
                 </div>
               )}
 
               {/* Regular treatment */}
-              <div className="fg">
-                <label className="lbl">هل يتلقى علاجاً منتظماً؟ <span className="req">*</span></label>
-                <div className="radio-row">
+              <div className={CLS_FG}>
+                <label className={CLS_LBL}>هل يتلقى علاجاً منتظماً؟ <span className={CLS_REQ}>*</span></label>
+                <div className="flex gap-3">
                   {[['yes', 'نعم'], ['no', 'لا']].map(([val, lbl]) => (
-                    <label key={val} className="radio-card">
-                      <input type="radio" value={val} checked={hasRegularTreatment === val}
+                    <label key={val} className={CLS_RADIO_STATE(hasRegularTreatment === val)}>
+                      <input type="radio" value={val} checked={hasRegularTreatment === val} className="hidden"
                         onChange={() => setHasRegularTreatment(val)} />
                       <span>{lbl}</span>
                     </label>
                   ))}
                 </div>
-                {stateErrors.hasRegularTreatment && <p className="ferr">{stateErrors.hasRegularTreatment}</p>}
+                {stateErrors.hasRegularTreatment && <p className={CLS_FERR}>{stateErrors.hasRegularTreatment}</p>}
               </div>
 
               {/* Health insurance */}
-              <div className="fg">
-                <label className="lbl">هل يتوفر تأمين صحي؟ <span className="req">*</span></label>
-                <div className="radio-row">
+              <div className={CLS_FG}>
+                <label className={CLS_LBL}>هل يتوفر تأمين صحي؟ <span className={CLS_REQ}>*</span></label>
+                <div className="flex gap-3">
                   {[['yes', 'نعم'], ['no', 'لا']].map(([val, lbl]) => (
-                    <label key={val} className="radio-card">
-                      <input type="radio" value={val} checked={hasHealthInsurance === val}
+                    <label key={val} className={CLS_RADIO_STATE(hasHealthInsurance === val)}>
+                      <input type="radio" value={val} checked={hasHealthInsurance === val} className="hidden"
                         onChange={() => setHasHealthInsurance(val)} />
                       <span>{lbl}</span>
                     </label>
                   ))}
                 </div>
-                {stateErrors.hasHealthInsurance && <p className="ferr">{stateErrors.hasHealthInsurance}</p>}
+                {stateErrors.hasHealthInsurance && <p className={CLS_FERR}>{stateErrors.hasHealthInsurance}</p>}
               </div>
 
             </div>
           </div>
 
           {/* ── Section 7: Economic ──────────────────────────────────────── */}
-          <div className="card">
+          <div className={CLS_CARD}>
             <SectionHeader number="٧" title="الوضع الاقتصادي" subtitle="مصادر الدخل والدعم المالي للأسرة" />
-            <div className="grid">
+            <div className={CLS_GRID}>
 
               {/* Income source */}
-              <div className="fg span2">
-                <label className="lbl">مصدر الدخل الرئيسي <span className="req">*</span></label>
-                <div className="rel-row">
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL}>مصدر الدخل الرئيسي <span className={CLS_REQ}>*</span></label>
+                <div className="flex gap-2.5 flex-wrap">
                   {[
                     ['salary',    'راتب شهري'],
                     ['assistance','مساعدات'],
                     ['freelance', 'أعمال حرة'],
                     ['none',      'لا يوجد'],
                   ].map(([val, lbl]) => (
-                    <label key={val} className="rel-chip">
-                      <input type="radio" value={val} checked={incomeSource === val}
+                    <label key={val} className={CLS_CHIP(incomeSource === val)}>
+                      <input type="radio" value={val} checked={incomeSource === val} className="hidden"
                         onChange={() => setIncomeSource(val)} />
                       <span>{lbl}</span>
                     </label>
                   ))}
                 </div>
-                {stateErrors.incomeSource && <p className="ferr">{stateErrors.incomeSource}</p>}
+                {stateErrors.incomeSource && <p className={CLS_FERR}>{stateErrors.incomeSource}</p>}
               </div>
 
               {/* Monthly income */}
-              <div className="fg">
-                <label className="lbl" htmlFor="monthlyIncome">
-                  متوسط الدخل الشهري <span className="req">*</span>
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="monthlyIncome">
+                  متوسط الدخل الشهري <span className={CLS_REQ}>*</span>
                 </label>
-                <div style={{ position: 'relative' }}>
-                  <input id="monthlyIncome" className={`inp ltr ${errors.monthlyIncome ? 'inp-err' : ''}`}
-                    placeholder="0" {...register('monthlyIncome', { required: 'متوسط الدخل الشهري مطلوب' })}
-                    style={{ paddingLeft: '3rem' }} />
-                  <span style={{
-                    position: 'absolute', left: '0.75rem', top: '50%',
-                    transform: 'translateY(-50%)', fontSize: '0.8rem',
-                    color: '#9ca3af', pointerEvents: 'none',
-                  }}>ريال</span>
+                <div className="relative">
+                  <input id="monthlyIncome" className={`${errors.monthlyIncome ? CLS_INP_E : CLS_INP} direction-ltr text-left pl-12`}
+                    placeholder="0" {...register('monthlyIncome', { required: 'متوسط الدخل الشهري مطلوب' })} />
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[0.8rem] text-gray-400 pointer-events-none">ريال</span>
                 </div>
-                {errors.monthlyIncome && <p className="ferr">{errors.monthlyIncome.message}</p>}
+                {errors.monthlyIncome && <p className={CLS_FERR}>{errors.monthlyIncome.message}</p>}
               </div>
 
               {/* Charity support */}
-              <div className="fg">
-                <label className="lbl">
-                  هل تتلقى الأسرة دعماً من جهة خيرية؟ <span className="req">*</span>
+              <div className={CLS_FG}>
+                <label className={CLS_LBL}>
+                  هل تتلقى الأسرة دعماً من جهة خيرية؟ <span className={CLS_REQ}>*</span>
                 </label>
-                <div className="radio-row">
+                <div className="flex gap-3">
                   {[['yes', 'نعم'], ['no', 'لا']].map(([val, lbl]) => (
-                    <label key={val} className="radio-card">
-                      <input type="radio" value={val} checked={hasCharitySupport === val}
+                    <label key={val} className={CLS_RADIO_STATE(hasCharitySupport === val)}>
+                      <input type="radio" value={val} checked={hasCharitySupport === val} className="hidden"
                         onChange={() => setHasCharitySupport(val)} />
                       <span>{lbl}</span>
                     </label>
                   ))}
                 </div>
-                {stateErrors.hasCharitySupport && <p className="ferr">{stateErrors.hasCharitySupport}</p>}
+                {stateErrors.hasCharitySupport && <p className={CLS_FERR}>{stateErrors.hasCharitySupport}</p>}
               </div>
 
               {/* Support details — only if yes */}
               {hasCharitySupport === 'yes' && (
-                <div className="fg span2">
-                  <label className="lbl" htmlFor="charitySupportDetails">تفصيل الدعم</label>
-                  <textarea id="charitySupportDetails" className="inp ta" rows={2}
+                <div className={CLS_FG2}>
+                  <label className={CLS_LBL} htmlFor="charitySupportDetails">تفصيل الدعم</label>
+                  <textarea id="charitySupportDetails" className={`${CLS_INP} resize-y min-h-[80px]`} rows={2}
                     placeholder="اذكر الجهة ومقدار الدعم…"
                     {...register('charitySupportDetails')} />
                 </div>
@@ -1251,52 +1253,39 @@ export default function OrphanRegistrationPage() {
           {/* ══ PAGE 4: المواهب والجوانب الشخصية ══ */}
           {currentPage === 4 && <Fragment>
           {/* ── Section 8: Skills & Talents ──────────────────────────────── */}
-          <div className="card">
+          <div className={CLS_CARD}>
             <SectionHeader
               number="٨"
               title="المهارات والمواهب"
               subtitle={
                 selectedTalents.size > 0
-                  ? `<Check size={16} /> سيتم تصنيف اليتيم كموهوب تلقائياً (${selectedTalents.size} موهبة)`
+                  ? `⭐ سيتم تصنيف اليتيم كموهوب تلقائياً (${selectedTalents.size} موهبة)`
                   : 'اختر المهارات والمواهب — أي اختيار يصنّف اليتيم كموهوب تلقائياً'
               }
             />
 
             {selectedTalents.size > 0 && (
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: '0.5rem',
-                background: '#ECFDF5', border: '1px solid #6EE7B7',
-                borderRadius: '0.625rem', padding: '0.6rem 1rem',
-                marginBottom: '1.25rem', fontSize: '0.85rem',
-                color: '#065F46', fontWeight: 600,
-              }}>
+              <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 px-4 mb-5 text-[0.85rem] text-emerald-800 font-semibold">
                 <span>⭐</span>
                 <span>سيتم تصنيف هذا اليتيم كموهوب بناءً على المهارات المختارة</span>
               </div>
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+            <div className="flex flex-col gap-4">
               {TALENT_CATEGORIES.map(({ key, label, options }) => (
                 <div key={key}>
-                  <p style={{ fontSize: '0.82rem', fontWeight: 700, color: '#374151', margin: '0 0 0.5rem' }}>
+                  <p className="text-[0.82rem] font-bold text-gray-700 m-0 mb-2">
                     {label}
                   </p>
-                  <div className="rel-row">
+                  <div className="flex gap-2.5 flex-wrap">
                     {options.map((opt) => {
                       const id = `${key}__${opt}`;
                       const checked = selectedTalents.has(id);
                       return (
-                        <label key={id} style={{
-                          display: 'flex', alignItems: 'center', padding: '0.45rem 0.9rem',
-                          border: `1.5px solid ${checked ? '#1B5E8C' : '#d1d5db'}`,
-                          borderRadius: '2rem', fontSize: '0.82rem', fontWeight: 600,
-                          color: checked ? '#fff' : '#6b7280',
-                          background: checked ? '#1B5E8C' : '#fafafa',
-                          cursor: 'pointer', transition: 'all .15s', userSelect: 'none',
-                        }}>
+                        <label key={id} className={`flex items-center px-3.5 py-1.5 border-[1.5px] rounded-[2rem] text-[0.82rem] font-semibold cursor-pointer transition-all duration-150 select-none ${checked ? 'border-[#1B5E8C] bg-[#1B5E8C] text-white' : 'border-gray-300 bg-gray-50 text-gray-500 hover:border-[#1B5E8C] hover:text-[#1B5E8C]'}`}>
                           <input
                             type="checkbox"
-                            style={{ display: 'none' }}
+                            className="hidden"
                             checked={checked}
                             onChange={() => {
                               setSelectedTalents(prev => {
@@ -1315,11 +1304,11 @@ export default function OrphanRegistrationPage() {
               ))}
 
               {/* Other talents */}
-              <div className="fg">
-                <label className="lbl" htmlFor="talentsOther">
-                  أخرى يود تعلمها أو تطويرها <span className="opt">(اختياري)</span>
+              <div className={CLS_FG}>
+                <label className={CLS_LBL} htmlFor="talentsOther">
+                  أخرى يود تعلمها أو تطويرها <span className={CLS_OPT}>(اختياري)</span>
                 </label>
-                <input id="talentsOther" className="inp"
+                <input id="talentsOther" className={CLS_INP}
                   placeholder="مثال: العزف، الطيران…"
                   {...register('talentsOther')} />
               </div>
@@ -1327,86 +1316,86 @@ export default function OrphanRegistrationPage() {
           </div>
 
           {/* ── Section 9a: Social Aspect ────────────────────────────────── */}
-          <div className="card">
+          <div className={CLS_CARD}>
             <SectionHeader number="٩" title="الجانب الاجتماعي" subtitle="العلاقات الاجتماعية والسلوك" />
-            <div className="grid">
+            <div className={CLS_GRID}>
 
-              <div className="fg span2">
-                <label className="lbl">العلاقات داخل الأسرة <span className="req">*</span></label>
-                <div className="rel-row">
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL}>العلاقات داخل الأسرة <span className={CLS_REQ}>*</span></label>
+                <div className="flex gap-2.5 flex-wrap">
                   {[['connected','مترابطة'],['tense','متوترة بعض الشيء'],['fragmented','مفككة']].map(([val,lbl]) => (
-                    <label key={val} className="rel-chip">
-                      <input type="radio" checked={familyRelations===val} onChange={()=>setFamilyRelations(val)} />
+                    <label key={val} className={CLS_CHIP(familyRelations===val)}>
+                      <input type="radio" checked={familyRelations===val} className="hidden" onChange={()=>setFamilyRelations(val)} />
                       <span>{lbl}</span>
                     </label>
                   ))}
                 </div>
-                {stateErrors.familyRelations && <p className="ferr">{stateErrors.familyRelations}</p>}
+                {stateErrors.familyRelations && <p className={CLS_FERR}>{stateErrors.familyRelations}</p>}
               </div>
 
-              <div className="fg span2">
-                <label className="lbl">العلاقة مع المجتمع <span className="req">*</span></label>
-                <div className="rel-row">
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL}>العلاقة مع المجتمع <span className={CLS_REQ}>*</span></label>
+                <div className="flex gap-2.5 flex-wrap">
                   {[['active','يشارك في أنشطة'],['shy','خجول ومنعزل'],['needs_push','يحتاج تشجيعاً على الاندماج']].map(([val,lbl]) => (
-                    <label key={val} className="rel-chip">
-                      <input type="radio" checked={communityRelation===val} onChange={()=>setCommunityRelation(val)} />
+                    <label key={val} className={CLS_CHIP(communityRelation===val)}>
+                      <input type="radio" checked={communityRelation===val} className="hidden" onChange={()=>setCommunityRelation(val)} />
                       <span>{lbl}</span>
                     </label>
                   ))}
                 </div>
-                {stateErrors.communityRelation && <p className="ferr">{stateErrors.communityRelation}</p>}
+                {stateErrors.communityRelation && <p className={CLS_FERR}>{stateErrors.communityRelation}</p>}
               </div>
 
-              <div className="fg span2">
-                <label className="lbl">العلاقة بالمدرسة والمعلمين <span className="req">*</span></label>
-                <div className="rel-row">
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL}>العلاقة بالمدرسة والمعلمين <span className={CLS_REQ}>*</span></label>
+                <div className="flex gap-2.5 flex-wrap">
                   {[['positive','إيجابية'],['average','متوسطة'],['weak','ضعيفة أو فيها مشكلات']].map(([val,lbl]) => (
-                    <label key={val} className="rel-chip">
-                      <input type="radio" checked={schoolRelation===val} onChange={()=>setSchoolRelation(val)} />
+                    <label key={val} className={CLS_CHIP(schoolRelation===val)}>
+                      <input type="radio" checked={schoolRelation===val} className="hidden" onChange={()=>setSchoolRelation(val)} />
                       <span>{lbl}</span>
                     </label>
                   ))}
                 </div>
-                {stateErrors.schoolRelation && <p className="ferr">{stateErrors.schoolRelation}</p>}
+                {stateErrors.schoolRelation && <p className={CLS_FERR}>{stateErrors.schoolRelation}</p>}
               </div>
 
-              <div className="fg span2">
-                <label className="lbl">سلوكيات اجتماعية ملحوظة <span className="req">*</span></label>
-                <div className="rel-row">
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL}>سلوكيات اجتماعية ملحوظة <span className={CLS_REQ}>*</span></label>
+                <div className="flex gap-2.5 flex-wrap">
                   {[['cooperative','متعاون'],['introverted','انطوائي'],['aggressive','عدواني'],['leader','قيادي']].map(([val,lbl]) => (
-                    <label key={val} className="rel-chip">
-                      <input type="radio" checked={socialBehavior===val} onChange={()=>setSocialBehavior(val)} />
+                    <label key={val} className={CLS_CHIP(socialBehavior===val)}>
+                      <input type="radio" checked={socialBehavior===val} className="hidden" onChange={()=>setSocialBehavior(val)} />
                       <span>{lbl}</span>
                     </label>
                   ))}
                 </div>
-                {stateErrors.socialBehavior && <p className="ferr">{stateErrors.socialBehavior}</p>}
+                {stateErrors.socialBehavior && <p className={CLS_FERR}>{stateErrors.socialBehavior}</p>}
               </div>
 
-              <div className="fg span2">
-                <label className="lbl">يحتاج إلى دعم اجتماعي إضافي؟ <span className="req">*</span></label>
-                <div className="rel-row">
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL}>يحتاج إلى دعم اجتماعي إضافي؟ <span className={CLS_REQ}>*</span></label>
+                <div className="flex gap-2.5 flex-wrap">
                   {[['yes','نعم'],['no','لا'],['pending','قيد المتابعة']].map(([val,lbl]) => (
-                    <label key={val} className="rel-chip">
-                      <input type="radio" checked={needsSocialSupport===val} onChange={()=>setNeedsSocialSupport(val)} />
+                    <label key={val} className={CLS_CHIP(needsSocialSupport===val)}>
+                      <input type="radio" checked={needsSocialSupport===val} className="hidden" onChange={()=>setNeedsSocialSupport(val)} />
                       <span>{lbl}</span>
                     </label>
                   ))}
                 </div>
-                {stateErrors.needsSocialSupport && <p className="ferr">{stateErrors.needsSocialSupport}</p>}
+                {stateErrors.needsSocialSupport && <p className={CLS_FERR}>{stateErrors.needsSocialSupport}</p>}
               </div>
 
             </div>
           </div>
 
           {/* ── Section 9b: Religious/Spiritual ──────────────────────────── */}
-          <div className="card">
+          <div className={CLS_CARD}>
             <SectionHeader number="١٠" title="الجانب الروحي الديني" subtitle="مستوى الالتزام الديني والأخلاقي" />
-            <div className="grid">
+            <div className={CLS_GRID}>
 
-              <div className="fg span2">
-                <label className="lbl">حفظ القرآن الكريم <span className="req">*</span></label>
-                <div className="rel-row">
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL}>حفظ القرآن الكريم <span className={CLS_REQ}>*</span></label>
+                <div className="flex gap-2.5 flex-wrap">
                   {[
                     ['none',      'لا يحفظ'],
                     ['few_suras', 'يحفظ سور قليلة'],
@@ -1414,172 +1403,172 @@ export default function OrphanRegistrationPage() {
                     ['half',      'يحفظ نصف القرآن'],
                     ['full',      'يحفظ كامل'],
                   ].map(([val, lbl]) => (
-                    <label key={val} className="rel-chip">
-                      <input type="radio" checked={quranLevel === val} onChange={() => setQuranLevel(val)} />
+                    <label key={val} className={CLS_CHIP(quranLevel === val)}>
+                      <input type="radio" checked={quranLevel === val} className="hidden" onChange={() => setQuranLevel(val)} />
                       <span>{lbl}</span>
                     </label>
                   ))}
                 </div>
-                {stateErrors.quranLevel && <p className="ferr">{stateErrors.quranLevel}</p>}
+                {stateErrors.quranLevel && <p className={CLS_FERR}>{stateErrors.quranLevel}</p>}
               </div>
 
-              <div className="fg span2">
-                <label className="lbl">الالتزام بالصلاة <span className="req">*</span></label>
-                <div className="rel-row">
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL}>الالتزام بالصلاة <span className={CLS_REQ}>*</span></label>
+                <div className="flex gap-2.5 flex-wrap">
                   {[
                     ['always',    'دائم الالتزام'],
                     ['sometimes', 'أحياناً'],
                     ['rarely',    'نادراً'],
                   ].map(([val, lbl]) => (
-                    <label key={val} className="rel-chip">
-                      <input type="radio" checked={prayerCommitment === val} onChange={() => setPrayerCommitment(val)} />
+                    <label key={val} className={CLS_CHIP(prayerCommitment === val)}>
+                      <input type="radio" checked={prayerCommitment === val} className="hidden" onChange={() => setPrayerCommitment(val)} />
                       <span>{lbl}</span>
                     </label>
                   ))}
                 </div>
-                {stateErrors.prayerCommitment && <p className="ferr">{stateErrors.prayerCommitment}</p>}
+                {stateErrors.prayerCommitment && <p className={CLS_FERR}>{stateErrors.prayerCommitment}</p>}
               </div>
 
-              <div className="fg span2">
-                <label className="lbl">السلوك والأخلاق <span className="req">*</span></label>
-                <div className="rel-row">
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL}>السلوك والأخلاق <span className={CLS_REQ}>*</span></label>
+                <div className="flex gap-2.5 flex-wrap">
                   {[
                     ['good',         'مهذب ومتعاون'],
                     ['needs_follow', 'يحتاج متابعة بسيطة'],
                     ['needs_guide',  'لديه سلوكيات تحتاج توجيه'],
                   ].map(([val, lbl]) => (
-                    <label key={val} className="rel-chip">
-                      <input type="radio" checked={moralBehavior === val} onChange={() => setMoralBehavior(val)} />
+                    <label key={val} className={CLS_CHIP(moralBehavior === val)}>
+                      <input type="radio" checked={moralBehavior === val} className="hidden" onChange={() => setMoralBehavior(val)} />
                       <span>{lbl}</span>
                     </label>
                   ))}
                 </div>
-                {stateErrors.moralBehavior && <p className="ferr">{stateErrors.moralBehavior}</p>}
+                {stateErrors.moralBehavior && <p className={CLS_FERR}>{stateErrors.moralBehavior}</p>}
               </div>
 
             </div>
           </div>
 
           {/* ── Section 9c: Psychological ────────────────────────────────── */}
-          <div className="card">
+          <div className={CLS_CARD}>
             <SectionHeader number="١١" title="الجانب النفسي" subtitle="الحالة النفسية والعاطفية لليتيم" />
-            <div className="grid">
+            <div className={CLS_GRID}>
 
-              <div className="fg span2">
-                <label className="lbl">المظهر العام والتفاعل <span className="req">*</span></label>
-                <div className="rel-row">
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL}>المظهر العام والتفاعل <span className={CLS_REQ}>*</span></label>
+                <div className="flex gap-2.5 flex-wrap">
                   {[['smiling','مبتسم ومتفاعل'],['shy','خجول'],['introverted','منطوٍ'],['aggressive','عدواني بعض الشيء']].map(([val,lbl]) => (
-                    <label key={val} className="rel-chip">
-                      <input type="radio" checked={generalAppearance===val} onChange={()=>setGeneralAppearance(val)} />
+                    <label key={val} className={CLS_CHIP(generalAppearance===val)}>
+                      <input type="radio" checked={generalAppearance===val} className="hidden" onChange={()=>setGeneralAppearance(val)} />
                       <span>{lbl}</span>
                     </label>
                   ))}
                 </div>
-                {stateErrors.generalAppearance && <p className="ferr">{stateErrors.generalAppearance}</p>}
+                {stateErrors.generalAppearance && <p className={CLS_FERR}>{stateErrors.generalAppearance}</p>}
               </div>
 
-              <div className="fg span2">
-                <label className="lbl">التعبير عن الذات <span className="req">*</span></label>
-                <div className="rel-row">
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL}>التعبير عن الذات <span className={CLS_REQ}>*</span></label>
+                <div className="flex gap-2.5 flex-wrap">
                   {[['confident','يتحدث بثقة'],['hesitant','يتردد في الكلام'],['silent','صامت أغلب الوقت']].map(([val,lbl]) => (
-                    <label key={val} className="rel-chip">
-                      <input type="radio" checked={selfExpression===val} onChange={()=>setSelfExpression(val)} />
+                    <label key={val} className={CLS_CHIP(selfExpression===val)}>
+                      <input type="radio" checked={selfExpression===val} className="hidden" onChange={()=>setSelfExpression(val)} />
                       <span>{lbl}</span>
                     </label>
                   ))}
                 </div>
-                {stateErrors.selfExpression && <p className="ferr">{stateErrors.selfExpression}</p>}
+                {stateErrors.selfExpression && <p className={CLS_FERR}>{stateErrors.selfExpression}</p>}
               </div>
 
-              <div className="fg span2">
-                <label className="lbl">العلاقات الأسرية <span className="req">*</span></label>
-                <div className="rel-row">
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL}>العلاقات الأسرية <span className={CLS_REQ}>*</span></label>
+                <div className="flex gap-2.5 flex-wrap">
                   {[['stable','جيدة ومستقرة'],['tense','متوترة قليلاً'],['troubled','مضطربة وتحتاج تدخل']].map(([val,lbl]) => (
-                    <label key={val} className="rel-chip">
-                      <input type="radio" checked={psychFamilyRelations===val} onChange={()=>setPsychFamilyRelations(val)} />
+                    <label key={val} className={CLS_CHIP(psychFamilyRelations===val)}>
+                      <input type="radio" checked={psychFamilyRelations===val} className="hidden" onChange={()=>setPsychFamilyRelations(val)} />
                       <span>{lbl}</span>
                     </label>
                   ))}
                 </div>
-                {stateErrors.psychFamilyRelations && <p className="ferr">{stateErrors.psychFamilyRelations}</p>}
+                {stateErrors.psychFamilyRelations && <p className={CLS_FERR}>{stateErrors.psychFamilyRelations}</p>}
               </div>
 
-              <div className="fg span2">
-                <label className="lbl">العلاقة مع الزملاء والأصدقاء <span className="req">*</span></label>
-                <div className="rel-row">
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL}>العلاقة مع الزملاء والأصدقاء <span className={CLS_REQ}>*</span></label>
+                <div className="flex gap-2.5 flex-wrap">
                   {[['positive','إيجابية'],['limited','محدودة'],['none','لا يملك أصدقاء']].map(([val,lbl]) => (
-                    <label key={val} className="rel-chip">
-                      <input type="radio" checked={peerRelations===val} onChange={()=>setPeerRelations(val)} />
+                    <label key={val} className={CLS_CHIP(peerRelations===val)}>
+                      <input type="radio" checked={peerRelations===val} className="hidden" onChange={()=>setPeerRelations(val)} />
                       <span>{lbl}</span>
                     </label>
                   ))}
                 </div>
-                {stateErrors.peerRelations && <p className="ferr">{stateErrors.peerRelations}</p>}
+                {stateErrors.peerRelations && <p className={CLS_FERR}>{stateErrors.peerRelations}</p>}
               </div>
 
-              <div className="fg span2">
-                <label className="lbl">النوم والشهية <span className="req">*</span></label>
-                <div className="rel-row">
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL}>النوم والشهية <span className={CLS_REQ}>*</span></label>
+                <div className="flex gap-2.5 flex-wrap">
                   {[['normal','طبيعية'],['poor_sleep','قلة نوم'],['poor_appetite','فقدان شهية'],['anxiety','قلق أو أحلام مزعجة']].map(([val,lbl]) => (
-                    <label key={val} className="rel-chip">
-                      <input type="radio" checked={sleepAppetite===val} onChange={()=>setSleepAppetite(val)} />
+                    <label key={val} className={CLS_CHIP(sleepAppetite===val)}>
+                      <input type="radio" checked={sleepAppetite===val} className="hidden" onChange={()=>setSleepAppetite(val)} />
                       <span>{lbl}</span>
                     </label>
                   ))}
                 </div>
-                {stateErrors.sleepAppetite && <p className="ferr">{stateErrors.sleepAppetite}</p>}
+                {stateErrors.sleepAppetite && <p className={CLS_FERR}>{stateErrors.sleepAppetite}</p>}
               </div>
 
-              <div className="fg span2">
-                <label className="lbl">علامات نفسية ظاهرة <span className="req">*</span></label>
-                <div className="rel-row">
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL}>علامات نفسية ظاهرة <span className={CLS_REQ}>*</span></label>
+                <div className="flex gap-2.5 flex-wrap">
                   {[['none','لا يوجد'],['sadness','حزن / بكاء متكرر'],['fear','خوف / قلق'],['aggression','عدوانية / غضب']].map(([val,lbl]) => (
-                    <label key={val} className="rel-chip">
-                      <input type="radio" checked={psychSigns===val} onChange={()=>setPsychSigns(val)} />
+                    <label key={val} className={CLS_CHIP(psychSigns===val)}>
+                      <input type="radio" checked={psychSigns===val} className="hidden" onChange={()=>setPsychSigns(val)} />
                       <span>{lbl}</span>
                     </label>
                   ))}
                 </div>
-                {stateErrors.psychSigns && <p className="ferr">{stateErrors.psychSigns}</p>}
+                {stateErrors.psychSigns && <p className={CLS_FERR}>{stateErrors.psychSigns}</p>}
               </div>
 
-              <div className="fg span2">
-                <label className="lbl">يحتاج إلى متابعة نفسية متخصصة؟ <span className="req">*</span></label>
-                <div className="rel-row">
+              <div className={CLS_FG2}>
+                <label className={CLS_LBL}>يحتاج إلى متابعة نفسية متخصصة؟ <span className={CLS_REQ}>*</span></label>
+                <div className="flex gap-2.5 flex-wrap">
                   {[['yes','نعم'],['no','لا'],['pending','قيد الملاحظة']].map(([val,lbl]) => (
-                    <label key={val} className="rel-chip">
-                      <input type="radio" checked={needsPsychSupport===val} onChange={()=>setNeedsPsychSupport(val)} />
+                    <label key={val} className={CLS_CHIP(needsPsychSupport===val)}>
+                      <input type="radio" checked={needsPsychSupport===val} className="hidden" onChange={()=>setNeedsPsychSupport(val)} />
                       <span>{lbl}</span>
                     </label>
                   ))}
                 </div>
-                {stateErrors.needsPsychSupport && <p className="ferr">{stateErrors.needsPsychSupport}</p>}
+                {stateErrors.needsPsychSupport && <p className={CLS_FERR}>{stateErrors.needsPsychSupport}</p>}
               </div>
 
             </div>
           </div>
 
           {/* ── Section 9d: Recommendations ──────────────────────────────── */}
-          <div className="card">
+          <div className={CLS_CARD}>
             <SectionHeader number="١٢" title="التوصيات" subtitle="ملاحظات وتوصيات الأخصائية" />
-            <div className="fg">
-              <label className="lbl" htmlFor="recommendations">
-                التوصيات <span className="req">*</span>
+            <div className={CLS_FG}>
+              <label className={CLS_LBL} htmlFor="recommendations">
+                التوصيات <span className={CLS_REQ}>*</span>
               </label>
               <textarea
                 id="recommendations"
-                className={`inp ta ${errors.recommendations ? 'inp-err' : ''}`}
+                className={`${errors.recommendations ? CLS_INP_E : CLS_INP} resize-y min-h-[80px]`}
                 rows={5}
                 placeholder="اكتب توصياتك وملاحظاتك هنا…"
                 {...register('recommendations', { required: 'التوصيات مطلوبة' })}
               />
-              {errors.recommendations && <p className="ferr">{errors.recommendations.message}</p>}
+              {errors.recommendations && <p className={CLS_FERR}>{errors.recommendations.message}</p>}
             </div>
           </div>
           </Fragment>}
 
           {/* ══ PAGE 5: المستندات ══ */}
-          {currentPage === 5 && <div className="card">
+          {currentPage === 5 && <div className={CLS_CARD}>
             <SectionHeader
               number="١٣"
               title="المستندات المطلوبة"
@@ -1587,27 +1576,27 @@ export default function OrphanRegistrationPage() {
             />
 
             {/* Format badge strip */}
-            <div className="doc-badges">
-              <span className="doc-badge"><FileText size={13} strokeWidth={2} /> PDF</span>
-              <span className="doc-badge"><Image size={13} strokeWidth={2} /> JPG</span>
-              <span className="doc-badge"><Image size={13} strokeWidth={2} /> PNG</span>
-              <span className="doc-badge-sep" />
-              <span className="doc-badge doc-badge-limit">الحد الأقصى 5 MB لكل ملف</span>
+            <div className="flex items-center gap-2 flex-wrap mb-6">
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-slate-100 border border-slate-200 rounded-[2rem] text-xs font-semibold text-slate-600"><FileText size={13} strokeWidth={2} /> PDF</span>
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-slate-100 border border-slate-200 rounded-[2rem] text-xs font-semibold text-slate-600"><Image size={13} strokeWidth={2} /> JPG</span>
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-slate-100 border border-slate-200 rounded-[2rem] text-xs font-semibold text-slate-600"><Image size={13} strokeWidth={2} /> PNG</span>
+              <span className="flex-1" />
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#fef9ec] border border-[#fcd34d] rounded-[2rem] text-xs font-semibold text-[#92400e]">الحد الأقصى 5 MB لكل ملف</span>
             </div>
 
-            <div className="doc-grid">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-[1.1rem]">
 
               {/* Death certificate */}
-              <div className="doc-card">
-                <div className="doc-card-head">
-                  <div className="doc-card-icon doc-card-icon-red">
+              <div className="bg-[#f8fafc] border border-[#e5eaf0] rounded-[0.875rem] p-[1.1rem] flex flex-col gap-3.5 transition-colors focus-within:border-[#1B5E8C]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-[0.625rem] flex items-center justify-center shrink-0 bg-red-100 text-red-600">
                     <FileText size={20} strokeWidth={1.8} />
                   </div>
                   <div>
-                    <p className="doc-card-title">شهادة وفاة الأب <span className="req">*</span></p>
-                    <p className="doc-card-sub">وثيقة رسمية تُثبت وفاة الأب</p>
+                    <p className="text-[0.88rem] font-bold text-slate-800 m-0 mb-0.5">شهادة وفاة الأب <span className="text-red-600 mr-0.5">*</span></p>
+                    <p className="text-[0.75rem] text-slate-400 m-0">وثيقة رسمية تُثبت وفاة الأب</p>
                   </div>
-                  {deathCertFile && <CheckCircle2 size={18} color="#16a34a" strokeWidth={2} style={{ marginRight: 'auto' }} />}
+                  {deathCertFile && <CheckCircle2 size={18} className="text-emerald-600 mr-auto" strokeWidth={2} />}
                 </div>
                 <FileDropZone
                   label="شهادة وفاة الأب"
@@ -1620,16 +1609,16 @@ export default function OrphanRegistrationPage() {
               </div>
 
               {/* Birth certificate */}
-              <div className="doc-card">
-                <div className="doc-card-head">
-                  <div className="doc-card-icon doc-card-icon-blue">
+              <div className="bg-[#f8fafc] border border-[#e5eaf0] rounded-[0.875rem] p-[1.1rem] flex flex-col gap-3.5 transition-colors focus-within:border-[#1B5E8C]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-[0.625rem] flex items-center justify-center shrink-0 bg-blue-100 text-blue-600">
                     <FileText size={20} strokeWidth={1.8} />
                   </div>
                   <div>
-                    <p className="doc-card-title">شهادة الميلاد <span className="req">*</span></p>
-                    <p className="doc-card-sub">وثيقة رسمية تُثبت ميلاد اليتيم</p>
+                    <p className="text-[0.88rem] font-bold text-slate-800 m-0 mb-0.5">شهادة الميلاد <span className="text-red-600 mr-0.5">*</span></p>
+                    <p className="text-[0.75rem] text-slate-400 m-0">وثيقة رسمية تُثبت ميلاد اليتيم</p>
                   </div>
-                  {birthCertFile && <CheckCircle2 size={18} color="#16a34a" strokeWidth={2} style={{ marginRight: 'auto' }} />}
+                  {birthCertFile && <CheckCircle2 size={18} className="text-emerald-600 mr-auto" strokeWidth={2} />}
                 </div>
                 <FileDropZone
                   label="شهادة الميلاد"
@@ -1642,17 +1631,17 @@ export default function OrphanRegistrationPage() {
               </div>
 
               {/* Additional docs */}
-              <div className="doc-card doc-card-full">
-                <div className="doc-card-head">
-                  <div className="doc-card-icon doc-card-icon-gray">
+              <div className="bg-[#f8fafc] border border-[#e5eaf0] rounded-[0.875rem] p-[1.1rem] flex flex-col gap-3.5 transition-colors focus-within:border-[#1B5E8C] sm:col-span-full">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-[0.625rem] flex items-center justify-center shrink-0 bg-slate-200 text-slate-500">
                     <File size={20} strokeWidth={1.8} />
                   </div>
                   <div>
-                    <p className="doc-card-title">مستندات إضافية <span className="opt">(اختياري)</span></p>
-                    <p className="doc-card-sub">أي وثائق داعمة — حتى 5 ملفات</p>
+                    <p className="text-[0.88rem] font-bold text-slate-800 m-0 mb-0.5">مستندات إضافية <span className="text-[#94a3b8] font-normal text-xs">(اختياري)</span></p>
+                    <p className="text-[0.75rem] text-slate-400 m-0">أي وثائق داعمة — حتى 5 ملفات</p>
                   </div>
                   {additionalFiles.length > 0 && (
-                    <span className="doc-count">{additionalFiles.length} / 5</span>
+                    <span className="mr-auto text-[0.75rem] font-bold text-[#1B5E8C] bg-[#e0f2fe] px-2 py-1 rounded-[2rem]">{additionalFiles.length} / 5</span>
                   )}
                 </div>
                 <FileDropZone
@@ -1674,29 +1663,27 @@ export default function OrphanRegistrationPage() {
 
           {/* API error banner */}
           {submitState === 'error' && apiError && (
-            <div className="err-banner" role="alert">
-              <span><AlertTriangle size={18} /></span>
+            <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4 px-5 animate-[fadeIn_0.2s_ease]" role="alert">
+              <span className="text-xl shrink-0 text-red-600"><AlertTriangle size={18} /></span>
               <div>
-                <strong>فشل الإرسال</strong>
-                <p>{apiError}</p>
+                <strong className="block text-sm font-bold text-red-800 mb-0.5">فشل الإرسال</strong>
+                <p className="text-xs text-red-600 m-0">{apiError}</p>
               </div>
             </div>
           )}
 
           {/* Navigation row */}
-          <div className="submit-row">
-            {/* Left side: Cancel (page 1) or Back */}
+          <div className="flex justify-end items-center gap-4 p-4 px-5 bg-white border border-[#e5eaf0] rounded-2xl">
             {currentPage === 1 ? (
-              <button type="button" className="btn-ghost" onClick={() => router.back()}>
+              <button type="button" className={CLS_GHOST} onClick={() => router.back()}>
                 إلغاء
               </button>
             ) : (
-              <button type="button" className="btn-ghost" onClick={() => setCurrentPage(p => p - 1)}>
+              <button type="button" className={CLS_GHOST} onClick={() => setCurrentPage(p => p - 1)}>
                 ← رجوع
               </button>
             )}
 
-            {/* Right side: Next or Submit */}
             {currentPage < 5 ? (
               <PrimaryButton type="button" onClick={handleNext}>
                 التالي ←
@@ -1707,7 +1694,7 @@ export default function OrphanRegistrationPage() {
                 disabled={submitState === 'loading'}
               >
                 {submitState === 'loading'
-                  ? <><span className="spin" aria-hidden />جارٍ الإرسال…</>
+                  ? <><span className="inline-block w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin shrink-0" aria-hidden /> جارٍ الإرسال…</>
                   : 'إرسال للمراجعة ←'}
               </PrimaryButton>
             )}
@@ -1716,168 +1703,6 @@ export default function OrphanRegistrationPage() {
         </form>
       </div>
 
-      <style jsx>{`
-        /* ── Page ─────────────────────────────────────────────────────── */
-        .page { max-width:860px; margin:0 auto; padding-bottom:4rem; font-family:'Cairo','Tajawal',sans-serif; }
-        .page-top { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; margin-bottom:1.5rem; }
-        .page-title { font-size:1.6rem; font-weight:800; color:#0d3d5c; margin:0 0 .25rem; }
-        .page-sub { font-size:.85rem; color:#6b7a8d; margin:0; }
-
-        /* ── Progress ─────────────────────────────────────────────────── */
-        .progress { display:flex; align-items:center; gap:.5rem; padding:.85rem 1.25rem; background:#fff; border:1px solid #e5eaf0; border-radius:.875rem; margin-bottom:1.75rem; font-size:.8rem; font-weight:600; }
-        .p-step { display:flex; align-items:center; gap:.4rem; color:#94a3b8; }
-        .p-active { color:#1B5E8C; }
-        .p-done { color:#16a34a; }
-        .p-num { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#d1d5db; color:#fff; font-size:.72rem; font-weight:700; }
-        .p-active .p-num { background:#1B5E8C; }
-        .p-done .p-num { background:#16a34a; }
-        .p-lbl { white-space:nowrap; }
-        .p-sep { flex:1; border-top:1.5px dashed #dde2e8; margin:0 .25rem; }
-
-        /* ── Cards ────────────────────────────────────────────────────── */
-        .form { display:flex; flex-direction:column; gap:1.25rem; }
-        .card { background:#fff; border:1px solid #e5eaf0; border-radius:1rem; padding:1.75rem; box-shadow:0 1px 4px rgba(27,94,140,.05); }
-
-        /* ── Section header ───────────────────────────────────────────── */
-        .sec-head { display:flex; align-items:flex-start; gap:1rem; margin-bottom:1.5rem; padding-bottom:1rem; border-bottom:1.5px solid #f0f4f8; }
-        .sec-num { width:38px; height:38px; border-radius:10px; background:linear-gradient(135deg,#1B5E8C,#0d3d5c); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:700; flex-shrink:0; font-family:'Cairo',sans-serif; }
-        .sec-title { font-size:1.05rem; font-weight:700; color:#0d3d5c; margin:0 0 .15rem; }
-        .sec-sub { font-size:.78rem; color:#94a3b8; margin:0; }
-
-        /* ── Grids ────────────────────────────────────────────────────── */
-        .grid { display:grid; grid-template-columns:1fr 1fr; gap:1.1rem; }
-        .doc-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.1rem; }
-        .fg { display:flex; flex-direction:column; gap:.3rem; }
-        .span2 { grid-column:1 / -1; }
-
-        /* ── Labels ───────────────────────────────────────────────────── */
-        .lbl { font-size:.82rem; font-weight:600; color:#374151; }
-        .req { color:#dc2626; margin-right:2px; }
-        .opt { color:#94a3b8; font-weight:400; font-size:.75rem; }
-
-        /* ── Inputs ───────────────────────────────────────────────────── */
-        .inp { width:100%; border:1.5px solid #d1d5db; border-radius:.625rem; padding:.65rem .9rem; font-size:.88rem; font-family:'Cairo',sans-serif; color:#1f2937; background:#fafafa; outline:none; transition:border-color .15s,box-shadow .15s,background .15s; box-sizing:border-box; }
-        .inp:focus { border-color:#1B5E8C; background:#fff; box-shadow:0 0 0 3px rgba(27,94,140,.1); }
-        .inp-err { border-color:#dc2626!important; background:#fff8f8!important; }
-        .inp-err:focus { box-shadow:0 0 0 3px rgba(220,38,38,.08)!important; }
-        .sel { appearance:none; cursor:pointer; }
-        .ta { resize:vertical; min-height:80px; }
-        .ltr { direction:ltr; text-align:left; }
-
-        /* ── Gender radio cards ───────────────────────────────────────── */
-        .radio-row { display:flex; gap:.75rem; }
-        .radio-card { flex:1; display:flex; align-items:center; justify-content:center; gap:.5rem; padding:.65rem 1rem; border:1.5px solid #d1d5db; border-radius:.625rem; font-size:.88rem; font-weight:600; color:#6b7280; cursor:pointer; transition:all .15s; background:#fafafa; user-select:none; }
-        .radio-card input[type=radio] { display:none; }
-        .radio-card:has(input:checked) { border-color:#1B5E8C; background:#f0f7ff; color:#1B5E8C; box-shadow:0 0 0 2px rgba(27,94,140,.12); }
-        .radio-card:hover { border-color:#1B5E8C; }
-        .rc-err { border-color:#dc2626!important; }
-
-        /* ── Relation pill chips ──────────────────────────────────────── */
-        .rel-row { display:flex; gap:.6rem; flex-wrap:wrap; }
-        .rel-chip { display:flex; align-items:center; padding:.55rem 1.1rem; border:1.5px solid #d1d5db; border-radius:2rem; font-size:.83rem; font-weight:600; color:#6b7280; cursor:pointer; transition:all .15s; background:#fafafa; user-select:none; }
-        .rel-chip input[type=radio] { display:none; }
-        .rel-chip:has(input:checked) { border-color:#1B5E8C; background:#1B5E8C; color:#fff; }
-        .rel-chip:hover:not(:has(input:checked)) { border-color:#1B5E8C; color:#1B5E8C; }
-
-        /* ── Doc badges ───────────────────────────────────────────────── */
-        .doc-badges { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; margin-bottom:1.5rem; }
-        .doc-badge { display:inline-flex; align-items:center; gap:.3rem; padding:.3rem .7rem; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:2rem; font-size:.75rem; font-weight:600; color:#475569; }
-        .doc-badge-sep { flex:1; }
-        .doc-badge-limit { background:#fef9ec; border-color:#fcd34d; color:#92400e; }
-
-        /* ── Doc cards ────────────────────────────────────────────────── */
-        .doc-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.1rem; }
-        .doc-card { background:#f8fafc; border:1.5px solid #e5eaf0; border-radius:.875rem; padding:1.1rem; display:flex; flex-direction:column; gap:.9rem; transition:border-color .15s; }
-        .doc-card:focus-within { border-color:#1B5E8C; }
-        .doc-card-full { grid-column:1 / -1; }
-        .doc-card-head { display:flex; align-items:center; gap:.75rem; }
-        .doc-card-icon { width:40px; height:40px; border-radius:.625rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-        .doc-card-icon-red { background:#fee2e2; color:#dc2626; }
-        .doc-card-icon-blue { background:#dbeafe; color:#2563eb; }
-        .doc-card-icon-gray { background:#f1f5f9; color:#64748b; }
-        .doc-card-title { font-size:.88rem; font-weight:700; color:#1e293b; margin:0 0 .1rem; }
-        .doc-card-sub { font-size:.75rem; color:#94a3b8; margin:0; }
-        .doc-count { margin-right:auto; font-size:.75rem; font-weight:700; color:#1B5E8C; background:#e0f2fe; padding:.2rem .55rem; border-radius:2rem; }
-
-        /* ── Dropzone ─────────────────────────────────────────────────── */
-        .dz-wrapper { display:flex; flex-direction:column; gap:.4rem; }
-        .dz { border:2px dashed #cbd5e1; border-radius:.75rem; padding:1.25rem; transition:all .15s; background:#fff; min-height:110px; display:flex; align-items:center; justify-content:center; }
-        .dz:hover, .dz-drag { border-color:#1B5E8C; background:#f0f7ff; }
-        .dz-filled { border-style:solid; border-color:#93c5fd; background:#f8fbff; }
-        .dz-err { border-color:#dc2626!important; background:#fff8f8!important; }
-        .dz-empty { display:flex; flex-direction:column; align-items:center; gap:.4rem; text-align:center; direction:rtl; }
-        .dz-cta { font-size:.82rem; font-weight:600; color:#334155; margin:0; }
-        .dz-hint { font-size:.72rem; color:#94a3b8; margin:0; }
-        .dz-btn { display:inline-flex; flex-direction:row-reverse; align-items:center; gap:.4rem; margin-top:.35rem; padding:.6rem 1.25rem; background:linear-gradient(135deg,#1B5E8C,#134569); color:#fff; border:none; border-radius:.75rem; font-size:.83rem; font-weight:700; font-family:'Cairo',sans-serif; cursor:pointer; transition:all .15s; white-space:nowrap; line-height:1; box-shadow:0 2px 8px rgba(27,94,140,.2); }
-        .dz-btn:hover { background:linear-gradient(135deg,#2E7EB8,#1B5E8C); box-shadow:0 4px 12px rgba(27,94,140,.3); transform:translateY(-1px); }
-        .dz-files { display:flex; flex-direction:column; gap:.5rem; width:100%; }
-        .chip { display:flex; align-items:center; gap:.6rem; padding:.55rem .75rem; background:#fff; border:1px solid #e2e8f0; border-radius:.625rem; transition:border-color .15s; }
-        .chip:hover { border-color:#93c5fd; }
-        .chip-ico { color:#1B5E8C; flex-shrink:0; display:flex; }
-        .chip-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:.05rem; }
-        .chip-name { font-size:.78rem; font-weight:600; color:#1e293b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; direction:ltr; text-align:left; }
-        .chip-size { font-size:.7rem; color:#94a3b8; }
-        .chip-rm { display:flex; align-items:center; justify-content:center; width:22px; height:22px; background:#f1f5f9; border:none; border-radius:.375rem; cursor:pointer; color:#64748b; transition:all .1s; flex-shrink:0; }
-        .chip-rm:hover { background:#fee2e2; color:#dc2626; }
-        .add-more { display:inline-flex; align-items:center; gap:.35rem; background:none; border:1.5px dashed #93c5fd; border-radius:.5rem; padding:.4rem .85rem; font-size:.78rem; color:#1B5E8C; cursor:pointer; font-family:'Cairo',sans-serif; font-weight:600; transition:all .15s; align-self:flex-start; margin-top:.25rem; }
-        .add-more:hover { background:#eff6ff; border-color:#1B5E8C; }
-
-        /* ── Field errors ─────────────────────────────────────────────── */
-        .ferr { font-size:.77rem; color:#dc2626; margin:0; display:flex; align-items:center; gap:.2rem; }
-        .ferr::before { content:'•'; }
-
-        /* ── API error banner ─────────────────────────────────────────── */
-        .err-banner { display:flex; align-items:flex-start; gap:.75rem; background:#fef2f2; border:1px solid #fecaca; border-radius:.75rem; padding:1rem 1.25rem; animation:fadeIn .2s ease; }
-        .err-banner span { font-size:1.2rem; flex-shrink:0; }
-        .err-banner strong { display:block; font-size:.9rem; color:#b91c1c; margin-bottom:.2rem; }
-        .err-banner p { font-size:.83rem; color:#dc2626; margin:0; }
-
-        /* ── Submit row ───────────────────────────────────────────────── */
-        .submit-row { display:flex; justify-content:flex-end; align-items:center; gap:1rem; padding:1rem 1.25rem; background:#fff; border:1px solid #e5eaf0; border-radius:1rem; }
-
-        .btn-ghost { display:inline-flex; align-items:center; gap:.4rem; padding:.7rem 1.25rem; background:none; color:#1B5E8C; font-family:'Cairo',sans-serif; font-size:.88rem; font-weight:600; border:1.5px solid #dde5f0; border-radius:.75rem; cursor:pointer; transition:all .15s; }
-        .btn-ghost:hover { background:#f0f7ff; border-color:#1B5E8C; }
-
-        /* ── Spinner ──────────────────────────────────────────────────── */
-        .spin { display:inline-block; width:15px; height:15px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; flex-shrink:0; }
-        @keyframes spin { to { transform:rotate(360deg); } }
-        @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
-
-        /* ── Success toast popup ──────────────────────────────────────── */
-        .toast-backdrop {
-          position:fixed; inset:0; background:rgba(0,0,0,.45);
-          display:flex; align-items:center; justify-content:center;
-          z-index:1000; padding:1rem;
-          animation:fadeIn .2s ease;
-        }
-        .toast-box {
-          background:#fff; border-radius:1.25rem; padding:2.25rem 2rem;
-          max-width:420px; width:100%; text-align:center;
-          box-shadow:0 20px 60px rgba(0,0,0,.18);
-          animation:scaleIn .2s ease;
-        }
-        .toast-icon-wrap { display:flex; justify-content:center; margin-bottom:1rem; }
-        .toast-title { font-size:1.2rem; font-weight:800; color:#0d3d5c; margin:0 0 .6rem; }
-        .toast-body { font-size:.875rem; color:#6b7280; line-height:1.7; margin:0 0 1.5rem; }
-        .toast-actions { display:flex; gap:.75rem; justify-content:center; flex-wrap:wrap; }
-        .toast-btn-ghost {
-          padding:.75rem 1.5rem; background:none; color:#1B5E8C;
-          border:1.5px solid #dde5f0; border-radius:.75rem;
-          font-family:'Cairo',sans-serif; font-size:.9rem; font-weight:600;
-          cursor:pointer; transition:all .15s;
-        }
-        .toast-btn-ghost:hover { background:#f0f7ff; border-color:#1B5E8C; }
-        @keyframes scaleIn { from{opacity:0;transform:scale(.93)} to{opacity:1;transform:none} }
-
-        /* ── Responsive ───────────────────────────────────────────────── */
-        @media (max-width: 640px) {
-          .grid, .doc-grid { grid-template-columns:1fr; }
-          .span2, .doc-card-full { grid-column:1; }
-          .page-top { flex-direction:column; }
-          .progress { flex-wrap:wrap; font-size:.72rem; }
-          .doc-badge-sep { display:none; }
-        }
-      `}</style>
     </AppShell>
   );
 }
