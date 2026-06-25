@@ -6,7 +6,6 @@ import { Search, AlertTriangle, X, Users, Filter, ChevronDown } from 'lucide-rea
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import { formatDate } from '@/components/disbursements/_constants';
-import RejectModal from '@/components/RejectModal';
 import StatPill from '@/components/families/StatPill';
 import StatusBadge, { STATUS_MAP } from '@/components/families/StatusBadge';
 import PrimaryButton from '@/components/ui/PrimaryButton';
@@ -20,8 +19,6 @@ export default function FamiliesManagementPage() {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterGov, setFilterGov] = useState('all');
-  const [rejectTarget, setRejectTarget] = useState(null);
-  const [actioning, setActioning] = useState(null);
   const [toast, setToast] = useState(null);
 
   const showToast = (msg, type = 'success') => {
@@ -58,21 +55,6 @@ export default function FamiliesManagementPage() {
     .filter(f => f.status === 'under_sponsorship')
     .reduce((sum, f) => sum + (parseInt(f.member_count) || 0), 0);
 
-  const handleRejectConfirm = async (notes) => {
-    if (!rejectTarget) return;
-    setActioning('reject');
-    try {
-      await api.patch(`/families/${rejectTarget.id}/status`, { status: 'rejected', notes });
-      showToast(`تم رفض تسجيل أسرة ${rejectTarget.family_name}`);
-      fetchFamilies();
-      setRejectTarget(null);
-    } catch (err) {
-      showToast(err.response?.data?.error || 'فشل الرفض', 'error');
-    } finally {
-      setActioning(null);
-    }
-  };
-
   const uniqueGovs = [...new Set(families.map(f => f.governorate_ar).filter(Boolean))];
 
   return (
@@ -84,16 +66,6 @@ export default function FamiliesManagementPage() {
           <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 rounded-full text-sm font-semibold shadow-lg whitespace-nowrap animate-[toastIn_.25s_ease] ${toast.type === 'error' ? 'bg-red-600 text-white' : 'bg-[#0d3d5c] text-white'}`}>
             {toast.msg}
           </div>
-        )}
-
-        {/* Reject Modal */}
-        {rejectTarget && (
-          <RejectModal
-            title={`رفض تسجيل أسرة ${rejectTarget.family_name}`}
-            onConfirm={handleRejectConfirm}
-            onClose={() => setRejectTarget(null)}
-            loading={actioning === 'reject'}
-          />
         )}
 
         {/* Page Header */}
