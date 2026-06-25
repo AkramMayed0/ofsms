@@ -106,61 +106,49 @@ export default function GovernoratesPage() {
 
   return (
     <AppShell>
-      <div dir="rtl" style={{ fontFamily:"'Cairo','Tajawal',sans-serif", minHeight:'calc(100vh - 80px)', display:'flex', flexDirection:'column', gap:'1rem' }}>
-
-        <style>{`
-          @keyframes gv-spin    { to { transform: rotate(360deg); } }
-          @keyframes gv-fade    { from { opacity:0; transform:translateX(12px); } to { opacity:1; transform:none; } }
-          @keyframes gv-slidein { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
-          @keyframes gv-bar     { from { width: 0 } }
-          @keyframes gv-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
-          .gv-gov-row:hover  { background: #f0f7ff !important; border-color: #93c5fd !important; }
-          .gv-gov-active     { background: #eff6ff !important; border-color: #1B5E8C !important; }
-          .gv-orphan-row:hover td { background: #f8fbff !important; }
-          .gv-input:focus    { border-color: #1B5E8C !important; box-shadow: 0 0 0 3px rgba(27,94,140,.1) !important; background: #fff !important; }
-          .gv-filter:hover   { border-color: #1B5E8C; color: #1B5E8C; }
-          .gv-back-btn:hover { background: #f0f7ff !important; }
-        `}</style>
+      <div dir="rtl" className="font-sans min-h-[calc(100vh-80px)] flex flex-col gap-4">
 
         {/* Page title */}
         <div>
-          <h1 style={{ fontSize:'1.5rem', fontWeight:800, color:'#0d3d5c', margin:'0 0 .2rem' }}>تحليلات المحافظات</h1>
-          <p style={{ fontSize:'.83rem', color:'#6b7a8d', margin:0 }}>
+          <h1 className="text-2xl font-extrabold text-[#0d3d5c] mb-1">تحليلات المحافظات</h1>
+          <p className="text-[0.83rem] text-[#6b7a8d] m-0">
             {loadingLeft ? 'جارٍ التحميل…' : `${govStats.filter(g => g.count > 0).length} محافظة بها أيتام · ${govStats.reduce((s,g) => s + g.count, 0)} يتيم إجمالي`}
           </p>
         </div>
 
         {/* Two-panel layout */}
-        <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '320px 1fr', gap:'1rem', flex:1, minHeight: isMobile ? 'auto' : 0 }}>
+        <div className={`grid gap-4 flex-1 ${isMobile ? 'grid-cols-1 min-h-auto' : 'grid-cols-[320px_1fr] min-h-0'}`}>
 
           {/* LEFT panel — hidden on mobile when a governorate is selected */}
-          <div style={{ background:'#fff', border:'1.5px solid #e5eaf0', borderRadius:'1rem', display: isMobile && selected ? 'none' : 'flex', flexDirection:'column', overflow:'hidden', minHeight: isMobile ? 400 : 0 }}>
-            <div style={{ padding:'1rem 1.1rem .75rem', borderBottom:'1px solid #f0f4f8', flexShrink:0 }}>
-              <h2 style={{ fontSize:'.88rem', fontWeight:700, color:'#1B5E8C', margin:0, display:'flex', alignItems:'center', gap:'.4rem' }}>
+          <div className={`bg-white border-[1.5px] border-[#e5eaf0] rounded-[1rem] flex-col overflow-hidden ${isMobile && selected ? 'hidden' : 'flex'} ${isMobile ? 'min-h-[400px]' : 'min-h-0'}`}>
+            <div className="px-[1.1rem] pt-4 pb-3 border-b border-[#f0f4f8] flex-shrink-0">
+              <h2 className="text-[0.88rem] font-bold text-primary m-0 flex items-center gap-1.5">
                 <MapPin size={15} /> المحافظات ({govStats.length})
               </h2>
             </div>
-            <div style={{ flex:1, overflowY:'auto', padding:'.5rem .6rem' }}>
+            <div className="flex-1 overflow-y-auto px-2.5 py-2">
               {loadingLeft ? <LeftSkeleton /> : errorLeft ? (
-                <p style={{ color:'#b91c1c', fontSize:'.82rem', padding:'1rem', textAlign:'center' }}><AlertTriangle size={18} /> {errorLeft}</p>
+                <p className="text-[#b91c1c] text-[0.82rem] p-4 text-center"><AlertTriangle size={18} /> {errorLeft}</p>
               ) : govStats.map(gov => (
                 <div
                   key={gov.id}
-                  className={`gv-gov-row ${selected?.id === gov.id ? 'gv-gov-active' : ''}`}
                   onClick={() => gov.count > 0 && selectGovernorate(gov)}
-                  style={{ display:'flex', flexDirection:'column', gap:'.35rem', padding:'.65rem .85rem', borderRadius:'.75rem', marginBottom:'.3rem', border:'1.5px solid transparent', cursor: gov.count > 0 ? 'pointer' : 'default', opacity: gov.count === 0 ? 0.45 : 1, transition:'all .15s' }}
+                  className={`flex flex-col gap-1 px-3.5 py-2.5 rounded-[0.75rem] mb-1.5 border-[1.5px] border-transparent transition-all duration-150 ${gov.count > 0 ? 'cursor-pointer hover:bg-[#f0f7ff] hover:border-[#93c5fd]' : 'cursor-default opacity-45'} ${selected?.id === gov.id ? 'bg-[#eff6ff] border-primary' : ''}`}
                 >
-                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                    <div style={{ display:'flex', alignItems:'center', gap:'.5rem' }}>
-                      {selected?.id === gov.id && <span style={{ color:'#1B5E8C', fontWeight:800, fontSize:'.8rem' }}>▶</span>}
-                      <span style={{ fontSize:'.85rem', fontWeight:600, color:'#1f2937' }}>{gov.name}</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {selected?.id === gov.id && <span className="text-primary font-extrabold text-[0.8rem]">▶</span>}
+                      <span className="text-[0.85rem] font-semibold text-gray-800">{gov.name}</span>
                     </div>
-                    <span style={{ fontSize:'.72rem', fontWeight:800, minWidth:'1.6rem', textAlign:'center', padding:'.15rem .5rem', borderRadius:'2rem', background: gov.count > 0 ? '#1B5E8C' : '#e5e7eb', color: gov.count > 0 ? '#fff' : '#9ca3af' }}>
+                    <span className={`text-[0.72rem] font-extrabold min-w-[1.6rem] text-center px-2 py-0.5 rounded-full ${gov.count > 0 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-400'}`}>
                       {gov.count}
                     </span>
                   </div>
-                  <div style={{ height:5, background:'#f0f4f8', borderRadius:'999px', overflow:'hidden' }}>
-                    <div style={{ height:'100%', borderRadius:'999px', width:`${(gov.count / maxCount) * 100}%`, background: selected?.id === gov.id ? 'linear-gradient(90deg,#1B5E8C,#2E7EB8)' : 'linear-gradient(90deg,#93c5fd,#60a5fa)', animation:'gv-bar .6s ease both' }} />
+                  <div className="h-1 bg-[#f0f4f8] rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full animate-gvBar ${selected?.id === gov.id ? 'bg-gradient-to-r from-primary to-primary-light' : 'bg-gradient-to-r from-blue-300 to-blue-400'}`}
+                      style={{ width: `${(gov.count / maxCount) * 100}%` }}
+                    />
                   </div>
                 </div>
               ))}
@@ -168,44 +156,43 @@ export default function GovernoratesPage() {
           </div>
 
           {/* RIGHT panel — hidden on mobile when nothing is selected */}
-          <div style={{ background:'#fff', border:'1.5px solid #e5eaf0', borderRadius:'1rem', display: isMobile && !selected ? 'none' : 'flex', flexDirection:'column', overflow:'hidden', minHeight: isMobile ? 400 : 0, animation: isMobile && selected ? 'gv-slidein .2s ease' : undefined }}>
+          <div className={`bg-white border-[1.5px] border-[#e5eaf0] rounded-[1rem] flex-col overflow-hidden ${isMobile && !selected ? 'hidden' : 'flex'} ${isMobile ? 'min-h-[400px]' : 'min-h-0'} ${isMobile && selected ? 'animate-gvSlideIn' : ''}`}>
             {!selected ? (
-              <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:'1rem', color:'#9ca3af', padding:'2rem', textAlign:'center' }}>
-                <Map size={52} strokeWidth={1.2} style={{ color:'#d1d5db' }} />
+              <div className="flex-1 flex flex-col items-center justify-center gap-4 text-gray-400 p-8 text-center">
+                <Map size={52} strokeWidth={1.2} className="text-gray-300" />
                 <div>
-                  <p style={{ fontSize:'1rem', fontWeight:700, color:'#374151', margin:'0 0 .4rem' }}>اختر محافظة من القائمة</p>
-                  <p style={{ fontSize:'.82rem', margin:0 }}>سيظهر هنا جدول الأيتام المسجلين في المحافظة المختارة</p>
+                  <p className="text-base font-bold text-gray-700 mb-1.5">اختر محافظة من القائمة</p>
+                  <p className="text-[0.82rem] m-0">سيظهر هنا جدول الأيتام المسجلين في المحافظة المختارة</p>
                 </div>
               </div>
             ) : (
               <>
                 {/* Right header */}
-                <div style={{ padding:'1rem 1.25rem', borderBottom:'1px solid #f0f4f8', flexShrink:0 }}>
+                <div className="px-5 py-4 border-b border-[#f0f4f8] flex-shrink-0">
                   {/* Mobile back button */}
                   {isMobile && (
                     <button
-                      className="gv-back-btn"
                       onClick={() => setSelected(null)}
-                      style={{ display:'inline-flex', alignItems:'center', gap:'.4rem', marginBottom:'.75rem', padding:'.35rem .75rem', border:'1.5px solid #e5eaf0', borderRadius:'.625rem', background:'#f8fafc', color:'#1B5E8C', fontSize:'.8rem', fontWeight:700, fontFamily:'Cairo,sans-serif', cursor:'pointer', transition:'background .15s' }}
+                      className="inline-flex items-center gap-1.5 mb-3 px-3 py-1.5 border-[1.5px] border-[#e5eaf0] rounded-[0.625rem] bg-slate-50 text-primary text-[0.8rem] font-bold cursor-pointer transition-colors duration-150 hover:bg-[#f0f7ff]"
                     >
                       <ArrowRight size={15} /> العودة للمحافظات
                     </button>
                   )}
-                  <div style={{ display:'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'flex-start', justifyContent:'space-between', gap: isMobile ? '.6rem' : '1rem', marginBottom:'.75rem' }}>
+                  <div className={`flex justify-between gap-3 mb-3 ${isMobile ? 'flex-col items-stretch' : 'flex-row items-start'}`}>
                     <div>
-                      <h2 style={{ fontSize: isMobile ? '1rem' : '1.1rem', fontWeight:800, color:'#0d3d5c', margin:'0 0 .15rem', display:'flex', alignItems:'center', gap:'.4rem' }}><MapPin size={16} /> {selected.name}</h2>
-                      <p style={{ fontSize:'.78rem', color:'#9ca3af', margin:0 }}>
+                      <h2 className={`font-extrabold text-[#0d3d5c] mb-0.5 flex items-center gap-1.5 ${isMobile ? 'text-base' : 'text-[1.1rem]'}`}><MapPin size={16} /> {selected.name}</h2>
+                      <p className="text-[0.78rem] text-gray-400 m-0">
                         {loadingRight ? 'جارٍ التحميل…' : `${orphans.length} يتيم مسجل`}
                       </p>
                     </div>
                     {/* Status chips + export */}
                     {!loadingRight && orphans.length > 0 && (
-                      <div style={{ display:'flex', gap:'.4rem', flexWrap:'wrap', justifyContent: isMobile ? 'flex-start' : 'flex-end', alignItems:'center' }}>
+                      <div className={`flex gap-1.5 flex-wrap items-center ${isMobile ? 'justify-start' : 'justify-end'}`}>
                         {Object.entries(statusCounts).map(([status, count]) => {
                           const cfg = STATUS[status];
                           if (!cfg) return null;
                           return (
-                            <span key={status} style={{ fontSize:'.68rem', fontWeight:700, padding:'.2rem .6rem', borderRadius:'2rem', background:cfg.bg, color:cfg.color }}>
+                            <span key={status} className={`text-[0.68rem] font-bold px-2.5 py-0.8 rounded-full border-[1.5px] ${cfg.bgClass} ${cfg.textClass} ${cfg.borderClass}`}>
                               {cfg.label}: {count}
                             </span>
                           );
@@ -222,25 +209,26 @@ export default function GovernoratesPage() {
 
                   {/* Toolbar */}
                   {!loadingRight && orphans.length > 0 && (
-                    <div style={{ display:'flex', flexDirection: isMobile ? 'column' : 'row', gap:'.6rem', flexWrap:'wrap', alignItems: isMobile ? 'stretch' : 'center' }}>
-                      <div style={{ position:'relative', flex:1, minWidth: isMobile ? 'auto' : 180 }}>
-                        <span style={{ position:'absolute', right:'.75rem', top:'50%', transform:'translateY(-50%)', fontSize:'.85rem', pointerEvents:'none' }}><Search size={16} /></span>
+                    <div className={`flex gap-2.5 flex-wrap ${isMobile ? 'flex-col items-stretch' : 'flex-row items-center'}`}>
+                      <div className={`relative flex-1 ${isMobile ? 'min-w-0' : 'min-w-[180px]'}`}>
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.85rem] pointer-events-none text-gray-400"><Search size={16} /></span>
                         <input
-                          className="gv-input"
-                          style={{ width:'100%', border:'1.5px solid #d1d5db', borderRadius:'.625rem', padding:'.55rem .85rem .55rem 2rem', paddingRight:'2.2rem', fontSize:'.82rem', fontFamily:'Cairo,sans-serif', background:'#fafafa', outline:'none', boxSizing:'border-box' }}
+                          className="w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2 pl-8 pr-9 text-[0.82rem] bg-gray-50 outline-none box-border transition-all duration-150 focus:border-primary focus:ring-4 focus:ring-primary/10 focus:bg-white"
                           placeholder="ابحث بالاسم أو الكافل أو المندوب…"
                           value={search}
                           onChange={e => setSearch(e.target.value)}
                         />
                         {search && (
-                          <button onClick={() => setSearch('')} style={{ position:'absolute', left:'.6rem', top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'#9ca3af', fontSize:'.8rem' }}><X size={16} /></button>
+                          <button onClick={() => setSearch('')} className="absolute left-2.5 top-1/2 -translate-y-1/2 bg-transparent border-0 cursor-pointer text-gray-400 text-[0.8rem]"><X size={16} /></button>
                         )}
                       </div>
-                      <div style={{ display:'flex', gap:'.35rem', flexWrap:'wrap' }}>
+                      <div className="flex gap-1.5 flex-wrap">
                         {[{ key:'all', label:'الكل' }, ...Object.entries(STATUS).map(([k,v]) => ({ key:k, label:v.label }))].map(({ key, label }) => (
-                          <button key={key} className="gv-filter"
+                          <button
+                            key={key}
                             onClick={() => setStatusFilter(key)}
-                            style={{ padding:'.3rem .7rem', border:`1.5px solid ${statusFilter === key ? '#1B5E8C' : '#e5eaf0'}`, borderRadius:'2rem', fontSize:'.72rem', fontWeight:600, color: statusFilter === key ? '#fff' : '#6b7280', background: statusFilter === key ? '#1B5E8C' : '#fff', cursor:'pointer', fontFamily:'Cairo,sans-serif', transition:'all .15s' }}>
+                            className={`px-3 py-1.5 border-[1.5px] rounded-full text-[0.72rem] font-semibold cursor-pointer transition-all duration-150 hover:border-primary hover:text-primary ${statusFilter === key ? 'border-primary text-white bg-primary' : 'border-[#e5eaf0] text-gray-500 bg-white'}`}
+                          >
                             {label}
                           </button>
                         ))}
@@ -250,27 +238,27 @@ export default function GovernoratesPage() {
                 </div>
 
                 {/* Table */}
-                <div style={{ flex:1, overflowY:'auto' }}>
+                <div className="flex-1 overflow-y-auto">
                   {loadingRight ? <RightSkeleton /> : errorRight ? (
-                    <div style={{ padding:'2rem', textAlign:'center', color:'#b91c1c', fontSize:'.85rem' }}><AlertTriangle size={18} /> {errorRight}</div>
+                    <div className="p-8 text-center text-[#b91c1c] text-[0.85rem]"><AlertTriangle size={18} /> {errorRight}</div>
                   ) : filteredOrphans.length === 0 ? (
-                    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'.5rem', padding:'3rem 2rem', color:'#9ca3af', textAlign:'center' }}>
-                      {orphans.length === 0 ? <Users size={40} strokeWidth={1.2} style={{ color:'#d1d5db' }} /> : <Search size={28} style={{ color:'#d1d5db' }} />}
-                      <p style={{ fontWeight:700, color:'#374151', margin:'0 0 .25rem', fontSize:'.9rem' }}>
+                    <div className="flex flex-col items-center gap-2 py-12 px-8 text-gray-400 text-center">
+                      {orphans.length === 0 ? <Users size={40} strokeWidth={1.2} className="text-gray-300" /> : <Search size={28} className="text-gray-300" />}
+                      <p className="font-bold text-gray-700 mb-1 text-[0.9rem]">
                         {orphans.length === 0 ? 'لا يوجد أيتام في هذه المحافظة' : 'لا توجد نتائج مطابقة'}
                       </p>
-                      <p style={{ fontSize:'.8rem', margin:0 }}>
+                      <p className="text-[0.8rem] m-0">
                         {orphans.length === 0 ? 'لم يُسجَّل أي يتيم بعد' : 'جرّب تغيير معايير البحث'}
                       </p>
                     </div>
                   ) : (
-                    <div style={{ animation:'gv-fade .25s ease' }}>
-                      <div style={{ overflowX:'auto', WebkitOverflowScrolling:'touch' }}>
-                      <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'.8rem', minWidth: isMobile ? 'auto' : 600 }}>
+                    <div className="animate-gvFade">
+                      <div className="overflow-x-auto [webkit-overflow-scrolling:touch]">
+                      <table className={`w-full border-collapse text-[0.8rem] ${isMobile ? 'min-w-0' : 'min-w-[600px]'}`}>
                         <thead>
-                          <tr style={{ background:'#f8fafc', position:'sticky', top:0, zIndex:1 }}>
+                          <tr className="bg-slate-50 sticky top-0 z-10">
                             {['#','الاسم','العمر','الحالة','الكافل', ...(!isMobile ? ['المندوب','تاريخ التسجيل'] : [])].map(h => (
-                              <th key={h} style={{ padding:'.75rem .9rem', textAlign:'right', fontSize:'.72rem', fontWeight:700, color:'#6b7a8d', whiteSpace:'nowrap', borderBottom:'2px solid #e5eaf0' }}>{h}</th>
+                              <th key={h} className="px-3.5 py-3 text-right text-[0.72rem] font-bold text-slate-500 whitespace-nowrap border-b-2 border-[#e5eaf0]">{h}</th>
                             ))}
                           </tr>
                         </thead>
@@ -278,27 +266,27 @@ export default function GovernoratesPage() {
                           {filteredOrphans.map((o, idx) => {
                             const cfg = STATUS[o.status] || STATUS.inactive;
                             return (
-                              <tr key={o.id} className="gv-orphan-row">
-                                <td style={{ padding:'.75rem .9rem', color:'#9ca3af', borderBottom:'1px solid #f8fafc', fontSize:'.72rem' }}>{idx + 1}</td>
-                                <td style={{ padding:'.75rem .9rem', borderBottom:'1px solid #f8fafc' }}>
-                                  <div style={{ display:'flex', alignItems:'center', gap:'.5rem' }}>
-                                    <User size={17} style={{ color: o.gender === 'female' ? '#db2777' : '#1B5E8C', flexShrink:0 }} />
+                              <tr key={o.id} className="hover:bg-sky-50/20 transition-colors">
+                                <td className="px-3.5 py-3 text-gray-400 border-b border-slate-50 text-[0.72rem]">{idx + 1}</td>
+                                <td className="px-3.5 py-3 border-b border-slate-50">
+                                  <div className="flex items-center gap-2">
+                                    <User size={17} className={`flex-shrink-0 ${o.gender === 'female' ? 'text-pink-600' : 'text-primary'}`} />
                                     <div>
-                                      <div style={{ fontWeight:700, color:'#0d3d5c', fontSize:'.85rem' }}>{o.full_name}</div>
-                                      {o.is_gifted && <span style={{ fontSize:'.63rem', fontWeight:700, color:'#f59e0b', display:'inline-flex', alignItems:'center', gap:'.2rem' }}><Star size={10} fill="#f59e0b" /> موهوب</span>}
+                                      <div className="font-bold text-[#0d3d5c] text-[0.85rem]">{o.full_name}</div>
+                                      {o.is_gifted && <span className="text-[0.63rem] font-bold text-amber-500 inline-flex items-center gap-1"><Star size={10} fill="#f59e0b" /> موهوب</span>}
                                     </div>
                                   </div>
                                 </td>
-                                <td style={{ padding:'.75rem .9rem', borderBottom:'1px solid #f8fafc', color:'#6b7a8d', whiteSpace:'nowrap' }}>{calcAge(o.date_of_birth)}</td>
-                                <td style={{ padding:'.75rem .9rem', borderBottom:'1px solid #f8fafc' }}>
-                                  <span style={{ fontSize:'.7rem', fontWeight:700, padding:'.2rem .6rem', borderRadius:'2rem', background:cfg.bg, color:cfg.color, whiteSpace:'nowrap' }}>{cfg.label}</span>
+                                <td className="px-3.5 py-3 border-b border-slate-50 text-slate-500 whitespace-nowrap">{calcAge(o.date_of_birth)}</td>
+                                <td className="px-3.5 py-3 border-b border-slate-50">
+                                  <span className={`text-[0.7rem] font-bold px-2.5 py-0.8 rounded-full border-[1.5px] ${cfg.bgClass} ${cfg.textClass} ${cfg.borderClass} whitespace-nowrap`}>{cfg.label}</span>
                                 </td>
-                                <td style={{ padding:'.75rem .9rem', borderBottom:'1px solid #f8fafc', color: o.sponsor_name ? '#065F46' : '#9ca3af', fontSize:'.8rem', fontWeight: o.sponsor_name ? 600 : 400 }}>
+                                <td className={`px-3.5 py-3 border-b border-slate-50 text-[0.8rem] ${o.sponsor_name ? 'text-emerald-800 font-semibold' : 'text-gray-400 font-normal'}`}>
                                   {o.sponsor_name || 'بدون كافل'}
                                 </td>
                                 {!isMobile && <>
-                                  <td style={{ padding:'.75rem .9rem', borderBottom:'1px solid #f8fafc', color:'#6b7a8d', fontSize:'.8rem' }}>{o.agent_name || '—'}</td>
-                                  <td style={{ padding:'.75rem .9rem', borderBottom:'1px solid #f8fafc', color:'#9ca3af', fontSize:'.75rem', whiteSpace:'nowrap' }}>
+                                  <td className="px-3.5 py-3 border-b border-slate-50 text-slate-500 text-[0.8rem]">{o.agent_name || '—'}</td>
+                                  <td className="px-3.5 py-3 border-b border-slate-50 text-gray-400 text-[0.75rem] whitespace-nowrap">
                                     {o.created_at ? new Date(o.created_at).toLocaleDateString('ar-YE', { dateStyle:'medium' }) : '—'}
                                   </td>
                                 </>}
@@ -308,7 +296,7 @@ export default function GovernoratesPage() {
                         </tbody>
                       </table>
                       </div>
-                      <div style={{ padding:'.65rem 1rem', fontSize:'.75rem', color:'#9ca3af', borderTop:'1px solid #f0f4f8', background:'#fafafa' }}>
+                      <div className="px-4 py-2.5 text-[0.75rem] text-gray-400 border-t border-[#f0f4f8] bg-gray-50">
                         عرض {filteredOrphans.length} من {orphans.length} يتيم في {selected.name}
                       </div>
                     </div>
@@ -325,9 +313,9 @@ export default function GovernoratesPage() {
 
 function LeftSkeleton() {
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:'.4rem', padding:'.25rem' }}>
+    <div className="flex flex-col gap-1.5 p-1">
       {Array.from({ length: 10 }).map((_, i) => (
-        <div key={i} style={{ height:52, borderRadius:'.75rem', background:'linear-gradient(90deg,#f3f4f6 25%,#e5e7eb 50%,#f3f4f6 75%)', backgroundSize:'400% 100%', animation:'gv-shimmer 1.4s ease-in-out infinite' }} />
+        <div key={i} className="h-[52px] rounded-[0.75rem] animate-shimmer bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:400%_100%]" />
       ))}
     </div>
   );
@@ -335,9 +323,9 @@ function LeftSkeleton() {
 
 function RightSkeleton() {
   return (
-    <div style={{ padding:'1rem', display:'flex', flexDirection:'column', gap:'.5rem' }}>
+    <div className="p-4 flex flex-col gap-2">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} style={{ height:44, borderRadius:'.625rem', background:'linear-gradient(90deg,#f3f4f6 25%,#e5e7eb 50%,#f3f4f6 75%)', backgroundSize:'400% 100%', animation:'gv-shimmer 1.4s ease-in-out infinite' }} />
+        <div key={i} className="h-11 rounded-[0.625rem] animate-shimmer bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:400%_100%]" />
       ))}
     </div>
   );
