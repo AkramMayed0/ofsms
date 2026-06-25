@@ -39,6 +39,11 @@ export default function AdsPage() {
   }, [loadAds]);
 
   const deleteAd = async (ad) => {
+    if (!isAdmin) {
+      setError('ليس لديك صلاحية لحذف الإعلان');
+      return;
+    }
+    
     setDeletingId(ad.id);
     setError('');
     try {
@@ -53,33 +58,33 @@ export default function AdsPage() {
 
   return (
     <AppShell>
-      <div className="ads-page" dir="rtl">
-        <div className="page-header">
+      <div className="max-w-[1100px] mx-auto pb-12 font-sans flex flex-col gap-4" dir="rtl">
+        <div className="flex justify-between items-center gap-4">
           <div>
-            <h1 className="page-title">صفحة الإعلانات</h1>
-            <p className="page-sub">
+            <h1 className="m-0 text-[#0d3d5c] text-[1.55rem] font-extrabold mb-1">صفحة الإعلانات</h1>
+            <p className="m-0 text-slate-500 text-[0.85rem]">
               {loading ? 'جارٍ التحميل…' : `${ads.length} إعلان موجه للكفلاء`}
             </p>
           </div>
-          <button className="icon-btn" onClick={loadAds} title="تحديث">
+          <button className="w-[2.35rem] h-[2.35rem] inline-flex items-center justify-center border-[1.5px] border-[#dbe4ee] rounded-xl bg-white text-teal-700 cursor-pointer hover:bg-slate-50 transition-colors" onClick={loadAds} title="تحديث">
             <RefreshCw size={17} />
           </button>
         </div>
 
         {error && (
-          <div className="error-banner">
+          <div className="flex items-center gap-2 py-3 px-4 border border-red-200 rounded-xl bg-red-50 text-red-700 text-[0.85rem]">
             <AlertTriangle size={18} /> {error}
           </div>
         )}
 
         {loading ? (
-          <div className="grid">
-            {[1, 2, 3].map((i) => <div key={i} className="skeleton" />)}
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
+            {[1, 2, 3].map((i) => <div key={i} className="h-[220px] rounded-xl bg-slate-200 animate-pulse" />)}
           </div>
         ) : ads.length === 0 ? (
-          <div className="empty">لا توجد إعلانات حالياً</div>
+          <div className="py-12 px-4 text-center text-slate-400 bg-white border border-slate-200 rounded-2xl">لا توجد إعلانات حالياً</div>
         ) : (
-          <div className="grid">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
             {ads.map((ad) => (
               <AdCard
                 key={ad.id}
@@ -92,40 +97,6 @@ export default function AdsPage() {
           </div>
         )}
       </div>
-
-      <style jsx>{`
-        .ads-page {
-          max-width: 1100px; margin: 0 auto; padding-bottom: 3rem;
-          font-family: 'Cairo', 'Tajawal', sans-serif;
-          display: flex; flex-direction: column; gap: 1rem;
-        }
-        .page-header {
-          display: flex; justify-content: space-between; align-items: center; gap: 1rem;
-        }
-        .page-title { margin: 0 0 .2rem; color: #0d3d5c; font-size: 1.55rem; font-weight: 800; }
-        .page-sub { margin: 0; color: #64748b; font-size: .85rem; }
-        .icon-btn {
-          width: 2.35rem; height: 2.35rem; display: inline-flex; align-items: center; justify-content: center;
-          border: 1.5px solid #dbe4ee; border-radius: .7rem; background: #fff; color: #0f766e;
-          cursor: pointer;
-        }
-        .error-banner {
-          display: flex; align-items: center; gap: .5rem; padding: .75rem 1rem;
-          border: 1px solid #fecaca; border-radius: .75rem; background: #fef2f2; color: #b91c1c;
-          font-size: .85rem;
-        }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
-        .empty {
-          padding: 3rem 1rem; text-align: center; color: #94a3b8; background: #fff;
-          border: 1px solid #e5eaf0; border-radius: .9rem;
-        }
-        .skeleton {
-          height: 220px; border-radius: .9rem;
-          background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-          background-size: 200% 100%; animation: shimmer 1.4s infinite;
-        }
-        @keyframes shimmer { to { background-position: -200% 0; } }
-      `}</style>
     </AppShell>
   );
 }
@@ -133,23 +104,25 @@ export default function AdsPage() {
 function AdCard({ ad, canDelete, deleting, onDelete }) {
   const isOrphan = ad.beneficiary_type === 'orphan';
   const age = calcAge(ad.date_of_birth);
-  const statusLabel = ad.is_sponsored ? 'Sponsored' : 'Awaiting Sponsor';
+  const statusLabel = ad.is_sponsored ? 'مكفول' : 'في انتظار كفيل';
 
   return (
-    <article className="card">
-      <div className="top">
-        <div className="avatar">{isOrphan ? <User size={20} /> : <Users size={20} />}</div>
+    <article className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-3.5 shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex items-center gap-3">
+        <div className="w-[42px] h-[42px] rounded-full bg-emerald-50 text-teal-700 inline-flex items-center justify-center shrink-0">
+          {isOrphan ? <User size={20} /> : <Users size={20} />}
+        </div>
         <div>
-          <h2 className="name">{ad.beneficiary_name || '—'}</h2>
-          <p className="type">{isOrphan ? 'يتيم' : 'أسرة'}</p>
+          <h2 className="m-0 text-[0.98rem] text-[#0d3d5c] font-extrabold">{ad.beneficiary_name || '—'}</h2>
+          <p className="mt-0.5 mb-0 text-slate-400 text-[0.75rem]">{isOrphan ? 'يتيم' : 'أسرة'}</p>
         </div>
       </div>
 
-      <span className={`status ${ad.is_sponsored ? 'sponsored' : 'awaiting'}`}>
+      <span className={`w-fit rounded-full px-2.5 py-1 text-[0.74rem] font-extrabold ${ad.is_sponsored ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
         {statusLabel}
       </span>
 
-      <div className="info">
+      <div className="flex flex-col gap-1.5 text-slate-600 text-[0.82rem]">
         <span>المحافظة: {ad.governorate_ar || '—'}</span>
         <span>المندوب: {ad.agent_name || '—'}</span>
         {isOrphan && age !== null && <span>العمر: {age} سنة</span>}
@@ -158,39 +131,10 @@ function AdCard({ ad, canDelete, deleting, onDelete }) {
       </div>
 
       {canDelete && (
-        <button className="delete-btn" onClick={onDelete} disabled={deleting}>
-          <Trash2 size={15} /> {deleting ? 'جارٍ الحذف…' : 'Delete Ad'}
+        <button className="inline-flex items-center justify-center gap-1.5 py-2 px-3 border border-red-200 rounded-xl bg-red-50 text-red-700 font-sans text-[0.8rem] font-extrabold cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed hover:bg-red-100 transition-colors mt-auto" onClick={onDelete} disabled={deleting}>
+          <Trash2 size={15} /> {deleting ? 'جارٍ الحذف…' : 'حذف الإعلان'}
         </button>
       )}
-
-      <style jsx>{`
-        .card {
-          background: #fff; border: 1px solid #e5eaf0; border-radius: .9rem;
-          padding: 1rem; display: flex; flex-direction: column; gap: .9rem;
-          box-shadow: 0 1px 4px rgba(15, 23, 42, .05);
-        }
-        .top { display: flex; align-items: center; gap: .75rem; }
-        .avatar {
-          width: 42px; height: 42px; border-radius: 50%; background: #ecfdf5; color: #0f766e;
-          display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
-        }
-        .name { margin: 0; font-size: .98rem; color: #0d3d5c; font-weight: 800; }
-        .type { margin: .1rem 0 0; color: #94a3b8; font-size: .75rem; }
-        .status {
-          width: fit-content; border-radius: 999px; padding: .25rem .65rem;
-          font-size: .74rem; font-weight: 800;
-        }
-        .status.sponsored { background: #dcfce7; color: #166534; }
-        .status.awaiting { background: #dbeafe; color: #1d4ed8; }
-        .info { display: flex; flex-direction: column; gap: .35rem; color: #475569; font-size: .82rem; }
-        .delete-btn {
-          display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
-          padding: .55rem .85rem; border: 1px solid #fecaca; border-radius: .65rem;
-          background: #fef2f2; color: #b91c1c; font-family: 'Cairo', sans-serif;
-          font-size: .8rem; font-weight: 800; cursor: pointer;
-        }
-        .delete-btn:disabled { opacity: .6; cursor: not-allowed; }
-      `}</style>
     </article>
   );
 }
