@@ -12,6 +12,10 @@ const TOAST_DURATION   = 3000; // ms
 const SKELETON_COUNT   = 4;
 const TITLE_MAX_LENGTH = 120;
 
+// ── Helpers ─────────────────────────────────────────────────────────────────
+const fmtDate = (d) =>
+  d ? new Date(d).toLocaleDateString('ar-YE', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+
 // ── SkeletonCard ──────────────────────────────────────────────────────────────
 function SkeletonCard() {
   return (
@@ -100,7 +104,7 @@ function SponsorAdCard({ ad, isGM, deletingAdId, onDelete }) {
               {isOrphan ? 'طلب كفالة يتيم' : 'طلب كفالة أسرة'}: {ad.beneficiary_name || '—'}
             </h3>
             <span className={`sponsor-badge ${ad.is_sponsored ? 'sponsor-badge-done' : 'sponsor-badge-wait'}`}>
-              {ad.is_sponsored ? 'Sponsored' : 'Awaiting Sponsor'}
+              {ad.is_sponsored ? 'مكفول' : 'في انتظار الكفيل'}
             </span>
           </div>
           <p className="ad-body">
@@ -117,16 +121,12 @@ function SponsorAdCard({ ad, isGM, deletingAdId, onDelete }) {
 
       {isGM && ad.is_sponsored && (
         <button className="ad-delete" onClick={() => onDelete(ad)} disabled={isDeleting}>
-          <Trash2 size={14} /> {isDeleting ? 'جارٍ الحذف…' : 'Delete Ad'}
+          <Trash2 size={14} /> {isDeleting ? 'جارٍ الحذف…' : 'حذف الإعلان'}
         </button>
       )}
     </div>
   );
 }
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-const fmtDate = (d) =>
-  d ? new Date(d).toLocaleDateString('ar-YE', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function AnnouncementsPage() {
@@ -157,6 +157,8 @@ export default function AnnouncementsPage() {
   const [togglingId, setTogglingId]     = useState(null);
   const [deletingAdId, setDeletingAdId] = useState(null);
 
+  const totalCount = announcements.length + ads.length;
+
   // ── Helpers ──────────────────────────────────────────────────────────────
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
@@ -164,19 +166,22 @@ export default function AnnouncementsPage() {
   };
 
   // ── Data fetch ───────────────────────────────────────────────────────────
-  const fetchAnnouncements = useCallback(() => {
+  const fetchAnnouncements = useCallback(async () => {
     setLoading(true);
     setError('');
-    Promise.all([
-      api.get('/announcements'),
-      isGM ? api.get('/ads') : Promise.resolve({ data: { ads: [] } }),
-    ])
-      .then(([annRes, adsRes]) => {
-        setAnnouncements(annRes.data.announcements || []);
-        setAds(adsRes.data.ads || []);
-      })
-      .catch(() => setError('تعذّر تحميل الإعلانات.'))
-      .finally(() => setLoading(false));
+    try {
+      const [annRes, adsRes] = await Promise.all([
+        api.get('/announcements'),
+        isGM ? api.get('/ads') : Promise.resolve({ data: { ads: [] } }),
+      ]);
+      setAnnouncements(annRes.data.announcements || []);
+      setAds(adsRes.data.ads || []);
+    } catch (err) {
+      console.error('[AnnouncementsPage] fetch failed:', err);
+      setError('تعذّر تحميل الإعلانات.');
+    } finally {
+      setLoading(false);
+    }
   }, [isGM]);
 
   useEffect(() => { fetchAnnouncements(); }, [fetchAnnouncements]);
@@ -291,7 +296,7 @@ export default function AnnouncementsPage() {
           <div>
             <h1 className="page-title">الإعلانات</h1>
             <p className="page-sub">
-              {loading ? '…' : `${announcements.length + ads.length} إعلان`}
+              {loading ? '…' : `${totalCount} إعلان`}
             </p>
           </div>
           <div className="header-actions">
