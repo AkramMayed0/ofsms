@@ -18,6 +18,7 @@ import { Upload, FileText, Image, X, Plus, AlertCircle, CheckCircle2, File, Aler
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import PrimaryButton from '@/components/ui/PrimaryButton';
+import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -59,7 +60,6 @@ const CLS_FERR  = "text-[0.77rem] text-[#dc2626] m-0 flex items-center gap-1 bef
 const CLS_CHIP  = (sel) => `flex items-center px-4 py-2.5 border-[1.5px] rounded-[2rem] text-[0.83rem] font-semibold cursor-pointer transition-all duration-150 select-none ${sel ? 'border-[#1B5E8C] bg-[#1B5E8C] text-white' : 'border-gray-300 bg-gray-50 text-[#6b7280] hover:border-[#1B5E8C] hover:text-[#1B5E8C]'}`;
 const CLS_RADIO = (err) => `flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border-[1.5px] rounded-xl text-sm font-semibold cursor-pointer transition-all duration-150 bg-gray-50 select-none hover:border-[#1B5E8C] has-[:checked]:border-[#1B5E8C] has-[:checked]:bg-[#f0f7ff] has-[:checked]:text-[#1B5E8C] has-[:checked]:shadow-[0_0_0_2px_rgba(27,94,140,0.12)] ${err ? 'border-red-500' : 'border-gray-300 text-gray-500'}`;
 const CLS_RADIO_STATE = (sel) => `flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border-[1.5px] rounded-xl text-sm font-semibold cursor-pointer transition-all duration-150 select-none ${sel ? 'border-[#1B5E8C] bg-[#f0f7ff] text-[#1B5E8C] shadow-[0_0_0_2px_rgba(27,94,140,0.12)]' : 'border-gray-300 bg-gray-50 text-gray-500 hover:border-[#1B5E8C]'}`;
-const CLS_GHOST = 'inline-flex items-center gap-1.5 px-5 py-3 bg-transparent text-[#1B5E8C] font-cairo text-sm font-semibold border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-all duration-150 hover:bg-[#f0f7ff] hover:border-[#1B5E8C]';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -545,9 +545,9 @@ export default function OrphanRegistrationPage() {
             <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] m-0 mb-1">تسجيل يتيم جديد</h1>
             <p className="text-[0.85rem] text-[#6b7a8d] m-0">أدخل بيانات اليتيم والمستندات المطلوبة لإرسالها للمراجعة</p>
           </div>
-          <button type="button" className={CLS_GHOST} onClick={() => router.back()}>
+          <Button variant="outline" type="button" className="py-3" onClick={() => router.back()}>
             ← رجوع
-          </button>
+          </Button>
         </div>
 
         {/* Progress bar — 5 steps */}
@@ -1676,13 +1676,13 @@ export default function OrphanRegistrationPage() {
           {/* Navigation row */}
           <div className="flex justify-end items-center gap-4 p-4 px-5 bg-white border border-[#e5eaf0] rounded-2xl">
             {currentPage === 1 ? (
-              <button type="button" className={CLS_GHOST} onClick={() => router.back()}>
+              <Button variant="outline" type="button" className="py-3" onClick={() => router.back()}>
                 إلغاء
-              </button>
+              </Button>
             ) : (
-              <button type="button" className={CLS_GHOST} onClick={() => setCurrentPage(p => p - 1)}>
+              <Button variant="outline" type="button" className="py-3" onClick={() => setCurrentPage(p => p - 1)}>
                 ← رجوع
-              </button>
+              </Button>
             )}
 
             {currentPage < 5 ? (

@@ -15,6 +15,7 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import PrimaryButton from '@/components/ui/PrimaryButton';
+import Button from '@/components/ui/Button';
 import { UserRound, Eye, Banknote, Building2, Megaphone, Users, Search, CheckCircle, AlertTriangle, X, User, Check } from 'lucide-react';
 
 // ── Role target options ────────────────────────────────────────────────────────
@@ -337,9 +338,9 @@ export default function SendNotificationModal({ onClose, onSent }) {
 
         {/* Footer */}
         <div className="modal-foot">
-          <button className="btn-ghost" onClick={onClose} disabled={sending}>
+          <Button variant="secondary" onClick={onClose} disabled={sending}>
             إلغاء
-          </button>
+          </Button>
           <PrimaryButton
             onClick={handleSend}
             disabled={!canSend || sending}
@@ -574,14 +575,6 @@ function Styles() {
         display: flex; gap: .75rem; justify-content: flex-end;
         padding: 1rem 1.5rem; border-top: 1px solid #f0f4f8;
       }
-      .btn-ghost {
-        display: inline-flex; align-items: center; padding: .7rem 1.25rem;
-        background: none; color: #6b7280; font-family: 'Cairo',sans-serif;
-        font-size: .88rem; font-weight: 600; border: 1.5px solid #e5eaf0;
-        border-radius: .75rem; cursor: pointer; transition: all .15s;
-      }
-      .btn-ghost:hover:not(:disabled) { border-color: #9ca3af; color: #374151; }
-      .btn-ghost:disabled { opacity: .5; cursor: not-allowed; }
       .send-count { font-size: .75rem; opacity: .8; }
 
       /* Spinner */

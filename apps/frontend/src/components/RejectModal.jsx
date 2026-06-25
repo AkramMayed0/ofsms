@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { X } from 'lucide-react';
-import Spinner from '@/components/ui/Spinner';
+import Button from '@/components/ui/Button';
 
 export default function RejectModal({ title, onConfirm, onClose, loading }) {
   const { register, handleSubmit, formState: { errors } } = useForm();
@@ -46,27 +46,23 @@ export default function RejectModal({ title, onConfirm, onClose, loading }) {
           </div>
 
           <div className="flex gap-3 justify-end border-t border-gray-100 pt-4">
-            <button
+            <Button
+              variant="ghost"
               type="button"
-              className="btn-ghost border border-gray-200 text-sm"
+              className="border border-gray-200 text-sm"
               onClick={onClose}
             >
               إلغاء
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="danger"
               type="submit"
               disabled={loading}
-              className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-red-600 text-white text-sm font-bold rounded-xl border-none cursor-pointer disabled:opacity-65 disabled:cursor-not-allowed hover:bg-red-700 transition-colors"
+              loading={loading}
+              loadingText="جارٍ الرفض…"
             >
-              {loading ? (
-                <>
-                  <Spinner size="sm" variant="white" />
-                  جارٍ الرفض…
-                </>
-              ) : (
-                'تأكيد الرفض'
-              )}
-            </button>
+              تأكيد الرفض
+            </Button>
           </div>
         </form>
       </div>
