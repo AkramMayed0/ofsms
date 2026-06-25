@@ -1,14 +1,12 @@
 /**
  * sponsors.service.js
- * All database queries for the sponsors module.
- *
- * Fix applied: createSponsorship and transferSponsorship now update the
- * beneficiary status to 'under_sponsorship' (FR-012) after assigning a sponsor.
+ * Business logic for the sponsors module.
  */
 
+const crypto = require('crypto');
+const repo = require('./sponsors.repository');
 const { logAudit } = require('../../utils/auditLog');
 const { query } = require('../../config/db');
-const crypto = require('crypto');
 
 /**
  * Generate a cryptographically secure unique portal token.
@@ -17,25 +15,11 @@ const generatePortalToken = () => crypto.randomBytes(32).toString('hex');
 
 /**
  * Create a new sponsor record.
- * portal_password_hash must already be bcrypt-hashed by the controller.
  */
 const createSponsor = async ({ fullName, phone, email, portalPasswordHash, portalPasswordPlain, createdBy }) => {
   // Check for duplicate email or phone before inserting
   if (email || phone) {
-    const conditions = [];
-    const params = [];
-    if (email) {
-      params.push(email);
-      conditions.push(`email = $${params.length}`);
-    }
-    if (phone) {
-      params.push(phone);
-      conditions.push(`phone = $${params.length}`);
-    }
-    const { rows: existing } = await query(
-      `SELECT email, phone FROM sponsors WHERE ${conditions.join(' OR ')}`,
-      params
-    );
+    const existing = await repo.findSponsorByEmailOrPhone(email, phone);
     if (existing.length > 0) {
       const match = existing[0];
       if (email && match.email === email) {
@@ -53,103 +37,47 @@ const createSponsor = async ({ fullName, phone, email, portalPasswordHash, porta
 
   const portalToken = generatePortalToken();
 
-  const finalEmail = email ? email : null;
-  const finalPhone = phone ? phone : null;
-
-  const { rows } = await query(
-    `INSERT INTO sponsors
-       (full_name, phone, email, portal_token, portal_password_hash, portal_password_plain, created_by)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
-     RETURNING id, full_name, phone, email, portal_token, portal_password_plain, created_at`,
-    [fullName, finalPhone, finalEmail, portalToken, portalPasswordHash, portalPasswordPlain, createdBy]
-  );
-  return rows[0];
+  return await repo.insertSponsor({
+    fullName,
+    phone,
+    email,
+    portalToken,
+    portalPasswordHash,
+    portalPasswordPlain,
+    createdBy,
+  });
 };
 
 /**
- * Get all sponsors (GM only) — excludes password hash.
+ * Get all sponsors with their active sponsorships count.
  */
 const getAllSponsors = async () => {
-  const { rows } = await query(
-    `SELECT
-       s.id, s.full_name, s.phone, s.email, s.portal_token,
-       s.created_at,
-       u.full_name AS created_by_name,
-       COUNT(sp.id) FILTER (WHERE sp.is_active) AS active_sponsorships
-     FROM sponsors s
-     LEFT JOIN users u ON u.id = s.created_by
-     LEFT JOIN sponsorships sp ON sp.sponsor_id = s.id
-     GROUP BY s.id, u.full_name
-     ORDER BY s.created_at DESC`
-  );
-  return rows;
+  return await repo.findAllSponsors();
 };
 
 /**
  * Get a single sponsor by ID.
  */
 const getSponsorById = async (id) => {
-  const { rows } = await query(
-    `SELECT
-       s.id, s.full_name, s.phone, s.email, s.portal_token,
-       s.portal_password_plain,
-       s.created_at, u.full_name AS created_by_name
-     FROM sponsors s
-     LEFT JOIN users u ON u.id = s.created_by
-     WHERE s.id = $1`,
-    [id]
-  );
-  return rows[0] || null;
+  return await repo.findSponsorById(id);
 };
 
 /**
- * Get a sponsor by portal token (used for portal login).
+ * Get a sponsor by portal token.
  */
 const getSponsorByToken = async (portalToken) => {
-  const { rows } = await query(
-    `SELECT id, full_name, email, portal_token, portal_password_hash
-     FROM sponsors
-     WHERE portal_token = $1`,
-    [portalToken]
-  );
-  return rows[0] || null;
+  return await repo.findSponsorByToken(portalToken);
 };
 
 /**
  * Get all sponsorships for a sponsor.
  */
 const getSponsorshipsBySponsorId = async (sponsorId) => {
-  const { rows } = await query(
-    `SELECT
-       sp.id, sp.beneficiary_type, sp.beneficiary_id,
-       sp.monthly_amount, sp.start_date, sp.intermediary, sp.is_active,
-       u.full_name AS agent_name,
-       -- Pull the beneficiary name dynamically
-       CASE
-         WHEN sp.beneficiary_type = 'orphan'  THEN o.full_name
-         WHEN sp.beneficiary_type = 'family'  THEN f.family_name
-       END AS beneficiary_name,
-       CASE
-         WHEN sp.beneficiary_type = 'orphan'  THEN g1.name_ar
-         WHEN sp.beneficiary_type = 'family'  THEN g2.name_ar
-       END AS governorate_ar
-     FROM sponsorships sp
-     LEFT JOIN users u      ON u.id  = sp.agent_id
-     LEFT JOIN orphans o    ON o.id  = sp.beneficiary_id AND sp.beneficiary_type = 'orphan'
-     LEFT JOIN families f   ON f.id  = sp.beneficiary_id AND sp.beneficiary_type = 'family'
-     LEFT JOIN governorates g1 ON g1.id = o.governorate_id
-     LEFT JOIN governorates g2 ON g2.id = f.governorate_id
-     WHERE sp.sponsor_id = $1
-     ORDER BY sp.is_active DESC, sp.start_date DESC`,
-    [sponsorId]
-  );
-  return rows;
+  return await repo.findSponsorshipsBySponsorId(sponsorId);
 };
 
 /**
- * Create a new sponsorship and flip the beneficiary status to under_sponsorship.
- * FR-012: beneficiary automatically moves to 'under_sponsorship' on assignment.
- *
+ * Create a new sponsorship.
  * Runs inside a transaction to keep the sponsorship insert and status update atomic.
  */
 const createSponsorship = async ({
@@ -161,37 +89,29 @@ const createSponsorship = async ({
   startDate,
   monthlyAmount,
 }) => {
-  // Use a transaction: sponsorship insert + status update must both succeed or both fail
-  const { rows: [sponsorship] } = await query('BEGIN');
+  await query('BEGIN');
 
   try {
     // 1. Deactivate any existing active sponsorship for this beneficiary
-    await query(
-      `UPDATE sponsorships
-       SET is_active = FALSE, end_date = NOW(), end_reason = 'reassigned'
-       WHERE beneficiary_type = $1 AND beneficiary_id = $2 AND is_active = TRUE`,
-      [beneficiaryType, beneficiaryId]
-    );
+    await repo.deactivateActiveSponsorships(beneficiaryType, beneficiaryId, 'reassigned');
 
     // 2. Insert the new sponsorship
-    const { rows } = await query(
-      `INSERT INTO sponsorships
-         (sponsor_id, beneficiary_type, beneficiary_id, agent_id,
-          intermediary, start_date, monthly_amount)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING *`,
-      [sponsorId, beneficiaryType, beneficiaryId, agentId, intermediary, startDate, monthlyAmount]
-    );
+    const sponsorship = await repo.insertSponsorship({
+      sponsorId,
+      beneficiaryType,
+      beneficiaryId,
+      agentId,
+      intermediary,
+      startDate,
+      monthlyAmount,
+    });
 
-    // 3. FR-012: flip beneficiary status to under_sponsorship
+    // 3. flip beneficiary status to under_sponsorship
     const table = beneficiaryType === 'orphan' ? 'orphans' : 'families';
-    await query(
-      `UPDATE ${table} SET status = 'under_sponsorship' WHERE id = $1`,
-      [beneficiaryId]
-    );
+    await repo.updateBeneficiaryStatus(table, beneficiaryId, 'under_sponsorship');
 
     await query('COMMIT');
-    return rows[0];
+    return sponsorship;
   } catch (err) {
     await query('ROLLBACK');
     throw err;
@@ -199,7 +119,7 @@ const createSponsorship = async ({
 };
 
 /**
- * Transfer a beneficiary from one sponsor to another (GM only).
+ * Transfer a beneficiary from one sponsor to another.
  * Closes old sponsorship, opens new one, keeps beneficiary status as under_sponsorship.
  */
 const transferSponsorship = async ({
@@ -209,47 +129,37 @@ const transferSponsorship = async ({
   agentId,
   monthlyAmount,
   endReason,
-  actorId,          // ← add this param
+  actorId,
 }) => {
-  await query('BEGIN');   // ← fix: no destructuring
-
   await query('BEGIN');
 
   try {
     // 1. Close existing active sponsorship
-    await query(
-      `UPDATE sponsorships
-       SET is_active = FALSE, end_date = NOW(), end_reason = $1
-       WHERE beneficiary_type = $2 AND beneficiary_id = $3 AND is_active = TRUE`,
-      [endReason || 'transferred', beneficiaryType, beneficiaryId]
-    );
+    await repo.deactivateActiveSponsorships(beneficiaryType, beneficiaryId, endReason || 'transferred');
 
     // 2. Open new sponsorship
-    const { rows } = await query(
-      `INSERT INTO sponsorships
-         (sponsor_id, beneficiary_type, beneficiary_id, agent_id,
-          start_date, monthly_amount)
-       VALUES ($1, $2, $3, $4, NOW(), $5)
-       RETURNING *`,
-      [newSponsorId, beneficiaryType, beneficiaryId, agentId, monthlyAmount]
-    );
-
-    // 3. Beneficiary stays under_sponsorship — no status change needed
-    // (already under_sponsorship from initial assignment)
+    const sponsorship = await repo.insertSponsorship({
+      sponsorId: newSponsorId,
+      beneficiaryType,
+      beneficiaryId,
+      agentId,
+      startDate: new Date(),
+      monthlyAmount,
+    });
 
     await query('COMMIT');
 
-    // 4. Audit log with real actor
+    // 3. Audit log with real actor
     await logAudit({
       userId: actorId || null,
       action: 'sponsorship_transferred',
       entityType: 'sponsorship',
-      entityId: rows[0].id,
+      entityId: sponsorship.id,
       oldValue: { beneficiary_type: beneficiaryType, beneficiary_id: beneficiaryId },
       newValue: { new_sponsor_id: newSponsorId, monthly_amount: monthlyAmount },
     });
 
-    return rows[0];
+    return sponsorship;
   } catch (err) {
     await query('ROLLBACK');
     throw err;
@@ -262,20 +172,7 @@ const transferSponsorship = async ({
 const updateSponsor = async (id, { fullName, phone, email, portalPasswordHash, portalPasswordPlain }) => {
   // Check for duplicates
   if (email || phone) {
-    const conditions = [];
-    const params = [id];
-    if (email) {
-      params.push(email);
-      conditions.push(`email = $${params.length}`);
-    }
-    if (phone) {
-      params.push(phone);
-      conditions.push(`phone = $${params.length}`);
-    }
-    const { rows: existing } = await query(
-      `SELECT email, phone FROM sponsors WHERE id != $1 AND (${conditions.join(' OR ')})`,
-      params
-    );
+    const existing = await repo.findSponsorByEmailOrPhoneExcludingId(id, email, phone);
     if (existing.length > 0) {
       const match = existing[0];
       if (email && match.email === email) {
@@ -291,29 +188,20 @@ const updateSponsor = async (id, { fullName, phone, email, portalPasswordHash, p
     }
   }
 
-  const finalEmail = email ? email : null;
-  const finalPhone = phone ? phone : null;
+  const sponsor = await repo.updateSponsorDetails(id, {
+    fullName,
+    phone,
+    email,
+    portalPasswordHash,
+    portalPasswordPlain,
+  });
 
-  let queryStr = `UPDATE sponsors SET full_name = $1, phone = $2, email = $3`;
-  const params = [fullName, finalPhone, finalEmail];
-
-  if (portalPasswordHash) {
-    params.push(portalPasswordHash);
-    queryStr += `, portal_password_hash = $${params.length}`;
-    params.push(portalPasswordPlain);
-    queryStr += `, portal_password_plain = $${params.length}`;
-  }
-
-  params.push(id);
-  queryStr += ` WHERE id = $${params.length} RETURNING id, full_name, phone, email, portal_token, portal_password_plain, created_at`;
-
-  const { rows } = await query(queryStr, params);
-  if (!rows[0]) {
+  if (!sponsor) {
     const err = new Error('الكافل غير موجود');
     err.status = 404;
     throw err;
   }
-  return rows[0];
+  return sponsor;
 };
 
 /**
@@ -321,23 +209,19 @@ const updateSponsor = async (id, { fullName, phone, email, portalPasswordHash, p
  */
 const deleteSponsor = async (id) => {
   // First check if they have active sponsorships
-  const { rows: activeCheck } = await query(
-    `SELECT COUNT(*) FROM sponsorships WHERE sponsor_id = $1 AND is_active = TRUE`,
-    [id]
-  );
-  
-  if (parseInt(activeCheck[0].count, 10) > 0) {
+  const activeCount = await repo.countActiveSponsorships(id);
+  if (activeCount > 0) {
     const err = new Error('لا يمكن حذف كافل لديه كفالات نشطة. قم بنقل الكفالات أولاً.');
     err.status = 400;
     throw err;
   }
 
   // Delete historical sponsorships first
-  await query(`DELETE FROM sponsorships WHERE sponsor_id = $1`, [id]);
+  await repo.deleteSponsorshipsBySponsorId(id);
   
   // Then delete the sponsor
-  const { rowCount } = await query(`DELETE FROM sponsors WHERE id = $1`, [id]);
-  if (rowCount === 0) {
+  const deletedCount = await repo.deleteSponsorById(id);
+  if (deletedCount === 0) {
     const err = new Error('الكافل غير موجود');
     err.status = 404;
     throw err;
@@ -345,13 +229,49 @@ const deleteSponsor = async (id) => {
   return true;
 };
 
+/**
+ * Get detailed active and historical sponsorships with summary metrics (portfolio view).
+ */
+const getSponsorPortfolio = async (id) => {
+  const sponsor = await repo.findSponsorById(id);
+  if (!sponsor) {
+    const err = new Error('الكافل غير موجود');
+    err.status = 404;
+    throw err;
+  }
+
+  const sponsorships = await repo.findPortfolioSponsorships(id);
+
+  const active = sponsorships.filter(s => s.is_active);
+  const historical = sponsorships.filter(s => !s.is_active);
+
+  const summary = {
+    total_sponsorships: sponsorships.length,
+    active_sponsorships: active.length,
+    historical_sponsorships: historical.length,
+    total_monthly_amount: active.reduce((sum, s) => sum + Number(s.monthly_amount || 0), 0),
+    orphans_count: active.filter(s => s.beneficiary_type === 'orphan').length,
+    families_count: active.filter(s => s.beneficiary_type === 'family').length,
+    gifted_count: active.filter(s => s.is_gifted).length,
+  };
+
+  return {
+    sponsor,
+    summary,
+    active,
+    historical,
+  };
+};
+
 module.exports = {
   createSponsor,
   getAllSponsors,
   getSponsorById,
+  getSponsorByToken,
   getSponsorshipsBySponsorId,
   createSponsorship,
   transferSponsorship,
   updateSponsor,
   deleteSponsor,
+  getSponsorPortfolio,
 };

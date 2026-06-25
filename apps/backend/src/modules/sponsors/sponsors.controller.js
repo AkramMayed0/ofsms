@@ -4,7 +4,6 @@
  */
 
 const bcrypt = require('bcryptjs');
-const { validationResult } = require('express-validator');
 const service = require('./sponsors.service');
 
 /**
@@ -13,11 +12,6 @@ const service = require('./sponsors.service');
  */
 const createSponsor = async (req, res, next) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ errors: errors.array() });
-    }
-
     const { fullName, phone, email, portalPassword } = req.body;
 
     const portalPasswordHash = await bcrypt.hash(portalPassword, 12);
@@ -80,11 +74,6 @@ const getSponsorById = async (req, res, next) => {
  */
 const createSponsorship = async (req, res, next) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ errors: errors.array() });
-    }
-
     const { beneficiaryType, beneficiaryId, agentId, intermediary, startDate, monthlyAmount } =
       req.body;
 
@@ -113,11 +102,6 @@ const createSponsorship = async (req, res, next) => {
  */
 const transferSponsorship = async (req, res, next) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ errors: errors.array() });
-    }
-
     const { beneficiaryType, beneficiaryId, newSponsorId, agentId, monthlyAmount, endReason } =
       req.body;
 
@@ -146,11 +130,6 @@ const transferSponsorship = async (req, res, next) => {
  */
 const updateSponsor = async (req, res, next) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ errors: errors.array() });
-    }
-
     const { fullName, phone, email, portalPassword } = req.body;
     let portalPasswordHash;
 
@@ -171,8 +150,8 @@ const updateSponsor = async (req, res, next) => {
       sponsor,
     });
   } catch (err) {
-    if (err.status === 409) {
-      return res.status(409).json({ error: err.message });
+    if (err.status === 409 || err.status === 404) {
+      return res.status(err.status).json({ error: err.message });
     }
     next(err);
   }
@@ -194,6 +173,22 @@ const deleteSponsor = async (req, res, next) => {
   }
 };
 
+/**
+ * GET /api/sponsors/:id/portfolio
+ * GM only — full portfolio view for a sponsor.
+ */
+const getSponsorPortfolio = async (req, res, next) => {
+  try {
+    const portfolio = await service.getSponsorPortfolio(req.params.id);
+    return res.json(portfolio);
+  } catch (err) {
+    if (err.status === 404) {
+      return res.status(404).json({ error: err.message });
+    }
+    next(err);
+  }
+};
+
 module.exports = {
   createSponsor,
   getAllSponsors,
@@ -202,4 +197,5 @@ module.exports = {
   transferSponsorship,
   updateSponsor,
   deleteSponsor,
+  getSponsorPortfolio,
 };
