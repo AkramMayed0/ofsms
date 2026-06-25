@@ -29,12 +29,17 @@ export default function GiftedOrphansPage() {
   const [search, setSearch]         = useState('');
   const [toast, setToast]           = useState('');
 
-  const fetchOrphans = useCallback(() => {
+  const fetchOrphans = useCallback(async () => {
     setLoading(true);
-    api.get('/orphans/gifted')
-      .then(({ data }) => setOrphans(data.orphans || []))
-      .catch(() => setError('تعذّر تحميل البيانات. يرجى تحديث الصفحة.'))
-      .finally(() => setLoading(false));
+    try {
+      const { data } = await api.get('/orphans/gifted');
+      setOrphans(data.orphans || []);
+    } catch (err) {
+      console.error('Error fetching gifted orphans:', err);
+      setError('تعذّر تحميل البيانات. يرجى تحديث الصفحة.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { fetchOrphans(); }, [fetchOrphans]);

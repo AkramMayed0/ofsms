@@ -23,13 +23,14 @@ import Link from 'next/link';
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
 import useAuthStore from '../../store/useAuthStore';
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
-  under_review:      { label: 'قيد المراجعة',  color: '#D97706', bg: '#FEF3C7', dot: '#F59E0B' },
-  under_marketing:   { label: 'تحت التسويق',   color: '#1D4ED8', bg: '#EFF6FF', dot: '#3B82F6' },
-  under_sponsorship: { label: 'تحت الكفالة',   color: '#065F46', bg: '#ECFDF5', dot: '#10B981' },
-  rejected:          { label: 'مرفوض',         color: '#991B1B', bg: '#FEF2F2', dot: '#EF4444' },
-  inactive:          { label: 'غير نشط',       color: '#374151', bg: '#F3F4F6', dot: '#9CA3AF' },
+  under_review:      { label: 'قيد المراجعة',  color: '#D97706', bg: '#FEF3C7', dot: '#F59E0B', textClass: 'text-amber-700', bgClass: 'bg-amber-50', borderClass: 'border-amber-200', dotClass: 'bg-amber-500' },
+  under_marketing:   { label: 'تحت التسويق',   color: '#1D4ED8', bg: '#EFF6FF', dot: '#3B82F6', textClass: 'text-blue-700', bgClass: 'bg-blue-50', borderClass: 'border-blue-200', dotClass: 'bg-blue-500' },
+  under_sponsorship: { label: 'تحت الكفالة',   color: '#065F46', bg: '#ECFDF5', dot: '#10B981', textClass: 'text-emerald-700', bgClass: 'bg-emerald-50', borderClass: 'border-emerald-200', dotClass: 'bg-emerald-500' },
+  rejected:          { label: 'مرفوض',         color: '#991B1B', bg: '#FEF2F2', dot: '#EF4444', textClass: 'text-red-700', bgClass: 'bg-red-50', borderClass: 'border-red-200', dotClass: 'bg-red-500' },
+  inactive:          { label: 'غير نشط',       color: '#374151', bg: '#F3F4F6', dot: '#9CA3AF', textClass: 'text-gray-700', bgClass: 'bg-gray-50', borderClass: 'border-gray-200', dotClass: 'bg-gray-400' },
 };
 
 const GENDER_LABELS = { male: 'ذكر', female: 'أنثى' };
@@ -97,10 +98,12 @@ const IconRefresh = () => (
 );
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+const MS_PER_YEAR = 365.25 * 24 * 60 * 60 * 1000;
+
 const calcAge = (dob) => {
   if (!dob) return '—';
   const diff = Date.now() - new Date(dob).getTime();
-  return `${Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000))}`;
+  return `${Math.floor(diff / MS_PER_YEAR)}`;
 };
 
 const formatDate = (d) =>
@@ -110,8 +113,8 @@ const formatDate = (d) =>
 function StatusBadge({ status }) {
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.inactive;
   return (
-    <span className="status-badge" style={{ color: cfg.color, background: cfg.bg }}>
-      <span className="status-dot" style={{ background: cfg.dot }} />
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[0.72rem] font-bold border ${cfg.bgClass} ${cfg.textClass} ${cfg.borderClass} whitespace-nowrap`}>
+      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.dotClass}`} />
       {cfg.label}
     </span>
   );
@@ -120,9 +123,11 @@ function StatusBadge({ status }) {
 // ── Skeleton row ──────────────────────────────────────────────────────────────
 function SkeletonRow() {
   return (
-    <tr className="skeleton-row">
+    <tr className="border-b border-slate-100">
       {[40, 80, 50, 70, 90, 60, 50].map((w, i) => (
-        <td key={i}><div className="skel-cell" style={{ width: `${w}%` }} /></td>
+        <td key={i} className="p-3.5">
+          <div className="animate-shimmer bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] h-3.5 rounded" style={{ width: `${w}%` }} />
+        </td>
       ))}
     </tr>
   );
@@ -131,25 +136,11 @@ function SkeletonRow() {
 // ── Stat pill ─────────────────────────────────────────────────────────────────
 function StatPill({ label, count, color }) {
   return (
-    <div
-      style={{
-        display: 'inline-flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '2px',
-        padding: '.6rem 1.1rem',
-        background: '#fff',
-        border: '1.5px solid #e5e7eb',
-        borderRadius: '12px',
-        fontFamily: "'Cairo', sans-serif",
-        minWidth: '80px',
-        boxShadow: '0 1px 3px rgba(0,0,0,.04)',
-      }}
-    >
-      <span style={{ fontSize: '1.35rem', fontWeight: 800, lineHeight: 1, color }}>
+    <div className="inline-flex flex-col items-center gap-0.5 px-4.5 py-2.5 bg-white border-[1.5px] border-gray-200 rounded-[12px] min-w-[80px] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+      <span className="text-[1.35rem] font-extrabold leading-none" style={{ color }}>
         {count}
       </span>
-      <span style={{ fontSize: '.72rem', fontWeight: 600, color: '#6b7280', whiteSpace: 'nowrap' }}>
+      <span className="text-[0.72rem] font-semibold text-gray-500 whitespace-nowrap">
         {label}
       </span>
     </div>
@@ -185,23 +176,26 @@ export default function OrphansListPage() {
   };
 
   // Load data — statusFilter is applied client-side so stats always reflect full counts
-  const fetchData = useCallback(() => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setError('');
     const params = new URLSearchParams();
     if (govFilter)    params.append('governorateId', govFilter);
     if (giftedFilter) params.append('isGifted', giftedFilter);
 
-    Promise.all([
-      api.get(`/orphans?${params}`),
-      api.get('/governorates'),
-    ])
-      .then(([orphansRes, govsRes]) => {
-        setOrphans(orphansRes.data.orphans || []);
-        setGovernorates(govsRes.data.data || []);
-      })
-      .catch(() => setError('تعذّر تحميل بيانات الأيتام'))
-      .finally(() => setLoading(false));
+    try {
+      const [orphansRes, govsRes] = await Promise.all([
+        api.get(`/orphans?${params}`),
+        api.get('/governorates'),
+      ]);
+      setOrphans(orphansRes.data.orphans || []);
+      setGovernorates(govsRes.data.data || []);
+    } catch (err) {
+      console.error('Failed to fetch orphans data:', err);
+      setError('تعذّر تحميل بيانات الأيتام');
+    } finally {
+      setLoading(false);
+    }
   }, [govFilter, giftedFilter]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -237,35 +231,28 @@ export default function OrphansListPage() {
 
   return (
     <AppShell>
-      <div className="orphans-page" dir="rtl">
+      <div className="max-w-[1100px] mx-auto pb-12 font-sans flex flex-col gap-5 px-4 md:px-0" dir="rtl">
 
         {/* ── Page header ─────────────────────────────────────────── */}
-        <div className="page-header">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="page-title">
+            <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] mb-1">
               {isAgent ? 'أيتامي' : 'الأيتام'}
             </h1>
-            <p className="page-sub">
+            <p className="text-[0.82rem] text-gray-400 m-0">
               {isAgent
                 ? 'الأيتام المسجَّلون من قِبَلك'
                 : 'جميع الأيتام المسجَّلين في النظام'}
             </p>
           </div>
-          <div className="header-actions">
-            <button className="btn-refresh" onClick={fetchData} title="تحديث">
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <button className="flex items-center justify-center w-9 h-9 border-[1.5px] border-gray-200 rounded-[0.625rem] bg-white text-gray-500 cursor-pointer transition-all duration-150 hover:border-primary hover:text-primary hover:bg-[#f0f7ff]" onClick={fetchData} title="تحديث">
               <IconRefresh />
             </button>
             {(isAgent || isGM) && (
               <Link
                 href="/orphans/new"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white no-underline hover:-translate-y-0.5 active:translate-y-0"
-                style={{
-                  background: 'linear-gradient(135deg, #1B5E8C 0%, #0f3a57 100%)',
-                  boxShadow: '0 4px 12px rgba(27,94,140,.35), 0 1px 3px rgba(0,0,0,.15)',
-                  border: '1.5px solid rgba(255,255,255,.15)',
-                  transition: 'all .18s ease',
-                  whiteSpace: 'nowrap',
-                }}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white no-underline transition-all duration-180 hover:-translate-y-0.5 active:translate-y-0 bg-gradient-to-br from-primary to-primary-dark border-[1.5px] border-white/15 shadow-[0_4px_12px_rgba(27,94,140,0.35),0_1px_3px_rgba(0,0,0,0.15)] whitespace-nowrap"
               >
                 <IconPlus /> تسجيل يتيم جديد
               </Link>
@@ -274,7 +261,7 @@ export default function OrphansListPage() {
         </div>
 
         {/* ── Stat pills ──────────────────────────────────────────── */}
-        <div className="stat-pills">
+        <div className="flex gap-2.5 flex-wrap">
           <StatPill label="الإجمالي"       count={stats.total}              color="#1B5E8C" />
           <StatPill label="قيد المراجعة"   count={stats.under_review}       color="#F59E0B" />
           <StatPill label="تحت التسويق"    count={stats.under_marketing}    color="#3B82F6" />
@@ -282,18 +269,10 @@ export default function OrphansListPage() {
         </div>
 
         {/* ── Filters bar ─────────────────────────────────────────── */}
-        <div style={{
-          display: 'flex', gap: '0.65rem', flexWrap: 'wrap', alignItems: 'center',
-          background: '#fff', border: '1px solid #e5eaf0', borderRadius: '0.875rem',
-          padding: '0.875rem 1rem',
-          boxShadow: '0 1px 3px rgba(0,0,0,.04)',
-        }}>
+        <div className="flex gap-2.5 flex-wrap items-center bg-white border border-[#e5eaf0] rounded-[0.875rem] p-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           {/* Search */}
-          <div style={{ position: 'relative', flex: 1, minWidth: '200px' }}>
-            <span style={{
-              position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)',
-              color: '#9ca3af', display: 'flex', pointerEvents: 'none',
-            }}>
+          <div className="relative flex-1 min-w-[200px]">
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 flex pointer-events-none">
               <IconSearch />
             </span>
             <input
@@ -301,53 +280,28 @@ export default function OrphansListPage() {
               placeholder="ابحث بالاسم أو اسم الوصي أو المحافظة…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              style={{
-                width: '100%', boxSizing: 'border-box',
-                padding: '0.55rem 2.25rem 0.55rem 2rem',
-                border: '1.5px solid #e5e7eb', borderRadius: '0.625rem',
-                fontFamily: "'Cairo', sans-serif", fontSize: '0.875rem', color: '#1f2937',
-                background: '#fafafa', outline: 'none', direction: 'rtl',
-                transition: 'border-color .15s, box-shadow .15s',
-              }}
-              onFocus={e => { e.target.style.borderColor = '#1B5E8C'; e.target.style.boxShadow = '0 0 0 3px rgba(27,94,140,.1)'; e.target.style.background = '#fff'; }}
-              onBlur={e  => { e.target.style.borderColor = '#e5e7eb'; e.target.style.boxShadow = 'none';                           e.target.style.background = '#fafafa'; }}
+              className="w-full py-2.5 pl-9 pr-10 border-[1.5px] border-gray-200 rounded-[0.625rem] text-[0.875rem] bg-gray-50 outline-none box-border text-right transition-all duration-150 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10"
             />
             {search && (
               <button
                 onClick={() => setSearch('')}
-                style={{
-                  position: 'absolute', left: '0.6rem', top: '50%', transform: 'translateY(-50%)',
-                  background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer',
-                  fontSize: '0.8rem', padding: '0.2rem', lineHeight: 1,
-                }}
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 bg-transparent border-none text-gray-400 cursor-pointer text-[0.8rem] p-1 transition-colors duration-120 hover:text-gray-700"
               ><X size={16} /></button>
             )}
           </div>
 
           {/* Status filter */}
-          <div style={{ position: 'relative' }}>
-            <span style={{
-              position: 'absolute', right: '0.65rem', top: '50%', transform: 'translateY(-50%)',
-              color: '#9ca3af', display: 'flex', pointerEvents: 'none', zIndex: 1,
-            }}>
+          <div className="relative">
+            <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 flex pointer-events-none z-10">
               <IconFilter />
             </span>
             <select
               value={statusFilter}
               onChange={(e) => setStatus(e.target.value)}
+              className="py-2.5 pl-7 pr-8 border-[1.5px] border-gray-200 rounded-[0.625rem] text-[0.82rem] text-gray-700 bg-gray-50 outline-none cursor-pointer transition-colors duration-150 focus:border-primary focus:bg-white [appearance:none] bg-no-repeat bg-[left_0.6rem_center] bg-[length:12px_12px]"
               style={{
-                padding: '0.55rem 2.1rem 0.55rem 1.75rem',
-                border: '1.5px solid #e5e7eb', borderRadius: '0.625rem',
-                fontFamily: "'Cairo', sans-serif", fontSize: '0.82rem', color: '#374151',
-                background: '#fafafa', outline: 'none', cursor: 'pointer',
-                appearance: 'none',
                 backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")",
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'left 0.6rem center',
-                transition: 'border-color .15s',
               }}
-              onFocus={e => e.target.style.borderColor = '#1B5E8C'}
-              onBlur={e  => e.target.style.borderColor = '#e5e7eb'}
             >
               {ALL_STATUSES.map((s) => (
                 <option key={s.value} value={s.value}>{s.label}</option>
@@ -356,67 +310,45 @@ export default function OrphansListPage() {
           </div>
 
           {/* Governorate filter */}
-          <select
-            value={govFilter}
-            onChange={(e) => setGov(e.target.value)}
-            style={{
-              padding: '0.55rem 0.875rem 0.55rem 1.75rem',
-              border: '1.5px solid #e5e7eb', borderRadius: '0.625rem',
-              fontFamily: "'Cairo', sans-serif", fontSize: '0.82rem', color: '#374151',
-              background: '#fafafa', outline: 'none', cursor: 'pointer',
-              appearance: 'none',
-              backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")",
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'left 0.6rem center',
-              transition: 'border-color .15s',
-            }}
-            onFocus={e => e.target.style.borderColor = '#1B5E8C'}
-            onBlur={e  => e.target.style.borderColor = '#e5e7eb'}
-          >
-            <option value="">جميع المحافظات</option>
-            {governorates.map((g) => (
-              <option key={g.id} value={g.id}>{g.name_ar}</option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              value={govFilter}
+              onChange={(e) => setGov(e.target.value)}
+              className="py-2.5 pl-7 pr-8 border-[1.5px] border-gray-200 rounded-[0.625rem] text-[0.82rem] text-gray-700 bg-gray-50 outline-none cursor-pointer transition-colors duration-150 focus:border-primary focus:bg-white [appearance:none] bg-no-repeat bg-[left_0.6rem_center] bg-[length:12px_12px]"
+              style={{
+                backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")",
+              }}
+            >
+              <option value="">جميع المحافظات</option>
+              {governorates.map((g) => (
+                <option key={g.id} value={g.id}>{g.name_ar}</option>
+              ))}
+            </select>
+          </div>
 
           {/* Gifted filter — GM/supervisor only */}
           {(isGM || isSupervisor) && (
-            <select
-              value={giftedFilter}
-              onChange={(e) => setGifted(e.target.value)}
-              style={{
-                padding: '0.55rem 0.875rem 0.55rem 1.75rem',
-                border: '1.5px solid #e5e7eb', borderRadius: '0.625rem',
-                fontFamily: "'Cairo', sans-serif", fontSize: '0.82rem', color: '#374151',
-                background: '#fafafa', outline: 'none', cursor: 'pointer',
-                appearance: 'none',
-                backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")",
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'left 0.6rem center',
-                transition: 'border-color .15s',
-              }}
-              onFocus={e => e.target.style.borderColor = '#1B5E8C'}
-              onBlur={e  => e.target.style.borderColor = '#e5e7eb'}
-            >
-              <option value="">الكل (موهوب + عادي)</option>
-              <option value="true">الموهوبون فقط ⭐</option>
-              <option value="false">غير الموهوبين</option>
-            </select>
+            <div className="relative">
+              <select
+                value={giftedFilter}
+                onChange={(e) => setGifted(e.target.value)}
+                className="py-2.5 pl-7 pr-8 border-[1.5px] border-gray-200 rounded-[0.625rem] text-[0.82rem] text-gray-700 bg-gray-50 outline-none cursor-pointer transition-colors duration-150 focus:border-primary focus:bg-white [appearance:none] bg-no-repeat bg-[left_0.6rem_center] bg-[length:12px_12px]"
+                style={{
+                  backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")",
+                }}
+              >
+                <option value="">الكل (موهوب + عادي)</option>
+                <option value="true">الموهوبون فقط ⭐</option>
+                <option value="false">غير الموهوبين</option>
+              </select>
+            </div>
           )}
 
           {/* Clear filters */}
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              style={{
-                padding: '0.5rem 0.875rem',
-                background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '0.625rem',
-                color: '#B91C1C', fontFamily: "'Cairo', sans-serif", fontSize: '0.78rem',
-                fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
-                transition: 'background .12s',
-              }}
-              onMouseEnter={e => e.target.style.background = '#FEE2E2'}
-              onMouseLeave={e => e.target.style.background = '#FEF2F2'}
+              className="px-3.5 py-2 bg-red-50 border border-red-200 rounded-[0.625rem] text-[#B91C1C] text-[0.78rem] font-semibold cursor-pointer transition-colors duration-120 hover:bg-red-100 whitespace-nowrap"
             >
               مسح الفلاتر <X size={16} />
             </button>
@@ -425,27 +357,29 @@ export default function OrphansListPage() {
 
         {/* ── Error ───────────────────────────────────────────────── */}
         {error && (
-          <div className="error-banner" role="alert">
-            <AlertTriangle size={18} /> {error}
-            <button onClick={fetchData} className="retry-btn">إعادة المحاولة</button>
+          <div className="flex items-center justify-between bg-red-50 border border-red-200 text-[#b91c1c] px-4 py-3 rounded-[0.75rem] text-[0.875rem]" role="alert">
+            <div className="flex items-center gap-2">
+              <AlertTriangle size={18} /> {error}
+            </div>
+            <button onClick={fetchData} className="bg-transparent border border-red-300 rounded-[0.5rem] text-[#b91c1c] px-3 py-1 cursor-pointer text-[0.78rem] font-semibold">إعادة المحاولة</button>
           </div>
         )}
 
         {/* ── Table ───────────────────────────────────────────────── */}
-        <div className="table-card">
-          <div className="table-scroll">
-            <table className="orphans-table">
+        <div className="bg-white border border-[#e5eaf0] rounded-[1rem] overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-[0.82rem] min-w-[700px]">
               <thead>
-                <tr>
-                  <th>الاسم</th>
-                  <th>العمر</th>
-                  <th>الجنس</th>
-                  <th>المحافظة</th>
-                  <th>الوصي</th>
-                  <th>الحالة</th>
-                  <th>تاريخ التسجيل</th>
-                  {(isGM || isSupervisor) && <th>المندوب</th>}
-                  <th></th>
+                <tr className="bg-slate-50 border-b-[1.5px] border-[#e5eaf0]">
+                  <th className="px-4 py-3 text-right text-[0.72rem] font-bold text-gray-400 whitespace-nowrap tracking-wider uppercase">الاسم</th>
+                  <th className="px-4 py-3 text-right text-[0.72rem] font-bold text-gray-400 whitespace-nowrap tracking-wider uppercase">العمر</th>
+                  <th className="px-4 py-3 text-right text-[0.72rem] font-bold text-gray-400 whitespace-nowrap tracking-wider uppercase">الجنس</th>
+                  <th className="px-4 py-3 text-right text-[0.72rem] font-bold text-gray-400 whitespace-nowrap tracking-wider uppercase">المحافظة</th>
+                  <th className="px-4 py-3 text-right text-[0.72rem] font-bold text-gray-400 whitespace-nowrap tracking-wider uppercase">الوصي</th>
+                  <th className="px-4 py-3 text-right text-[0.72rem] font-bold text-gray-400 whitespace-nowrap tracking-wider uppercase">الحالة</th>
+                  <th className="px-4 py-3 text-right text-[0.72rem] font-bold text-gray-400 whitespace-nowrap tracking-wider uppercase">تاريخ التسجيل</th>
+                  {(isGM || isSupervisor) && <th className="px-4 py-3 text-right text-[0.72rem] font-bold text-gray-400 whitespace-nowrap tracking-wider uppercase">المندوب</th>}
+                  <th className="px-4 py-3 text-right text-[0.72rem] font-bold text-gray-400 whitespace-nowrap tracking-wider uppercase"></th>
                 </tr>
               </thead>
               <tbody>
@@ -454,12 +388,12 @@ export default function OrphansListPage() {
                 ) : filtered.length === 0 ? (
                   <tr>
                     <td colSpan="9">
-                      <div className="empty-state">
+                      <div className="flex flex-col items-center gap-2 py-14 px-4 text-gray-400">
                         <IconEmpty />
-                        <p className="empty-title">
+                        <p className="text-[0.95rem] font-bold text-gray-700 mt-1 mb-0">
                           {hasActiveFilters ? 'لا توجد نتائج مطابقة' : 'لا يوجد أيتام مسجَّلون بعد'}
                         </p>
-                        <p className="empty-sub">
+                        <p className="text-[0.82rem] m-0">
                           {hasActiveFilters
                             ? 'جرّب تغيير الفلاتر أو مسحها'
                             : isAgent
@@ -467,12 +401,12 @@ export default function OrphansListPage() {
                               : 'لم يُضَف أي يتيم إلى النظام'}
                         </p>
                         {hasActiveFilters && (
-                          <button className="btn-clear-filters-sm" onClick={clearFilters}>
+                          <button className="mt-2 px-5 py-2 bg-transparent border-[1.5px] border-gray-300 rounded-[0.625rem] text-gray-700 text-[0.82rem] font-semibold cursor-pointer transition-colors duration-120 hover:border-primary hover:text-primary" onClick={clearFilters}>
                             مسح الفلاتر
                           </button>
                         )}
                         {!hasActiveFilters && isAgent && (
-                          <Link href="/orphans/new" className="btn-add-sm">
+                          <Link href="/orphans/new" className="mt-2 px-5 py-2.5 bg-gradient-to-br from-primary to-primary-dark text-white rounded-[0.625rem] text-[0.82rem] font-bold shadow-[0_4px_12px_rgba(27,94,140,0.35)] hover:-translate-y-0.5 transition-all">
                             + تسجيل يتيم جديد
                           </Link>
                         )}
@@ -483,7 +417,7 @@ export default function OrphansListPage() {
                   filtered.map((orphan) => (
                     <tr
                       key={orphan.id}
-                      className="data-row"
+                      className="border-b border-slate-100 cursor-pointer transition-colors duration-120 hover:bg-[#f8fbff] focus:outline-none focus:bg-[#f0f7ff]"
                       onClick={() => handleRowClick(orphan)}
                       tabIndex={0}
                       onKeyDown={(e) => e.key === 'Enter' && handleRowClick(orphan)}
@@ -491,7 +425,7 @@ export default function OrphansListPage() {
                       aria-label={`عرض تفاصيل ${orphan.full_name}`}
                     >
                       {/* Name */}
-                      <td>
+                      <td className="p-3.5 align-middle">
                         <div className="name-cell">
                           <div className="avatar-sm">
                             {orphan.full_name?.[0] || '؟'}
@@ -500,7 +434,7 @@ export default function OrphansListPage() {
                             <span className="name-text">
                               {orphan.full_name}
                               {orphan.is_gifted && (
-                                <span className="gifted-tag" title="موهوب">
+                                <span className="text-amber-500 flex-shrink-0" title="موهوب">
                                   <IconStar />
                                 </span>
                               )}
@@ -510,46 +444,52 @@ export default function OrphansListPage() {
                       </td>
 
                       {/* Age */}
-                      <td>
-                        <span className="age-cell">{calcAge(orphan.date_of_birth)} سنة</span>
+                      <td className="p-3.5 align-middle">
+                        <span className="font-semibold text-gray-700">{calcAge(orphan.date_of_birth)} سنة</span>
                       </td>
 
                       {/* Gender */}
-                      <td>
-                        <span className="gender-cell">
+                      <td className="p-3.5 align-middle">
+                        <span className="text-gray-700">
                           {GENDER_LABELS[orphan.gender] || '—'}
                         </span>
                       </td>
 
                       {/* Governorate */}
-                      <td>
-                        <span className="gov-cell">{orphan.governorate_ar || '—'}</span>
+                      <td className="p-3.5 align-middle">
+                        <span className="text-gray-700">{orphan.governorate_ar || '—'}</span>
                       </td>
 
                       {/* Guardian */}
-                      <td>
-                        <span className="guardian-cell">{orphan.guardian_name || '—'}</span>
+                      <td className="p-3.5 align-middle">
+                        <span className="text-gray-500 text-[0.8rem]">{orphan.guardian_name || '—'}</span>
                       </td>
 
                       {/* Status */}
-                      <td>
+                      <td className="p-3.5 align-middle">
                         <StatusBadge status={orphan.status} />
                       </td>
 
                       {/* Date */}
-                      <td>
-                        <span className="date-cell">{formatDate(orphan.created_at)}</span>
+                      <td className="p-3.5 align-middle">
+                        <span className="text-gray-400 text-[0.75rem] whitespace-nowrap">{formatDate(orphan.created_at)}</span>
                       </td>
 
                       {/* Agent — supervisor/GM only */}
                       {(isGM || isSupervisor) && (
-                        <td>
-                          <span className="agent-cell">{orphan.agent_name || '—'}</span>
+                        <td className="p-3.5 align-middle">
+                          <span className="text-gray-500 text-[0.78rem]">{orphan.agent_name || '—'}</span>
                         </td>
                       )}
 
                       {/* Actions */}
-                      <td />
+                      <td className="p-3.5 align-middle">
+                        <div className="flex items-center gap-1.5 justify-end">
+                          <button className="flex items-center justify-center w-7 h-7 rounded-[0.4rem] bg-transparent border border-gray-200 text-gray-400 cursor-pointer transition-all duration-120 hover:border-primary hover:text-primary hover:bg-[#f0f7ff]">
+                            <IconChevron />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -559,8 +499,8 @@ export default function OrphansListPage() {
 
           {/* Footer count */}
           {!loading && filtered.length > 0 && (
-            <div className="table-footer">
-              <span className="result-count">
+            <div className="px-4 py-3 border-t border-slate-100 flex justify-end">
+              <span className="text-[0.75rem] text-gray-400 font-medium">
                 {filtered.length === orphans.length
                   ? `${orphans.length} يتيم`
                   : `${filtered.length} من أصل ${orphans.length} يتيم`}
@@ -569,261 +509,6 @@ export default function OrphansListPage() {
           )}
         </div>
       </div>
-
-      <style jsx>{`
-        .orphans-page {
-          max-width: 1100px; margin: 0 auto; padding-bottom: 3rem;
-          font-family: 'Cairo', 'Tajawal', sans-serif;
-          display: flex; flex-direction: column; gap: 1.25rem;
-        }
-
-        /* ── Header ─────────────────────────────────────────────── */
-        .page-header {
-          display: flex; align-items: flex-start; justify-content: space-between;
-          gap: 1rem; flex-wrap: wrap;
-        }
-        .page-title { font-size: 1.6rem; font-weight: 800; color: #0d3d5c; margin: 0 0 .2rem; }
-        .page-sub   { font-size: .82rem; color: #9ca3af; margin: 0; }
-        .header-actions { display: flex; align-items: center; gap: .75rem; flex-shrink: 0; }
-
-        .btn-refresh {
-          display: flex; align-items: center; justify-content: center;
-          width: 2.25rem; height: 2.25rem;
-          border: 1.5px solid #e5e7eb; border-radius: .625rem;
-          background: #fff; color: #6b7280; cursor: pointer;
-          transition: all .15s;
-        }
-        .btn-refresh:hover { border-color: #1B5E8C; color: #1B5E8C; background: #f0f7ff; }
-
-
-        /* ── Stat pills ─────────────────────────────────────────── */
-        .stat-pills { display: flex; gap: .6rem; flex-wrap: wrap; }
-        .stat-pill {
-          display: inline-flex; align-items: center; gap: .5rem;
-          padding: .45rem .9rem;
-          background: #fff; border: 1.5px solid #e5e7eb; border-radius: 999px;
-          font-family: 'Cairo', sans-serif; font-size: .78rem; font-weight: 600;
-          color: #6b7280; cursor: pointer; transition: all .15s;
-        }
-        .stat-pill:hover { border-color: var(--pill-color); color: var(--pill-color); }
-        .stat-pill-active {
-          border-color: var(--pill-color);
-          background: color-mix(in srgb, var(--pill-color) 10%, white);
-          color: var(--pill-color);
-        }
-        .pill-count {
-          background: var(--pill-color); color: #fff;
-          border-radius: 999px; padding: .05rem .45rem;
-          font-size: .7rem; font-weight: 700; min-width: 1.25rem; text-align: center;
-        }
-        .stat-pill:not(.stat-pill-active) .pill-count { background: #d1d5db; color: #374151; }
-
-        /* ── Filters bar ────────────────────────────────────────── */
-        .filters-bar {
-          display: flex; gap: .65rem; flex-wrap: wrap; align-items: center;
-          background: #fff; border: 1px solid #e5eaf0; border-radius: .875rem;
-          padding: .875rem 1rem;
-        }
-
-        .search-wrap { position: relative; flex: 1; min-width: 200px; }
-        .search-icon {
-          position: absolute; right: .75rem; top: 50%; transform: translateY(-50%);
-          color: #9ca3af; display: flex; pointer-events: none;
-        }
-        .search-inp {
-          width: 100%; padding: .6rem .75rem .6rem 2.2rem;
-          border: 1.5px solid #e5e7eb; border-radius: .625rem;
-          font-family: 'Cairo', sans-serif; font-size: .875rem; color: #1f2937;
-          background: #fafafa; outline: none; box-sizing: border-box;
-          direction: rtl; transition: border-color .15s, box-shadow .15s;
-        }
-        .search-inp::placeholder { color: #c4cdd8; }
-        .search-inp:focus { border-color: #1B5E8C; box-shadow: 0 0 0 3px rgba(27,94,140,.1); background: #fff; }
-        .search-clear {
-          position: absolute; left: .6rem; top: 50%; transform: translateY(-50%);
-          background: none; border: none; color: #9ca3af; cursor: pointer;
-          font-size: .8rem; padding: .2rem;
-          transition: color .12s;
-        }
-        .search-clear:hover { color: #374151; }
-
-        .filter-select-wrap { position: relative; }
-        .filter-icon {
-          position: absolute; right: .65rem; top: 50%; transform: translateY(-50%);
-          color: #9ca3af; display: flex; pointer-events: none; z-index: 1;
-        }
-        .filter-select {
-          padding: .6rem 2rem .6rem .875rem;
-          border: 1.5px solid #e5e7eb; border-radius: .625rem;
-          font-family: 'Cairo', sans-serif; font-size: .82rem; color: #374151;
-          background: #fafafa; outline: none; cursor: pointer;
-          appearance: none;
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-          background-repeat: no-repeat;
-          background-position: left .6rem center;
-          transition: border-color .15s;
-        }
-        .filter-select:focus { border-color: #1B5E8C; }
-
-        .btn-clear-filters {
-          padding: .5rem .875rem;
-          background: #FEF2F2; border: 1px solid #FECACA; border-radius: .625rem;
-          color: #B91C1C; font-family: 'Cairo', sans-serif; font-size: .78rem;
-          font-weight: 600; cursor: pointer; transition: all .12s; white-space: nowrap;
-        }
-        .btn-clear-filters:hover { background: #FEE2E2; }
-
-        /* ── Error ──────────────────────────────────────────────── */
-        .error-banner {
-          display: flex; align-items: center; justify-content: space-between;
-          background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c;
-          padding: .75rem 1rem; border-radius: .75rem; font-size: .875rem;
-        }
-        .retry-btn {
-          background: none; border: 1px solid #fca5a5; border-radius: .5rem;
-          color: #b91c1c; padding: .3rem .75rem; cursor: pointer; font-size: .78rem;
-          font-family: 'Cairo', sans-serif; font-weight: 600;
-        }
-
-        /* ── Table card ─────────────────────────────────────────── */
-        .table-card {
-          background: #fff; border: 1px solid #e5eaf0; border-radius: 1rem;
-          overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.04);
-        }
-        .table-scroll { overflow-x: auto; }
-
-        .orphans-table {
-          width: 100%; border-collapse: collapse; font-size: .82rem;
-          min-width: 700px;
-        }
-
-        .orphans-table thead tr {
-          background: #f8fafc; border-bottom: 1.5px solid #e5eaf0;
-        }
-        .orphans-table th {
-          padding: .75rem 1rem; font-size: .72rem; font-weight: 700;
-          color: #9ca3af; text-align: right; white-space: nowrap;
-          letter-spacing: .04em; text-transform: uppercase;
-        }
-
-        /* ── Data rows ──────────────────────────────────────────── */
-        .data-row {
-          border-bottom: 1px solid #f1f5f9; cursor: pointer;
-          transition: background .12s;
-        }
-        .data-row:last-child { border-bottom: none; }
-        .data-row:hover { background: #f8fbff; }
-        .data-row:focus { outline: none; background: #f0f7ff; }
-        .data-row td { padding: .875rem 1rem; vertical-align: middle; }
-
-        /* ── Name cell ──────────────────────────────────────────── */
-        .name-cell { display: flex; align-items: center; gap: .625rem; }
-        .avatar-sm {
-          width: 2rem; height: 2rem; border-radius: 50%; flex-shrink: 0;
-          background: linear-gradient(135deg, #1B5E8C, #134569);
-          color: #fff; font-size: .78rem; font-weight: 700;
-          display: flex; align-items: center; justify-content: center;
-        }
-        .name-info { display: flex; flex-direction: column; }
-        .name-text {
-          font-size: .875rem; font-weight: 700; color: #0d3d5c;
-          display: flex; align-items: center; gap: .3rem;
-        }
-        .gifted-tag {
-          color: #D97706; display: inline-flex; align-items: center;
-          flex-shrink: 0;
-        }
-
-        /* ── Other cells ────────────────────────────────────────── */
-        .age-cell      { font-weight: 600; color: #374151; }
-        .gender-cell   { color: #374151; }
-        .gov-cell      { color: #374151; }
-        .guardian-cell { color: #6b7280; font-size: .8rem; }
-        .agent-cell    { color: #6b7280; font-size: .78rem; }
-        .date-cell     { color: #9ca3af; font-size: .75rem; white-space: nowrap; }
-
-        /* ── Status badge ───────────────────────────────────────── */
-        .status-badge {
-          display: inline-flex; align-items: center; gap: .35rem;
-          padding: .25rem .65rem; border-radius: 999px;
-          font-size: .72rem; font-weight: 700; white-space: nowrap;
-        }
-        .status-dot {
-          width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
-        }
-
-        /* ── Actions cell ───────────────────────────────────────── */
-        .actions-cell { display: flex; align-items: center; gap: .4rem; justify-content: flex-end; }
-
-        .btn-transfer-row {
-          display: inline-flex; align-items: center; gap: .3rem;
-          padding: .35rem .65rem;
-          background: linear-gradient(135deg, #1B5E8C, #134569);
-          color: #fff; border: none; border-radius: .5rem;
-          font-family: 'Cairo', sans-serif; font-size: .72rem; font-weight: 700;
-          cursor: pointer; white-space: nowrap;
-          box-shadow: 0 1px 4px rgba(27,94,140,.25);
-          transition: all .15s;
-        }
-        .btn-transfer-row:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 3px 10px rgba(27,94,140,.35);
-        }
-
-        .btn-view-row {
-          display: flex; align-items: center; justify-content: center;
-          width: 1.75rem; height: 1.75rem; border-radius: .4rem;
-          background: none; border: 1px solid #e5e7eb; color: #9ca3af;
-          cursor: pointer; transition: all .12s;
-        }
-        .btn-view-row:hover { border-color: #1B5E8C; color: #1B5E8C; background: #f0f7ff; }
-
-        /* ── Skeleton ───────────────────────────────────────────── */
-        .skeleton-row td { padding: .875rem 1rem; }
-        .skel-cell {
-          height: 14px; border-radius: 4px;
-          background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
-          background-size: 200% 100%; animation: shimmer 1.4s infinite;
-        }
-        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-
-        /* ── Empty state ────────────────────────────────────────── */
-        .empty-state {
-          display: flex; flex-direction: column; align-items: center; gap: .5rem;
-          padding: 3.5rem 1rem; color: #9ca3af;
-        }
-        .empty-title { font-size: .95rem; font-weight: 700; color: #374151; margin: .25rem 0 0; }
-        .empty-sub   { font-size: .82rem; margin: 0; }
-
-        .btn-clear-filters-sm {
-          margin-top: .5rem; padding: .5rem 1.25rem;
-          background: none; border: 1.5px solid #d1d5db; border-radius: .625rem;
-          color: #374151; font-family: 'Cairo', sans-serif; font-size: .82rem;
-          font-weight: 600; cursor: pointer; transition: all .12s;
-        }
-        .btn-clear-filters-sm:hover { border-color: #1B5E8C; color: #1B5E8C; }
-
-        .btn-add-sm {
-          margin-top: .5rem; padding: .55rem 1.25rem;
-          background: linear-gradient(135deg, #1B5E8C, #134569);
-          color: #fff; border-radius: .625rem; text-decoration: none;
-          font-size: .82rem; font-weight: 700;
-        }
-
-        /* ── Table footer ───────────────────────────────────────── */
-        .table-footer {
-          padding: .75rem 1rem; border-top: 1px solid #f1f5f9;
-          display: flex; justify-content: flex-end;
-        }
-        .result-count { font-size: .75rem; color: #9ca3af; font-weight: 500; }
-
-        /* ── Responsive ─────────────────────────────────────────── */
-        @media (max-width: 640px) {
-          .page-title { font-size: 1.3rem; }
-          .filters-bar { gap: .5rem; }
-          .search-wrap { min-width: 100%; }
-        }
-      `}</style>
     </AppShell>
   );
 }
