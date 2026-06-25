@@ -5,7 +5,7 @@
  * APIs:
  *   GET /api/sponsor/me       → sponsor info
  *   GET /api/sponsor/orphans  → list of sponsored orphans
- *   GET /api/announcements    → public announcements board
+ *   GET /api/ads/sponsor/feed → sponsor announcements feed
  */
 
 import { useEffect, useState } from 'react';
@@ -16,6 +16,13 @@ import Link from 'next/link';
 import sponsorApi from '@/lib/sponsorApi';
 import useSponsorStore from '@/store/useSponsorStore';
 
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const API_ENDPOINTS = {
+  ORPHANS:       '/sponsor/orphans',
+  SPONSOR_FEED:  '/ads/sponsor/feed',
+};
+
 const STATUS_CONFIG = {
   under_review:      { label: 'قيد المراجعة', color: '#92400E', bg: '#FEF3C7' },
   under_marketing:   { label: 'تحت التسويق',  color: '#1E40AF', bg: '#EFF6FF' },
@@ -24,14 +31,30 @@ const STATUS_CONFIG = {
   inactive:          { label: 'غير نشط',      color: '#6B7280', bg: '#F3F4F6' },
 };
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+const mapAdToAnnouncement = (ad) => ({
+  id: ad.id,
+  title: ad.beneficiary_type === 'family'
+    ? `طلب كفالة أسرة: ${ad.beneficiary_name}`
+    : `طلب كفالة: ${ad.beneficiary_name}`,
+  body: ad.beneficiary_type === 'family'
+    ? `من سيكفل هذه الأسرة؟ المحافظة: ${ad.governorate_ar || '—'}`
+    : `من سيكفل هذا الطفل؟ المحافظة: ${ad.governorate_ar || '—'}`,
+  published_at: ad.published_at,
+  is_active: true,
+});
+
+// ── Main page ─────────────────────────────────────────────────────────────────
+
 export default function SponsorDashboard() {
   const router = useRouter();
   const { sponsor, clearSponsorAuth, isAuthenticated } = useSponsorStore();
 
-  const [orphans, setOrphans]             = useState([]);
+  const [orphans,       setOrphans]       = useState([]);
   const [announcements, setAnnouncements] = useState([]);
-  const [loading, setLoading]             = useState(true);
-  const [error, setError]                 = useState('');
+  const [loading,       setLoading]       = useState(true);
+  const [error,         setError]         = useState('');
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -39,22 +62,12 @@ export default function SponsorDashboard() {
       return;
     }
     Promise.all([
-      sponsorApi.get('/sponsor/orphans'),
-      sponsorApi.get('/ads/sponsor/feed').catch(() => ({ data: { ads: [] } })),
+      sponsorApi.get(API_ENDPOINTS.ORPHANS),
+      sponsorApi.get(API_ENDPOINTS.SPONSOR_FEED).catch(() => ({ data: { ads: [] } })),
     ])
-      .then(([orphansRes, announcementsRes]) => {
+      .then(([orphansRes, feedRes]) => {
         setOrphans(orphansRes.data.orphans || []);
-        setAnnouncements((announcementsRes.data.ads || []).map(ad => ({
-          id: ad.id,
-          title: ad.beneficiary_type === 'family'
-            ? `طلب كفالة أسرة: ${ad.beneficiary_name}`
-            : `طلب كفالة: ${ad.beneficiary_name}`,
-          body: ad.beneficiary_type === 'family'
-            ? `من سيكفل هذه الأسرة؟ المحافظة: ${ad.governorate_ar || '—'}`
-            : `من سيكفل هذا الطفل؟ المحافظة: ${ad.governorate_ar || '—'}`,
-          published_at: ad.published_at,
-          is_active: true,
-        })));
+        setAnnouncements((feedRes.data.ads || []).map(mapAdToAnnouncement));
       })
       .catch(() => setError('تعذّر تحميل البيانات'))
       .finally(() => setLoading(false));
@@ -66,91 +79,103 @@ export default function SponsorDashboard() {
   };
 
   return (
-    <div className="root" dir="rtl">
+    <div className="min-h-screen bg-gray-100 font-sans" dir="rtl">
+
       {/* Header */}
-      <header className="header">
-        <div className="header-inner">
-          <div className="header-brand">
-            <span className="header-icon"><Handshake size={32} /></span>
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
+        <div className="max-w-[1100px] mx-auto py-3.5 px-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-[#0d3d5c]"><Handshake size={32} /></span>
             <div>
-              <span className="header-title">بوابة الكافل</span>
-              <span className="header-org">مؤسسة إكرام النعمة الخيرية</span>
+              <span className="block text-[1rem] font-extrabold text-[#0d3d5c] leading-none">بوابة الكافل</span>
+              <span className="block text-[0.7rem] text-gray-400 mt-0.5">مؤسسة إكرام النعمة الخيرية</span>
             </div>
           </div>
-          <div className="header-user">
-            <span className="user-name">أهلاً، {sponsor?.name || 'الكافل'}</span>
-            <button className="logout-btn" onClick={handleLogout}>خروج</button>
+          <div className="flex items-center gap-4">
+            <span className="text-[0.85rem] font-semibold text-gray-700">أهلاً، {sponsor?.name || 'الكافل'}</span>
+            <button
+              className="bg-transparent border-[1.5px] border-gray-200 rounded-lg py-1.5 px-3.5 font-sans text-[0.78rem] font-semibold text-gray-500 cursor-pointer hover:bg-gray-50 hover:text-red-600 hover:border-red-300 transition-colors"
+              onClick={handleLogout}
+            >
+              خروج
+            </button>
           </div>
         </div>
       </header>
 
-      <main className="main">
+      <main className="max-w-[1100px] mx-auto py-8 px-6 flex flex-col gap-6">
 
-        {error && <div className="err-banner"><AlertTriangle size={18} /> {error}</div>}
+        {/* Error */}
+        {error && (
+          <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 py-3 px-4 rounded-xl text-[0.875rem]">
+            <AlertTriangle size={18} /> {error}
+          </div>
+        )}
 
         {/* Welcome card */}
-        <div className="welcome-card">
-          <div className="welcome-text">
-            <h1 className="welcome-title">مرحباً بك في بوابة الكافل</h1>
-            <p className="welcome-sub">يمكنك متابعة أيتامك وتقاريرهم الشهرية من هذه الصفحة</p>
+        <div className="bg-gradient-to-br from-[#1a4a2e] to-[#2d7a4a] rounded-2xl py-7 px-8 flex items-center justify-between text-white">
+          <div>
+            <h1 className="text-[1.3rem] font-extrabold m-0 mb-1.5">مرحباً بك في بوابة الكافل</h1>
+            <p className="text-[0.83rem] text-white/75 m-0">يمكنك متابعة أيتامك وتقاريرهم الشهرية من هذه الصفحة</p>
           </div>
-          <div className="welcome-stat">
-            <span className="stat-big">{loading ? '—' : orphans.length}</span>
-            <span className="stat-lbl">يتيم تحت كفالتك</span>
+          <div className="text-center shrink-0">
+            <span className="block text-[2.5rem] font-extrabold leading-none">{loading ? '—' : orphans.length}</span>
+            <span className="block text-[0.75rem] text-white/70 mt-1 text-center">يتيم تحت كفالتك</span>
           </div>
         </div>
 
-        <div className="content-grid">
+        {/* Content grid */}
+        <div className="grid grid-cols-[2fr_1fr] gap-6 max-[768px]:grid-cols-1">
 
           {/* Orphans section */}
-          <section className="section orphans-section">
-            <h2 className="section-title">
-              <span className="section-icon"><User size={18} /></span>
+          <section className="bg-white border-[1.5px] border-gray-200 rounded-2xl p-5">
+            <h2 className="flex items-center gap-2.5 text-[0.95rem] font-bold text-[#0d3d5c] m-0 mb-4 pb-3 border-b-[1.5px] border-gray-100">
+              <span className="text-[#0d3d5c]"><User size={18} /></span>
               أيتامك المكفولون
             </h2>
 
             {loading ? (
-              <div className="orphans-list">
-                {[1,2,3].map(i => <SkeletonCard key={i} />)}
+              <div className="flex flex-col gap-3">
+                {[1, 2, 3].map((i) => <SkeletonCard key={i} />)}
               </div>
             ) : orphans.length === 0 ? (
-              <div className="empty">
-                <span><Search size={16} /></span>
-                <p>لا يوجد أيتام مرتبطون بكفالتك حالياً</p>
+              <div className="flex flex-col items-center gap-2 py-10 px-4 text-gray-400 text-[0.83rem] text-center">
+                <Search size={16} />
+                <p className="m-0">لا يوجد أيتام مرتبطون بكفالتك حالياً</p>
               </div>
             ) : (
-              <div className="orphans-list">
-                {orphans.map(orphan => (
+              <div className="flex flex-col gap-3">
+                {orphans.map((orphan) => (
                   <OrphanCard key={orphan.id} orphan={orphan} />
                 ))}
               </div>
             )}
           </section>
 
-          {/* Announcements */}
-          <section className="section">
-            <h2 className="section-title">
-              <span className="section-icon">📢</span>
+          {/* Announcements section */}
+          <section className="bg-white border-[1.5px] border-gray-200 rounded-2xl p-5">
+            <h2 className="flex items-center gap-2.5 text-[0.95rem] font-bold text-[#0d3d5c] m-0 mb-4 pb-3 border-b-[1.5px] border-gray-100">
+              <span>📢</span>
               إعلانات المؤسسة
             </h2>
 
             {loading ? (
-              <div className="ann-skeleton" />
+              <div className="h-[180px] rounded-xl bg-gradient-to-r from-gray-100 to-gray-200 animate-[shimmer_1.4s_infinite] bg-[length:200%_100%]" />
             ) : announcements.length === 0 ? (
-              <div className="empty small">
-                <span>📭</span>
-                <p>لا توجد إعلانات حالياً</p>
+              <div className="flex flex-col items-center gap-2 py-6 px-4 text-gray-400 text-[0.83rem] text-center">
+                <span className="text-[2rem]">📭</span>
+                <p className="m-0">لا توجد إعلانات حالياً</p>
               </div>
             ) : (
-              <div className="ann-list">
-                {announcements.map(ann => (
-                  <div key={ann.id} className="ann-card">
-                    <span className="ann-dot" />
+              <div className="flex flex-col gap-3.5">
+                {announcements.map((ann) => (
+                  <div key={ann.id} className="flex gap-3 items-start">
+                    <span className="w-2 h-2 rounded-full bg-[#2d7a4a] shrink-0 mt-1.5" />
                     <div>
-                      <p className="ann-title">{ann.title}</p>
-                      <p className="ann-body">{ann.body}</p>
-                      <span className="ann-date">
-                        {new Date(ann.published_at).toLocaleDateString('ar-YE', { day:'numeric', month:'long', year:'numeric' })}
+                      <p className="text-[0.85rem] font-bold text-[#0d3d5c] m-0 mb-1">{ann.title}</p>
+                      <p className="text-[0.78rem] text-gray-500 m-0 mb-1 leading-relaxed">{ann.body}</p>
+                      <span className="text-[0.68rem] text-gray-400">
+                        {new Date(ann.published_at).toLocaleDateString('ar-YE', { day: 'numeric', month: 'long', year: 'numeric' })}
                       </span>
                     </div>
                   </div>
@@ -158,129 +183,69 @@ export default function SponsorDashboard() {
               </div>
             )}
           </section>
-
         </div>
       </main>
-
-      <style jsx>{`
-        * { box-sizing: border-box; }
-        .root { min-height:100vh; background:#f0f4f8; font-family:'Cairo','Tajawal',sans-serif; }
-
-        /* Header */
-        .header { background:#fff; border-bottom:1px solid #e5eaf0; position:sticky; top:0; z-index:10; box-shadow:0 1px 4px rgba(0,0,0,.06); }
-        .header-inner { max-width:1100px; margin:0 auto; padding:.9rem 1.5rem; display:flex; align-items:center; justify-content:space-between; }
-        .header-brand { display:flex; align-items:center; gap:.75rem; }
-        .header-icon { font-size:1.5rem; }
-        .header-title { display:block; font-size:1rem; font-weight:800; color:#0d3d5c; line-height:1; }
-        .header-org { display:block; font-size:.7rem; color:#9ca3af; margin-top:.15rem; }
-        .header-user { display:flex; align-items:center; gap:1rem; }
-        .user-name { font-size:.85rem; font-weight:600; color:#374151; }
-        .logout-btn { background:none; border:1.5px solid #dde5f0; border-radius:.5rem; padding:.4rem .85rem; font-family:'Cairo',sans-serif; font-size:.78rem; font-weight:600; color:#6b7280; cursor:pointer; }
-        .logout-btn:hover { background:#f9fafb; color:#dc2626; border-color:#fca5a5; }
-
-        .main { max-width:1100px; margin:0 auto; padding:2rem 1.5rem; display:flex; flex-direction:column; gap:1.5rem; }
-
-        .err-banner { background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; padding:.75rem 1rem; border-radius:.75rem; font-size:.875rem; }
-
-        /* Welcome */
-        .welcome-card { background:linear-gradient(135deg,#1a4a2e,#2d7a4a); border-radius:1.25rem; padding:1.75rem 2rem; display:flex; align-items:center; justify-content:space-between; color:#fff; }
-        .welcome-title { font-size:1.3rem; font-weight:800; margin:0 0 .4rem; }
-        .welcome-sub { font-size:.83rem; color:rgba(255,255,255,.75); margin:0; }
-        .stat-big { display:block; font-size:2.5rem; font-weight:800; line-height:1; }
-        .stat-lbl { display:block; font-size:.75rem; color:rgba(255,255,255,.7); margin-top:.25rem; text-align:center; }
-
-        /* Grid */
-        .content-grid { display:grid; grid-template-columns:2fr 1fr; gap:1.5rem; }
-        @media(max-width:768px){ .content-grid{ grid-template-columns:1fr; } }
-
-        /* Section */
-        .section { background:#fff; border:1.5px solid #e5eaf0; border-radius:1rem; padding:1.25rem; }
-        .section-title { display:flex; align-items:center; gap:.6rem; font-size:.95rem; font-weight:700; color:#0d3d5c; margin:0 0 1.1rem; padding-bottom:.75rem; border-bottom:1.5px solid #f3f4f6; }
-        .section-icon { font-size:1.1rem; }
-
-        /* Orphan cards */
-        .orphans-list { display:flex; flex-direction:column; gap:.75rem; }
-
-        /* Announcements */
-        .ann-list { display:flex; flex-direction:column; gap:.85rem; }
-        .ann-card { display:flex; gap:.75rem; align-items:flex-start; }
-        .ann-dot { width:8px; height:8px; border-radius:50%; background:#2d7a4a; flex-shrink:0; margin-top:.35rem; }
-        .ann-title { font-size:.85rem; font-weight:700; color:#0d3d5c; margin:0 0 .25rem; }
-        .ann-body { font-size:.78rem; color:#6b7280; margin:0 0 .25rem; line-height:1.6; }
-        .ann-date { font-size:.68rem; color:#9ca3af; }
-        .ann-skeleton { height:180px; border-radius:.75rem; background:linear-gradient(90deg,#f3f4f6 25%,#e5e7eb 50%,#f3f4f6 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; }
-
-        .empty { display:flex; flex-direction:column; align-items:center; gap:.5rem; padding:2.5rem 1rem; color:#9ca3af; font-size:.83rem; text-align:center; }
-        .empty span { font-size:2rem; }
-        .empty p { margin:0; }
-        .empty.small { padding:1.5rem 1rem; }
-
-        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-      `}</style>
     </div>
   );
 }
+
+// ── OrphanCard ────────────────────────────────────────────────────────────────
 
 function OrphanCard({ orphan }) {
   const cfg = STATUS_CONFIG[orphan.status] || STATUS_CONFIG.inactive;
   const age = orphan.date_of_birth
     ? Math.floor((Date.now() - new Date(orphan.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000))
     : null;
+  const initial = orphan.full_name?.charAt(0) || '؟';
 
   return (
-    <Link href={`/sponsor/orphans/${orphan.id}`} style={{ textDecoration:'none' }}>
-      <div className="ocard">
-        <div className="ocard-avatar">
-          {orphan.gender === 'female' ? '👧' : '<User size={18} />'}
+    <Link href={`/sponsor/orphans/${orphan.id}`} className="no-underline">
+      <div className="flex items-center gap-3.5 bg-gray-50 border-[1.5px] border-gray-200 rounded-[0.875rem] py-3.5 px-4 cursor-pointer transition-all hover:bg-blue-50 hover:border-blue-300 hover:-translate-x-0.5">
+        {/* Avatar */}
+        <div className="w-11 h-11 bg-white rounded-full border-[1.5px] border-gray-200 flex items-center justify-center shrink-0 text-[1.1rem] font-bold text-[#0d3d5c]">
+          {orphan.gender === 'female' ? '👧' : initial}
         </div>
-        <div className="ocard-info">
-          <div className="ocard-top">
-            <span className="ocard-name">{orphan.full_name}</span>
-            {orphan.is_gifted && <span className="gifted-tag">⭐ موهوب</span>}
+
+        {/* Info */}
+        <div className="flex-1 flex flex-col gap-1.5 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-[0.9rem] font-bold text-[#0d3d5c] truncate">{orphan.full_name}</span>
+            {orphan.is_gifted && (
+              <span className="bg-amber-100 text-amber-800 text-[0.65rem] font-bold py-0.5 px-1.5 rounded-full whitespace-nowrap">⭐ موهوب</span>
+            )}
           </div>
-          <div className="ocard-meta">
+          <div className="flex items-center gap-1.5 text-[0.73rem] text-gray-400">
             {age !== null && <span>العمر: {age} سنة</span>}
             <span>•</span>
             <span>{orphan.governorate_ar}</span>
           </div>
-          <div className="ocard-bottom">
-            <span className="status-badge" style={{ color:cfg.color, background:cfg.bg }}>
+          <div className="flex items-center gap-2.5">
+            <span className="text-[0.68rem] font-bold py-0.5 px-2 rounded-full" style={{ color: cfg.color, background: cfg.bg }}>
               {cfg.label}
             </span>
-            <span className="ocard-amount">
+            <span className="text-[0.75rem] font-bold text-[#2d7a4a] mr-auto">
               {parseFloat(orphan.monthly_amount || 0).toLocaleString('ar-YE')} ريال/شهر
             </span>
           </div>
         </div>
-        <span className="ocard-arrow">←</span>
-      </div>
 
-      <style jsx>{`
-        .ocard { display:flex; align-items:center; gap:.85rem; background:#fafafa; border:1.5px solid #e5eaf0; border-radius:.875rem; padding:.85rem 1rem; cursor:pointer; transition:all .15s; }
-        .ocard:hover { background:#f0f7ff; border-color:#93c5fd; transform:translateX(-2px); }
-        .ocard-avatar { font-size:1.8rem; flex-shrink:0; width:44px; height:44px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1.5px solid #e5eaf0; }
-        .ocard-info { flex:1; display:flex; flex-direction:column; gap:.3rem; }
-        .ocard-top { display:flex; align-items:center; gap:.5rem; }
-        .ocard-name { font-size:.9rem; font-weight:700; color:#0d3d5c; }
-        .gifted-tag { background:#FEF3C7; color:#92400E; font-size:.65rem; font-weight:700; padding:.15rem .45rem; border-radius:999px; }
-        .ocard-meta { font-size:.73rem; color:#9ca3af; display:flex; gap:.4rem; }
-        .ocard-bottom { display:flex; align-items:center; gap:.6rem; }
-        .status-badge { font-size:.68rem; font-weight:700; padding:.15rem .5rem; border-radius:999px; }
-        .ocard-amount { font-size:.75rem; font-weight:700; color:#2d7a4a; margin-right:auto; }
-        .ocard-arrow { color:#9ca3af; font-size:.85rem; flex-shrink:0; }
-      `}</style>
+        <span className="text-gray-400 text-[0.85rem] shrink-0">←</span>
+      </div>
     </Link>
   );
 }
 
+// ── SkeletonCard ──────────────────────────────────────────────────────────────
+
 function SkeletonCard() {
+  const shimmer = 'bg-gradient-to-r from-gray-100 to-gray-200 animate-[shimmer_1.4s_infinite] bg-[length:200%_100%]';
   return (
-    <div style={{ background:'#fafafa', border:'1.5px solid #e5eaf0', borderRadius:'.875rem', padding:'.85rem 1rem', display:'flex', gap:'.85rem', alignItems:'center' }}>
-      <div style={{ width:44, height:44, borderRadius:'50%', background:'#e5e7eb' }} />
-      <div style={{ flex:1, display:'flex', flexDirection:'column', gap:'.4rem' }}>
-        <div style={{ height:14, width:'40%', borderRadius:4, background:'#e5e7eb' }} />
-        <div style={{ height:11, width:'60%', borderRadius:4, background:'#f3f4f6' }} />
-        <div style={{ height:11, width:'30%', borderRadius:4, background:'#f3f4f6' }} />
+    <div className="flex items-center gap-3.5 bg-gray-50 border-[1.5px] border-gray-200 rounded-[0.875rem] py-3.5 px-4">
+      <div className={`w-11 h-11 rounded-full shrink-0 ${shimmer}`} />
+      <div className="flex-1 flex flex-col gap-1.5">
+        <div className={`h-3.5 w-2/5 rounded ${shimmer}`} />
+        <div className={`h-2.5 w-3/5 rounded ${shimmer}`} />
+        <div className={`h-2.5 w-[30%] rounded ${shimmer}`} />
       </div>
     </div>
   );

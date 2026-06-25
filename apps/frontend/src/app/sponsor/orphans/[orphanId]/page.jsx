@@ -7,12 +7,19 @@
  */
 
 import { useEffect, useState } from 'react';
-import { AlertTriangle, User, Handshake, CheckCircle2, XCircle, FileEdit, Check } from 'lucide-react';
+import {
+  AlertTriangle, User, Handshake,
+  CheckCircle2, XCircle, Check,
+} from 'lucide-react';
 
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import sponsorApi from '@/lib/sponsorApi';
 import useSponsorStore from '@/store/useSponsorStore';
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const API_REPORTS = (id) => `/sponsor/reports/${id}`;
 
 const ARABIC_MONTHS = [
   '', 'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
@@ -20,66 +27,77 @@ const ARABIC_MONTHS = [
 ];
 
 const REPORT_STATUS = {
-  pending:  { label: 'قيد المراجعة', color: '#92400E', bg: '#FEF3C7', icon: '⏳' },
-  approved: { label: 'مقبول',        color: '#065F46', bg: '#ECFDF5', icon: '<CheckCircle2 size={16} />' },
-  rejected: { label: 'مرفوض',       color: '#991B1B', bg: '#FEF2F2', icon: '<XCircle size={16} />' },
+  pending:  { label: 'قيد المراجعة', color: '#92400E', bg: '#FEF3C7', Icon: null },
+  approved: { label: 'مقبول',        color: '#065F46', bg: '#ECFDF5', Icon: CheckCircle2 },
+  rejected: { label: 'مرفوض',       color: '#991B1B', bg: '#FEF2F2', Icon: XCircle },
 };
 
 const DISB_STATUS = {
-  draft:               { label: 'مسودة',         color: '#6B7280' },
-  supervisor_approved: { label: 'اعتمد المشرف',  color: '#1E40AF' },
-  finance_approved:    { label: 'اعتمد المالي',  color: '#5B21B6' },
-  released:            { label: 'مُصدَر',         color: '#065F46' },
-  rejected:            { label: 'مرفوض',          color: '#991B1B' },
+  draft:               { label: 'مسودة',        color: '#6B7280' },
+  supervisor_approved: { label: 'اعتمد المشرف', color: '#1E40AF' },
+  finance_approved:    { label: 'اعتمد المالي', color: '#5B21B6' },
+  released:            { label: 'مُصدَر',        color: '#065F46' },
+  rejected:            { label: 'مرفوض',         color: '#991B1B' },
 };
 
-export default function SponsorOrphanDetail() {
-  const { orphanId } = useParams();
-  const router = useRouter();
-  const { isAuthenticated, sponsor } = useSponsorStore();
+// ── Main page ─────────────────────────────────────────────────────────────────
 
-  const [data, setData]     = useState(null);
+export default function SponsorOrphanDetail() {
+  const { orphanId }                    = useParams();
+  const router                          = useRouter();
+  const { isAuthenticated, sponsor }    = useSponsorStore();
+
+  const [data,    setData]    = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError]   = useState('');
-  const [tab, setTab]       = useState('quran'); // 'quran' | 'disbursements'
+  const [error,   setError]   = useState('');
+  const [tab,     setTab]     = useState('quran'); // 'quran' | 'disbursements'
 
   useEffect(() => {
     if (!isAuthenticated()) { router.replace('/sponsor/login'); return; }
-    sponsorApi.get(`/sponsor/reports/${orphanId}`)
+    sponsorApi.get(API_REPORTS(orphanId))
       .then(({ data: res }) => setData(res))
       .catch(() => setError('تعذّر تحميل بيانات هذا اليتيم'))
       .finally(() => setLoading(false));
   }, [orphanId]);
 
   return (
-    <div className="root" dir="rtl">
+    <div className="min-h-screen bg-gray-100 font-sans" dir="rtl">
+
       {/* Header */}
-      <header className="header">
-        <div className="header-inner">
-          <Link href="/sponsor/dashboard" className="back-link">
+      <header className="bg-white border-b border-gray-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
+        <div className="max-w-[900px] mx-auto py-3.5 px-6 flex items-center justify-between">
+          <Link href="/sponsor/dashboard" className="text-[0.85rem] font-semibold text-[#2d7a4a] no-underline hover:underline">
             ← العودة للقائمة
           </Link>
-          <div className="header-brand">
-            <span><Handshake size={32} /></span>
-            <span className="brand-name">بوابة الكافل</span>
+          <div className="flex items-center gap-1.5 text-[0.9rem] font-bold text-[#0d3d5c]">
+            <Handshake size={32} />
+            <span>بوابة الكافل</span>
           </div>
-          <span className="sponsor-name">{sponsor?.name || ''}</span>
+          <span className="text-[0.78rem] text-gray-400">{sponsor?.name || ''}</span>
         </div>
       </header>
 
-      <main className="main">
-        {error && <div className="err-banner"><AlertTriangle size={18} /> {error}</div>}
+      <main className="max-w-[900px] mx-auto py-8 px-6 flex flex-col gap-5">
+
+        {/* Error */}
+        {error && (
+          <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 py-3 px-4 rounded-xl text-[0.875rem]">
+            <AlertTriangle size={18} /> {error}
+          </div>
+        )}
 
         {loading ? (
           <LoadingSkeleton />
         ) : !data ? null : (
           <>
             {/* Orphan header card */}
-            <div className="orphan-header">
-              <div className="orphan-avatar"><User size={18} /></div>
-              <div className="orphan-info">
-                <h1 className="orphan-name">تقارير اليتيم</h1>
-                <p className="orphan-sub">
+            <div className="bg-gradient-to-br from-[#1a4a2e] to-[#2d7a4a] rounded-2xl py-6 px-7 flex items-center gap-5 text-white">
+              <div className="w-14 h-14 bg-white/15 rounded-full flex items-center justify-center shrink-0 text-white">
+                <User size={18} />
+              </div>
+              <div>
+                <h1 className="text-[1.2rem] font-extrabold m-0 mb-1">تقارير اليتيم</h1>
+                <p className="text-[0.8rem] text-white/70 m-0">
                   {data.quran_reports?.length || 0} تقرير حفظ ·{' '}
                   {data.disbursements?.length || 0} دورة صرف
                 </p>
@@ -87,184 +105,150 @@ export default function SponsorOrphanDetail() {
             </div>
 
             {/* Tabs */}
-            <div className="tabs">
-              <button
-                className={`tab ${tab === 'quran' ? 'active' : ''}`}
-                onClick={() => setTab('quran')}
-              >
-                📖 تقارير حفظ القرآن
-                <span className="tab-count">{data.quran_reports?.length || 0}</span>
-              </button>
-              <button
-                className={`tab ${tab === 'disbursements' ? 'active' : ''}`}
-                onClick={() => setTab('disbursements')}
-              >
-                💰 سجل الصرف الشهري
-                <span className="tab-count">{data.disbursements?.length || 0}</span>
-              </button>
+            <div className="flex gap-2 bg-white border-[1.5px] border-gray-200 rounded-[0.875rem] p-2">
+              {[
+                { key: 'quran',         label: '📖 تقارير حفظ القرآن',  count: data.quran_reports?.length || 0 },
+                { key: 'disbursements', label: '💰 سجل الصرف الشهري',   count: data.disbursements?.length || 0 },
+              ].map(({ key, label, count }) => {
+                const isActive = tab === key;
+                return (
+                  <button
+                    key={key}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 border-none rounded-[0.625rem] font-sans text-[0.85rem] font-semibold cursor-pointer transition-all ${isActive ? 'bg-emerald-50 text-[#2d7a4a]' : 'text-gray-500 bg-transparent hover:bg-gray-50'}`}
+                    onClick={() => setTab(key)}
+                  >
+                    {label}
+                    <span className={`text-[0.68rem] font-bold py-0 px-1.5 rounded-full ${isActive ? 'bg-[#2d7a4a] text-white' : 'bg-gray-200 text-gray-700'}`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
             {/* Tab content */}
-            {tab === 'quran' && (
-              <QuranReportsTab reports={data.quran_reports || []} />
-            )}
-            {tab === 'disbursements' && (
-              <DisbursementsTab disbursements={data.disbursements || []} />
-            )}
+            {tab === 'quran'         && <QuranReportsTab    reports={data.quran_reports || []} />}
+            {tab === 'disbursements' && <DisbursementsTab   disbursements={data.disbursements || []} />}
           </>
         )}
       </main>
-
-      <style jsx>{`
-        * { box-sizing:border-box; }
-        .root { min-height:100vh; background:#f0f4f8; font-family:'Cairo','Tajawal',sans-serif; }
-
-        .header { background:#fff; border-bottom:1px solid #e5eaf0; box-shadow:0 1px 4px rgba(0,0,0,.06); }
-        .header-inner { max-width:900px; margin:0 auto; padding:.9rem 1.5rem; display:flex; align-items:center; justify-content:space-between; }
-        .back-link { font-size:.85rem; font-weight:600; color:#2d7a4a; text-decoration:none; }
-        .back-link:hover { text-decoration:underline; }
-        .header-brand { display:flex; align-items:center; gap:.4rem; font-size:.9rem; font-weight:700; color:#0d3d5c; }
-        .sponsor-name { font-size:.78rem; color:#9ca3af; }
-
-        .main { max-width:900px; margin:0 auto; padding:2rem 1.5rem; display:flex; flex-direction:column; gap:1.25rem; }
-
-        .err-banner { background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; padding:.75rem 1rem; border-radius:.75rem; font-size:.875rem; }
-
-        /* Orphan header */
-        .orphan-header { background:linear-gradient(135deg,#1a4a2e,#2d7a4a); border-radius:1rem; padding:1.5rem 1.75rem; display:flex; align-items:center; gap:1.25rem; color:#fff; }
-        .orphan-avatar { font-size:2.5rem; width:56px; height:56px; background:rgba(255,255,255,.15); border-radius:50%; display:flex; align-items:center; justify-content:center; }
-        .orphan-name { font-size:1.2rem; font-weight:800; margin:0 0 .25rem; }
-        .orphan-sub { font-size:.8rem; color:rgba(255,255,255,.7); margin:0; }
-
-        /* Tabs */
-        .tabs { display:flex; gap:.5rem; background:#fff; border:1.5px solid #e5eaf0; border-radius:.875rem; padding:.5rem; }
-        .tab { flex:1; display:flex; align-items:center; justify-content:center; gap:.5rem; padding:.65rem 1rem; border:none; border-radius:.625rem; font-family:'Cairo',sans-serif; font-size:.85rem; font-weight:600; color:#6b7280; background:none; cursor:pointer; transition:all .15s; }
-        .tab.active { background:#f0fdf4; color:#2d7a4a; }
-        .tab:hover:not(.active) { background:#f9fafb; }
-        .tab-count { background:#e5e7eb; color:#374151; font-size:.68rem; font-weight:700; padding:.1rem .45rem; border-radius:999px; }
-        .tab.active .tab-count { background:#2d7a4a; color:#fff; }
-      `}</style>
     </div>
   );
 }
 
-// ── Quran Reports Tab ─────────────────────────────────────────────────────────
+// ── QuranReportsTab ───────────────────────────────────────────────────────────
+
 function QuranReportsTab({ reports }) {
   if (!reports.length) {
     return (
-      <div className="empty-state">
-        <span>📖</span>
-        <p>لا توجد تقارير حفظ بعد</p>
+      <div className="bg-white border-[1.5px] border-gray-200 rounded-2xl py-12 px-4 text-center text-gray-400 flex flex-col items-center gap-2 text-[0.85rem]">
+        <span className="text-[2.5rem]">📖</span>
+        <p className="m-0">لا توجد تقارير حفظ بعد</p>
       </div>
     );
   }
 
   return (
-    <div className="reports-grid">
-      {reports.map(r => {
-        const cfg = REPORT_STATUS[r.status] || REPORT_STATUS.pending;
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4">
+      {reports.map((r) => {
+        const cfg   = REPORT_STATUS[r.status] || REPORT_STATUS.pending;
+        const Icon  = cfg.Icon;
         return (
-          <div key={r.id} className="report-card">
-            <div className="report-top">
-              <div className="report-period">
-                <span className="period-month">{ARABIC_MONTHS[r.month]}</span>
-                <span className="period-year">{r.year}</span>
+          <div key={r.id} className="bg-white border-[1.5px] border-gray-200 rounded-[0.875rem] py-4 px-4.5 flex flex-col gap-3">
+            {/* Top row */}
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col">
+                <span className="text-[0.95rem] font-bold text-[#0d3d5c] leading-none">{ARABIC_MONTHS[r.month]}</span>
+                <span className="text-[0.72rem] text-gray-400">{r.year}</span>
               </div>
-              <span className="report-badge" style={{ color:cfg.color, background:cfg.bg }}>
-                {cfg.icon} {cfg.label}
+              <span className="text-[0.72rem] font-bold py-0.5 px-2.5 rounded-full flex items-center gap-1" style={{ color: cfg.color, background: cfg.bg }}>
+                {Icon && <Icon size={12} />} {cfg.label}
               </span>
             </div>
 
-            <div className="report-juz">
-              <span className="juz-num">{r.juz_memorized}</span>
-              <span className="juz-lbl">جزء محفوظ هذا الشهر</span>
+            {/* Juz count */}
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-[2rem] font-extrabold text-[#2d7a4a] leading-none">{r.juz_memorized}</span>
+              <span className="text-[0.72rem] text-gray-400">جزء محفوظ هذا الشهر</span>
             </div>
 
+            {/* Rejection notes */}
             {r.supervisor_notes && r.status === 'rejected' && (
-              <div className="report-notes">
+              <div className="flex items-start gap-1.5 bg-red-50 rounded-lg py-2 px-2.5 text-[0.75rem] text-red-800">
                 <span>📝</span>
                 <span>{r.supervisor_notes}</span>
               </div>
             )}
 
-            <div className="report-date">
-              {new Date(r.submitted_at).toLocaleDateString('ar-YE', { day:'numeric', month:'short', year:'numeric' })}
+            {/* Submit date */}
+            <div className="text-[0.7rem] text-gray-400 pt-1 border-t border-gray-100">
+              {new Date(r.submitted_at).toLocaleDateString('ar-YE', { day: 'numeric', month: 'short', year: 'numeric' })}
             </div>
           </div>
         );
       })}
-
-      <style jsx>{`
-        .reports-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(240px,1fr)); gap:1rem; }
-        .report-card { background:#fff; border:1.5px solid #e5eaf0; border-radius:.875rem; padding:1rem 1.1rem; display:flex; flex-direction:column; gap:.75rem; }
-        .report-top { display:flex; align-items:center; justify-content:space-between; }
-        .report-period { display:flex; flex-direction:column; }
-        .period-month { font-size:.95rem; font-weight:700; color:#0d3d5c; line-height:1; }
-        .period-year { font-size:.72rem; color:#9ca3af; }
-        .report-badge { font-size:.72rem; font-weight:700; padding:.2rem .6rem; border-radius:999px; }
-        .report-juz { display:flex; align-items:baseline; gap:.4rem; }
-        .juz-num { font-size:2rem; font-weight:800; color:#2d7a4a; line-height:1; }
-        .juz-lbl { font-size:.72rem; color:#9ca3af; }
-        .report-notes { display:flex; align-items:flex-start; gap:.4rem; background:#fef2f2; border-radius:.5rem; padding:.5rem .65rem; font-size:.75rem; color:#991b1b; }
-        .report-date { font-size:.7rem; color:#9ca3af; padding-top:.25rem; border-top:1px solid #f3f4f6; }
-        .empty-state { background:#fff; border:1.5px solid #e5eaf0; border-radius:1rem; padding:3rem; text-align:center; color:#9ca3af; display:flex; flex-direction:column; align-items:center; gap:.5rem; font-size:.85rem; }
-        .empty-state span { font-size:2.5rem; }
-      `}</style>
     </div>
   );
 }
 
-// ── Disbursements Tab ─────────────────────────────────────────────────────────
+// ── DisbursementsTab ──────────────────────────────────────────────────────────
+
 function DisbursementsTab({ disbursements }) {
   if (!disbursements.length) {
     return (
-      <div className="empty-state">
-        <span>💰</span>
-        <p>لا توجد بيانات صرف بعد</p>
+      <div className="bg-white border-[1.5px] border-gray-200 rounded-2xl py-12 px-4 text-center text-gray-400 flex flex-col items-center gap-2 text-[0.85rem]">
+        <span className="text-[2.5rem]">💰</span>
+        <p className="m-0">لا توجد بيانات صرف بعد</p>
       </div>
     );
   }
 
   const totalReleased = disbursements
-    .filter(d => d.list_status === 'released' && d.included)
+    .filter((d) => d.list_status === 'released' && d.included)
     .reduce((s, d) => s + parseFloat(d.amount), 0);
 
   return (
-    <div className="disb-section">
-      <div className="disb-summary">
-        <span className="summary-label">إجمالي المبالغ المُصدَرة:</span>
-        <span className="summary-amount">{totalReleased.toLocaleString('ar-YE')} ريال</span>
+    <div className="flex flex-col gap-4">
+      {/* Summary */}
+      <div className="bg-emerald-50 border-[1.5px] border-emerald-300 rounded-xl py-3.5 px-4 flex items-center justify-between">
+        <span className="text-[0.85rem] font-semibold text-emerald-800">إجمالي المبالغ المُصدَرة:</span>
+        <span className="text-[1.1rem] font-extrabold text-emerald-800">{totalReleased.toLocaleString('ar-YE')} ريال</span>
       </div>
 
-      <div className="disb-table-wrap">
-        <table className="disb-table">
+      {/* Table */}
+      <div className="bg-white border-[1.5px] border-gray-200 rounded-2xl overflow-hidden">
+        <table className="w-full border-collapse text-[0.8rem]">
           <thead>
             <tr>
-              <th>الشهر</th>
-              <th>المبلغ</th>
-              <th>حالة الكشف</th>
-              <th>مُدرَج</th>
-              <th>تأكيد الاستلام</th>
+              {['الشهر', 'المبلغ', 'حالة الكشف', 'مُدرَج', 'تأكيد الاستلام'].map((h) => (
+                <th key={h} className="text-right py-2.5 px-3.5 text-[0.72rem] font-bold text-gray-400 border-b-2 border-gray-100 whitespace-nowrap bg-gray-50">
+                  {h}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {disbursements.map((d, i) => {
               const cfg = DISB_STATUS[d.list_status] || DISB_STATUS.draft;
               return (
-                <tr key={i}>
-                  <td>{ARABIC_MONTHS[d.month]} {d.year}</td>
-                  <td className="td-amount">{parseFloat(d.amount).toLocaleString('ar-YE')} ريال</td>
-                  <td><span className="disb-status" style={{ color:cfg.color }}>{cfg.label}</span></td>
-                  <td>
+                <tr key={i} className="border-b border-gray-50 last:border-b-0 hover:bg-gray-50 transition-colors">
+                  <td className="py-3 px-3.5 text-gray-700">{ARABIC_MONTHS[d.month]} {d.year}</td>
+                  <td className="py-3 px-3.5 font-bold text-[#0d3d5c]">{parseFloat(d.amount).toLocaleString('ar-YE')} ريال</td>
+                  <td className="py-3 px-3.5">
+                    <span className="text-[0.75rem] font-semibold" style={{ color: cfg.color }}>{cfg.label}</span>
+                  </td>
+                  <td className="py-3 px-3.5">
                     {d.included
-                      ? <span className="badge-yes"><Check size={16} /> نعم</span>
-                      : <span className="badge-no" title={d.exclusion_reason}>✗ لا</span>
+                      ? <span className="bg-emerald-50 text-emerald-800 text-[0.72rem] font-bold py-0.5 px-2 rounded-full flex items-center gap-1 w-fit"><Check size={12} /> نعم</span>
+                      : <span className="bg-red-50 text-red-800 text-[0.72rem] font-bold py-0.5 px-2 rounded-full cursor-help" title={d.exclusion_reason}>✗ لا</span>
                     }
                   </td>
-                  <td>
+                  <td className="py-3 px-3.5">
                     {d.receipt_confirmed_at
-                      ? <span className="badge-yes"><Check size={16} /> {new Date(d.receipt_confirmed_at).toLocaleDateString('ar-YE', { day:'numeric', month:'short' })}</span>
-                      : <span className="badge-pending">بانتظار</span>
+                      ? <span className="bg-emerald-50 text-emerald-800 text-[0.72rem] font-bold py-0.5 px-2 rounded-full flex items-center gap-1 w-fit">
+                          <Check size={12} /> {new Date(d.receipt_confirmed_at).toLocaleDateString('ar-YE', { day: 'numeric', month: 'short' })}
+                        </span>
+                      : <span className="bg-gray-100 text-gray-500 text-[0.72rem] font-semibold py-0.5 px-2 rounded-full">بانتظار</span>
                     }
                   </td>
                 </tr>
@@ -273,38 +257,21 @@ function DisbursementsTab({ disbursements }) {
           </tbody>
         </table>
       </div>
-
-      <style jsx>{`
-        .disb-section { display:flex; flex-direction:column; gap:1rem; }
-        .disb-summary { background:#f0fdf4; border:1.5px solid #6ee7b7; border-radius:.75rem; padding:.85rem 1.1rem; display:flex; align-items:center; justify-content:space-between; }
-        .summary-label { font-size:.85rem; font-weight:600; color:#065F46; }
-        .summary-amount { font-size:1.1rem; font-weight:800; color:#065F46; }
-        .disb-table-wrap { background:#fff; border:1.5px solid #e5eaf0; border-radius:1rem; overflow:hidden; }
-        .disb-table { width:100%; border-collapse:collapse; font-size:.8rem; }
-        .disb-table th { text-align:right; padding:.65rem .85rem; font-size:.72rem; font-weight:700; color:#9ca3af; border-bottom:2px solid #f3f4f6; white-space:nowrap; background:#fafafa; }
-        .disb-table td { padding:.7rem .85rem; color:#374151; border-bottom:1px solid #f9fafb; }
-        .disb-table tr:last-child td { border-bottom:none; }
-        .disb-table tr:hover td { background:#fafafa; }
-        .td-amount { font-weight:700; color:#0d3d5c; }
-        .disb-status { font-size:.75rem; font-weight:600; }
-        .badge-yes { background:#ECFDF5; color:#065F46; font-size:.72rem; font-weight:700; padding:.15rem .5rem; border-radius:999px; }
-        .badge-no { background:#fef2f2; color:#991b1b; font-size:.72rem; font-weight:700; padding:.15rem .5rem; border-radius:999px; cursor:help; }
-        .badge-pending { background:#f3f4f6; color:#6b7280; font-size:.72rem; font-weight:600; padding:.15rem .5rem; border-radius:999px; }
-        .empty-state { background:#fff; border:1.5px solid #e5eaf0; border-radius:1rem; padding:3rem; text-align:center; color:#9ca3af; display:flex; flex-direction:column; align-items:center; gap:.5rem; font-size:.85rem; }
-        .empty-state span { font-size:2.5rem; }
-      `}</style>
     </div>
   );
 }
 
+// ── LoadingSkeleton ───────────────────────────────────────────────────────────
+
 function LoadingSkeleton() {
+  const shimmer = 'bg-gradient-to-r from-gray-100 to-gray-200 animate-[shimmer_1.4s_infinite] bg-[length:200%_100%]';
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:'1rem' }}>
-      <div style={{ height:100, borderRadius:'1rem', background:'linear-gradient(90deg,#f3f4f6 25%,#e5e7eb 50%,#f3f4f6 75%)', backgroundSize:'200% 100%', animation:'shimmer 1.4s infinite' }} />
-      <div style={{ height:48, borderRadius:'.875rem', background:'#e5e7eb' }} />
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'1rem' }}>
-        {[1,2,3].map(i => (
-          <div key={i} style={{ height:140, borderRadius:'.875rem', background:'linear-gradient(90deg,#f3f4f6 25%,#e5e7eb 50%,#f3f4f6 75%)', backgroundSize:'200% 100%', animation:'shimmer 1.4s infinite' }} />
+    <div className="flex flex-col gap-4">
+      <div className={`h-24 rounded-2xl ${shimmer}`} />
+      <div className={`h-12 rounded-[0.875rem] ${shimmer}`} />
+      <div className="grid grid-cols-3 gap-4 max-[640px]:grid-cols-1">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className={`h-[140px] rounded-[0.875rem] ${shimmer}`} />
         ))}
       </div>
     </div>
