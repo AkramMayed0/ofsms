@@ -16,6 +16,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import useAuthStore from '../store/useAuthStore';
+import Spinner from '../components/ui/Spinner';
 
 // Maps each role to its home dashboard route
 const ROLE_DASHBOARD = {
@@ -49,7 +50,7 @@ export default function HomePage() {
       dir="rtl"
     >
       <div className="flex flex-col items-center gap-4">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <Spinner size="lg" variant="primaryMuted" />
         <p className="text-sm text-gray-400 font-medium">جارٍ التحميل…</p>
       </div>
     </main>

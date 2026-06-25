@@ -9,6 +9,7 @@ import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import useAuthStore from '@/store/useAuthStore';
 import PrimaryButton from '@/components/ui/PrimaryButton';
+import Spinner from '@/components/ui/Spinner';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -1255,7 +1256,7 @@ export default function OrphanEditPage() {
                 disabled={submitState === 'loading'}
               >
                 {submitState === 'loading'
-                  ? <><span className="inline-block w-[15px] h-[15px] border-2 border-white/40 border-t-white rounded-full animate-spin shrink-0" aria-hidden />جارٍ الحفظ…</>
+                  ? <><Spinner size="sm" />جارٍ الحفظ…</>
                   : isGM ? 'حفظ التعديلات ←' : 'حفظ وإعادة إرسال ←'}
               </PrimaryButton>
             </div>

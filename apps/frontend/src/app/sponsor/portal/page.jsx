@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { AlertTriangle, X, ShieldCheck, ArrowLeft, Users, Bell, LogOut, KeyRound, Heart, HandHeart } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import axios from 'axios';
+import Spinner from '@/components/ui/Spinner';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -136,7 +137,7 @@ function LoginView({ token, onLogin }) {
               >
                 <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
                 {loading ? (
-                  <><span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> جاري التحقق...</>
+                  <><Spinner size="md" />جاري التحقق...</>
                 ) : (
                   <><span>دخول آمن</span> <ArrowLeft size={18} className="transition-transform group-hover:-translate-x-1" /></>
                 )}
@@ -187,7 +188,7 @@ function OrphanDetailModal({ orphanId, orphanName, token, onClose }) {
         <div className="overflow-y-auto p-5 sm:p-6 flex-1 space-y-8 bg-white">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12 gap-3 text-slate-400">
-              <span className="w-8 h-8 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin" />
+              <Spinner size="lg" variant="emerald" />
               <span className="text-sm font-bold">جاري إحضار السجلات...</span>
             </div>
           ) : !data ? (

@@ -19,6 +19,7 @@ import useAuthStore from '../../../store/useAuthStore';
 import TransferSponsorModal from '../../../components/TransferSponsorModal';
 import ShareAdModal from '../../../components/ShareAdModal';
 import PrimaryButton from '@/components/ui/PrimaryButton';
+import Spinner from '@/components/ui/Spinner';
 
 // ── Status config ─────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -298,7 +299,7 @@ function AssignSponsorModal({ isOpen, onClose, onSuccess, familyName, familyId, 
           <button className="inline-flex items-center gap-1.5 py-2.5 px-5 bg-transparent text-gray-500 font-sans text-[0.88rem] font-semibold border-[1.5px] border-[#e5eaf0] rounded-xl cursor-pointer hover:bg-gray-50" onClick={onClose} disabled={loading}>إلغاء</button>
           <button className={`inline-flex items-center gap-1.5 py-2.5 px-6 font-sans text-[0.9rem] font-bold border-none rounded-xl transition-all ${loading ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-gradient-to-br from-emerald-600 to-emerald-700 text-white cursor-pointer shadow-[0_2px_8px_rgba(5,150,105,0.3)] hover:-translate-y-[1px] hover:shadow-[0_4px_14px_rgba(5,150,105,0.4)]'}`} onClick={handleSubmit} disabled={loading}>
             {loading ? (
-              <><span className="inline-block w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />جارٍ التعيين…</>
+              <><Spinner size="sm" />جارٍ التعيين…</>
             ) : (
               <>تعيين الكافل <Check size={16} /></>
             )}

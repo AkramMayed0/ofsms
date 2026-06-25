@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
+import Spinner from '@/components/ui/Spinner';
 import { 
   ArrowRight, 
   Copy, 
@@ -205,7 +206,7 @@ function AssignBeneficiaryModal({ sponsor, onClose, onSuccess }) {
           <button className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-transparent text-gray-500 font-sans text-[0.88rem] font-semibold border border-[#e5eaf0] rounded-xl cursor-pointer hover:bg-slate-50 hover:text-gray-700 transition-colors" onClick={onClose} disabled={loading}>إلغاء</button>
           <button className="inline-flex items-center gap-1.5 px-6 py-2.5 text-white font-sans text-[0.9rem] font-bold border-none rounded-xl cursor-pointer shadow-[0_2px_8px_rgba(27,94,140,0.3)] bg-gradient-to-br from-primary to-[#134569] hover:from-primary-light hover:to-primary hover:-translate-y-0.5 transition-all duration-200 disabled:bg-[#94a3b8] disabled:from-[#94a3b8] disabled:to-[#94a3b8] disabled:cursor-not-allowed disabled:shadow-none" onClick={handleSubmit} disabled={loading}>
             {loading ? (
-              <><span className="inline-block w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />جارٍ التعيين…</>
+              <><Spinner size="sm" />جارٍ التعيين…</>
             ) : (
               <>تعيين المستفيد <Check size={16} /></>
             )}
@@ -314,7 +315,7 @@ function EditSponsorModal({ sponsor, onClose, onSuccess }) {
           <button className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-transparent text-gray-500 font-sans text-[0.88rem] font-semibold border border-[#e5eaf0] rounded-xl cursor-pointer hover:bg-slate-50 hover:text-gray-700 transition-colors" onClick={onClose} disabled={saving}>إلغاء</button>
           <button className="inline-flex items-center gap-1.5 px-6 py-2.5 text-white font-sans text-[0.9rem] font-bold border-none rounded-xl cursor-pointer shadow-[0_2px_8px_rgba(27,94,140,0.3)] bg-gradient-to-br from-primary to-[#134569] hover:from-primary-light hover:to-primary hover:-translate-y-0.5 transition-all duration-200 disabled:bg-[#94a3b8] disabled:from-[#94a3b8] disabled:to-[#94a3b8] disabled:cursor-not-allowed disabled:shadow-none" onClick={handleSubmit} disabled={saving}>
             {saving ? (
-              <><span className="inline-block w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />جارٍ الحفظ…</>
+              <><Spinner size="sm" />جارٍ الحفظ…</>
             ) : (
               <>حفظ التعديلات <Check size={16} /></>
             )}
@@ -369,7 +370,7 @@ function DeleteConfirmModal({ sponsor, onClose, onSuccess }) {
           <button className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-transparent text-gray-500 font-sans text-[0.88rem] font-semibold border border-[#e5eaf0] rounded-xl cursor-pointer hover:bg-slate-50 hover:text-gray-700 transition-colors" onClick={onClose} disabled={deleting}>إلغاء</button>
           <button className="inline-flex items-center gap-1.5 px-6 py-2.5 text-white font-sans text-[0.9rem] font-bold border-none rounded-xl cursor-pointer shadow-[0_2px_8px_rgba(220,38,38,0.25)] bg-red-600 hover:bg-red-700 hover:-translate-y-0.5 transition-all duration-150 disabled:bg-red-400 disabled:cursor-not-allowed disabled:shadow-none" onClick={handleDelete} disabled={deleting}>
             {deleting ? (
-              <><span className="inline-block w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />جارٍ الحذف…</>
+              <><Spinner size="sm" />جارٍ الحذف…</>
             ) : (
               <><Trash2 size={16} /> تأكيد الحذف</>
             )}

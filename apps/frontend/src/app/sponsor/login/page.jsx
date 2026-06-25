@@ -10,6 +10,7 @@ import { AlertTriangle, Lock, ShieldCheck, ArrowLeft, KeyRound } from 'lucide-re
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import useSponsorStore from '@/store/useSponsorStore';
+import Spinner from '@/components/ui/Spinner';
 
 const API_LOGIN_URL = `${process.env.NEXT_PUBLIC_API_URL}/sponsor/login`;
 
@@ -157,7 +158,7 @@ export default function SponsorLoginPage() {
               <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
               
               {loading ? (
-                <><span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> جاري الدخول...</>
+                <><Spinner size="md" />جاري الدخول...</>
               ) : (
                 <>
                   <span>متابعة للدخول</span>

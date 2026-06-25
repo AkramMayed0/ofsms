@@ -6,6 +6,7 @@ import { X, CheckCircle2, AlertTriangle, User, Users, DollarSign, Zap, Search } 
 import api from '@/lib/api';
 import StatusBadge from '@/components/ui/StatusBadge';
 import RejectModal from '@/components/RejectModal';
+import Spinner from '@/components/ui/Spinner';
 import { MONTHS_AR, formatAmount } from './_constants';
 
 export default function ItemsDrawer({ listId, listInfo, role, onClose, onAction }) {
@@ -139,7 +140,7 @@ export default function ItemsDrawer({ listId, listInfo, role, onClose, onAction 
                   onClick={() => doAction('approve')}
                   className="inline-flex items-center gap-1.5 px-6 py-3 bg-gradient-to-br from-emerald-600 to-emerald-700 text-white text-[0.9rem] font-bold rounded-xl border-none cursor-pointer shadow-[0_3px_12px_rgba(5,150,105,0.35)] hover:-translate-y-px hover:shadow-[0_5px_18px_rgba(5,150,105,0.45)] disabled:opacity-60 disabled:cursor-not-allowed transition-all"
                 >
-                  {acting ? <><span className="inline-block w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />جارٍ الاعتماد…</> : <><CheckCircle2 size={16} /> اعتماد الكشف</>}
+                  {acting ? <><Spinner size="sm" variant="white" />جارٍ الاعتماد…</> : <><CheckCircle2 size={16} /> اعتماد الكشف</>}
                 </button>
               )}
 
@@ -149,7 +150,7 @@ export default function ItemsDrawer({ listId, listInfo, role, onClose, onAction 
                   onClick={() => doAction('finance-approve')}
                   className="inline-flex items-center gap-1.5 px-6 py-3 bg-gradient-to-br from-emerald-600 to-emerald-700 text-white text-[0.9rem] font-bold rounded-xl border-none cursor-pointer shadow-[0_3px_12px_rgba(5,150,105,0.35)] hover:-translate-y-px disabled:opacity-60 disabled:cursor-not-allowed transition-all"
                 >
-                  {acting ? <><span className="inline-block w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />جارٍ التصديق…</> : <><CheckCircle2 size={16} /> تصديق مالي</>}
+                  {acting ? <><Spinner size="sm" variant="white" />جارٍ التصديق…</> : <><CheckCircle2 size={16} /> تصديق مالي</>}
                 </button>
               )}
 
@@ -159,7 +160,7 @@ export default function ItemsDrawer({ listId, listInfo, role, onClose, onAction 
                   onClick={() => doAction('release')}
                   className="inline-flex items-center gap-1.5 px-6 py-3 bg-gradient-to-br from-primary to-primary-dark text-white text-[0.9rem] font-bold rounded-xl border-none cursor-pointer shadow-[0_3px_12px_rgba(27,94,140,0.35)] hover:-translate-y-px disabled:opacity-60 disabled:cursor-not-allowed transition-all"
                 >
-                  {acting ? <><span className="inline-block w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />جارٍ الإصدار…</> : <><Zap size={16} /> إصدار الأموال</>}
+                  {acting ? <><Spinner size="sm" variant="white" />جارٍ الإصدار…</> : <><Zap size={16} /> إصدار الأموال</>}
                 </button>
               )}
 

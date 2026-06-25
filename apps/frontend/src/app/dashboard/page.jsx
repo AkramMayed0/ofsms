@@ -9,22 +9,23 @@ import dynamic from 'next/dynamic';
 import AppShell from '@/components/AppShell';
 import useAuthStore from '@/store/useAuthStore';
 import { AlertTriangle } from 'lucide-react';
+import Spinner from '@/components/ui/Spinner';
 
 const AgentDashboard = dynamic(
   () => import('@/components/dashboards/AgentDashboard'),
-  { loading: () => <Spinner />, ssr: false }
+  { loading: () => <LoadingSpinner />, ssr: false }
 );
 const GmDashboard = dynamic(
   () => import('@/components/dashboards/GmDashboard'),
-  { loading: () => <Spinner />, ssr: false }
+  { loading: () => <LoadingSpinner />, ssr: false }
 );
 const SupervisorDashboard = dynamic(
   () => import('@/components/dashboards/SupervisorDashboard'),
-  { loading: () => <Spinner />, ssr: false }
+  { loading: () => <LoadingSpinner />, ssr: false }
 );
 const FinanceDashboard = dynamic(
   () => import('@/components/dashboards/FinanceDashboard'),
-  { loading: () => <Spinner />, ssr: false }
+  { loading: () => <LoadingSpinner />, ssr: false }
 );
 
 const ROLE_DASHBOARDS = {
@@ -40,7 +41,7 @@ export default function DashboardPage() {
 
   const renderDashboard = () => {
     if (!user) {
-      return <Spinner />;
+      return <LoadingSpinner />;
     }
 
     const DashboardComponent = ROLE_DASHBOARDS[role];
@@ -66,10 +67,10 @@ export default function DashboardPage() {
   );
 }
 
-function Spinner() {
+function LoadingSpinner() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 font-sans">
-      <div className="w-9 h-9 border-[3px] border-slate-200 border-t-[#1B5E8C] rounded-full animate-spin" />
+      <Spinner size="xl" variant="primary" />
       <p className="m-0 text-slate-400 text-[0.85rem]">جارٍ التحميل…</p>
     </div>
   );

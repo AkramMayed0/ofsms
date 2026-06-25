@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { X } from 'lucide-react';
+import Spinner from '@/components/ui/Spinner';
 
 export default function RejectModal({ title, onConfirm, onClose, loading }) {
   const { register, handleSubmit, formState: { errors } } = useForm();
@@ -59,7 +60,7 @@ export default function RejectModal({ title, onConfirm, onClose, loading }) {
             >
               {loading ? (
                 <>
-                  <span className="inline-block w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  <Spinner size="sm" variant="white" />
                   جارٍ الرفض…
                 </>
               ) : (

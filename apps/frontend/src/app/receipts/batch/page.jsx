@@ -24,6 +24,7 @@ import { AlertTriangle, User, Users, Handshake, CheckCircle2 } from 'lucide-reac
 import { useSearchParams, useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
+import Spinner from '@/components/ui/Spinner';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -120,7 +121,7 @@ function FingerprintUploader({ item, onUploaded }) {
         disabled={uploading}
       >
         {uploading
-          ? <><span className="inline-block w-[13px] h-[13px] border-2 border-white/40 border-t-white rounded-full animate-spin" aria-hidden /> جارٍ الرفع…</>
+          ? <><Spinner size="xs" /> جارٍ الرفع…</>
           : '📷 رفع البصمة'}
       </button>
       {error && <p className="text-[0.72rem] text-red-600 m-0">{error}</p>}

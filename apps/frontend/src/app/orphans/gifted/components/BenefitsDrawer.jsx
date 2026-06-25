@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { School, Shirt, Briefcase, Bus, AlertCircle, X } from 'lucide-react';
+import Spinner from '@/components/ui/Spinner';
 
 const fmt = (n) =>
   n != null && n !== '' ? Number(n).toLocaleString('ar-YE') : '—';
@@ -225,7 +226,7 @@ export default function BenefitsDrawer({ orphan, onClose, onSaved }) {
           >
             {saving ? (
               <div className="flex items-center justify-center gap-2">
-                <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                <Spinner size="xs" />
                 <span>جارٍ الحفظ…</span>
               </div>
             ) : (

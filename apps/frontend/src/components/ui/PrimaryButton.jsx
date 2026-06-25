@@ -1,3 +1,5 @@
+import Spinner from './Spinner';
+
 export default function PrimaryButton({
   children,
   onClick,
@@ -21,10 +23,7 @@ export default function PrimaryButton({
     >
       {loading ? (
         <>
-          <span
-            className="inline-block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white/40 border-t-white"
-            aria-hidden="true"
-          />
+          <Spinner size="xs" variant="white" />
           {loadingText}
         </>
       ) : (

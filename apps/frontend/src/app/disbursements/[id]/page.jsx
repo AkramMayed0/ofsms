@@ -9,6 +9,7 @@ import AppShell from '@/components/AppShell';
 import useAuthStore from '@/store/useAuthStore';
 import { MONTHS_AR, STATUS_MAP, formatAmount } from '@/components/disbursements/_constants';
 import RejectModal from '@/components/RejectModal';
+import Spinner from '@/components/ui/Spinner';
 
 export default function DisbursementDetailPage() {
   const router = useRouter();
@@ -185,7 +186,7 @@ export default function DisbursementDetailPage() {
                 disabled={acting}
               >
                 {acting
-                  ? <span className="inline-block w-3.5 h-3.5 border-2 border-emerald-300 border-t-emerald-800 rounded-full animate-spin" />
+                  ? <Spinner size="sm" variant="emeraldDark" />
                   : <CheckCircle2 size={16} />}
                 {canSupervisorApprove ? 'اعتماد الكشف' : 'مصادقة المالية'}
               </button>
@@ -197,7 +198,7 @@ export default function DisbursementDetailPage() {
                 disabled={acting}
               >
                 {acting
-                  ? <span className="inline-block w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  ? <Spinner size="sm" />
                   : <Zap size={16} />}
                 إصدار أمر الصرف النهائي
               </button>

@@ -18,6 +18,7 @@ import { Upload, FileText, Image, X, Plus, AlertCircle, CheckCircle2, File, Aler
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import PrimaryButton from '@/components/ui/PrimaryButton';
+import Spinner from '@/components/ui/Spinner';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -1694,7 +1695,7 @@ export default function OrphanRegistrationPage() {
                 disabled={submitState === 'loading'}
               >
                 {submitState === 'loading'
-                  ? <><span className="inline-block w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin shrink-0" aria-hidden /> جارٍ الإرسال…</>
+                  ? <><Spinner size="sm" /> جارٍ الإرسال…</>
                   : 'إرسال للمراجعة ←'}
               </PrimaryButton>
             )}

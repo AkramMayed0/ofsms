@@ -8,6 +8,7 @@ import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import PrimaryButton from '@/components/ui/PrimaryButton';
+import Spinner from '@/components/ui/Spinner';
 
 function SectionHeader({ number, title, subtitle }) {
   return (
@@ -290,7 +291,7 @@ export default function FamilyEditPage() {
                 disabled={submitState === 'loading'}
               >
                 {submitState === 'loading'
-                  ? <><span className="inline-block w-[15px] h-[15px] border-2 border-white/40 border-t-white rounded-full animate-spin shrink-0" aria-hidden />جارٍ الحفظ…</>
+                  ? <><Spinner size="sm" />جارٍ الحفظ…</>
                   : 'حفظ وإعادة إرسال ←'}
               </PrimaryButton>
             </div>

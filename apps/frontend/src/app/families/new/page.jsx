@@ -19,6 +19,7 @@ import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import PrimaryButton from '@/components/ui/PrimaryButton';
+import Spinner from '@/components/ui/Spinner';
 
 // ── Section header ─────────────────────────────────────────────────────────────
 
@@ -389,7 +390,7 @@ export default function FamilyRegistrationPage() {
                 disabled={submitState === 'loading'}
               >
                 {submitState === 'loading'
-                  ? <><span className="inline-block w-[15px] h-[15px] border-2 border-white/40 border-t-white rounded-full animate-spin shrink-0" aria-hidden />جارٍ الإرسال…</>
+                  ? <><Spinner size="sm" />جارٍ الإرسال…</>
                   : <span className="flex items-center gap-1.5">إرسال للمراجعة <Check size={16} /></span>}
               </PrimaryButton>
             )}

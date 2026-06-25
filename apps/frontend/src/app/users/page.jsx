@@ -22,6 +22,7 @@ import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import useAuthStore from '@/store/useAuthStore';
 import PrimaryButton from '@/components/ui/PrimaryButton';
+import Spinner from '@/components/ui/Spinner';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -284,7 +285,7 @@ function UserFormModal({ mode, user, onClose, onSaved }) {
               disabled={saving}
             >
               {saving ? (
-                <><RefreshCw className="h-4 w-4 animate-spin" /> جارٍ الحفظ…</>
+                <><Spinner size="xs" variant="white" /> جارٍ الحفظ…</>
               ) : (
                 isEdit ? 'حفظ التغييرات' : 'إضافة المستخدم'
               )}
@@ -333,7 +334,7 @@ function DeleteConfirmModal({ user, onClose, onConfirm, loading }) {
               disabled={loading}
             >
               {loading ? (
-                <><RefreshCw className="h-4 w-4 animate-spin" /> جاري الحذف…</>
+                <><Spinner size="xs" variant="white" /> جاري الحذف…</>
               ) : (
                 'نعم، احذف المستخدم'
               )}

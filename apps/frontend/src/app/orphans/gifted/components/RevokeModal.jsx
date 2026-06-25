@@ -1,4 +1,5 @@
 import { AlertTriangle } from 'lucide-react';
+import Spinner from '@/components/ui/Spinner';
 
 export default function RevokeModal({ orphan, onClose, onConfirm, loading }) {
   if (!orphan) return null;
@@ -27,7 +28,7 @@ export default function RevokeModal({ orphan, onClose, onConfirm, loading }) {
           >
             {loading ? (
               <div className="flex items-center justify-center gap-2">
-                <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                <Spinner size="xs" />
                 <span>جارٍ الإلغاء…</span>
               </div>
             ) : (

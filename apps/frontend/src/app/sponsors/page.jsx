@@ -16,6 +16,7 @@ import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import PrimaryButton from '@/components/ui/PrimaryButton';
+import Spinner from '@/components/ui/Spinner';
 import { 
   Search, 
   Plus, 
@@ -125,7 +126,7 @@ function CreateSponsorModal({ onClose, onCreated }) {
           <div className="flex gap-3 justify-end pt-2 border-t border-[#f0f4f8] mt-2">
             <button type="button" className="inline-flex items-center px-5 py-2.5 bg-transparent text-primary font-sans text-[0.88rem] font-semibold border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-all duration-150 hover:bg-[#f0f7ff]" onClick={onClose}>إلغاء</button>
             <PrimaryButton type="submit" disabled={saving}>
-              {saving ? <><span className="inline-block w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />جارٍ الحفظ…</> : 'إضافة الكافل'}
+              {saving ? <><Spinner size="sm" />جارٍ الحفظ…</> : 'إضافة الكافل'}
             </PrimaryButton>
           </div>
         </form>

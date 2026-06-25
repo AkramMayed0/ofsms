@@ -6,6 +6,7 @@ import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
 import useAuthStore from '../../store/useAuthStore';
 import PrimaryButton from '@/components/ui/PrimaryButton';
+import Spinner from '@/components/ui/Spinner';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const TOAST_DURATION   = 3000; // ms
@@ -467,7 +468,7 @@ export default function AnnouncementsPage() {
                   disabled={saving}
                 >
                   {saving
-                    ? <><span className="inline-block w-3.5 h-3.5 border-2 border-white/35 border-t-white rounded-full animate-spin flex-shrink-0" /> جارٍ الحفظ…</>
+                    ? <><Spinner size="sm" variant="whiteMuted" /> جارٍ الحفظ…</>
                     : editTarget ? 'حفظ التعديلات' : 'نشر الإعلان'}
                 </button>
               </div>
@@ -516,7 +517,7 @@ export default function AnnouncementsPage() {
                   disabled={deleting}
                 >
                   {deleting
-                    ? <><span className="inline-block w-3.5 h-3.5 border-2 border-white/35 border-t-white rounded-full animate-spin flex-shrink-0" /> جارٍ الحذف…</>
+                    ? <><Spinner size="sm" variant="whiteMuted" /> جارٍ الحذف…</>
                     : <><Trash2 size={14} /> تأكيد الحذف</>}
                 </button>
               </div>

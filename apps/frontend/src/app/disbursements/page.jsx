@@ -9,6 +9,7 @@ import useAuthStore from '@/store/useAuthStore';
 import { MONTHS_AR, formatDate, formatAmount } from '@/components/disbursements/_constants';
 import StatusBadge from '@/components/ui/StatusBadge';
 import ItemsDrawer from '@/components/disbursements/ItemsDrawer';
+import Spinner from '@/components/ui/Spinner';
 
 export default function DisbursementsPage() {
   const user = useAuthStore((s) => s.user);
@@ -81,7 +82,7 @@ export default function DisbursementsPage() {
               disabled={generating}
             >
               {generating
-                ? <><span className="inline-block w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />جارٍ الإنشاء…</>
+                ? <><Spinner size="sm" />جارٍ الإنشاء…</>
                 : '+ إنشاء كشف هذا الشهر'}
             </button>
           )}
