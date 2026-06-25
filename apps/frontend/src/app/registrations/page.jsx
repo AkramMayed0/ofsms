@@ -8,22 +8,40 @@
  *         PATCH /api/families/:id/status      → approve / reject family
  *
  * Layout:
- *   Left  — filterable queue list
- *   Right — slide-in detail panel (opens on row click)
- *           with Approve / Reject (+ notes modal) actions
+ *   Queue list with filter tabs
+ *   Slide-in detail panel (opens on row click)
+ *   with Approve / Reject (+ notes modal) actions
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { AlertTriangle, X, User, Users, Check, RefreshCw, MapPin, CalendarDays, UserCircle, Users2, CheckCircle2 } from 'lucide-react';
+import {
+  AlertTriangle, X, User, Users, Check, RefreshCw,
+  MapPin, CalendarDays, UserCircle, Users2, CheckCircle2,
+} from 'lucide-react';
 
-import api from '../../lib/api';
-import AppShell from '../../components/AppShell';
+import api from '@/lib/api';
+import AppShell from '@/components/AppShell';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const GUARDIAN_LABELS = {
-  uncle: 'عم', maternal_uncle: 'خال', grandfather: 'جد',
-  sibling: 'أخ / أخت', other: 'أخرى',
+
+const API_ENDPOINTS = {
+  QUEUE:          '/supervisor/queue',
+  ORPHAN_STATUS:  (id) => `/orphans/${id}/status`,
+  FAMILY_STATUS:  (id) => `/families/${id}/status`,
 };
+
+const APPROVE_STATUS  = 'under_marketing';
+const TOAST_DURATION  = 3000; // ms
+
+const GUARDIAN_LABELS = {
+  uncle:         'عم',
+  maternal_uncle: 'خال',
+  grandfather:   'جد',
+  sibling:       'أخ / أخت',
+  other:         'أخرى',
+};
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 const calcAge = (dob) => {
   if (!dob) return null;
@@ -42,59 +60,86 @@ const fmtDateRelative = (d) => {
   return fmtDate(d);
 };
 
-// ── Skeleton row ──────────────────────────────────────────────────────────────
+const statusEndpoint = (record) =>
+  record.record_type === 'orphan'
+    ? API_ENDPOINTS.ORPHAN_STATUS(record.id)
+    : API_ENDPOINTS.FAMILY_STATUS(record.id);
+
+// ── SkeletonRow ───────────────────────────────────────────────────────────────
+
 function SkeletonRow() {
+  const shimmer = 'bg-gradient-to-r from-gray-100 to-gray-200 animate-[shimmer_1.4s_infinite] bg-[length:200%_100%]';
   return (
-    <div className="queue-row sk-row">
-      <div className="sk-badge" />
-      <div className="sk-lines">
-        <div className="sk-line" style={{ width: 160 }} />
-        <div className="sk-line" style={{ width: 100 }} />
+    <div className="flex items-center gap-3.5 py-3.5 px-5 border-b border-gray-50 pointer-events-none">
+      <div className={`w-[38px] h-[38px] rounded-xl shrink-0 ${shimmer}`} />
+      <div className="flex-1 flex flex-col gap-1.5">
+        <div className={`h-3 rounded-full ${shimmer}`} style={{ width: 160 }} />
+        <div className={`h-2.5 rounded-full ${shimmer}`} style={{ width: 100 }} />
       </div>
-      <div className="sk-line" style={{ width: 70 }} />
+      <div className={`h-2.5 rounded-full ${shimmer}`} style={{ width: 70 }} />
     </div>
   );
 }
 
-// ── Reject modal ──────────────────────────────────────────────────────────────
+// ── RejectModal ───────────────────────────────────────────────────────────────
+
 function RejectModal({ record, onConfirm, onCancel, loading }) {
   const [notes, setNotes] = useState('');
+
   return (
-    <div className="modal-overlay" onClick={onCancel}>
-      <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <span className="modal-icon"><AlertTriangle size={18} /></span>
+    <div
+      className="fixed inset-0 bg-black/45 backdrop-blur-[3px] z-[500] flex items-center justify-content-center sm:items-center items-end p-4 sm:p-4 p-0 font-sans animate-[fadeIn_0.15s_ease]"
+      style={{ direction: 'rtl' }}
+      onClick={onCancel}
+    >
+      <div
+        className="bg-white border border-gray-200 rounded-2xl w-full max-w-[440px] shadow-[0_20px_60px_rgba(0,0,0,0.18)] overflow-hidden animate-[slideUp_0.2s_ease] mx-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-start gap-3.5 py-5 px-6 bg-red-50 border-b border-red-200">
+          <span className="text-red-600 shrink-0 mt-0.5"><AlertTriangle size={18} /></span>
           <div>
-            <h3 className="modal-title">رفض التسجيل</h3>
-            <p className="modal-sub">
-              {record.record_type === 'orphan' ? record.name : record.name}
-            </p>
+            <h3 className="text-[1rem] font-extrabold text-red-700 m-0 mb-0.5">رفض التسجيل</h3>
+            <p className="text-[0.8rem] text-gray-500 m-0">{record.name}</p>
           </div>
         </div>
-        <div className="modal-body">
-          <label className="modal-label">سبب الرفض <span className="req">*</span></label>
+
+        {/* Body */}
+        <div className="py-5 px-6">
+          <label className="block text-[0.8rem] font-bold text-gray-700 mb-2">
+            سبب الرفض <span className="text-red-600">*</span>
+          </label>
           <textarea
-            className="modal-textarea"
+            className="w-full border-[1.5px] border-gray-200 rounded-xl py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 resize-y outline-none bg-gray-50 transition-colors focus:border-red-500 focus:ring-[3px] focus:ring-red-500/8 focus:bg-white box-border"
             rows={4}
             placeholder="اكتب سبب الرفض ليُرسَل للمندوب عبر الإشعارات…"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             autoFocus
           />
-          <p className="modal-hint">
+          <p className="text-[0.75rem] text-gray-400 mt-2 mb-0">
             سيتلقى المندوب إشعاراً فورياً يتضمن هذا السبب.
           </p>
         </div>
-        <div className="modal-actions">
-          <button className="btn-ghost" onClick={onCancel} disabled={loading}>
+
+        {/* Actions */}
+        <div className="flex gap-3 py-4 px-6 border-t border-gray-100">
+          <button
+            className="flex-1 py-2.5 bg-transparent border-[1.5px] border-gray-200 rounded-xl font-sans text-[0.85rem] font-semibold text-gray-500 cursor-pointer transition-colors hover:not(:disabled):border-gray-400 hover:not(:disabled):text-gray-700 disabled:opacity-50"
+            onClick={onCancel}
+            disabled={loading}
+          >
             إلغاء
           </button>
           <button
-            className={`btn-reject ${!notes.trim() || loading ? 'btn-disabled' : ''}`}
+            className={`flex-[2] py-2.5 bg-gradient-to-br from-red-600 to-red-700 text-white font-sans text-[0.88rem] font-bold border-none rounded-xl cursor-pointer flex items-center justify-center gap-1.5 shadow-[0_2px_8px_rgba(220,38,38,0.25)] transition-all ${!notes.trim() || loading ? 'opacity-40 cursor-not-allowed' : 'hover:-translate-y-px hover:shadow-[0_4px_14px_rgba(220,38,38,0.35)]'}`}
             onClick={() => notes.trim() && onConfirm(notes.trim())}
             disabled={!notes.trim() || loading}
           >
-            {loading ? <span className="spin" /> : <><X size={16} /> تأكيد الرفض</>}
+            {loading
+              ? <span className="inline-block w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-[spin_0.6s_linear_infinite] shrink-0" />
+              : <><X size={16} /> تأكيد الرفض</>}
           </button>
         </div>
       </div>
@@ -102,98 +147,114 @@ function RejectModal({ record, onConfirm, onCancel, loading }) {
   );
 }
 
-// ── Detail modal ──────────────────────────────────────────────────────────────
+// ── DetailPanel ───────────────────────────────────────────────────────────────
+
 function DetailPanel({ record, onApprove, onReject, actionLoading, onClose }) {
   const isOrphan = record.record_type === 'orphan';
 
-  return (
-    <div className="dp-overlay" onClick={onClose}>
-      <div className="dp-box" onClick={(e) => e.stopPropagation()}>
+  const headerClass = isOrphan
+    ? 'bg-gradient-to-br from-[#0d3d5c] to-[#1B5E8C]'
+    : 'bg-gradient-to-br from-[#065f46] to-[#059669]';
 
-        {/* ── Gradient header ── */}
-        <div className={`dp-header ${isOrphan ? 'dp-header-orphan' : 'dp-header-family'}`}>
-          <div className="dp-avatar">
+  return (
+    <div
+      className="fixed inset-0 bg-[rgba(13,61,92,0.45)] backdrop-blur-[4px] z-[400] flex items-center justify-center p-4 animate-[fadeIn_0.18s_ease] font-sans"
+      style={{ direction: 'rtl' }}
+      onClick={onClose}
+    >
+      <div
+        className="bg-white border border-gray-200 rounded-2xl w-full max-w-[500px] max-h-[88vh] flex flex-col shadow-[0_32px_80px_rgba(13,61,92,0.22)] overflow-hidden animate-[slideUp_0.22s_cubic-bezier(0.22,1,0.36,1)]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Gradient header */}
+        <div className={`flex items-center gap-3.5 py-5 px-6 text-white shrink-0 ${headerClass}`}>
+          <div className="w-[46px] h-[46px] rounded-xl bg-white/18 flex items-center justify-center shrink-0">
             {isOrphan ? <User size={22} /> : <Users size={22} />}
           </div>
-          <div className="dp-title-wrap">
-            <h2 className="dp-name">{record.name}</h2>
-            <span className={`dp-chip ${isOrphan ? 'dp-chip-orphan' : 'dp-chip-family'}`}>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-[1.1rem] font-extrabold text-white m-0 mb-0.5 truncate">{record.name}</h2>
+            <span className={`inline-block text-[0.68rem] font-bold py-0.5 px-2 rounded-full bg-white/20 ${isOrphan ? 'text-blue-200' : 'text-emerald-200'}`}>
               {isOrphan ? 'يتيم' : 'أسرة'}
             </span>
           </div>
-          <button className="dp-close" onClick={onClose} aria-label="إغلاق">
+          <button
+            className="w-[30px] h-[30px] bg-white/15 border-none rounded-lg text-white cursor-pointer flex items-center justify-center shrink-0 transition-colors hover:bg-white/28"
+            onClick={onClose}
+            aria-label="إغلاق"
+          >
             <X size={16} />
           </button>
         </div>
 
-        {/* ── Info grid ── */}
-        <div className="dp-body">
-          <div className="dp-grid">
-            <div className="dp-info-card">
-              <MapPin size={14} className="dp-info-icon" />
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto min-h-0 py-5 px-6 flex flex-col gap-4">
+          {/* Info grid */}
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="flex items-start gap-2 bg-gray-50 border border-gray-200 rounded-xl py-2.5 px-3">
+              <MapPin size={14} className="text-[#1B5E8C] mt-0.5 shrink-0" />
               <div>
-                <span className="dp-info-label">المحافظة</span>
-                <span className="dp-info-val">{record.governorate_ar || '—'}</span>
+                <span className="block text-[0.68rem] font-bold text-gray-400 mb-0.5">المحافظة</span>
+                <span className="block text-[0.83rem] font-semibold text-gray-800">{record.governorate_ar || '—'}</span>
               </div>
             </div>
-            <div className="dp-info-card">
-              <UserCircle size={14} className="dp-info-icon" />
+            <div className="flex items-start gap-2 bg-gray-50 border border-gray-200 rounded-xl py-2.5 px-3">
+              <UserCircle size={14} className="text-[#1B5E8C] mt-0.5 shrink-0" />
               <div>
-                <span className="dp-info-label">المندوب</span>
-                <span className="dp-info-val">{record.agent_name || '—'}</span>
+                <span className="block text-[0.68rem] font-bold text-gray-400 mb-0.5">المندوب</span>
+                <span className="block text-[0.83rem] font-semibold text-gray-800">{record.agent_name || '—'}</span>
               </div>
             </div>
-            <div className="dp-info-card">
-              <CalendarDays size={14} className="dp-info-icon" />
+            <div className="flex items-start gap-2 bg-gray-50 border border-gray-200 rounded-xl py-2.5 px-3">
+              <CalendarDays size={14} className="text-[#1B5E8C] mt-0.5 shrink-0" />
               <div>
-                <span className="dp-info-label">تاريخ التسجيل</span>
-                <span className="dp-info-val">{fmtDate(record.created_at)}</span>
+                <span className="block text-[0.68rem] font-bold text-gray-400 mb-0.5">تاريخ التسجيل</span>
+                <span className="block text-[0.83rem] font-semibold text-gray-800">{fmtDate(record.created_at)}</span>
               </div>
             </div>
             {isOrphan && record.date_of_birth && (
-              <div className="dp-info-card">
-                <CalendarDays size={14} className="dp-info-icon" />
+              <div className="flex items-start gap-2 bg-gray-50 border border-gray-200 rounded-xl py-2.5 px-3">
+                <CalendarDays size={14} className="text-[#1B5E8C] mt-0.5 shrink-0" />
                 <div>
-                  <span className="dp-info-label">العمر</span>
-                  <span className="dp-info-val">{calcAge(record.date_of_birth)} سنة</span>
+                  <span className="block text-[0.68rem] font-bold text-gray-400 mb-0.5">العمر</span>
+                  <span className="block text-[0.83rem] font-semibold text-gray-800">{calcAge(record.date_of_birth)} سنة</span>
                 </div>
               </div>
             )}
             {isOrphan && record.gender && (
-              <div className="dp-info-card">
-                <User size={14} className="dp-info-icon" />
+              <div className="flex items-start gap-2 bg-gray-50 border border-gray-200 rounded-xl py-2.5 px-3">
+                <User size={14} className="text-[#1B5E8C] mt-0.5 shrink-0" />
                 <div>
-                  <span className="dp-info-label">الجنس</span>
-                  <span className="dp-info-val">{record.gender === 'female' ? 'أنثى' : 'ذكر'}</span>
+                  <span className="block text-[0.68rem] font-bold text-gray-400 mb-0.5">الجنس</span>
+                  <span className="block text-[0.83rem] font-semibold text-gray-800">{record.gender === 'female' ? 'أنثى' : 'ذكر'}</span>
                 </div>
               </div>
             )}
             {record.guardian_name && (
-              <div className="dp-info-card">
-                <UserCircle size={14} className="dp-info-icon" />
+              <div className="flex items-start gap-2 bg-gray-50 border border-gray-200 rounded-xl py-2.5 px-3">
+                <UserCircle size={14} className="text-[#1B5E8C] mt-0.5 shrink-0" />
                 <div>
-                  <span className="dp-info-label">{isOrphan ? 'الوصي' : 'رب الأسرة'}</span>
-                  <span className="dp-info-val">{record.guardian_name}</span>
+                  <span className="block text-[0.68rem] font-bold text-gray-400 mb-0.5">{isOrphan ? 'الوصي' : 'رب الأسرة'}</span>
+                  <span className="block text-[0.83rem] font-semibold text-gray-800">{record.guardian_name}</span>
                 </div>
               </div>
             )}
             {isOrphan && record.guardian_relation && (
-              <div className="dp-info-card">
-                <Users2 size={14} className="dp-info-icon" />
+              <div className="flex items-start gap-2 bg-gray-50 border border-gray-200 rounded-xl py-2.5 px-3">
+                <Users2 size={14} className="text-[#1B5E8C] mt-0.5 shrink-0" />
                 <div>
-                  <span className="dp-info-label">صلة الوصي</span>
-                  <span className="dp-info-val">
+                  <span className="block text-[0.68rem] font-bold text-gray-400 mb-0.5">صلة الوصي</span>
+                  <span className="block text-[0.83rem] font-semibold text-gray-800">
                     {GUARDIAN_LABELS[record.guardian_relation] || record.guardian_relation}
                   </span>
                 </div>
               </div>
             )}
             {!isOrphan && record.member_count && (
-              <div className="dp-info-card">
-                <Users size={14} className="dp-info-icon" />
+              <div className="flex items-start gap-2 bg-gray-50 border border-gray-200 rounded-xl py-2.5 px-3">
+                <Users size={14} className="text-[#1B5E8C] mt-0.5 shrink-0" />
                 <div>
-                  <span className="dp-info-label">عدد الأفراد</span>
-                  <span className="dp-info-val">{record.member_count}</span>
+                  <span className="block text-[0.68rem] font-bold text-gray-400 mb-0.5">عدد الأفراد</span>
+                  <span className="block text-[0.83rem] font-semibold text-gray-800">{record.member_count}</span>
                 </div>
               </div>
             )}
@@ -201,16 +262,16 @@ function DetailPanel({ record, onApprove, onReject, actionLoading, onClose }) {
 
           {/* Notes */}
           {record.notes && (
-            <div className="dp-section">
-              <p className="dp-section-title">ملاحظات المندوب</p>
-              <p className="dp-notes">{record.notes}</p>
+            <div className="bg-amber-50 border border-amber-200 rounded-xl py-3 px-4">
+              <p className="text-[0.7rem] font-extrabold text-amber-800 tracking-wider mb-1.5 m-0">ملاحظات المندوب</p>
+              <p className="text-[0.85rem] text-gray-700 leading-relaxed m-0">{record.notes}</p>
             </div>
           )}
 
-          {/* Documents link */}
+          {/* Full file link */}
           <a
             href={`/${isOrphan ? 'orphans' : 'families'}/${record.id}`}
-            className="dp-docs-link"
+            className="inline-flex items-center self-start text-[0.8rem] font-bold text-[#1B5E8C] no-underline py-2 px-3 border-[1.5px] border-blue-200 rounded-xl bg-blue-50 transition-colors hover:bg-blue-100 hover:border-blue-300"
             target="_blank"
             rel="noreferrer"
           >
@@ -218,42 +279,50 @@ function DetailPanel({ record, onApprove, onReject, actionLoading, onClose }) {
           </a>
         </div>
 
-        {/* ── Actions ── */}
-        <div className="dp-actions">
-          <button className="dp-btn-approve" onClick={onApprove} disabled={!!actionLoading}>
+        {/* Actions */}
+        <div className="flex gap-3 py-4 px-6 border-t-[1.5px] border-gray-100 bg-white shrink-0">
+          <button
+            className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-gradient-to-br from-emerald-600 to-emerald-700 text-white font-sans text-[0.9rem] font-bold border-none rounded-xl cursor-pointer shadow-[0_2px_8px_rgba(5,150,105,0.25)] transition-all disabled:opacity-55 disabled:cursor-not-allowed hover:not(:disabled):-translate-y-px hover:not(:disabled):shadow-[0_4px_16px_rgba(5,150,105,0.35)]"
+            onClick={onApprove}
+            disabled={!!actionLoading}
+          >
             {actionLoading === 'approve'
-              ? <><span className="spin spin-sm" /> جارٍ الاعتماد…</>
+              ? <><span className="inline-block w-3.5 h-3.5 border-2 border-white/35 border-t-white rounded-full animate-[spin_0.6s_linear_infinite]" /> جارٍ الاعتماد…</>
               : <><Check size={16} /> اعتماد التسجيل</>}
           </button>
-          <button className="dp-btn-reject" onClick={onReject} disabled={!!actionLoading}>
+          <button
+            className="flex items-center justify-center gap-1.5 py-3 px-5 bg-white border-[1.5px] border-red-300 text-red-600 font-sans text-[0.88rem] font-bold rounded-xl cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:not(:disabled):bg-red-50 hover:not(:disabled):border-red-400"
+            onClick={onReject}
+            disabled={!!actionLoading}
+          >
             <X size={15} /> رفض
           </button>
         </div>
-
       </div>
     </div>
   );
 }
 
 // ── Main page ─────────────────────────────────────────────────────────────────
+
 export default function RegistrationsPage() {
-  const [queue, setQueue]             = useState([]);
-  const [loading, setLoading]         = useState(true);
-  const [error, setError]             = useState('');
-  const [filter, setFilter]           = useState('all');   // all | orphan | family
-  const [selected, setSelected]       = useState(null);    // the record in detail panel
-  const [rejectTarget, setRejectTarget] = useState(null);  // record for reject modal
-  const [actionLoading, setActionLoading] = useState(null); // 'approve' | 'reject' | null
-  const [toast, setToast]             = useState(null);    // { msg, type }
+  const [queue,         setQueue]         = useState([]);
+  const [loading,       setLoading]       = useState(true);
+  const [error,         setError]         = useState('');
+  const [filter,        setFilter]        = useState('all');   // all | orphan | family
+  const [selected,      setSelected]      = useState(null);    // record in detail panel
+  const [rejectTarget,  setRejectTarget]  = useState(null);    // record for reject modal
+  const [actionLoading, setActionLoading] = useState(null);    // 'approve' | 'reject' | null
+  const [toast,         setToast]         = useState(null);    // { msg, type }
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
+    setTimeout(() => setToast(null), TOAST_DURATION);
   };
 
   const fetchQueue = useCallback(() => {
     setLoading(true);
-    api.get('/supervisor/queue')
+    api.get(API_ENDPOINTS.QUEUE)
       .then((res) => setQueue(res.data.queue || []))
       .catch(() => setError('تعذّر تحميل قائمة الانتظار.'))
       .finally(() => setLoading(false));
@@ -268,11 +337,8 @@ export default function RegistrationsPage() {
   // ── Approve ──
   const handleApprove = async (record) => {
     setActionLoading('approve');
-    const endpoint = record.record_type === 'orphan'
-      ? `/orphans/${record.id}/status`
-      : `/families/${record.id}/status`;
     try {
-      await api.patch(endpoint, { status: 'under_marketing' });
+      await api.patch(statusEndpoint(record), { status: APPROVE_STATUS });
       setQueue((prev) => prev.filter((r) => r.id !== record.id));
       setSelected(null);
       showToast(`تمت الموافقة على ${record.name} وانتقل إلى التسويق`);
@@ -287,11 +353,8 @@ export default function RegistrationsPage() {
   const handleRejectConfirm = async (notes) => {
     if (!rejectTarget) return;
     setActionLoading('reject');
-    const endpoint = rejectTarget.record_type === 'orphan'
-      ? `/orphans/${rejectTarget.id}/status`
-      : `/families/${rejectTarget.id}/status`;
     try {
-      await api.patch(endpoint, { status: 'rejected', notes });
+      await api.patch(statusEndpoint(rejectTarget), { status: 'rejected', notes });
       setQueue((prev) => prev.filter((r) => r.id !== rejectTarget.id));
       if (selected?.id === rejectTarget.id) setSelected(null);
       setRejectTarget(null);
@@ -303,17 +366,28 @@ export default function RegistrationsPage() {
     }
   };
 
-  // Counts
   const orphanCount = queue.filter((r) => r.record_type === 'orphan').length;
   const familyCount = queue.filter((r) => r.record_type === 'family').length;
 
+  const STAT_PILLS = [
+    { label: 'إجمالي الطلبات', count: queue.length,  colorClass: 'text-[#1B5E8C]' },
+    { label: 'أيتام',           count: orphanCount,   colorClass: 'text-amber-500' },
+    { label: 'أسر',             count: familyCount,   colorClass: 'text-emerald-500' },
+  ];
+
+  const FILTER_TABS = [
+    { value: 'all',    label: 'الكل',  count: queue.length },
+    { value: 'orphan', label: 'أيتام', count: orphanCount },
+    { value: 'family', label: 'أسر',   count: familyCount },
+  ];
+
   return (
     <AppShell>
-      <div className="page" dir="rtl">
+      <div className="max-w-[900px] mx-auto flex flex-col gap-4 font-sans pb-12 relative" dir="rtl">
 
         {/* ── Toast ── */}
         {toast && (
-          <div className={`toast ${toast.type === 'error' ? 'toast-err' : 'toast-ok'}`}>
+          <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 py-3 px-6 rounded-full text-[0.85rem] font-semibold z-[100] whitespace-nowrap shadow-[0_4px_20px_rgba(0,0,0,0.15)] animate-[toastIn_0.25s_ease] ${toast.type === 'error' ? 'bg-red-600 text-white' : 'bg-[#0d3d5c] text-white'}`}>
             {toast.msg}
           </div>
         )}
@@ -329,98 +403,103 @@ export default function RegistrationsPage() {
         )}
 
         {/* ── Page header ── */}
-        <div className="page-header">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="page-title">طلبات التسجيل</h1>
-            <p className="page-sub">
+            <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] m-0 mb-0.5">طلبات التسجيل</h1>
+            <p className="text-[0.82rem] text-gray-400 m-0">
               {loading ? '…' : `${queue.length} طلب بانتظار المراجعة`}
             </p>
           </div>
-          <button className="btn-refresh" onClick={fetchQueue} title="تحديث">
+          <button
+            className="flex items-center justify-center w-9 h-9 border-[1.5px] border-gray-200 rounded-xl bg-white text-gray-500 cursor-pointer shrink-0 transition-colors hover:border-[#1B5E8C] hover:text-[#1B5E8C] hover:bg-blue-50"
+            onClick={fetchQueue}
+            title="تحديث"
+          >
             <RefreshCw size={14} />
           </button>
         </div>
 
         {/* ── Stat pills ── */}
-        <div className="stat-pills">
-          {[
-            { label: 'إجمالي الطلبات', count: queue.length,  color: '#1B5E8C' },
-            { label: 'أيتام',           count: orphanCount,   color: '#F59E0B' },
-            { label: 'أسر',             count: familyCount,   color: '#10B981' },
-          ].map((p) => (
-            <div key={p.label} className="stat-pill">
-              <span className="stat-pill-count" style={{ color: p.color }}>{loading ? '…' : p.count}</span>
-              <span className="stat-pill-label">{p.label}</span>
+        <div className="flex gap-2.5 flex-wrap">
+          {STAT_PILLS.map(({ label, count, colorClass }) => (
+            <div key={label} className="inline-flex flex-col items-center gap-0.5 py-2.5 px-4 bg-white border-[1.5px] border-gray-200 rounded-xl min-w-[80px] flex-1 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+              <span className={`text-[1.35rem] font-extrabold leading-none ${colorClass}`}>
+                {loading ? '…' : count}
+              </span>
+              <span className="text-[0.72rem] font-semibold text-gray-500 whitespace-nowrap">{label}</span>
             </div>
           ))}
         </div>
 
         {/* ── Error ── */}
-        {error && <div className="err-banner"><AlertTriangle size={18} /> {error}</div>}
+        {error && (
+          <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 py-3 px-4 rounded-xl text-[0.85rem]">
+            <AlertTriangle size={18} /> {error}
+          </div>
+        )}
 
-        {/* ── Queue list (full width) ── */}
-        <div className="queue-col">
+        {/* ── Queue card ── */}
+        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
 
           {/* Filter tabs */}
-          <div className="filter-tabs">
-            {[
-              { value: 'all',    label: 'الكل',    count: queue.length },
-              { value: 'orphan', label: 'أيتام',   count: orphanCount },
-              { value: 'family', label: 'أسر',     count: familyCount },
-            ].map((f) => (
-              <button
-                key={f.value}
-                className={`tab ${filter === f.value ? 'tab-active' : ''}`}
-                onClick={() => setFilter(f.value)}
-              >
-                {f.label}
-                {!loading && (
-                  <span className={`tab-count ${filter === f.value ? 'tab-count-active' : ''}`}>
-                    {f.count}
-                  </span>
-                )}
-              </button>
-            ))}
+          <div className="flex border-b-[1.5px] border-gray-200 px-4 pt-2 gap-1 bg-gray-50 overflow-x-auto scrollbar-none">
+            {FILTER_TABS.map(({ value, label, count }) => {
+              const isActive = filter === value;
+              return (
+                <button
+                  key={value}
+                  className={`inline-flex items-center gap-1.5 py-2.5 px-4 border-none bg-transparent font-sans text-[0.83rem] font-semibold cursor-pointer whitespace-nowrap shrink-0 border-b-[2.5px] -mb-[1.5px] transition-colors ${isActive ? 'text-[#1B5E8C] border-b-[#1B5E8C]' : 'text-gray-500 border-b-transparent hover:text-[#1B5E8C]'}`}
+                  onClick={() => setFilter(value)}
+                >
+                  {label}
+                  {!loading && (
+                    <span className={`text-[0.7rem] font-bold py-0 px-1.5 rounded-full min-w-[1.2rem] text-center ${isActive ? 'bg-blue-50 text-[#1B5E8C]' : 'bg-gray-100 text-gray-500'}`}>
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           {/* Queue rows */}
-          <div className="queue-list">
+          <div className="max-h-[calc(100vh-240px)] overflow-y-auto">
             {loading
               ? Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)
               : displayed.length === 0
-              ? (
-                <div className="empty-state">
-                  <span className="empty-icon"><CheckCircle2 size={40} strokeWidth={1.5} /></span>
-                  <p className="empty-title">لا توجد طلبات معلّقة</p>
-                  <p className="empty-sub">كل الطلبات تمت مراجعتها</p>
-                </div>
-              )
-              : displayed.map((record) => {
+                ? (
+                  <div className="flex flex-col items-center gap-1.5 py-16 px-4 text-center">
+                    <span className="text-emerald-500 flex"><CheckCircle2 size={40} strokeWidth={1.5} /></span>
+                    <p className="text-[0.9rem] font-bold text-gray-700 m-0">لا توجد طلبات معلّقة</p>
+                    <p className="text-[0.8rem] text-gray-400 m-0">كل الطلبات تمت مراجعتها</p>
+                  </div>
+                )
+                : displayed.map((record) => {
                   const isOrphan = record.record_type === 'orphan';
                   return (
                     <div
                       key={record.id}
-                      className="queue-row"
+                      className="flex items-center gap-3.5 py-3.5 px-5 border-b border-gray-50 cursor-pointer transition-colors last:border-b-0 hover:bg-blue-50/40 group"
                       onClick={() => setSelected(record)}
                     >
                       {/* Type badge */}
-                      <div className={`row-badge ${isOrphan ? 'badge-orphan' : 'badge-family'}`}>
+                      <div className={`w-[38px] h-[38px] rounded-xl flex items-center justify-center shrink-0 ${isOrphan ? 'bg-blue-50 text-[#1B5E8C]' : 'bg-emerald-50 text-emerald-600'}`}>
                         {isOrphan ? <User size={18} /> : <Users size={18} />}
                       </div>
 
                       {/* Info */}
-                      <div className="row-info">
-                        <span className="row-name">{record.name}</span>
-                        <span className="row-meta">
+                      <div className="flex-1 flex flex-col gap-0.5 min-w-0">
+                        <span className="text-[0.88rem] font-bold text-gray-800 truncate">{record.name}</span>
+                        <span className="text-[0.75rem] text-gray-400 truncate">
                           {record.governorate_ar}
                           {record.agent_name && ` · ${record.agent_name}`}
                         </span>
                       </div>
 
                       {/* Date + arrow */}
-                      <div className="row-right">
-                        <span className="row-date">{fmtDateRelative(record.created_at)}</span>
-                        <span className="row-arrow">←</span>
+                      <div className="flex flex-col items-end gap-0.5 shrink-0">
+                        <span className="text-[0.72rem] text-gray-400 whitespace-nowrap hidden sm:block">{fmtDateRelative(record.created_at)}</span>
+                        <span className="text-[0.75rem] text-gray-300 transition-all group-hover:text-[#1B5E8C] group-hover:-translate-x-1">←</span>
                       </div>
                     </div>
                   );
@@ -440,537 +519,6 @@ export default function RegistrationsPage() {
           />
         )}
       </div>
-
-      <style jsx>{`
-        /* ── Page ─────────────────────────────────────────────────────── */
-        .page {
-          max-width: 900px;
-          margin: 0 auto;
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-          font-family: 'Cairo', 'Tajawal', sans-serif;
-          padding-bottom: 3rem;
-          position: relative;
-        }
-        @media (max-width: 600px) {
-          .page { gap: 0.75rem; }
-        }
-
-        /* ── Toast ───────────────────────────────────────────────────── */
-        .toast {
-          position: fixed;
-          bottom: 2rem;
-          left: 50%;
-          transform: translateX(-50%);
-          padding: 0.75rem 1.5rem;
-          border-radius: 999px;
-          font-size: 0.85rem;
-          font-weight: 600;
-          z-index: 100;
-          animation: toastIn 0.25s ease;
-          white-space: nowrap;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-        }
-        .toast-ok  { background: #0d3d5c; color: #fff; }
-        .toast-err { background: #DC2626; color: #fff; }
-        @keyframes toastIn {
-          from { opacity: 0; transform: translateX(-50%) translateY(12px); }
-          to   { opacity: 1; transform: translateX(-50%) translateY(0); }
-        }
-
-        /* ── Header ──────────────────────────────────────────────────── */
-        .page-header {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: 1rem;
-          flex-wrap: wrap;
-        }
-        .page-title {
-          font-size: 1.6rem;
-          font-weight: 800;
-          color: #0d3d5c;
-          margin: 0 0 0.2rem;
-        }
-        .page-sub { font-size: 0.82rem; color: #9ca3af; margin: 0; }
-        .btn-refresh {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 2.25rem;
-          height: 2.25rem;
-          border: 1.5px solid #e5e7eb;
-          border-radius: 0.625rem;
-          background: #fff;
-          color: #6b7280;
-          cursor: pointer;
-          transition: all 0.15s;
-          flex-shrink: 0;
-        }
-        .btn-refresh:hover { border-color: #1B5E8C; color: #1B5E8C; background: #f0f7ff; }
-
-        /* ── Stat pills ──────────────────────────────────────────────── */
-        .stat-pills { display: flex; gap: 0.6rem; flex-wrap: wrap; }
-        .stat-pill {
-          display: inline-flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 2px;
-          padding: 0.6rem 1.1rem;
-          background: #fff;
-          border: 1.5px solid #e5e7eb;
-          border-radius: 12px;
-          min-width: 80px;
-          flex: 1;
-          box-shadow: 0 1px 3px rgba(0,0,0,.04);
-        }
-        .stat-pill-count { font-size: 1.35rem; font-weight: 800; line-height: 1; }
-        .stat-pill-label { font-size: 0.72rem; font-weight: 600; color: #6b7280; white-space: nowrap; }
-        @media (max-width: 400px) {
-          .stat-pill-count { font-size: 1.1rem; }
-          .stat-pill { padding: 0.5rem 0.75rem; min-width: 60px; }
-        }
-
-        /* ── Error ───────────────────────────────────────────────────── */
-        .err-banner {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          background: #fef2f2;
-          border: 1px solid #fecaca;
-          color: #b91c1c;
-          padding: 0.75rem 1rem;
-          border-radius: 0.75rem;
-          font-size: 0.85rem;
-        }
-
-        /* ── Queue list col ────────────────────────────────────────────── */
-        .queue-col {
-          background: #fff;
-          border: 1px solid #e5eaf0;
-          border-radius: 1rem;
-          overflow: hidden;
-          box-shadow: 0 1px 3px rgba(0,0,0,.04);
-        }
-
-        /* ── Filter tabs ──────────────────────────────────────────────── */
-        .filter-tabs {
-          display: flex;
-          border-bottom: 1.5px solid #e5eaf0;
-          padding: 0.5rem 1rem 0;
-          gap: 0.25rem;
-          background: #f8fafc;
-          overflow-x: auto;
-          scrollbar-width: none;
-        }
-        .filter-tabs::-webkit-scrollbar { display: none; }
-        .tab {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.4rem;
-          padding: 0.6rem 1rem;
-          border: none;
-          background: none;
-          font-family: 'Cairo', sans-serif;
-          font-size: 0.83rem;
-          font-weight: 600;
-          color: #6b7280;
-          cursor: pointer;
-          border-bottom: 2.5px solid transparent;
-          transition: all 0.15s;
-          margin-bottom: -1.5px;
-          white-space: nowrap;
-          flex-shrink: 0;
-        }
-        .tab:hover { color: #1B5E8C; }
-        .tab-active { color: #1B5E8C; border-bottom-color: #1B5E8C; }
-        .tab-count {
-          background: #e5eaf0;
-          color: #6b7280;
-          font-size: 0.7rem;
-          font-weight: 700;
-          padding: 0 0.4rem;
-          border-radius: 999px;
-          min-width: 1.2rem;
-          text-align: center;
-        }
-        .tab-count-active { background: #EFF6FF; color: #1B5E8C; }
-
-        /* ── Queue list ───────────────────────────────────────────────── */
-        .queue-list {
-          max-height: calc(100vh - 240px);
-          overflow-y: auto;
-        }
-        .queue-row {
-          display: flex;
-          align-items: center;
-          gap: 0.85rem;
-          padding: 0.9rem 1.25rem;
-          border-bottom: 1px solid #f9fafb;
-          cursor: pointer;
-          transition: background 0.12s;
-        }
-        .queue-row:last-child { border-bottom: none; }
-        .queue-row:hover { background: #f8fbff; }
-        @media (max-width: 480px) {
-          .queue-row { padding: 0.75rem 1rem; gap: 0.65rem; }
-          .row-date { display: none; }
-        }
-
-        .row-badge {
-          width: 38px;
-          height: 38px;
-          border-radius: 10px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-          color: #1B5E8C;
-        }
-        .badge-orphan { background: #EFF6FF; color: #1B5E8C; }
-        .badge-family { background: #ECFDF5; color: #059669; }
-
-        .row-info {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          gap: 0.15rem;
-          min-width: 0;
-        }
-        .row-name {
-          font-size: 0.88rem;
-          font-weight: 700;
-          color: #1f2937;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .row-meta {
-          font-size: 0.75rem;
-          color: #9ca3af;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .row-right {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          gap: 0.2rem;
-          flex-shrink: 0;
-        }
-        .row-date  { font-size: 0.72rem; color: #9ca3af; white-space: nowrap; }
-        .row-arrow {
-          font-size: 0.75rem;
-          color: #d1d5db;
-          transition: color 0.12s, transform 0.12s;
-        }
-        .queue-row:hover .row-arrow { color: #1B5E8C; transform: translateX(-3px); }
-
-        /* ── Empty state ──────────────────────────────────────────────── */
-        .empty-state {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 0.4rem;
-          padding: 4rem 1rem;
-          text-align: center;
-        }
-        .empty-icon  { color: #10B981; display: flex; }
-        .empty-title { font-size: 0.9rem; color: #374151; font-weight: 700; margin: 0; }
-        .empty-sub   { font-size: 0.8rem; color: #9ca3af; margin: 0; }
-
-        /* ── Skeleton ─────────────────────────────────────────────────── */
-        .sk-row { pointer-events: none; }
-        .sk-badge {
-          width: 38px;
-          height: 38px;
-          border-radius: 10px;
-          flex-shrink: 0;
-        }
-        .sk-badge, .sk-line, .sk-lines {
-          background: linear-gradient(90deg, #f3f4f6 25%, #e9ecef 50%, #f3f4f6 75%);
-          background-size: 200% 100%;
-          animation: shimmer 1.4s infinite;
-        }
-        .sk-lines { flex: 1; display: flex; flex-direction: column; gap: 0.4rem; background: none; }
-        .sk-line {
-          height: 12px;
-          border-radius: 6px;
-        }
-        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-
-
-
-      `}</style>
-
-      {/* ── Global styles for the detail popup ── */}
-      <style jsx global>{`
-        .dp-overlay {
-          position: fixed;
-          inset: 0;
-          background: rgba(13,61,92,0.45);
-          backdrop-filter: blur(4px);
-          z-index: 400;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 1rem;
-          animation: dpFadeIn 0.18s ease;
-          font-family: 'Cairo', 'Tajawal', sans-serif;
-          direction: rtl;
-        }
-        @media (max-width: 480px) {
-          .dp-overlay { padding: 0; align-items: flex-end; }
-          .dp-box {
-            max-width: 100% !important;
-            max-height: 92vh !important;
-            border-radius: 1.25rem 1.25rem 0 0 !important;
-            animation: dpSlideUpMobile 0.25s cubic-bezier(.22,1,.36,1) !important;
-          }
-          .dp-grid { grid-template-columns: 1fr !important; }
-          .dp-header { padding: 1rem 1.25rem !important; }
-          .dp-body { padding: 1rem 1.25rem !important; }
-          .dp-actions { padding: 0.875rem 1.25rem !important; }
-          .modal-overlay { padding: 0; align-items: flex-end; }
-          .modal-box {
-            max-width: 100% !important;
-            border-radius: 1.25rem 1.25rem 0 0 !important;
-            animation: dpSlideUpMobile 0.25s cubic-bezier(.22,1,.36,1) !important;
-          }
-        }
-        @keyframes dpFadeIn { from{opacity:0} to{opacity:1} }
-        @keyframes dpSlideUpMobile {
-          from { transform: translateY(100%); }
-          to   { transform: none; }
-        }
-        .dp-box {
-          background: #fff;
-          border: 1px solid #e5eaf0;
-          border-radius: 1.25rem;
-          width: 100%;
-          max-width: 500px;
-          max-height: 88vh;
-          display: flex;
-          flex-direction: column;
-          box-shadow: 0 32px 80px rgba(13,61,92,0.22);
-          overflow: hidden;
-          animation: dpSlideUp 0.22s cubic-bezier(.22,1,.36,1);
-        }
-        @keyframes dpSlideUp {
-          from { opacity:0; transform:translateY(20px); }
-          to   { opacity:1; transform:none; }
-        }
-        .dp-header {
-          display: flex;
-          align-items: center;
-          gap: 0.875rem;
-          padding: 1.25rem 1.5rem;
-          color: #fff;
-          flex-shrink: 0;
-        }
-        .dp-header-orphan { background: linear-gradient(135deg, #0d3d5c 0%, #1B5E8C 100%); }
-        .dp-header-family  { background: linear-gradient(135deg, #065f46 0%, #059669 100%); }
-        .dp-avatar {
-          width: 46px; height: 46px;
-          border-radius: 12px;
-          background: rgba(255,255,255,0.18);
-          display: flex; align-items: center; justify-content: center;
-          flex-shrink: 0;
-        }
-        .dp-title-wrap { flex: 1; min-width: 0; }
-        .dp-name {
-          font-size: 1.1rem; font-weight: 800; color: #fff;
-          margin: 0 0 0.2rem;
-          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .dp-chip {
-          display: inline-block;
-          font-size: 0.68rem; font-weight: 700;
-          padding: 0.1rem 0.55rem;
-          border-radius: 999px;
-        }
-        .dp-chip-orphan { background: rgba(255,255,255,0.2); color: #bfdbfe; }
-        .dp-chip-family  { background: rgba(255,255,255,0.2); color: #a7f3d0; }
-        .dp-close {
-          width: 30px; height: 30px;
-          background: rgba(255,255,255,0.15);
-          border: none; border-radius: 8px;
-          color: #fff; cursor: pointer;
-          display: flex; align-items: center; justify-content: center;
-          flex-shrink: 0; transition: background 0.12s;
-        }
-        .dp-close:hover { background: rgba(255,255,255,0.28); }
-        .dp-body {
-          flex: 1; overflow-y: auto; min-height: 0;
-          padding: 1.25rem 1.5rem;
-          display: flex; flex-direction: column; gap: 1rem;
-        }
-        .dp-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 0.6rem;
-        }
-        .dp-info-card {
-          display: flex;
-          align-items: flex-start;
-          gap: 0.5rem;
-          background: #f8fafc;
-          border: 1px solid #e5eaf0;
-          border-radius: 0.75rem;
-          padding: 0.65rem 0.75rem;
-        }
-        .dp-info-icon { color: #1B5E8C; margin-top: 3px; flex-shrink: 0; }
-        .dp-info-label {
-          display: block;
-          font-size: 0.68rem; font-weight: 700;
-          color: #9ca3af; margin-bottom: 2px;
-        }
-        .dp-info-val {
-          display: block;
-          font-size: 0.83rem; font-weight: 600; color: #1f2937;
-        }
-        .dp-section {
-          background: #fffbeb;
-          border: 1px solid #fde68a;
-          border-radius: 0.75rem;
-          padding: 0.75rem 1rem;
-        }
-        .dp-section-title {
-          font-size: 0.7rem; font-weight: 800;
-          color: #92400e; letter-spacing: 0.05em;
-          margin: 0 0 0.4rem;
-        }
-        .dp-notes { font-size: 0.85rem; color: #374151; line-height: 1.7; margin: 0; }
-        .dp-docs-link {
-          display: inline-flex; align-items: center;
-          font-size: 0.8rem; font-weight: 700;
-          color: #1B5E8C; text-decoration: none;
-          padding: 0.5rem 0.75rem;
-          border: 1.5px solid #bfdbfe;
-          border-radius: 0.625rem;
-          background: #EFF6FF;
-          transition: all 0.15s; align-self: flex-start;
-        }
-        .dp-docs-link:hover { background: #dbeafe; border-color: #93c5fd; }
-        .dp-actions {
-          display: flex; gap: 0.75rem;
-          padding: 1rem 1.5rem;
-          border-top: 1.5px solid #e5eaf0;
-          background: #fff; flex-shrink: 0;
-        }
-        .dp-btn-approve {
-          flex: 1;
-          display: flex; align-items: center; justify-content: center; gap: 0.4rem;
-          padding: 0.8rem;
-          background: linear-gradient(135deg, #059669, #047857);
-          color: #fff;
-          font-family: 'Cairo', sans-serif; font-size: 0.9rem; font-weight: 700;
-          border: none; border-radius: 0.75rem; cursor: pointer;
-          box-shadow: 0 2px 8px rgba(5,150,105,.25);
-          transition: transform 0.12s, box-shadow 0.12s;
-        }
-        .dp-btn-approve:hover:not(:disabled) {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 16px rgba(5,150,105,.35);
-        }
-        .dp-btn-approve:disabled { opacity: 0.55; cursor: not-allowed; }
-        .dp-btn-reject {
-          display: flex; align-items: center; justify-content: center; gap: 0.35rem;
-          padding: 0.8rem 1.25rem;
-          background: #fff;
-          border: 1.5px solid #fca5a5; color: #DC2626;
-          font-family: 'Cairo', sans-serif; font-size: 0.88rem; font-weight: 700;
-          border-radius: 0.75rem; cursor: pointer;
-          transition: all 0.15s;
-        }
-        .dp-btn-reject:hover:not(:disabled) { background: #fef2f2; border-color: #f87171; }
-        .dp-btn-reject:disabled { opacity: 0.5; cursor: not-allowed; }
-        @media (max-width: 360px) {
-          .dp-btn-approve, .dp-btn-reject { font-size: 0.8rem; padding: 0.7rem 0.5rem; }
-        }
-        .spin-sm {
-          display: inline-block; width: 13px; height: 13px;
-          border: 2px solid rgba(255,255,255,.35);
-          border-top-color: #fff; border-radius: 50%;
-          animation: dpSpin .6s linear infinite;
-        }
-        @keyframes dpSpin { to { transform: rotate(360deg); } }
-
-        /* ── Reject modal ────────────────────────────────────────────── */
-        .modal-overlay {
-          position: fixed; inset: 0;
-          background: rgba(0,0,0,0.45);
-          backdrop-filter: blur(3px);
-          z-index: 500;
-          display: flex; align-items: center; justify-content: center;
-          padding: 1rem;
-          font-family: 'Cairo','Tajawal',sans-serif;
-          direction: rtl;
-          animation: dpFadeIn 0.15s ease;
-        }
-        .modal-box {
-          background: #fff;
-          border: 1px solid #e5eaf0;
-          border-radius: 1rem;
-          width: 100%; max-width: 440px;
-          box-shadow: 0 20px 60px rgba(0,0,0,0.18);
-          overflow: hidden;
-          animation: dpSlideUp 0.2s ease;
-        }
-        .modal-header {
-          display: flex; align-items: flex-start; gap: 0.875rem;
-          padding: 1.25rem 1.5rem;
-          background: #FEF2F2; border-bottom: 1px solid #fecaca;
-        }
-        .modal-icon { color: #DC2626; flex-shrink: 0; margin-top: 2px; }
-        .modal-title { font-size: 1rem; font-weight: 800; color: #b91c1c; margin: 0 0 0.15rem; }
-        .modal-sub { font-size: 0.8rem; color: #6b7280; margin: 0; }
-        .modal-body { padding: 1.25rem 1.5rem; }
-        .modal-label { display: block; font-size: 0.8rem; font-weight: 700; color: #374151; margin-bottom: 0.5rem; }
-        .req { color: #DC2626; }
-        .modal-textarea {
-          width: 100%;
-          border: 1.5px solid #e5eaf0; border-radius: 0.75rem;
-          padding: 0.7rem 0.9rem;
-          font-size: 0.88rem; font-family: 'Cairo', sans-serif; color: #1f2937;
-          resize: vertical; outline: none; box-sizing: border-box;
-          background: #fafafa;
-          transition: border-color 0.15s, box-shadow 0.15s;
-        }
-        .modal-textarea:focus { border-color: #DC2626; box-shadow: 0 0 0 3px rgba(220,38,38,.08); background: #fff; }
-        .modal-hint { font-size: 0.75rem; color: #9ca3af; margin: 0.5rem 0 0; }
-        .modal-actions { display: flex; gap: 0.75rem; padding: 1rem 1.5rem; border-top: 1px solid #e5eaf0; }
-        .btn-ghost {
-          flex: 1; padding: 0.7rem;
-          background: none; border: 1.5px solid #e5eaf0; border-radius: 0.75rem;
-          font-family: 'Cairo', sans-serif; font-size: 0.85rem; font-weight: 600;
-          color: #6b7280; cursor: pointer; transition: all 0.15s;
-        }
-        .btn-ghost:hover:not(:disabled) { border-color: #9ca3af; color: #374151; }
-        .btn-reject {
-          flex: 2; padding: 0.7rem;
-          background: linear-gradient(135deg, #DC2626, #b91c1c);
-          color: #fff; font-family: 'Cairo', sans-serif; font-size: 0.88rem; font-weight: 700;
-          border: none; border-radius: 0.75rem; cursor: pointer;
-          display: flex; align-items: center; justify-content: center; gap: 0.4rem;
-          transition: transform 0.12s, box-shadow 0.12s;
-          box-shadow: 0 2px 8px rgba(220,38,38,.25);
-        }
-        .btn-reject:hover:not(.btn-disabled) { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(220,38,38,.35); }
-        .btn-disabled { opacity: 0.4; cursor: not-allowed; }
-
-        /* ── Spinners ────────────────────────────────────────────────── */
-        .spin {
-          display: inline-block; width: 14px; height: 14px;
-          border: 2px solid rgba(255,255,255,.4);
-          border-top-color: #fff; border-radius: 50%;
-          animation: dpSpin .6s linear infinite; flex-shrink: 0;
-        }
-        .spin-dark { border-color: rgba(5,150,105,.3); border-top-color: #047857; }
-      `}</style>
     </AppShell>
   );
 }
