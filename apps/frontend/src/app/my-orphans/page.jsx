@@ -60,15 +60,8 @@ const formatDate = (iso) => {
 function StatusBadge({ status }) {
   const cfg = STATUS_MAP[status] || STATUS_MAP.inactive;
   return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
-      padding: '0.25rem 0.75rem', borderRadius: '2rem',
-      fontSize: '0.75rem', fontWeight: 700,
-      color: cfg.color, background: cfg.bg,
-      border: `1px solid ${cfg.color}30`,
-      whiteSpace: 'nowrap',
-    }}>
-      <span style={{ width: 6, height: 6, borderRadius: '50%', background: cfg.dot, flexShrink: 0 }} />
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${cfg.bgClass} ${cfg.textClass} ${cfg.borderClass} whitespace-nowrap`}>
+      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.dotClass}`} />
       {cfg.label}
     </span>
   );
@@ -102,25 +95,25 @@ function DetailDrawer({ orphan, onClose }) {
   return (
     <>
       {/* Backdrop */}
-      <div className="backdrop" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/35 z-40 animate-fadeIn" onClick={onClose} />
 
       {/* Drawer */}
-      <aside className="drawer" dir="rtl">
+      <aside className="fixed top-0 left-0 w-[420px] max-w-[95vw] h-screen bg-white z-50 flex flex-col shadow-[-4px_0_24px_rgba(0,0,0,0.12)] animate-slideInLeft" dir="rtl">
         {/* Header */}
-        <div className="drawer-head">
+        <div className="flex items-start justify-between gap-4 p-6 border-b border-[#f0f4f8]">
           <div>
-            <h2 className="drawer-name">{orphan.full_name}</h2>
+            <h2 className="text-[1.15rem] font-extrabold text-[#0d3d5c] mb-2">{orphan.full_name}</h2>
             <StatusBadge status={orphan.status} />
           </div>
-          <button className="drawer-close" onClick={onClose} aria-label="إغلاق"><X size={16} /></button>
+          <button className="bg-transparent border-none text-[1.1rem] text-gray-400 cursor-pointer px-1.5 py-1 rounded-[6px] transition-all duration-150 hover:bg-gray-100 hover:text-gray-700 flex-shrink-0" onClick={onClose} aria-label="إغلاق"><X size={16} /></button>
         </div>
 
-        <div className="drawer-body">
+        <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-5">
 
           {/* Info grid */}
           <div className="info-section">
-            <h3 className="info-title">البيانات الأساسية</h3>
-            <div className="info-grid">
+            <h3 className="text-[0.78rem] font-bold text-slate-400 uppercase tracking-[0.06em] mb-3">البيانات الأساسية</h3>
+            <div className="flex flex-col gap-2">
               <InfoRow label="العمر"        value={calcAge(orphan.date_of_birth)} />
               <InfoRow label="تاريخ الميلاد" value={formatDate(orphan.date_of_birth)} />
               <InfoRow label="الجنس"        value={GENDER_MAP[orphan.gender] || '—'} />
@@ -128,17 +121,17 @@ function DetailDrawer({ orphan, onClose }) {
               <InfoRow label="اسم الوصي"   value={orphan.guardian_name || '—'} />
               <InfoRow label="صلة الوصي"   value={RELATION_MAP[orphan.guardian_relation] || '—'} />
               <InfoRow label="تاريخ التسجيل" value={formatDate(orphan.created_at)} />
-              {orphan.is_gifted && <InfoRow label="موهوب" value={<span style={{ display:'inline-flex', alignItems:'center', gap:'.3rem' }}><CheckCircle2 size={14} /> نعم</span>} highlight />}
+              {orphan.is_gifted && <InfoRow label="موهوب" value={<span className="inline-flex items-center gap-1.5"><CheckCircle2 size={14} /> نعم</span>} highlight />}
             </div>
           </div>
 
           {/* Sponsorship info */}
           {orphan.status === 'under_sponsorship' && (
             <div className="info-section">
-              <h3 className="info-title">بيانات الكفالة</h3>
-              <div className="info-grid">
+              <h3 className="text-[0.78rem] font-bold text-slate-400 uppercase tracking-[0.06em] mb-3">بيانات الكفالة</h3>
+              <div className="flex flex-col gap-2">
                 <InfoRow label="اسم الكافل"    value={orphan.sponsor_name || '—'} />
-                <InfoRow label="المبلغ الشهري" value={orphan.monthly_amount ? `${orphan.monthly_amount} ر.ي` : '—'} />
+                <InfoRow label="المبلغ الشهري" value={orphan.monthly_amount ? `${orphan.monthly_amount.toLocaleString('ar-YE')} ر.ي` : '—'} />
                 <InfoRow label="تاريخ البداية" value={formatDate(orphan.sponsorship_start)} />
               </div>
             </div>
@@ -146,29 +139,29 @@ function DetailDrawer({ orphan, onClose }) {
 
           {/* Rejection notes */}
           {orphan.status === 'rejected' && orphan.notes && (
-            <div className="rejection-box">
-              <span className="rejection-icon"><AlertTriangle size={18} /></span>
+            <div className="flex gap-3 bg-red-50 border border-red-200 rounded-[0.75rem] p-4">
+              <span className="text-[1.1rem] flex-shrink-0 text-red-600"><AlertTriangle size={18} /></span>
               <div>
-                <strong>سبب الرفض</strong>
-                <p>{orphan.notes}</p>
+                <strong className="block text-[0.85rem] font-bold text-red-700 mb-1">سبب الرفض</strong>
+                <p className="text-[0.82rem] text-red-600 m-0 leading-relaxed">{orphan.notes}</p>
               </div>
             </div>
           )}
 
           {/* Documents */}
           <div className="info-section">
-            <h3 className="info-title">المستندات المرفوعة</h3>
+            <h3 className="text-[0.78rem] font-bold text-slate-400 uppercase tracking-[0.06em] mb-3">المستندات المرفوعة</h3>
             {docsLoading ? (
-              <p className="muted">جارٍ التحميل…</p>
+              <p className="text-[0.83rem] text-slate-400 m-0">جارٍ التحميل…</p>
             ) : docs.length === 0 ? (
-              <p className="muted">لا توجد مستندات مرفوعة</p>
+              <p className="text-[0.83rem] text-slate-400 m-0">لا توجد مستندات مرفوعة</p>
             ) : (
-              <div className="doc-list">
+              <div className="flex flex-col gap-1.5">
                 {docs.map((d) => (
-                  <div key={d.id} className="doc-chip">
+                  <div key={d.id} className="flex items-center gap-2 px-2.5 py-2 bg-slate-50 border border-[#e5eaf0] rounded-[0.5rem] text-[0.78rem]">
                     <span><FileText size={16} /></span>
-                    <span className="doc-name">{d.original_name || d.doc_type}</span>
-                    <span className="doc-date">{formatDate(d.uploaded_at)}</span>
+                    <span className="flex-1 text-gray-700 font-medium overflow-hidden text-ellipsis whitespace-nowrap [direction:ltr] text-left">{d.original_name || d.doc_type}</span>
+                    <span className="text-slate-400 flex-shrink-0">{formatDate(d.uploaded_at)}</span>
                   </div>
                 ))}
               </div>
@@ -177,57 +170,24 @@ function DetailDrawer({ orphan, onClose }) {
         </div>
 
         {/* Footer actions */}
-        <div className="drawer-foot">
+        <div className="px-6 py-4 border-t border-[#f0f4f8] flex gap-3 justify-end">
           {orphan.status === 'rejected' && (
             <a href={`/orphans/${orphan.id}/edit`} className="inline-flex items-center px-4 py-2 bg-gradient-to-br from-[#1B5E8C] to-[#134569] text-white text-[.82rem] font-bold rounded-lg no-underline hover:from-[#2E7EB8] hover:to-[#1B5E8C] transition-all">
               تعديل وإعادة الإرسال
             </a>
           )}
-          <button className="btn-ghost-sm" onClick={onClose}>إغلاق</button>
+          <button className="inline-flex items-center px-4.5 py-2.5 bg-transparent text-primary font-semibold border-[1.5px] border-[#dde5f0] rounded-[0.625rem] cursor-pointer transition-all duration-150 hover:bg-[#f0f7ff] hover:border-primary text-[0.82rem]" onClick={onClose}>إغلاق</button>
         </div>
       </aside>
-
-      <style jsx>{`
-        .backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:40; animation:fadeIn .2s ease; }
-        .drawer { position:fixed; top:0; left:0; width:420px; max-width:95vw; height:100vh; background:#fff; z-index:50; display:flex; flex-direction:column; box-shadow:-4px 0 24px rgba(0,0,0,0.12); animation:slideIn .25s ease; }
-        @keyframes slideIn { from { transform:translateX(-100%); } to { transform:translateX(0); } }
-        @keyframes fadeIn  { from { opacity:0; } to { opacity:1; } }
-
-        .drawer-head { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; padding:1.5rem; border-bottom:1px solid #f0f4f8; }
-        .drawer-name { font-size:1.15rem; font-weight:800; color:#0d3d5c; margin:0 0 .5rem; }
-        .drawer-close { background:none; border:none; font-size:1.1rem; color:#9ca3af; cursor:pointer; padding:.25rem .4rem; border-radius:6px; transition:all .15s; flex-shrink:0; }
-        .drawer-close:hover { background:#f3f4f6; color:#374151; }
-
-        .drawer-body { flex:1; overflow-y:auto; padding:1.25rem 1.5rem; display:flex; flex-direction:column; gap:1.25rem; }
-        .drawer-foot { padding:1rem 1.5rem; border-top:1px solid #f0f4f8; display:flex; gap:.75rem; justify-content:flex-end; }
-
-        .info-section {}
-        .info-title { font-size:.78rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.06em; margin:0 0 .75rem; }
-        .info-grid { display:flex; flex-direction:column; gap:.5rem; }
-
-        .rejection-box { display:flex; gap:.75rem; background:#fef2f2; border:1px solid #fecaca; border-radius:.75rem; padding:1rem; }
-        .rejection-icon { font-size:1.1rem; flex-shrink:0; }
-        .rejection-box strong { display:block; font-size:.85rem; color:#b91c1c; margin-bottom:.25rem; }
-        .rejection-box p { font-size:.82rem; color:#dc2626; margin:0; line-height:1.6; }
-
-        .muted { font-size:.83rem; color:#94a3b8; margin:0; }
-        .doc-list { display:flex; flex-direction:column; gap:.4rem; }
-        .doc-chip { display:flex; align-items:center; gap:.5rem; padding:.45rem .65rem; background:#f8fafc; border:1px solid #e5eaf0; border-radius:.5rem; font-size:.78rem; }
-        .doc-name { flex:1; color:#374151; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; direction:ltr; text-align:left; }
-        .doc-date { color:#94a3b8; flex-shrink:0; }
-
-.btn-ghost-sm { display:inline-flex; align-items:center; padding:.55rem 1.1rem; background:none; color:#1B5E8C; font-family:'Cairo',sans-serif; font-size:.82rem; font-weight:600; border:1.5px solid #dde5f0; border-radius:.625rem; cursor:pointer; transition:all .15s; }
-        .btn-ghost-sm:hover { background:#f0f7ff; border-color:#1B5E8C; }
-      `}</style>
     </>
   );
 }
 
 function InfoRow({ label, value, highlight }) {
   return (
-    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap: '.75rem', padding:'.35rem 0', borderBottom:'1px solid #f8fafc', minWidth: 0 }}>
-      <span style={{ fontSize:'.8rem', color:'#6b7a8d', fontWeight:500, minWidth: 0 }}>{label}</span>
-      <span style={{ fontSize:'.83rem', color: highlight ? '#10b981' : '#1f2937', fontWeight: highlight ? 700 : 600, minWidth: 0, overflowWrap: 'anywhere', wordBreak: 'break-word', textAlign: 'left' }}>{value}</span>
+    <div className="flex justify-between items-start gap-3 py-1.5 border-b border-slate-50 min-w-0">
+      <span className="text-[0.8rem] text-slate-500 font-medium min-w-0">{label}</span>
+      <span className={`text-[0.83rem] min-w-0 overflow-wrap-anywhere break-all text-left ${highlight ? 'text-emerald-500 font-bold' : 'text-gray-800 font-semibold'}`}>{value}</span>
     </div>
   );
 }
@@ -279,13 +239,13 @@ export default function MyOrphansPage() {
 
   return (
     <AppShell>
-      <div className="page" dir="rtl">
+      <div className="max-w-[1100px] mx-auto pb-16 font-sans px-4 md:px-0" dir="rtl">
 
         {/* Page header */}
-        <div className="page-top">
+        <div className="flex justify-between gap-4 mb-6 md:flex-row flex-col items-start">
           <div>
-            <h1 className="page-title">أيتامي</h1>
-            <p className="page-sub">
+            <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] mb-1">أيتامي</h1>
+            <p className="text-[0.85rem] text-[#6b7a8d] m-0">
               {loading ? 'جارٍ التحميل…' : `${orphans.length} يتيم مسجّل`}
             </p>
           </div>
@@ -295,36 +255,36 @@ export default function MyOrphansPage() {
         </div>
 
         {/* Search + filter bar */}
-        <div className="toolbar">
-          <div className="search-wrap">
-            <span className="search-icon"><Search size={16} /></span>
+        <div className="flex flex-col gap-3 mb-5">
+          <div className="relative flex items-center">
+            <span className="absolute right-3.5 text-[0.9rem] pointer-events-none text-gray-400"><Search size={16} /></span>
             <input
-              className="search-inp"
+              className="w-full border-[1.5px] border-gray-300 rounded-[0.75rem] py-2.5 pl-10 pr-9.5 text-[0.88rem] text-gray-800 bg-gray-50 outline-none transition-all duration-150 box-border focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10"
               placeholder="ابحث بالاسم أو المحافظة أو الوصي…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
             {search && (
-              <button className="search-clear" onClick={() => setSearch('')}><X size={16} /></button>
+              <button className="absolute left-3 bg-transparent border-none cursor-pointer text-gray-400 text-[0.85rem] p-1 transition-colors duration-150 hover:text-gray-700" onClick={() => setSearch('')}><X size={16} /></button>
             )}
           </div>
 
           {/* Status filter tabs */}
-          <div className="filter-tabs">
+          <div className="flex gap-1.5 flex-wrap">
             <button
-              className={`ftab ${filterStatus === 'all' ? 'ftab-active' : ''}`}
+              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 border-[1.5px] rounded-full text-[0.78rem] font-semibold cursor-pointer transition-all duration-150 hover:border-primary hover:text-primary ${filterStatus === 'all' ? 'border-primary bg-primary text-white' : 'border-[#e5eaf0] text-gray-500 bg-white'}`}
               onClick={() => setFilterStatus('all')}
             >
-              الكل <span className="ftab-count">{orphans.length}</span>
+              الكل <span className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[0.7rem] font-bold ${filterStatus === 'all' ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-500'}`}>{orphans.length}</span>
             </button>
             {ALL_STATUSES.map((s) => counts[s] ? (
               <button
                 key={s}
-                className={`ftab ${filterStatus === s ? 'ftab-active' : ''}`}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 border-[1.5px] rounded-full text-[0.78rem] font-semibold cursor-pointer transition-all duration-150 hover:border-primary hover:text-primary ${filterStatus === s ? 'border-primary bg-primary text-white' : 'border-[#e5eaf0] text-gray-500 bg-white'}`}
                 onClick={() => setFilterStatus(filterStatus === s ? 'all' : s)}
               >
                 {STATUS_MAP[s].label}
-                <span className="ftab-count">{counts[s]}</span>
+                <span className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[0.7rem] font-bold ${filterStatus === s ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-500'}`}>{counts[s]}</span>
               </button>
             ) : null)}
           </div>
@@ -332,20 +292,20 @@ export default function MyOrphansPage() {
 
         {/* Error state */}
         {error && (
-          <div className="err-banner">
+          <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-[0.75rem] px-4 py-3.5 text-[0.85rem] text-red-700 font-medium mb-4">
             <span><AlertTriangle size={18} /></span> {error}
           </div>
         )}
 
         {/* Loading skeleton */}
         {loading && (
-          <div className="skeleton-wrap">
+          <div className="flex flex-col gap-2">
             {[1,2,3,4,5].map((i) => (
-              <div key={i} className="skeleton-row">
-                <div className="skel skel-name" />
-                <div className="skel skel-gov" />
-                <div className="skel skel-badge" />
-                <div className="skel skel-date" />
+              <div key={i} className="flex gap-4 px-5 py-4 bg-white border border-[#e5eaf0] rounded-[0.75rem] items-center">
+                <div className="animate-shimmer bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] rounded-[0.375rem] w-40 h-4" />
+                <div className="animate-shimmer bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] rounded-[0.375rem] w-20 h-3.5" />
+                <div className="animate-shimmer bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] rounded-full w-[90px] h-6" />
+                <div className="animate-shimmer bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] rounded-[0.375rem] w-[100px] h-3.5 mr-auto" />
               </div>
             ))}
           </div>
@@ -353,70 +313,70 @@ export default function MyOrphansPage() {
 
         {/* Empty state */}
         {!loading && !error && filtered.length === 0 && (
-          <div className="empty">
-            <div className="empty-ico"><User size={18} /></div>
-            <h3 className="empty-title">
+          <div className="flex flex-col items-center justify-center min-h-[320px] text-center gap-3">
+            <div className="text-[3.5rem] text-gray-300"><User size={18} /></div>
+            <h3 className="text-[1.1rem] font-bold text-gray-700 m-0">
               {search || filterStatus !== 'all' ? 'لا توجد نتائج مطابقة' : 'لا يوجد أيتام مسجّلون بعد'}
             </h3>
-            <p className="empty-sub">
+            <p className="text-[0.85rem] text-gray-400 m-0">
               {search || filterStatus !== 'all'
                 ? 'جرّب تغيير معايير البحث أو الفلتر'
                 : 'ابدأ بتسجيل يتيم جديد'}
             </p>
             {!search && filterStatus === 'all' && (
-              <button className="btn-primary" onClick={() => router.push('/orphans/new')}>
+              <PrimaryButton onClick={() => router.push('/orphans/new')}>
                 + تسجيل يتيم جديد
-              </button>
+              </PrimaryButton>
             )}
           </div>
         )}
 
         {/* Table */}
         {!loading && filtered.length > 0 && (
-          <div className="table-wrap">
-            <table className="table">
+          <div className="bg-white border border-[#e5eaf0] rounded-[1rem] overflow-hidden shadow-[0_1px_4px_rgba(27,94,140,0.05)]">
+            <table className="w-full border-collapse">
               <thead>
-                <tr>
-                  <th>الاسم الكامل</th>
-                  <th>المحافظة</th>
-                  <th>العمر</th>
-                  <th>الجنس</th>
-                  <th>الحالة</th>
-                  <th>تاريخ التسجيل</th>
-                  <th></th>
+                <tr className="bg-slate-50">
+                  <th className="px-5 py-3.5 text-right text-[0.75rem] font-bold text-slate-500 whitespace-nowrap border-b border-[#e5eaf0]">الاسم الكامل</th>
+                  <th className="px-5 py-3.5 text-right text-[0.75rem] font-bold text-slate-500 whitespace-nowrap border-b border-[#e5eaf0]">المحافظة</th>
+                  <th className="hidden md:table-cell px-5 py-3.5 text-right text-[0.75rem] font-bold text-slate-500 whitespace-nowrap border-b border-[#e5eaf0]">العمر</th>
+                  <th className="hidden md:table-cell px-5 py-3.5 text-right text-[0.75rem] font-bold text-slate-500 whitespace-nowrap border-b border-[#e5eaf0]">الجنس</th>
+                  <th className="px-5 py-3.5 text-right text-[0.75rem] font-bold text-slate-500 whitespace-nowrap border-b border-[#e5eaf0]">الحالة</th>
+                  <th className="hidden md:table-cell px-5 py-3.5 text-right text-[0.75rem] font-bold text-slate-500 whitespace-nowrap border-b border-[#e5eaf0]">تاريخ التسجيل</th>
+                  <th className="px-5 py-3.5 text-right text-[0.75rem] font-bold text-slate-500 whitespace-nowrap border-b border-[#e5eaf0]"></th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((o) => (
                   <tr
                     key={o.id}
-                    className="trow"
+                    className="cursor-pointer transition-colors duration-120 hover:bg-[#f8fbff] focus:outline focus:outline-2 focus:outline-primary focus:-outline-offset-2"
                     onClick={() => setSelected(o)}
                     tabIndex={0}
                     onKeyDown={(e) => e.key === 'Enter' && setSelected(o)}
                     aria-label={`عرض تفاصيل ${o.full_name}`}
                   >
-                    <td>
-                      <div className="name-cell">
-                        <div className="name-avatar">
+                    <td className="px-5 py-3.5 text-[0.85rem] border-b border-slate-50 align-middle">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-primary-dark text-white flex items-center justify-center text-[0.9rem] font-bold flex-shrink-0">
                           {o.full_name?.charAt(0) || '؟'}
                         </div>
                         <div>
-                          <div className="name-text">{o.full_name}</div>
+                          <div className="font-bold text-gray-800">{o.full_name}</div>
                           {o.is_gifted && (
-                            <span className="gifted-tag">🌟 موهوب</span>
+                            <span className="inline-block text-[0.68rem] font-semibold text-amber-500 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 mt-0.5">🌟 موهوب</span>
                           )}
                         </div>
                       </div>
                     </td>
-                    <td className="cell-muted">{o.governorate_ar || '—'}</td>
-                    <td className="cell-muted">{calcAge(o.date_of_birth)}</td>
-                    <td className="cell-muted">{GENDER_MAP[o.gender] || '—'}</td>
-                    <td><StatusBadge status={o.status} /></td>
-                    <td className="cell-muted">{formatDate(o.created_at)}</td>
-                    <td>
-                      <button className="view-btn" onClick={(e) => { e.stopPropagation(); setSelected(o); }}>
-                        عرض →
+                    <td className="px-5 py-3.5 text-[0.85rem] border-b border-slate-50 align-middle text-slate-500">{o.governorate_ar || '—'}</td>
+                    <td className="hidden md:table-cell px-5 py-3.5 text-[0.85rem] border-b border-slate-50 align-middle text-slate-500">{calcAge(o.date_of_birth)}</td>
+                    <td className="hidden md:table-cell px-5 py-3.5 text-[0.85rem] border-b border-slate-50 align-middle text-slate-500">{GENDER_MAP[o.gender] || '—'}</td>
+                    <td className="px-5 py-3.5 text-[0.85rem] border-b border-slate-50 align-middle"><StatusBadge status={o.status} /></td>
+                    <td className="hidden md:table-cell px-5 py-3.5 text-[0.85rem] border-b border-slate-50 align-middle text-slate-500">{formatDate(o.created_at)}</td>
+                    <td className="px-5 py-3.5 text-[0.85rem] border-b border-slate-50 align-middle">
+                      <button className="bg-transparent border-[1.5px] border-[#e5eaf0] rounded-[0.5rem] px-3 py-1 text-[0.78rem] font-semibold text-primary cursor-pointer transition-all duration-150 hover:bg-[#f0f7ff] hover:border-primary whitespace-nowrap" onClick={(e) => { e.stopPropagation(); setSelected(o); }}>
+                        عرض ←
                       </button>
                     </td>
                   </tr>
@@ -425,7 +385,7 @@ export default function MyOrphansPage() {
             </table>
 
             {/* Result count */}
-            <div className="table-footer">
+            <div className="px-5 py-3 text-[0.78rem] text-gray-400 border-t border-[#f0f4f8] text-left">
               عرض {filtered.length} من {orphans.length} يتيم
             </div>
           </div>
@@ -434,83 +394,6 @@ export default function MyOrphansPage() {
 
       {/* Detail drawer */}
       <DetailDrawer orphan={selected} onClose={() => setSelected(null)} />
-
-      <style jsx>{`
-        /* ── Page ─────────────────────────────────────────────────────── */
-        .page { max-width:1100px; margin:0 auto; padding-bottom:4rem; font-family:'Cairo','Tajawal',sans-serif; }
-        .page-top { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; margin-bottom:1.5rem; }
-        .page-title { font-size:1.6rem; font-weight:800; color:#0d3d5c; margin:0 0 .2rem; }
-        .page-sub { font-size:.85rem; color:#6b7a8d; margin:0; }
-
-        /* ── Toolbar ──────────────────────────────────────────────────── */
-        .toolbar { display:flex; flex-direction:column; gap:.75rem; margin-bottom:1.25rem; }
-        .search-wrap { position:relative; display:flex; align-items:center; }
-        .search-icon { position:absolute; right:.85rem; font-size:.9rem; pointer-events:none; }
-        .search-inp { width:100%; border:1.5px solid #d1d5db; border-radius:.75rem; padding:.65rem .9rem .65rem 2.5rem; padding-right:2.4rem; font-size:.88rem; font-family:'Cairo',sans-serif; color:#1f2937; background:#fafafa; outline:none; transition:border-color .15s,box-shadow .15s; box-sizing:border-box; }
-        .search-inp:focus { border-color:#1B5E8C; background:#fff; box-shadow:0 0 0 3px rgba(27,94,140,.1); }
-        .search-clear { position:absolute; left:.75rem; background:none; border:none; cursor:pointer; color:#9ca3af; font-size:.85rem; padding:.2rem; transition:color .15s; }
-        .search-clear:hover { color:#374151; }
-
-        /* ── Filter tabs ──────────────────────────────────────────────── */
-        .filter-tabs { display:flex; gap:.4rem; flex-wrap:wrap; }
-        .ftab { display:inline-flex; align-items:center; gap:.35rem; padding:.4rem .85rem; border:1.5px solid #e5eaf0; border-radius:2rem; font-size:.78rem; font-weight:600; color:#6b7280; background:#fff; cursor:pointer; transition:all .15s; font-family:'Cairo',sans-serif; }
-        .ftab:hover { border-color:#1B5E8C; color:#1B5E8C; }
-        .ftab-active { border-color:#1B5E8C; background:#1B5E8C; color:#fff; }
-        .ftab-active .ftab-count { background:rgba(255,255,255,.25); color:#fff; }
-        .ftab-count { display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 4px; border-radius:2rem; background:#f0f4f8; color:#6b7280; font-size:.7rem; font-weight:700; }
-
-        /* ── Error ────────────────────────────────────────────────────── */
-        .err-banner { display:flex; align-items:center; gap:.5rem; background:#fef2f2; border:1px solid #fecaca; border-radius:.75rem; padding:.85rem 1rem; font-size:.85rem; color:#b91c1c; font-weight:500; margin-bottom:1rem; }
-
-        /* ── Skeleton ─────────────────────────────────────────────────── */
-        .skeleton-wrap { display:flex; flex-direction:column; gap:.5rem; }
-        .skeleton-row { display:flex; gap:1rem; padding:1rem 1.25rem; background:#fff; border:1px solid #e5eaf0; border-radius:.75rem; align-items:center; }
-        .skel { background:linear-gradient(90deg,#f0f4f8 25%,#e5eaf0 50%,#f0f4f8 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:.375rem; }
-        .skel-name { width:160px; height:16px; }
-        .skel-gov  { width:80px;  height:14px; }
-        .skel-badge{ width:90px;  height:24px; border-radius:2rem; }
-        .skel-date { width:100px; height:14px; margin-right:auto; }
-        @keyframes shimmer { to { background-position:-200% 0; } }
-
-        /* ── Empty ────────────────────────────────────────────────────── */
-        .empty { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:320px; text-align:center; gap:.75rem; }
-        .empty-ico { font-size:3.5rem; }
-        .empty-title { font-size:1.1rem; font-weight:700; color:#374151; margin:0; }
-        .empty-sub { font-size:.85rem; color:#9ca3af; margin:0; }
-
-        /* ── Table ────────────────────────────────────────────────────── */
-        .table-wrap { background:#fff; border:1px solid #e5eaf0; border-radius:1rem; overflow:hidden; box-shadow:0 1px 4px rgba(27,94,140,.05); }
-        .table { width:100%; border-collapse:collapse; }
-        .table thead tr { background:#f8fafc; }
-        .table th { padding:.85rem 1.25rem; text-align:right; font-size:.75rem; font-weight:700; color:#6b7a8d; white-space:nowrap; border-bottom:1px solid #e5eaf0; }
-        .table td { padding:.9rem 1.25rem; font-size:.85rem; border-bottom:1px solid #f8fafc; vertical-align:middle; }
-        .trow { cursor:pointer; transition:background .12s; }
-        .trow:hover { background:#f8fbff; }
-        .trow:last-child td { border-bottom:none; }
-        .trow:focus { outline:2px solid #1B5E8C; outline-offset:-2px; }
-
-        .name-cell { display:flex; align-items:center; gap:.75rem; }
-        .name-avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#1B5E8C,#0d3d5c); color:#fff; display:flex; align-items:center; justify-content:center; font-size:.9rem; font-weight:700; flex-shrink:0; }
-        .name-text { font-weight:700; color:#1f2937; }
-        .gifted-tag { display:inline-block; font-size:.68rem; font-weight:600; color:#f59e0b; background:#fffbeb; border:1px solid #fde68a; border-radius:2rem; padding:.1rem .45rem; margin-top:.15rem; }
-        .cell-muted { color:#6b7a8d; }
-
-        .view-btn { background:none; border:1.5px solid #e5eaf0; border-radius:.5rem; padding:.3rem .7rem; font-size:.78rem; font-weight:600; color:#1B5E8C; cursor:pointer; font-family:'Cairo',sans-serif; transition:all .15s; white-space:nowrap; }
-        .view-btn:hover { background:#f0f7ff; border-color:#1B5E8C; }
-
-        .table-footer { padding:.75rem 1.25rem; font-size:.78rem; color:#9ca3af; border-top:1px solid #f0f4f8; text-align:left; }
-
-/* ── Responsive ───────────────────────────────────────────────── */
-        @media (max-width: 768px) {
-          .page-top { flex-direction:column; }
-          .table th:nth-child(3),
-          .table td:nth-child(3),
-          .table th:nth-child(4),
-          .table td:nth-child(4),
-          .table th:nth-child(6),
-          .table td:nth-child(6) { display:none; }
-        }
-      `}</style>
     </AppShell>
   );
 }
