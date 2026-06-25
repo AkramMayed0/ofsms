@@ -82,11 +82,19 @@ function DetailDrawer({ orphan, onClose }) {
 
   useEffect(() => {
     if (!orphan) return;
-    setDL(true);
-    api.get(`/orphans/${orphan.id}`)
-      .then(({ data }) => setDocs(data.documents || []))
-      .catch(() => setDocs([]))
-      .finally(() => setDL(false));
+    async function fetchDocs() {
+      setDL(true);
+      try {
+        const { data } = await api.get(`/orphans/${orphan.id}`);
+        setDocs(data.documents || []);
+      } catch (err) {
+        console.error(`Failed to fetch documents for orphan ID ${orphan.id}:`, err);
+        setDocs([]);
+      } finally {
+        setDL(false);
+      }
+    }
+    fetchDocs();
   }, [orphan?.id]);
 
   if (!orphan) return null;
@@ -238,11 +246,19 @@ export default function MyOrphansPage() {
 
   // Fetch orphans
   useEffect(() => {
-    setLoading(true);
-    api.get('/orphans')
-      .then(({ data }) => setOrphans(data.orphans || []))
-      .catch(() => setError('تعذّر تحميل البيانات. يرجى تحديث الصفحة.'))
-      .finally(() => setLoading(false));
+    async function fetchOrphans() {
+      setLoading(true);
+      try {
+        const { data } = await api.get('/orphans');
+        setOrphans(data.orphans || []);
+      } catch (err) {
+        console.error('Failed to fetch assigned orphans:', err);
+        setError('تعذّر تحميل البيانات. يرجى تحديث الصفحة.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchOrphans();
   }, []);
 
   // Filter + search
