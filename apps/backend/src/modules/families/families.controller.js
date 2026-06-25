@@ -3,75 +3,29 @@
  * HTTP handlers for the families module.
  */
 
-const { validationResult } = require('express-validator');
-const { uploadFile } = require('../../config/s3');
 const service = require('./families.service');
 const adsService = require('../ads/ads.service');
 
 const createFamily = async (req, res, next) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
-
     const { familyName, headOfFamily, memberCount, governorateId, notes } = req.body;
 
-    // 1. Create family record (status = under_review automatically)
-    const family = await service.createFamily({
-      familyName,
-      headOfFamily,
-      memberCount: parseInt(memberCount, 10),
-      governorateId: parseInt(governorateId, 10),
-      agentId: req.user.id,
-      notes,
-    });
-
-    // 2. Upload documents to S3
-    const uploadedDocs = [];
-
-    // Optional: head of family ID document
-    const headIdFile = req.files?.headOfFamilyId?.[0];
-    if (headIdFile) {
-      const { key } = await uploadFile({
-        buffer: headIdFile.buffer,
-        originalName: headIdFile.originalname,
-        mimetype: headIdFile.mimetype,
-        folder: 'documents',
-      });
-      const doc = await service.addDocument({
-        entityType: 'family',
-        entityId: family.id,
-        docType: 'guardian_id',
-        fileKey: key,
-        originalName: headIdFile.originalname,
-        uploadedBy: req.user.id,
-      });
-      uploadedDocs.push(doc);
-    }
-
-    // Optional: additional docs (up to 5)
-    const additionalFiles = req.files?.additionalDocs || [];
-    for (const file of additionalFiles.slice(0, 5)) {
-      const { key } = await uploadFile({
-        buffer: file.buffer,
-        originalName: file.originalname,
-        mimetype: file.mimetype,
-        folder: 'documents',
-      });
-      const doc = await service.addDocument({
-        entityType: 'family',
-        entityId: family.id,
-        docType: 'other',
-        fileKey: key,
-        originalName: file.originalname,
-        uploadedBy: req.user.id,
-      });
-      uploadedDocs.push(doc);
-    }
+    const result = await service.createFamily(
+      {
+        familyName,
+        headOfFamily,
+        memberCount,
+        governorateId,
+        agentId: req.user.id,
+        notes,
+      },
+      req.files
+    );
 
     return res.status(201).json({
       message: 'تم تسجيل الأسرة بنجاح وهي الآن في قائمة انتظار المراجعة',
-      family,
-      documents: uploadedDocs,
+      family: result.family,
+      documents: result.documents,
     });
   } catch (err) {
     next(err);
@@ -101,67 +55,48 @@ const getFamiliesUnderMarketing = async (_req, res, next) => {
 
 const getFamilyById = async (req, res, next) => {
   try {
-    const family = await service.getFamilyById(req.params.id);
-    if (!family) return res.status(404).json({ error: 'الأسرة غير موجودة' });
-
-    if (req.user.role === 'agent' && family.agent_id !== req.user.id) {
-      return res.status(403).json({ error: 'ليس لديك صلاحية للوصول إلى هذا المورد' });
-    }
-
-    const documents = await service.getFamilyDocuments(req.params.id);
-    return res.json({ family, documents });
+    const result = await service.getFamilyById(req.params.id, req.user.role, req.user.id);
+    return res.json(result);
   } catch (err) {
+    // If the error has a statusCode, it will be handled by our global error handler (if it supports it)
+    // or we map it directly here to be safe.
+    if (err.statusCode) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
     next(err);
   }
 };
 
 const updateFamily = async (req, res, next) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
-
-    const existing = await service.getFamilyById(req.params.id);
-    if (!existing) return res.status(404).json({ error: 'الأسرة غير موجودة' });
-
-    if (req.user.role === 'agent') {
-      if (existing.agent_id !== req.user.id) {
-        return res.status(403).json({ error: 'ليس لديك صلاحية لتعديل هذه الأسرة' });
-      }
-      if (existing.status !== 'under_review' && existing.status !== 'rejected') {
-        return res.status(400).json({ error: 'لا يمكن تعديل الأسرة بعد اعتمادها' });
-      }
-    }
-
-    const family = await service.updateFamily(req.params.id, req.body);
+    const family = await service.updateFamily(req.params.id, req.body, req.user.role, req.user.id);
     return res.json({ message: 'تم تحديث بيانات الأسرة', family });
   } catch (err) {
+    if (err.statusCode) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
     next(err);
   }
 };
 
 const updateFamilyStatus = async (req, res, next) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
-
     const { status, notes } = req.body;
-
-    if (req.user.role === 'supervisor' && status === 'under_sponsorship') {
-      return res.status(403).json({ error: 'هذه الصلاحية للمدير العام فقط' });
-    }
 
     const family = await service.updateFamilyStatus(
       req.params.id,
       status,
       notes,
       req.user.name,
-      req.user.id
+      req.user.id,
+      req.user.role
     );
-
-    if (!family) return res.status(404).json({ error: 'الأسرة غير موجودة' });
 
     return res.json({ message: 'تم تحديث حالة الأسرة', family });
   } catch (err) {
+    if (err.statusCode) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
     next(err);
   }
 };
@@ -171,10 +106,12 @@ const shareFamilyToAds = async (req, res, next) => {
     const { targetAll = true, sponsorIds = [] } = req.body || {};
     const shareWithAll = targetAll === true || targetAll === 'true';
     if (!shareWithAll && (!Array.isArray(sponsorIds) || sponsorIds.length === 0)) {
-      return res.status(422).json({ error: 'يرجى اختيار كافل واحد على الأقل أو اختيار جميع الكفلاء' });
+      return res.status(400).json({ error: 'يرجى اختيار كافل واحد على الأقل أو اختيار جميع الكفلاء' });
     }
-    const family = await service.getFamilyById(req.params.id);
-    if (!family) return res.status(404).json({ error: 'الأسرة غير موجودة' });
+    
+    // We can still use service.getFamilyById to get the family safely
+    const { family } = await service.getFamilyById(req.params.id, req.user.role, req.user.id);
+    
     if (family.status !== 'under_marketing') {
       return res.status(400).json({ error: 'يمكن مشاركة الأسر تحت التسويق فقط' });
     }
@@ -195,6 +132,9 @@ const shareFamilyToAds = async (req, res, next) => {
       ad,
     });
   } catch (err) {
+    if (err.statusCode) {
+      return res.status(err.statusCode).json({ error: err.message });
+    }
     next(err);
   }
 };

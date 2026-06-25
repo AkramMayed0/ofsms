@@ -14,7 +14,14 @@ import useAuthStore from '../../store/useAuthStore';
 import api from '../../lib/api';
 import PrimaryButton from '../../components/ui/PrimaryButton';
 
-const INITIAL_FORM = { email: '', password: '' };
+const REDIRECT_AFTER_LOGIN = '/dashboard';
+const LOGIN_ENDPOINT = '/auth/login';
+const APP_NAME = 'نظام إدارة الأيتام والأسر';
+const ORG_NAME = 'مؤسسة إكرام النعمة الخيرية';
+const LOGO_PATH = '/ikram-logo.png';
+const MIN_PASSWORD_LENGTH = 8;
+
+const INITIAL_FORM = Object.freeze({ email: '', password: '' });
 
 const FIELD_ICON_CLASS =
   'absolute right-3.5 z-10 flex items-center text-gray-400 pointer-events-none';
@@ -39,7 +46,9 @@ const validate = ({ email, password }) => {
   }
 
   if (!password) errors.password = 'كلمة المرور مطلوبة';
-  else if (password.length < 6) errors.password = 'كلمة المرور قصيرة جداً';
+  else if (password.length < MIN_PASSWORD_LENGTH) {
+    errors.password = `كلمة المرور يجب أن تكون ${MIN_PASSWORD_LENGTH} أحرف على الأقل`;
+  }
 
   return errors;
 };
@@ -74,14 +83,20 @@ export default function LoginPage() {
     setLoading(true);
     setApiError('');
 
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setLoading(false);
+      setApiError('لا يوجد اتصال بالإنترنت. يرجى التحقق من الشبكة والمحاولة مجدداً.');
+      return;
+    }
+
     try {
-      const { data } = await api.post('/auth/login', {
+      const { data } = await api.post(LOGIN_ENDPOINT, {
         email: form.email.trim().toLowerCase(),
         password: form.password,
       });
 
       setAuth(data.accessToken, data.user);
-      router.push('/dashboard');
+      router.push(REDIRECT_AFTER_LOGIN);
     } catch (err) {
       setApiError(err.response?.data?.error || 'حدث خطأ. يرجى المحاولة مجدداً');
     } finally {
@@ -153,7 +168,7 @@ export default function LoginPage() {
           </form>
 
           <p className="m-0 mt-6 text-center text-xs tracking-wide text-gray-400">
-            مؤسسة إكرام النعمة الخيرية · نظام كفالة الأيتام
+            {ORG_NAME} · {APP_NAME}
           </p>
         </section>
       </main>
@@ -165,12 +180,11 @@ function BrandPanel() {
   return (
     <aside
       className="relative flex min-h-[180px] w-full shrink-0 items-center justify-center overflow-hidden bg-gradient-to-br from-[#0d3d5c] via-primary to-[#1a7a6e] px-4 py-6 md:min-h-screen md:w-[42%]"
-      aria-hidden="true"
     >
       <div className="relative z-10 flex flex-col items-center justify-center p-8 text-center">
         <img
-          src="/ikram-logo.png"
-          alt="مؤسسة إكرام النعمة الخيرية"
+          src={LOGO_PATH}
+          alt={ORG_NAME}
           className="h-auto w-full max-w-[200px] p-4 md:max-w-[500px] md:p-0"
         />
       </div>
@@ -181,8 +195,8 @@ function BrandPanel() {
 function MobileLogo() {
   return (
     <div className="mb-6 flex items-center gap-2 text-sm font-semibold text-primary md:hidden">
-      <ShieldCheck size={28} className="rounded text-primary" aria-hidden="true" />
-      <span>نظام إدارة الأيتام والأسر</span>
+      <ShieldCheck size={28} aria-hidden="true" />
+      <span>{APP_NAME}</span>
     </div>
   );
 }

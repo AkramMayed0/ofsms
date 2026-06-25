@@ -11,19 +11,22 @@
  * Fully responsive (stacks on mobile).
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { Search, X, CheckCircle2, FileText, Check, Wallet, MapPin, FileSpreadsheet, Lightbulb } from 'lucide-react';
 
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
 
+// ── Constants ────────────────────────────────────────────────────────────────
+const EXPORT_DELAY_MS = 600;
+
 // ── Status labels ─────────────────────────────────────────────────────────────
 const DISB_STATUS = {
-  draft:               { label: 'مسودة',        color: '#92400E', bg: '#FEF3C7' },
-  supervisor_approved: { label: 'اعتمد المشرف', color: '#1E40AF', bg: '#EFF6FF' },
-  finance_approved:    { label: 'اعتمد المالي', color: '#5B21B6', bg: '#F5F3FF' },
-  released:            { label: 'مُصدَر',        color: '#065F46', bg: '#ECFDF5' },
-  rejected:            { label: 'مرفوض',         color: '#991B1B', bg: '#FEF2F2' },
+  draft:               { label: 'مسودة',        className: 'bg-amber-100 text-amber-800' },
+  supervisor_approved: { label: 'اعتمد المشرف', className: 'bg-blue-50 text-blue-800' },
+  finance_approved:    { label: 'اعتمد المالي', className: 'bg-purple-50 text-purple-800' },
+  released:            { label: 'مُصدَر',        className: 'bg-emerald-50 text-emerald-800' },
+  rejected:            { label: 'مرفوض',         className: 'bg-red-50 text-red-800' },
 };
 
 const ARABIC_MONTHS = [
@@ -65,37 +68,30 @@ const downloadFile = async (url, filename, ext) => {
 function ExportBar({ selectedCount, onExportPdf, onExportExcel, pdfLoading, excelLoading, label }) {
   const busy = pdfLoading || excelLoading;
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      flexWrap: 'wrap', gap: '.75rem',
-      padding: '.75rem 1.1rem',
-      background: selectedCount > 0 ? 'linear-gradient(90deg,#f0f7ff,#e8f4ff)' : '#f8fafc',
-      borderBottom: '1px solid #e5eaf0', transition: 'background .2s',
-    }}>
-      <span style={{ fontSize: '.83rem', fontWeight: 700, color: selectedCount > 0 ? '#1B5E8C' : '#9ca3af', display: 'inline-flex', alignItems: 'center', gap: '.3rem' }}>
+    <div className={`flex items-center justify-between flex-wrap gap-3 py-3 px-[1.1rem] border-b border-[#e5eaf0] transition-colors duration-200 ${
+      selectedCount > 0 ? 'bg-gradient-to-r from-[#f0f7ff] to-[#e8f4ff]' : 'bg-[#f8fafc]'
+    }`}>
+      <span className={`text-[0.83rem] font-bold inline-flex items-center gap-[0.3rem] ${
+        selectedCount > 0 ? 'text-[#1B5E8C]' : 'text-gray-400'
+      }`}>
         {selectedCount > 0
           ? <><Check size={14} /> تم تحديد {selectedCount} {label}</>
           : `اختر ${label} للتصدير`}
       </span>
-      <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+      <div className="flex gap-2 items-center flex-wrap">
         {selectedCount > 1 && (
-          <span style={{ fontSize: '.72rem', color: '#9ca3af', background: '#fff', border: '1px solid #e5eaf0', borderRadius: '.5rem', padding: '.2rem .6rem' }}>
+          <span className="text-[0.72rem] text-gray-400 bg-white border border-[#e5eaf0] rounded-[0.5rem] py-[0.2rem] px-[0.6rem]">
             سيتم تنزيل {selectedCount} ملفات
           </span>
         )}
         <button
           onClick={onExportExcel}
           disabled={selectedCount === 0 || busy}
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: '.35rem',
-            padding: '.5rem 1rem', fontSize: '.82rem', fontWeight: 700,
-            border: '1.5px solid #86efac', borderRadius: '.625rem',
-            background: selectedCount === 0 ? '#f9fafb' : '#f0fdf4',
-            color: selectedCount === 0 ? '#9ca3af' : '#16a34a',
-            cursor: selectedCount === 0 || busy ? 'not-allowed' : 'pointer',
-            fontFamily: 'Cairo,sans-serif', transition: 'all .15s',
-            opacity: busy && !excelLoading ? .5 : 1,
-          }}
+          className={`inline-flex items-center gap-[0.35rem] py-2 px-4 text-[0.82rem] font-bold border-[1.5px] border-[#86efac] rounded-[0.625rem] font-cairo transition-all duration-150 ${
+            selectedCount === 0
+              ? 'bg-[#f9fafb] text-gray-400 cursor-not-allowed'
+              : 'bg-[#f0fdf4] text-[#16a34a] cursor-pointer'
+          } ${busy && !excelLoading ? 'opacity-50' : 'opacity-100'}`}
         >
           {excelLoading ? <MiniSpinner color="#16a34a" /> : <FileSpreadsheet size={15} />}
           {excelLoading ? 'جارٍ التصدير…' : 'Excel'}
@@ -103,16 +99,11 @@ function ExportBar({ selectedCount, onExportPdf, onExportExcel, pdfLoading, exce
         <button
           onClick={onExportPdf}
           disabled={selectedCount === 0 || busy}
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: '.35rem',
-            padding: '.5rem 1rem', fontSize: '.82rem', fontWeight: 700,
-            border: '1.5px solid #fca5a5', borderRadius: '.625rem',
-            background: selectedCount === 0 ? '#f9fafb' : '#fef2f2',
-            color: selectedCount === 0 ? '#9ca3af' : '#dc2626',
-            cursor: selectedCount === 0 || busy ? 'not-allowed' : 'pointer',
-            fontFamily: 'Cairo,sans-serif', transition: 'all .15s',
-            opacity: busy && !pdfLoading ? .5 : 1,
-          }}
+          className={`inline-flex items-center gap-[0.35rem] py-2 px-4 text-[0.82rem] font-bold border-[1.5px] border-[#fca5a5] rounded-[0.625rem] font-cairo transition-all duration-150 ${
+            selectedCount === 0
+              ? 'bg-[#f9fafb] text-gray-400 cursor-not-allowed'
+              : 'bg-[#fef2f2] text-[#dc2626] cursor-pointer'
+          } ${busy && !pdfLoading ? 'opacity-50' : 'opacity-100'}`}
         >
           {pdfLoading ? <MiniSpinner color="#dc2626" /> : <FileText size={15} />}
           {pdfLoading ? 'جارٍ التصدير…' : 'PDF'}
@@ -125,11 +116,10 @@ function ExportBar({ selectedCount, onExportPdf, onExportExcel, pdfLoading, exce
 // ── MiniSpinner ───────────────────────────────────────────────────────────────
 function MiniSpinner({ color = '#1B5E8C' }) {
   return (
-    <span style={{
-      display: 'inline-block', width: 13, height: 13, flexShrink: 0,
-      border: `2px solid ${color}30`, borderTopColor: color,
-      borderRadius: '50%', animation: 'rp-spin .7s linear infinite',
-    }} />
+    <span
+      style={{ border: `2px solid ${color}30`, borderTopColor: color }}
+      className="inline-block w-[13px] h-[13px] shrink-0 rounded-full animate-spin"
+    />
   );
 }
 
@@ -140,8 +130,11 @@ function SkeletonRows({ count = 5 }) {
       {Array.from({ length: count }).map((_, i) => (
         <tr key={i}>
           {Array.from({ length: 5 }).map((__, j) => (
-            <td key={j} style={{ padding: '.75rem 1rem', borderBottom: '1px solid #f8fafc' }}>
-              <div style={{ height: 14, borderRadius: 4, background: 'linear-gradient(90deg,#f3f4f6 25%,#e5e7eb 50%,#f3f4f6 75%)', backgroundSize: '400% 100%', animation: 'rp-shimmer 1.4s ease-in-out infinite', width: `${60 + (i + j) * 7}%` }} />
+            <td key={j} className="py-3 px-4 border-b border-[#f8fafc]">
+              <div
+                style={{ width: `${60 + (i + j) * 7}%` }}
+                className="h-[14px] rounded bg-gradient-to-r from-[#f0f4f8] via-[#e5eaf0] to-[#f0f4f8] bg-[length:200%_100%] animate-shimmer"
+              />
             </td>
           ))}
         </tr>
@@ -152,20 +145,19 @@ function SkeletonRows({ count = 5 }) {
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
 function Toast({ msg, type = 'error', onClose }) {
-  const colors = type === 'success'
-    ? { bg: '#ecfdf5', border: '#6ee7b7', text: '#065f46' }
-    : { bg: '#fef2f2', border: '#fecaca', text: '#b91c1c' };
+  const isSuccess = type === 'success';
+  const colorsClass = isSuccess
+    ? 'bg-[#ecfdf5] border-[#6ee7b7] text-[#065f46]'
+    : 'bg-[#fef2f2] border-[#fecaca] text-[#b91c1c]';
   return (
-    <div style={{
-      position: 'fixed', top: '1.5rem', left: '50%', transform: 'translateX(-50%)',
-      zIndex: 2000, background: colors.bg, border: `1px solid ${colors.border}`,
-      color: colors.text, borderRadius: '.75rem', padding: '.8rem 1.5rem',
-      fontWeight: 600, fontSize: '.85rem', boxShadow: '0 4px 20px rgba(0,0,0,.12)',
-      display: 'flex', alignItems: 'center', gap: '.75rem', animation: 'rp-fadein .25s ease',
-      fontFamily: 'Cairo,sans-serif',
-    }}>
+    <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[2000] border rounded-xl py-3 px-6 font-semibold text-[0.85rem] shadow-[0_4px_20px_rgba(0,0,0,0.12)] flex items-center gap-3 animate-toastIn font-cairo ${colorsClass}`}>
       {msg}
-      <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.text, fontWeight: 800, padding: 0, fontSize: '1rem', lineHeight: 1 }}><X size={16} /></button>
+      <button
+        onClick={onClose}
+        className="bg-none border-none cursor-pointer font-extrabold p-0 text-base leading-none text-current hover:opacity-85"
+      >
+        <X size={16} />
+      </button>
     </div>
   );
 }
@@ -182,10 +174,18 @@ function DisbursementsTab() {
   const [toast, setToast]               = useState(null);
 
   useEffect(() => {
-    api.get('/disbursements')
-      .then(({ data }) => setLists(data.lists || []))
-      .catch(() => setToast({ msg: 'تعذّر تحميل كشوف الصرف', type: 'error' }))
-      .finally(() => setLoading(false));
+    const fetchDisbursements = async () => {
+      try {
+        const { data } = await api.get('/disbursements');
+        setLists(data.lists || []);
+      } catch (err) {
+        console.error('Error fetching disbursements:', err);
+        setToast({ msg: 'تعذّر تحميل كشوف الصرف', type: 'error' });
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDisbursements();
   }, []);
 
   const filtered = lists.filter(l => {
@@ -224,10 +224,20 @@ function DisbursementsTab() {
           `كشف-صرف-${monthName}-${list.year}`,
           ext
         );
-        if (selectedLists.length > 1) await new Promise(r => setTimeout(r, 600));
+        if (selectedLists.length > 1) {
+          await new Promise(r => setTimeout(r, EXPORT_DELAY_MS));
+        }
       }
-      setToast({ msg: <><CheckCircle2 size={15} style={{ flexShrink: 0 }} /> تم تصدير {selectedLists.length} ملف بنجاح</>, type: 'success' });
+      setToast({
+        msg: (
+          <span className="flex items-center gap-1.5 shrink-0">
+            <CheckCircle2 size={15} /> تم تصدير {selectedLists.length} ملف بنجاح
+          </span>
+        ),
+        type: 'success',
+      });
     } catch (err) {
+      console.error('Error exporting disbursements:', err);
       const serverMsg = await readBlobError(err);
       const status    = err?.response?.status;
       const fallback  = status === 403
@@ -242,28 +252,41 @@ function DisbursementsTab() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+    <div className="flex flex-col flex-1 min-h-0">
       {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
 
       {/* Toolbar */}
-      <div style={{ display: 'flex', gap: '.65rem', flexWrap: 'wrap', alignItems: 'center', padding: '1rem', borderBottom: '1px solid #f0f4f8' }}>
-        <div style={{ position: 'relative', flex: 1, minWidth: 180 }}>
-          <span style={{ position: 'absolute', right: '.75rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><Search size={16} /></span>
+      <div className="flex gap-2.5 flex-wrap items-center p-4 border-b border-[#f0f4f8]">
+        <div className="relative flex-1 min-w-[180px]">
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+            <Search size={16} />
+          </span>
           <input
-            style={{ width: '100%', border: '1.5px solid #d1d5db', borderRadius: '.625rem', padding: '.55rem .85rem .55rem 2rem', paddingRight: '2.2rem', fontSize: '.83rem', fontFamily: 'Cairo,sans-serif', background: '#fafafa', outline: 'none', boxSizing: 'border-box' }}
+            className="w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2 px-8 pl-8 pr-9 text-[0.83rem] font-cairo bg-[#fafafa] outline-none box-border"
             placeholder="ابحث بالشهر أو السنة أو المُنشئ…"
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
           {search && (
-            <button onClick={() => setSearch('')} style={{ position: 'absolute', left: '.6rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af' }}><X size={16} /></button>
+            <button
+              onClick={() => setSearch('')}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 bg-none border-none cursor-pointer text-gray-400 hover:text-gray-600"
+            >
+              <X size={16} />
+            </button>
           )}
         </div>
-        <div style={{ display: 'flex', gap: '.35rem', flexWrap: 'wrap' }}>
+        <div className="flex gap-1.5 flex-wrap">
           {[{ key: 'all', label: 'الكل' }, ...Object.entries(DISB_STATUS).map(([k, v]) => ({ key: k, label: v.label }))].map(({ key, label }) => (
-            <button key={key}
+            <button
+              key={key}
               onClick={() => setStatusFilter(key)}
-              style={{ padding: '.35rem .75rem', border: `1.5px solid ${statusFilter === key ? '#1B5E8C' : '#e5eaf0'}`, borderRadius: '2rem', fontSize: '.73rem', fontWeight: 600, color: statusFilter === key ? '#fff' : '#6b7280', background: statusFilter === key ? '#1B5E8C' : '#fff', cursor: 'pointer', fontFamily: 'Cairo,sans-serif', transition: 'all .15s' }}>
+              className={`py-1.5 px-3 border-[1.5px] rounded-full text-[0.73rem] font-semibold font-cairo cursor-pointer transition-all duration-150 ${
+                statusFilter === key
+                  ? 'border-primary bg-primary text-white shadow-[0_2px_8px_rgba(27,94,140,0.2)]'
+                  : 'border-[#e5eaf0] bg-white text-gray-500 hover:bg-gray-50'
+              }`}
+            >
               {label}
             </button>
           ))}
@@ -281,78 +304,108 @@ function DisbursementsTab() {
       />
 
       {/* Table */}
-      <div style={{ flex: 1, overflowY: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.82rem' }}>
+      <div className="flex-1 overflow-y-auto">
+        <table className="w-full border-collapse text-[0.82rem]">
           <thead>
-            <tr style={{ background: '#f8fafc', position: 'sticky', top: 0, zIndex: 1 }}>
-              <th style={{ width: 44, padding: '.75rem 1rem', textAlign: 'center', borderBottom: '2px solid #e5eaf0' }}>
-                <input type="checkbox" style={{ width: 16, height: 16, accentColor: '#1B5E8C', cursor: 'pointer' }}
+            <tr className="bg-[#f8fafc] sticky top-0 z-10">
+              <th className="w-11 py-3 px-4 text-center border-b-2 border-[#e5eaf0]">
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 accent-primary cursor-pointer"
                   checked={selected.size === filtered.length && filtered.length > 0}
                   ref={el => { if (el) el.indeterminate = selected.size > 0 && selected.size < filtered.length; }}
-                  onChange={toggleAll} />
+                  onChange={toggleAll}
+                />
               </th>
               {['الفترة', 'الحالة', 'المستفيدون', 'الإجمالي', 'أنشأه', 'تاريخ الإنشاء'].map(h => (
-                <th key={h} style={{ padding: '.75rem 1rem', textAlign: 'right', fontSize: '.73rem', fontWeight: 700, color: '#6b7a8d', whiteSpace: 'nowrap', borderBottom: '2px solid #e5eaf0' }}>{h}</th>
+                <th
+                  key={h}
+                  className="py-3 px-4 text-right text-[0.73rem] font-bold text-[#6b7a8d] whitespace-nowrap border-b-2 border-[#e5eaf0]"
+                >
+                  {h}
+                </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {loading ? <SkeletonRows count={5} /> :
-             filtered.length === 0 ? (
-              <tr><td colSpan={7} style={{ padding: '3rem', color: '#9ca3af', fontSize: '.85rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.4rem' }}>
-                  {lists.length === 0
-                    ? <><FileText size={16} style={{ opacity: .4 }} /> لا توجد كشوف صرف بعد</>
-                    : <><Search size={16} /> لا توجد نتائج مطابقة</>}
-                </div>
-              </td></tr>
-            ) : filtered.map((list, idx) => {
-              const cfg  = DISB_STATUS[list.status] || DISB_STATUS.draft;
-              const isSel = selected.has(list.id);
-              return (
-                <tr key={list.id}
-                  onClick={() => toggle(list.id)}
-                  style={{ background: isSel ? '#f0f7ff' : idx % 2 === 0 ? '#fff' : '#fafafa', cursor: 'pointer', transition: 'background .1s' }}
-                  onMouseEnter={e => { if (!isSel) e.currentTarget.style.background = '#f8fbff'; }}
-                  onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = idx % 2 === 0 ? '#fff' : '#fafafa'; }}
-                >
-                  <td style={{ textAlign: 'center', padding: '.75rem 1rem', borderBottom: '1px solid #f0f4f8' }}
-                    onClick={e => e.stopPropagation()}>
-                    <input type="checkbox" style={{ width: 16, height: 16, accentColor: '#1B5E8C', cursor: 'pointer' }}
-                      checked={isSel} onChange={() => toggle(list.id)} />
-                  </td>
-                  <td style={{ padding: '.75rem 1rem', borderBottom: '1px solid #f0f4f8' }}>
-                    <div style={{ fontWeight: 700, color: '#0d3d5c', fontSize: '.87rem' }}>
-                      {ARABIC_MONTHS[list.month]} {list.year}
-                    </div>
-                  </td>
-                  <td style={{ padding: '.75rem 1rem', borderBottom: '1px solid #f0f4f8' }}>
-                    <span style={{ fontSize: '.72rem', fontWeight: 700, padding: '.2rem .65rem', borderRadius: '2rem', background: cfg.bg, color: cfg.color, whiteSpace: 'nowrap' }}>
-                      {cfg.label}
-                    </span>
-                  </td>
-                  <td style={{ padding: '.75rem 1rem', borderBottom: '1px solid #f0f4f8', color: '#6b7280', fontSize: '.82rem' }}>
-                    {parseInt(list.total_items || 0)} مستفيد
-                  </td>
-                  <td style={{ padding: '.75rem 1rem', borderBottom: '1px solid #f0f4f8', fontWeight: 700, color: '#1B5E8C', fontSize: '.82rem' }}>
-                    {parseFloat(list.total_amount || 0).toLocaleString('ar-YE')} ر.ي
-                  </td>
-                  <td style={{ padding: '.75rem 1rem', borderBottom: '1px solid #f0f4f8', color: '#6b7280', fontSize: '.8rem' }}>
-                    {list.created_by_name || '—'}
-                  </td>
-                  <td style={{ padding: '.75rem 1rem', borderBottom: '1px solid #f0f4f8', color: '#9ca3af', fontSize: '.77rem', whiteSpace: 'nowrap' }}>
-                    {list.created_at ? new Date(list.created_at).toLocaleDateString('ar-YE', { dateStyle: 'medium' }) : '—'}
-                  </td>
-                </tr>
-              );
-            })}
+            {loading ? (
+              <SkeletonRows count={5} />
+            ) : filtered.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="p-12 text-[#9ca3af] text-[0.85rem]">
+                  <div className="flex items-center justify-center gap-1.5">
+                    {lists.length === 0 ? (
+                      <>
+                        <FileText size={16} className="opacity-40" /> لا توجد كشوف صرف بعد
+                      </>
+                    ) : (
+                      <>
+                        <Search size={16} /> لا توجد نتائج مطابقة
+                      </>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              filtered.map((list, idx) => {
+                const cfg = DISB_STATUS[list.status] || DISB_STATUS.draft;
+                const isSel = selected.has(list.id);
+                return (
+                  <tr
+                    key={list.id}
+                    onClick={() => toggle(list.id)}
+                    className={`cursor-pointer transition-colors duration-100 ${
+                      isSel
+                        ? 'bg-[#f0f7ff]'
+                        : idx % 2 === 0
+                        ? 'bg-white hover:bg-[#f8fbff]'
+                        : 'bg-[#fafafa] hover:bg-[#f8fbff]'
+                    }`}
+                  >
+                    <td
+                      className="text-center py-3 px-4 border-b border-[#f0f4f8]"
+                      onClick={e => e.stopPropagation()}
+                    >
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4 accent-primary cursor-pointer"
+                        checked={isSel}
+                        onChange={() => toggle(list.id)}
+                      />
+                    </td>
+                    <td className="py-3 px-4 border-b border-[#f0f4f8]">
+                      <div className="font-bold text-[#0d3d5c] text-[0.87rem]">
+                        {ARABIC_MONTHS[list.month]} {list.year}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 border-b border-[#f0f4f8]">
+                      <span className={`text-[0.72rem] font-bold py-1 px-2.5 rounded-full whitespace-nowrap ${cfg.className}`}>
+                        {cfg.label}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 border-b border-[#f0f4f8] text-gray-500 text-[0.82rem]">
+                      {parseInt(list.total_items || 0)} مستفيد
+                    </td>
+                    <td className="py-3 px-4 border-b border-[#f0f4f8] font-bold text-primary text-[0.82rem]">
+                      {parseFloat(list.total_amount || 0).toLocaleString('ar-YE')} ر.ي
+                    </td>
+                    <td className="py-3 px-4 border-b border-[#f0f4f8] text-gray-500 text-[0.8rem]">
+                      {list.created_by_name || '—'}
+                    </td>
+                    <td className="py-3 px-4 border-b border-[#f0f4f8] text-gray-400 text-[0.77rem] whitespace-nowrap">
+                      {list.created_at ? new Date(list.created_at).toLocaleDateString('ar-YE', { dateStyle: 'medium' }) : '—'}
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>
 
       {/* Footer count */}
       {!loading && (
-        <div style={{ padding: '.6rem 1rem', fontSize: '.75rem', color: '#9ca3af', borderTop: '1px solid #f0f4f8', background: '#fafafa', flexShrink: 0 }}>
+        <div className="py-2.5 px-4 text-[0.75rem] text-[#9ca3af] border-t border-[#f0f4f8] bg-[#fafafa] shrink-0">
           {filtered.length} كشف{selected.size > 0 ? ` · ${selected.size} مختار` : ''}
         </div>
       )}
@@ -371,17 +424,31 @@ function GovernoratesTab() {
   const [toast, setToast]               = useState(null);
 
   useEffect(() => {
-    Promise.all([api.get('/governorates'), api.get('/dashboard/gm')])
-      .then(([govsRes, dashRes]) => {
+    const fetchGovernoratesAndStats = async () => {
+      try {
+        const [govsRes, dashRes] = await Promise.all([
+          api.get('/governorates'),
+          api.get('/dashboard/gm'),
+        ]);
         const stats = dashRes.data.orphans_per_governorate || [];
         const merged = (govsRes.data.data || []).map(g => {
           const stat = stats.find(s => s.governorate_ar === g.name_ar);
-          return { id: g.id, name_ar: g.name_ar, name_en: g.name_en, count: stat ? parseInt(stat.count) : 0 };
+          return {
+            id: g.id,
+            name_ar: g.name_ar,
+            name_en: g.name_en,
+            count: stat ? parseInt(stat.count) : 0,
+          };
         }).sort((a, b) => b.count - a.count);
         setGovs(merged);
-      })
-      .catch(() => setToast({ msg: 'تعذّر تحميل المحافظات', type: 'error' }))
-      .finally(() => setLoading(false));
+      } catch (err) {
+        console.error('Error fetching governorates statistics:', err);
+        setToast({ msg: 'تعذّر تحميل المحافظات', type: 'error' });
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchGovernoratesAndStats();
   }, []);
 
   const filtered = govs.filter(g =>
@@ -416,10 +483,20 @@ function GovernoratesTab() {
           `أيتام-${gov.name_ar}`,
           ext
         );
-        if (selectedGovs.length > 1) await new Promise(r => setTimeout(r, 600));
+        if (selectedGovs.length > 1) {
+          await new Promise(r => setTimeout(r, EXPORT_DELAY_MS));
+        }
       }
-      setToast({ msg: <><CheckCircle2 size={15} style={{ flexShrink: 0 }} /> تم تصدير {selectedGovs.length} تقرير بنجاح</>, type: 'success' });
+      setToast({
+        msg: (
+          <span className="flex items-center gap-1.5 shrink-0">
+            <CheckCircle2 size={15} /> تم تصدير {selectedGovs.length} تقرير بنجاح
+          </span>
+        ),
+        type: 'success',
+      });
     } catch (err) {
+      console.error('Error exporting governorates report:', err);
       const serverMsg = await readBlobError(err);
       const status    = err?.response?.status;
       const fallback  = status === 403
@@ -434,21 +511,28 @@ function GovernoratesTab() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+    <div className="flex flex-col flex-1 min-h-0">
       {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
 
       {/* Toolbar */}
-      <div style={{ padding: '1rem', borderBottom: '1px solid #f0f4f8' }}>
-        <div style={{ position: 'relative', maxWidth: 340 }}>
-          <span style={{ position: 'absolute', right: '.75rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><Search size={16} /></span>
+      <div className="p-4 border-b border-[#f0f4f8]">
+        <div className="relative max-w-[340px]">
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+            <Search size={16} />
+          </span>
           <input
-            style={{ width: '100%', border: '1.5px solid #d1d5db', borderRadius: '.625rem', padding: '.55rem .85rem .55rem 2rem', paddingRight: '2.2rem', fontSize: '.83rem', fontFamily: 'Cairo,sans-serif', background: '#fafafa', outline: 'none', boxSizing: 'border-box' }}
+            className="w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2 px-8 pl-8 pr-9 text-[0.83rem] font-cairo bg-[#fafafa] outline-none box-border"
             placeholder="ابحث باسم المحافظة…"
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
           {search && (
-            <button onClick={() => setSearch('')} style={{ position: 'absolute', left: '.6rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af' }}><X size={16} /></button>
+            <button
+              onClick={() => setSearch('')}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 bg-none border-none cursor-pointer text-gray-400 hover:text-gray-600"
+            >
+              <X size={16} />
+            </button>
           )}
         </div>
       </div>
@@ -464,71 +548,105 @@ function GovernoratesTab() {
       />
 
       {/* Table */}
-      <div style={{ flex: 1, overflowY: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.82rem' }}>
+      <div className="flex-1 overflow-y-auto">
+        <table className="w-full border-collapse text-[0.82rem]">
           <thead>
-            <tr style={{ background: '#f8fafc', position: 'sticky', top: 0, zIndex: 1 }}>
-              <th style={{ width: 44, padding: '.75rem 1rem', textAlign: 'center', borderBottom: '2px solid #e5eaf0' }}>
-                <input type="checkbox" style={{ width: 16, height: 16, accentColor: '#1B5E8C', cursor: 'pointer' }}
+            <tr className="bg-[#f8fafc] sticky top-0 z-10">
+              <th className="w-11 py-3 px-4 text-center border-b-2 border-[#e5eaf0]">
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 accent-primary cursor-pointer"
                   checked={selected.size === withOrphans.length && withOrphans.length > 0}
                   ref={el => { if (el) el.indeterminate = selected.size > 0 && selected.size < withOrphans.length; }}
-                  onChange={toggleAll} />
+                  onChange={toggleAll}
+                />
               </th>
               {['المحافظة', 'بالإنجليزية', 'عدد الأيتام', 'النسبة'].map(h => (
-                <th key={h} style={{ padding: '.75rem 1rem', textAlign: 'right', fontSize: '.73rem', fontWeight: 700, color: '#6b7a8d', whiteSpace: 'nowrap', borderBottom: '2px solid #e5eaf0' }}>{h}</th>
+                <th
+                  key={h}
+                  className="py-3 px-4 text-right text-[0.73rem] font-bold text-[#6b7a8d] whitespace-nowrap border-b-2 border-[#e5eaf0]"
+                >
+                  {h}
+                </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {loading ? <SkeletonRows count={8} /> :
-             filtered.length === 0 ? (
-              <tr><td colSpan={5} style={{ padding: '3rem', textAlign: 'center', color: '#9ca3af' }}><Search size={16} /> لا توجد نتائج</td></tr>
-            ) : filtered.map((gov, idx) => {
-              const isSel     = selected.has(gov.id);
-              const hasOrphans = gov.count > 0;
-              const pct       = Math.round((gov.count / maxCount) * 100);
-              return (
-                <tr key={gov.id}
-                  onClick={() => hasOrphans && toggle(gov.id)}
-                  style={{ background: isSel ? '#f0f7ff' : idx % 2 === 0 ? '#fff' : '#fafafa', cursor: hasOrphans ? 'pointer' : 'default', opacity: hasOrphans ? 1 : 0.45, transition: 'background .1s' }}
-                  onMouseEnter={e => { if (!isSel && hasOrphans) e.currentTarget.style.background = '#f8fbff'; }}
-                  onMouseLeave={e => { if (!isSel && hasOrphans) e.currentTarget.style.background = idx % 2 === 0 ? '#fff' : '#fafafa'; }}
-                >
-                  <td style={{ textAlign: 'center', padding: '.75rem 1rem', borderBottom: '1px solid #f0f4f8' }}
-                    onClick={e => e.stopPropagation()}>
-                    <input type="checkbox" style={{ width: 16, height: 16, accentColor: '#1B5E8C', cursor: hasOrphans ? 'pointer' : 'not-allowed' }}
-                      checked={isSel} disabled={!hasOrphans} onChange={() => hasOrphans && toggle(gov.id)} />
-                  </td>
-                  <td style={{ padding: '.75rem 1rem', borderBottom: '1px solid #f0f4f8', fontWeight: 700, color: '#0d3d5c' }}>
-                    {gov.name_ar}
-                  </td>
-                  <td style={{ padding: '.75rem 1rem', borderBottom: '1px solid #f0f4f8', color: '#9ca3af', fontSize: '.78rem', direction: 'ltr', textAlign: 'left' }}>
-                    {gov.name_en}
-                  </td>
-                  <td style={{ padding: '.75rem 1rem', borderBottom: '1px solid #f0f4f8' }}>
-                    <span style={{ fontWeight: 800, color: hasOrphans ? '#1B5E8C' : '#9ca3af', fontSize: '.9rem' }}>
-                      {gov.count}
-                    </span>
-                    {!hasOrphans && <span style={{ fontSize: '.7rem', color: '#9ca3af', marginRight: '.35rem' }}>— لا يوجد أيتام</span>}
-                  </td>
-                  <td style={{ padding: '.75rem 1rem', borderBottom: '1px solid #f0f4f8', minWidth: 140 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '.6rem' }}>
-                      <div style={{ flex: 1, height: 7, background: '#f0f4f8', borderRadius: '999px', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${pct}%`, background: isSel ? '#1B5E8C' : 'linear-gradient(90deg,#93c5fd,#60a5fa)', borderRadius: '999px', transition: 'width .4s ease' }} />
+            {loading ? (
+              <SkeletonRows count={8} />
+            ) : filtered.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="p-12 text-center text-[#9ca3af] text-[0.85rem]">
+                  <div className="flex items-center justify-center gap-1.5">
+                    <Search size={16} /> لا توجد نتائج
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              filtered.map((gov, idx) => {
+                const isSel = selected.has(gov.id);
+                const hasOrphans = gov.count > 0;
+                const pct = Math.round((gov.count / maxCount) * 100);
+                return (
+                  <tr
+                    key={gov.id}
+                    onClick={() => hasOrphans && toggle(gov.id)}
+                    className={`transition-colors duration-100 ${
+                      isSel
+                        ? 'bg-[#f0f7ff]'
+                        : idx % 2 === 0
+                        ? 'bg-white'
+                        : 'bg-[#fafafa]'
+                    } ${hasOrphans ? 'cursor-pointer hover:bg-[#f8fbff] opacity-100' : 'cursor-default opacity-45'}`}
+                  >
+                    <td
+                      className="text-center py-3 px-4 border-b border-[#f0f4f8]"
+                      onClick={e => e.stopPropagation()}
+                    >
+                      <input
+                        type="checkbox"
+                        className={`w-4 h-4 accent-primary ${hasOrphans ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                        checked={isSel}
+                        disabled={!hasOrphans}
+                        onChange={() => hasOrphans && toggle(gov.id)}
+                      />
+                    </td>
+                    <td className="py-3 px-4 border-b border-[#f0f4f8] font-bold text-[#0d3d5c]">
+                      {gov.name_ar}
+                    </td>
+                    <td className="py-3 px-4 border-b border-[#f0f4f8] text-gray-400 text-[0.78rem] ltr text-left">
+                      {gov.name_en}
+                    </td>
+                    <td className="py-3 px-4 border-b border-[#f0f4f8]">
+                      <span className={`font-extrabold text-[0.9rem] ${hasOrphans ? 'text-primary' : 'text-gray-400'}`}>
+                        {gov.count}
+                      </span>
+                      {!hasOrphans && <span className="text-[0.7rem] text-gray-400 mr-1.5">— لا يوجد أيتام</span>}
+                    </td>
+                    <td className="py-3 px-4 border-b border-[#f0f4f8] min-w-[140px]">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex-1 h-[7px] bg-[#f0f4f8] rounded-full overflow-hidden">
+                          <div
+                            style={{ width: `${pct}%` }}
+                            className={`h-full rounded-full transition-[width] duration-400 ease-out ${
+                              isSel ? 'bg-primary' : 'bg-gradient-to-r from-blue-300 to-blue-400'
+                            }`}
+                          />
+                        </div>
+                        <span className="text-[0.7rem] text-gray-400 min-w-[28px] text-left">{pct}%</span>
                       </div>
-                      <span style={{ fontSize: '.7rem', color: '#9ca3af', minWidth: 28, textAlign: 'left' }}>{pct}%</span>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>
 
       {/* Footer */}
       {!loading && (
-        <div style={{ padding: '.6rem 1rem', fontSize: '.75rem', color: '#9ca3af', borderTop: '1px solid #f0f4f8', background: '#fafafa', flexShrink: 0 }}>
+        <div className="py-2.5 px-4 text-[0.75rem] text-[#9ca3af] border-t border-[#f0f4f8] bg-[#fafafa] shrink-0">
           {filtered.length} محافظة{selected.size > 0 ? ` · ${selected.size} مختارة` : ''}
         </div>
       )}
@@ -547,55 +665,43 @@ export default function ReportsPage() {
 
   return (
     <AppShell>
-      <div dir="rtl" style={{ fontFamily: "'Cairo','Tajawal',sans-serif", height: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-
-        {/* Keyframes */}
-        <style>{`
-          @keyframes rp-spin    { to   { transform: rotate(360deg); } }
-          @keyframes rp-fadein  { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
-          @keyframes rp-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
-        `}</style>
+      <div dir="rtl" className="font-sans h-[calc(100vh-80px)] flex flex-col gap-4">
 
         {/* Page header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '.75rem' }}>
+        <div className="flex items-start justify-between flex-wrap gap-3">
           <div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0d3d5c', margin: '0 0 .2rem' }}>التقارير والتصدير</h1>
-            <p style={{ fontSize: '.83rem', color: '#6b7a8d', margin: 0 }}>اختر البيانات من الجدول ثم صدّرها بتنسيق PDF أو Excel</p>
+            <h1 className="text-2xl font-extrabold text-[#0d3d5c] mb-[0.2rem]">التقارير والتصدير</h1>
+            <p className="text-[0.83rem] text-[#6b7a8d]">اختر البيانات من الجدول ثم صدّرها بتنسيق PDF أو Excel</p>
           </div>
           {/* How-to tip */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '.5rem', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '.625rem', padding: '.5rem .85rem', fontSize: '.75rem', color: '#1d4ed8', fontWeight: 600 }}>
+          <div className="flex items-center gap-2 bg-[#eff6ff] border border-[#bfdbfe] rounded-[0.625rem] py-2 px-3.5 text-[0.75rem] text-[#1d4ed8] font-semibold">
             <Lightbulb size={14} />
             <span>حدد صفاً أو أكثر ثم اضغط PDF أو Excel</span>
           </div>
         </div>
 
         {/* Tab nav */}
-        <div style={{ display: 'flex', gap: '.5rem', flexWrap: 'wrap' }}>
+        <div className="flex gap-2 flex-wrap">
           {tabs.map(t => (
             <button key={t.key}
               onClick={() => setTab(t.key)}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: '.5rem',
-                padding: '.65rem 1.25rem',
-                border: `2px solid ${tab === t.key ? '#1B5E8C' : '#e5eaf0'}`,
-                borderRadius: '.875rem', fontFamily: 'Cairo,sans-serif', fontSize: '.85rem',
-                fontWeight: 700, color: tab === t.key ? '#fff' : '#6b7280',
-                background: tab === t.key ? '#1B5E8C' : '#fff',
-                cursor: 'pointer', transition: 'all .15s',
-                boxShadow: tab === t.key ? '0 2px 8px rgba(27,94,140,.2)' : 'none',
-              }}
+              className={`inline-flex items-center gap-2 py-2.5 px-5 border-2 rounded-[0.875rem] font-cairo text-[0.85rem] font-bold cursor-pointer transition-all duration-150 ${
+                tab === t.key
+                  ? 'border-primary bg-primary text-white shadow-[0_2px_8px_rgba(27,94,140,0.2)]'
+                  : 'border-[#e5eaf0] bg-white text-gray-500 hover:bg-gray-50'
+              }`}
             >
               <t.Icon size={18} />
-              <div style={{ textAlign: 'right' }}>
+              <div className="text-right">
                 <div>{t.label}</div>
-                <div style={{ fontSize: '.68rem', fontWeight: 400, opacity: .8 }}>{t.desc}</div>
+                <div className="text-[0.68rem] font-normal opacity-80">{t.desc}</div>
               </div>
             </button>
           ))}
         </div>
 
         {/* Table card */}
-        <div style={{ flex: 1, background: '#fff', border: '1.5px solid #e5eaf0', borderRadius: '1rem', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
+        <div className="flex-1 bg-white border-[1.5px] border-[#e5eaf0] rounded-2xl flex flex-col overflow-hidden min-h-0">
           {tab === 'disbursements' && <DisbursementsTab />}
           {tab === 'governorates'  && <GovernoratesTab />}
         </div>

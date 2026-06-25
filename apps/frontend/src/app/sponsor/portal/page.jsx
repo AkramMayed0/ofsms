@@ -1,52 +1,47 @@
 'use client';
 
 /**
- * apps/frontend/src/app/sponsor/portal/page.jsx
  * Route: /sponsor/portal?token=<portal_token>   (PUBLIC — no staff auth needed)
- *
- * Two views:
- *   1. Login form  — sponsor enters their password (token comes from URL)
- *   2. Dashboard   — sponsor sees their orphans, reports, announcements
- *
- * API calls:
- *   POST /api/sponsor/login          → { accessToken, sponsor }
- *   GET  /api/sponsor/me             → sponsor details
- *   GET  /api/sponsor/orphans        → list of sponsored orphans
- *   GET  /api/sponsor/reports/:id    → orphan detail reports
- *   GET  /api/announcements          → active announcements
  */
 
 import { useState, useEffect } from 'react';
-import { AlertTriangle, X, User, Handshake, CheckCircle2, XCircle } from 'lucide-react';
-
+import { AlertTriangle, X, ShieldCheck, ArrowLeft, Users, Bell, LogOut, KeyRound, Heart, HandHeart } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import axios from 'axios';
 
-// ── Axios instance for sponsor portal (no Zustand, uses its own token) ────────
-const sponsorApi = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+const API_ENDPOINTS = {
+  LOGIN:   `${BASE_URL}/sponsor/login`,
+  ORPHANS: '/sponsor/orphans',
+  FEED:    '/ads/sponsor/feed',
+  REPORTS: (id) => `/sponsor/reports/${id}`,
+};
+
+const QURAN_STATUS = {
+  approved: { label: 'معتمد',        color: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-200' },
+  rejected: { label: 'مرفوض',        color: 'text-rose-700',    bg: 'bg-rose-100',    border: 'border-rose-200' },
+  pending:  { label: 'قيد المراجعة', color: 'text-amber-700',   bg: 'bg-amber-100',   border: 'border-amber-200' },
+};
+
+const fmt = (iso) => iso ? new Date(iso).toLocaleDateString('ar-YE', { dateStyle: 'medium' }) : '—';
+
+const authHeader = (token) => ({ Authorization: `Bearer ${token}` });
+
+const portalApi = axios.create({
+  baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
 });
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-const fmt = (iso) =>
-  iso
-    ? new Date(iso).toLocaleDateString('ar-YE', { dateStyle: 'medium' })
-    : '—';
+const mapAdToAnnouncement = (ad) => ({
+  id: ad.id,
+  title: ad.beneficiary_type === 'family' ? `طلب كفالة أسرة: ${ad.beneficiary_name}` : `طلب كفالة: ${ad.beneficiary_name}`,
+  body: ad.beneficiary_type === 'family' ? `من سيكفل هذه الأسرة؟ المحافظة: ${ad.governorate_ar || '—'}` : `من سيكفل هذا الطفل؟ المحافظة: ${ad.governorate_ar || '—'}`,
+  published_at: ad.published_at,
+});
 
-const calcAge = (dob) => {
-  if (!dob) return '—';
-  return `${Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000))} سنة`;
-};
-
-const QURAN_STATUS = {
-  approved: { label: 'معتمد',       color: '#10b981', bg: '#ecfdf5' },
-  rejected: { label: 'مرفوض',       color: '#ef4444', bg: '#fef2f2' },
-  pending:  { label: 'قيد المراجعة', color: '#f59e0b', bg: '#fffbeb' },
-};
-
-// ── Login Page ────────────────────────────────────────────────────────────────
+// ── 1. Premium Login View ────────────────────────────────────────────────────────
 function LoginView({ token, onLogin }) {
   const [password, setPassword] = useState('');
   const [loading,  setLoading]  = useState(false);
@@ -54,143 +49,113 @@ function LoginView({ token, onLogin }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!password) { setError('كلمة المرور مطلوبة'); return; }
+    if (!password) { setError('يرجى إدخال كلمة المرور'); return; }
     setLoading(true);
     setError('');
     try {
-      const { data } = await sponsorApi.post('/sponsor/login', {
-        portalToken: token,
-        password,
-      });
+      const { data } = await axios.post(API_ENDPOINTS.LOGIN, { portalToken: token, password });
       onLogin(data.accessToken, data.sponsor);
     } catch (err) {
-      setError(err.response?.data?.error || 'رمز البوابة أو كلمة المرور غير صحيحة');
+      setError(err.response?.data?.error || 'كلمة المرور غير صحيحة');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="login-root" dir="rtl">
-      {/* Brand panel */}
-      <aside className="brand-panel">
-        <div className="brand-pattern">
-          {[...Array(30)].map((_, i) => (
-            <div key={i} className="dot" style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
-            }} />
-          ))}
+    <div className="flex flex-col md:flex-row-reverse min-h-screen font-sans bg-slate-50" dir="rtl">
+      {/* Brand Panel */}
+      <aside className="relative md:w-[45%] lg:w-[50%] bg-gradient-to-br from-[#0B2F44] via-[#124b6e] to-[#0A4A3E] flex items-center justify-center overflow-hidden shrink-0 min-h-[300px] md:min-h-screen">
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-[10%] -right-[10%] w-[500px] h-[500px] rounded-full bg-[#1da07f] blur-[120px] mix-blend-screen animate-pulse" style={{ animationDuration: '8s' }} />
+          <div className="absolute bottom-[10%] -left-[10%] w-[400px] h-[400px] rounded-full bg-[#3b82f6] blur-[100px] mix-blend-screen animate-pulse" style={{ animationDuration: '10s' }} />
         </div>
-        <div className="brand-content">
-          <div className="shield">🛡️</div>
-          <h1 className="brand-title">بوابة الكفلاء</h1>
-          <p className="brand-sub">
-            Orphan &amp; Family Sponsorship<br />Management System
-          </p>
-          <div className="brand-divider" />
-          <p className="brand-tagline">شفافية · رعاية · أثر</p>
+        <div className="relative z-10 w-[80%] max-w-[400px] flex flex-col items-center justify-center">
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-8 rounded-[2rem] shadow-2xl flex flex-col items-center w-full transform transition-transform duration-700 hover:scale-105">
+            <div className="w-20 h-20 bg-gradient-to-br from-[#1cd29c] to-[#0d7d59] rounded-2xl flex items-center justify-center shadow-[0_0_40px_rgba(28,210,156,0.3)] mb-6">
+              <ShieldCheck size={40} className="text-white" strokeWidth={1.5} />
+            </div>
+            <h1 className="text-3xl font-extrabold text-white mb-3 tracking-tight text-center">بوابة الكفلاء</h1>
+            <p className="text-sm font-medium text-blue-100/80 text-center leading-relaxed">
+              نافذتك المباشرة لمتابعة أيتامك، والاطلاع على تقاريرهم من أي مكان.
+            </p>
+            <div className="w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent my-6" />
+            <span className="text-white/90 text-xs font-semibold tracking-wider">مؤسسة إكرام النعمة الخيرية</span>
+          </div>
         </div>
       </aside>
 
-      {/* Form panel */}
-      <main className="form-panel">
-        <div className="form-card">
-          <div className="form-logo"><Handshake size={32} /></div>
-          <h2 className="form-title">تسجيل دخول الكافل</h2>
-          <p className="form-hint">أدخل كلمة المرور للوصول إلى محفظة كفالاتك</p>
+      {/* Form Panel */}
+      <main className="flex-1 flex items-center justify-center p-6 md:p-12 relative z-10">
+        <div className="w-full max-w-[420px]">
+          <div className="mb-10 text-center">
+            <h2 className="text-[2rem] font-black text-slate-800 mb-2 tracking-tight">مرحباً بك مجدداً</h2>
+            <p className="text-slate-500 font-medium">الرجاء إدخال كلمة المرور للوصول إلى محفظتك</p>
+          </div>
 
-          {!token && (
-            <div className="err-box">
-              <AlertTriangle size={18} /> رابط البوابة غير صحيح. يرجى استخدام الرابط المُرسَل إليك.
+          {!token ? (
+            <div className="bg-rose-50/80 backdrop-blur-sm border border-rose-100 text-rose-700 p-5 rounded-2xl flex items-start gap-3 shadow-sm">
+              <AlertTriangle size={22} className="shrink-0 mt-0.5" />
+              <div>
+                <h4 className="font-bold text-sm mb-1">رابط غير صالح</h4>
+                <p className="text-xs font-medium opacity-90">يبدو أن رابط البوابة غير صحيح أو منتهي الصلاحية. يرجى استخدام الرابط المرسل إليك حصرياً.</p>
+              </div>
             </div>
-          )}
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+              {error && (
+                <div className="flex items-center gap-3 bg-red-50/80 backdrop-blur-sm border border-red-100 text-red-600 rounded-2xl p-4 animate-in slide-in-from-top-2 fade-in">
+                  <AlertTriangle size={18} className="shrink-0" />
+                  <span className="text-sm font-semibold">{error}</span>
+                </div>
+              )}
 
-          {token && (
-            <form onSubmit={handleSubmit} className="form" noValidate>
-              {error && <div className="err-box">{error}</div>}
-
-              <div className="field">
-                <label className="lbl">كلمة المرور</label>
-                <input
-                  type="password"
-                  className="inp"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => { setPassword(e.target.value); setError(''); }}
-                  disabled={loading}
-                  autoFocus
-                />
+              <div className="space-y-2">
+                <label className="block text-sm font-bold text-slate-700 ml-1">كلمة المرور</label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 group-focus-within:text-emerald-600 transition-colors">
+                    <KeyRound size={20} strokeWidth={2} />
+                  </div>
+                  <input
+                    type="password"
+                    className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pr-12 pl-4 text-slate-800 font-medium placeholder:text-slate-400 transition-all outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:opacity-60 tracking-widest text-left"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => { setPassword(e.target.value); setError(''); }}
+                    disabled={loading}
+                    autoFocus
+                    dir="ltr"
+                  />
+                </div>
               </div>
 
-              <button type="submit" className="btn-submit" disabled={loading || !token}>
-                {loading ? <><span className="spin" /> جارٍ التحقق…</> : 'دخول إلى البوابة ←'}
+              <button
+                type="submit"
+                className="group relative w-full flex items-center justify-center gap-2 py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-base transition-all duration-200 overflow-hidden shadow-[0_8px_20px_rgba(15,23,42,0.15)] hover:shadow-[0_8px_25px_rgba(15,23,42,0.25)] hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+                disabled={loading}
+              >
+                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
+                {loading ? (
+                  <><span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> جاري التحقق...</>
+                ) : (
+                  <><span>دخول آمن</span> <ArrowLeft size={18} className="transition-transform group-hover:-translate-x-1" /></>
+                )}
               </button>
             </form>
           )}
-
-          <p className="form-footer">مؤسسة إكرام النعمة الخيرية · نظام كفالة الأيتام</p>
         </div>
       </main>
-
-      <style jsx>{`
-        .login-root { display:flex; flex-direction:row-reverse; min-height:100vh; background:#f0f4f8; font-family:'Cairo','Tajawal',sans-serif; }
-
-        .brand-panel { position:relative; width:42%; background:linear-gradient(160deg,#0d3d5c 0%,#1B5E8C 55%,#1a7a6e 100%); display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; }
-        .brand-pattern { position:absolute; inset:0; }
-        .dot { position:absolute; width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,0.12); animation:pulse 3s ease-in-out infinite; }
-        @keyframes pulse { 0%,100%{opacity:.12;transform:scale(1)} 50%{opacity:.4;transform:scale(1.5)} }
-        .brand-content { position:relative; z-index:2; text-align:center; color:#fff; padding:2rem; }
-        .shield { font-size:3.5rem; margin-bottom:1rem; display:block; }
-        .brand-title { font-size:2rem; font-weight:700; margin:0 0 .5rem; text-shadow:0 2px 16px rgba(0,0,0,.18); }
-        .brand-sub { font-size:.75rem; color:rgba(255,255,255,.6); letter-spacing:.08em; text-transform:uppercase; margin:0 0 1.5rem; line-height:1.8; }
-        .brand-divider { width:40px; height:2px; background:rgba(255,255,255,.3); margin:0 auto 1.25rem; border-radius:1px; }
-        .brand-tagline { font-size:.9rem; font-weight:500; color:rgba(255,255,255,.8); letter-spacing:.15em; margin:0; }
-
-        .form-panel { flex:1; display:flex; align-items:center; justify-content:center; padding:2rem 1.5rem; }
-        .form-card { width:100%; max-width:400px; background:#fff; border-radius:1.25rem; padding:2.5rem 2rem; box-shadow:0 1px 3px rgba(0,0,0,.06),0 4px 24px rgba(27,94,140,.09); border:1px solid rgba(27,94,140,.08); text-align:center; }
-        .form-logo { font-size:2.5rem; margin-bottom:1rem; }
-        .form-title { font-size:1.4rem; font-weight:700; color:#0d3d5c; margin:0 0 .3rem; }
-        .form-hint { font-size:.83rem; color:#6b7a8d; margin:0 0 1.75rem; line-height:1.6; }
-
-        .form { display:flex; flex-direction:column; gap:1rem; text-align:right; }
-        .field { display:flex; flex-direction:column; gap:.35rem; }
-        .lbl { font-size:.82rem; font-weight:600; color:#374151; }
-        .inp { border:1.5px solid #d1d5db; border-radius:.75rem; padding:.7rem .9rem; font-size:.9rem; font-family:'Cairo',sans-serif; color:#1f2937; background:#fafafa; outline:none; transition:border-color .15s,box-shadow .15s; direction:ltr; text-align:left; }
-        .inp:focus { border-color:#1B5E8C; background:#fff; box-shadow:0 0 0 3px rgba(27,94,140,.12); }
-
-        .err-box { background:#fef2f2; border:1px solid #fecaca; border-radius:.625rem; padding:.65rem .85rem; font-size:.82rem; color:#b91c1c; font-weight:500; text-align:right; margin-bottom:.5rem; }
-
-        .btn-submit { display:flex; align-items:center; justify-content:center; gap:.5rem; width:100%; padding:.8rem 1.5rem; background:linear-gradient(135deg,#1B5E8C,#134569); color:#fff; font-family:'Cairo',sans-serif; font-size:.95rem; font-weight:700; border:none; border-radius:.75rem; cursor:pointer; transition:all .15s; box-shadow:0 2px 8px rgba(27,94,140,.28); }
-        .btn-submit:hover:not(:disabled) { background:linear-gradient(135deg,#2E7EB8,#1B5E8C); transform:translateY(-1px); }
-        .btn-submit:disabled { opacity:.65; cursor:not-allowed; }
-
-        .form-footer { font-size:.72rem; color:#9ca3af; margin:1.5rem 0 0; }
-
-        .spin { display:inline-block; width:15px; height:15px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; flex-shrink:0; }
-        @keyframes spin { to { transform:rotate(360deg); } }
-
-        @media (max-width:768px) {
-          .login-root { flex-direction:column; }
-          .brand-panel { width:100%; min-height:160px; padding:1.5rem; }
-          .brand-title { font-size:1.4rem; }
-        }
-      `}</style>
     </div>
   );
 }
 
-// ── Orphan Detail Modal ───────────────────────────────────────────────────────
+// ── 2. Premium Modal ──────────────────────────────────────────────────────────
 function OrphanDetailModal({ orphanId, orphanName, token, onClose }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    sponsorApi
-      .get(`/sponsor/reports/${orphanId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    portalApi.get(API_ENDPOINTS.REPORTS(orphanId), { headers: authHeader(token) })
       .then(({ data: d }) => setData(d))
       .catch(() => setData(null))
       .finally(() => setLoading(false));
@@ -200,116 +165,124 @@ function OrphanDetailModal({ orphanId, orphanName, token, onClose }) {
   const disbursements = data?.disbursements  || [];
 
   return (
-    <>
-      <div className="modal-backdrop" onClick={onClose} />
-      <div className="modal" dir="rtl">
-        <div className="modal-head">
-          <h3 className="modal-title">تقارير — {orphanName}</h3>
-          <button className="modal-close" onClick={onClose}><X size={16} /></button>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6" dir="rtl">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onClick={onClose} />
+      
+      {/* Modal Content */}
+      <div className="relative bg-white rounded-3xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between p-5 sm:p-6 border-b border-slate-100 bg-slate-50/50">
+          <div>
+            <h3 className="text-lg font-black text-slate-800 leading-none mb-1">سجل التقارير</h3>
+            <p className="text-xs font-bold text-slate-500">اليتيم: {orphanName}</p>
+          </div>
+          <button onClick={onClose} className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full transition-colors">
+            <X size={18} strokeWidth={2.5} />
+          </button>
         </div>
-        <div className="modal-body">
+
+        {/* Body */}
+        <div className="overflow-y-auto p-5 sm:p-6 flex-1 space-y-8 bg-white">
           {loading ? (
-            <div className="loading-state">⏳ جارٍ التحميل…</div>
+            <div className="flex flex-col items-center justify-center py-12 gap-3 text-slate-400">
+              <span className="w-8 h-8 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin" />
+              <span className="text-sm font-bold">جاري إحضار السجلات...</span>
+            </div>
           ) : !data ? (
-            <div className="empty-state">تعذّر تحميل البيانات</div>
+            <div className="text-center py-12 text-slate-500 font-semibold bg-slate-50 rounded-2xl">تعذّر تحميل البيانات. يرجى المحاولة لاحقاً.</div>
           ) : (
             <>
-              {/* Quran reports */}
-              <h4 className="section-title">📖 تقارير حفظ القرآن</h4>
-              {quranReports.length === 0 ? (
-                <p className="empty-text">لا توجد تقارير بعد</p>
-              ) : (
-                <div className="report-list">
-                  {quranReports.map((r) => {
-                    const cfg = QURAN_STATUS[r.status] || QURAN_STATUS.pending;
-                    return (
-                      <div key={r.id} className="report-row">
-                        <div className="report-period">{r.month}/{r.year}</div>
-                        <div className="report-juz">{r.juz_memorized} جزء</div>
-                        <span className="report-badge" style={{ color: cfg.color, background: cfg.bg }}>
-                          {cfg.label}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+              {/* Quran Reports */}
+              <section>
+                <h4 className="text-sm font-black text-slate-800 mb-4 flex items-center gap-2">
+                  <span className="p-1.5 bg-emerald-100 text-emerald-600 rounded-lg"><Heart size={16} /></span>
+                  تقارير حفظ القرآن
+                </h4>
+                {quranReports.length === 0 ? (
+                  <p className="text-sm text-slate-500 text-center py-6 bg-slate-50 rounded-2xl border border-slate-100 border-dashed">لا توجد تقارير حالياً</p>
+                ) : (
+                  <div className="space-y-3">
+                    {quranReports.map((r) => {
+                      const cfg = QURAN_STATUS[r.status] || QURAN_STATUS.pending;
+                      return (
+                        <div key={r.id} className="flex items-center justify-between p-3.5 bg-white border border-slate-200 rounded-2xl shadow-sm hover:border-emerald-200 transition-colors">
+                          <div className="flex items-center gap-4">
+                            <div className="flex flex-col items-center justify-center w-12 h-12 bg-slate-50 rounded-xl border border-slate-100">
+                              <span className="text-xs font-bold text-slate-400">{r.year}</span>
+                              <span className="text-sm font-black text-slate-700 leading-none">{r.month}</span>
+                            </div>
+                            <div>
+                              <span className="block text-sm font-bold text-slate-800">حفظ {r.juz_memorized} أجزاء</span>
+                              <span className="block text-xs font-semibold text-slate-400 mt-0.5">معدل الإنجاز الشهري</span>
+                            </div>
+                          </div>
+                          <span className={`text-[0.65rem] font-bold px-2.5 py-1 rounded-lg border ${cfg.bg} ${cfg.color} ${cfg.border}`}>
+                            {cfg.label}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
 
               {/* Disbursements */}
-              <h4 className="section-title" style={{ marginTop: '1.5rem' }}>💰 سجل الصرف</h4>
-              {disbursements.length === 0 ? (
-                <p className="empty-text">لا يوجد سجل صرف بعد</p>
-              ) : (
-                <div className="report-list">
-                  {disbursements.map((d, i) => (
-                    <div key={i} className="report-row">
-                      <div className="report-period">{d.month}/{d.year}</div>
-                      <div className="report-juz">{d.amount} ر.ي</div>
-                      <span className="report-badge" style={{
-                        color: d.included ? '#10b981' : '#ef4444',
-                        background: d.included ? '#ecfdf5' : '#fef2f2',
-                      }}>
-                        {d.included
-                          ? d.receipt_confirmed_at ? '<CheckCircle2 size={16} /> استُلم' : '🕐 جارٍ التوزيع'
-                          : '<XCircle size={16} /> مستبعد'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <section>
+                <h4 className="text-sm font-black text-slate-800 mb-4 flex items-center gap-2">
+                  <span className="p-1.5 bg-blue-100 text-blue-600 rounded-lg"><HandHeart size={16} /></span>
+                  سجل الدفعات المالية
+                </h4>
+                {disbursements.length === 0 ? (
+                  <p className="text-sm text-slate-500 text-center py-6 bg-slate-50 rounded-2xl border border-slate-100 border-dashed">لا يوجد سجل مدفوعات حالياً</p>
+                ) : (
+                  <div className="space-y-3">
+                    {disbursements.map((d, i) => (
+                      <div key={i} className="flex items-center justify-between p-3.5 bg-white border border-slate-200 rounded-2xl shadow-sm hover:border-blue-200 transition-colors">
+                        <div className="flex items-center gap-4">
+                            <div className="flex flex-col items-center justify-center w-12 h-12 bg-slate-50 rounded-xl border border-slate-100">
+                              <span className="text-xs font-bold text-slate-400">{d.year}</span>
+                              <span className="text-sm font-black text-slate-700 leading-none">{d.month}</span>
+                            </div>
+                            <div>
+                              <span className="block text-sm font-black text-slate-800">{parseFloat(d.amount).toLocaleString('ar-YE')} ر.ي</span>
+                              <span className="block text-[0.65rem] font-bold text-slate-400 mt-1">دفعة شهرية</span>
+                            </div>
+                        </div>
+                        <span className={`text-[0.65rem] font-bold px-2.5 py-1 rounded-lg border ${d.included ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+                          {d.included ? (d.receipt_confirmed_at ? 'تم الاستلام' : 'قيد التوزيع') : 'مستبعد'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
             </>
           )}
         </div>
       </div>
-      <style jsx>{`
-        .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:60; animation:fadeIn .2s ease; }
-        .modal { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:min(540px,95vw); max-height:85vh; background:#fff; border-radius:1.25rem; z-index:61; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,.2); font-family:'Cairo','Tajawal',sans-serif; animation:popIn .2s ease; }
-        @keyframes fadeIn { from{opacity:0}to{opacity:1} }
-        @keyframes popIn { from{opacity:0;transform:translate(-50%,-48%) scale(.97)}to{opacity:1;transform:translate(-50%,-50%) scale(1)} }
-        .modal-head { display:flex; align-items:center; justify-content:space-between; padding:1.25rem 1.5rem; border-bottom:1px solid #f0f4f8; }
-        .modal-title { font-size:1rem; font-weight:800; color:#0d3d5c; margin:0; }
-        .modal-close { background:none; border:none; font-size:1.1rem; color:#9ca3af; cursor:pointer; padding:.2rem .4rem; border-radius:6px; }
-        .modal-close:hover { background:#f3f4f6; }
-        .modal-body { overflow-y:auto; padding:1.25rem 1.5rem; }
-        .section-title { font-size:.85rem; font-weight:700; color:#374151; margin:0 0 .75rem; }
-        .report-list { display:flex; flex-direction:column; gap:.4rem; }
-        .report-row { display:flex; align-items:center; gap:.75rem; padding:.5rem .65rem; background:#f8fafc; border-radius:.5rem; border:1px solid #e5eaf0; }
-        .report-period { font-size:.8rem; font-weight:700; color:#1f2937; min-width:55px; }
-        .report-juz { font-size:.83rem; color:#6b7a8d; flex:1; }
-        .report-badge { font-size:.7rem; font-weight:700; padding:.2rem .6rem; border-radius:2rem; white-space:nowrap; }
-        .empty-text { font-size:.82rem; color:#9ca3af; margin:0 0 .5rem; }
-        .loading-state, .empty-state { text-align:center; padding:2rem; color:#9ca3af; font-size:.85rem; }
-      `}</style>
-    </>
+    </div>
   );
 }
 
-// ── Dashboard ─────────────────────────────────────────────────────────────────
+// ── 3. Premium Dashboard View ─────────────────────────────────────────────────
 function DashboardView({ token, sponsor, onLogout }) {
   const [orphans,       setOrphans]       = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [loading,       setLoading]       = useState(true);
-  const [detailOrphan,  setDetailOrphan]  = useState(null); // { id, name }
+  const [detailOrphan,  setDetailOrphan]  = useState(null);
 
   const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
 
   useEffect(() => {
     Promise.all([
-      sponsorApi.get('/sponsor/orphans', authHeaders),
-      sponsorApi.get('/ads/sponsor/feed', authHeaders).catch(() => ({ data: { ads: [] } })),
+      portalApi.get(API_ENDPOINTS.ORPHANS, authHeaders),
+      portalApi.get(API_ENDPOINTS.FEED, authHeaders).catch(() => ({ data: { ads: [] } })),
     ])
       .then(([orphanRes, annRes]) => {
         setOrphans(orphanRes.data.orphans || []);
-        setAnnouncements((annRes.data.ads || []).map(ad => ({
-          id: ad.id,
-          title: ad.beneficiary_type === 'family'
-            ? `طلب كفالة أسرة: ${ad.beneficiary_name}`
-            : `طلب كفالة: ${ad.beneficiary_name}`,
-          body: ad.beneficiary_type === 'family'
-            ? `من سيكفل هذه الأسرة؟ المحافظة: ${ad.governorate_ar || '—'}`
-            : `من سيكفل هذا الطفل؟ المحافظة: ${ad.governorate_ar || '—'}`,
-          published_at: ad.published_at,
-        })));
+        setAnnouncements((annRes.data.ads || []).map(mapAdToAnnouncement));
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -318,91 +291,106 @@ function DashboardView({ token, sponsor, onLogout }) {
   const totalMonthly = orphans.reduce((s, o) => s + Number(o.monthly_amount || 0), 0);
 
   return (
-    <div className="dash" dir="rtl">
+    <div className="min-h-screen bg-[#f8fafc] font-sans" dir="rtl">
+      
       {/* Header */}
-      <header className="header">
-        <div className="header-brand">
-          <span className="header-logo"><Handshake size={32} /></span>
-          <div>
-            <h1 className="header-title">بوابة الكافل</h1>
-            <p className="header-sub">مؤسسة إكرام النعمة الخيرية</p>
+      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
+        <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-700 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+              <ShieldCheck className="text-white" size={22} strokeWidth={2} />
+            </div>
+            <div>
+              <h1 className="text-lg font-black text-slate-800 leading-none tracking-tight">بوابة الكفلاء</h1>
+              <span className="text-[0.65rem] font-bold text-slate-400">نظام الإدارة الآمن</span>
+            </div>
           </div>
-        </div>
-        <div className="header-user">
-          <span className="header-name">{sponsor.name}</span>
-          <button className="btn-logout" onClick={onLogout}>خروج</button>
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-bold text-slate-700 hidden sm:block">{sponsor.name}</span>
+            <button onClick={onLogout} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all">
+              <LogOut size={20} />
+            </button>
+          </div>
         </div>
       </header>
 
-      <main className="main">
-        {/* Stats */}
-        <div className="stats-row">
-          <div className="stat-card">
-            <span className="stat-icon"><User size={18} /></span>
-            <div>
-              <div className="stat-num">{orphans.length}</div>
-              <div className="stat-lbl">أيتام مكفولون</div>
-            </div>
+      <main className="max-w-6xl mx-auto px-6 py-8 md:py-12 flex flex-col gap-10">
+        
+        {/* Welcome & Stats Row */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-2 relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-slate-900 via-[#0B2F44] to-[#0A4A3E] shadow-xl p-8 md:p-10 flex flex-col justify-center">
+             <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-emerald-500/20 blur-[80px] rounded-full mix-blend-overlay -translate-y-1/2 translate-x-1/3" />
+             <div className="relative z-10">
+               <h2 className="text-2xl md:text-3xl font-black text-white mb-3">أهلاً بك في حسابك الموحد</h2>
+               <p className="text-slate-300 text-sm font-medium leading-relaxed max-w-md">مساحتك الخاصة لمتابعة التقارير الشهرية وتفاصيل الكفالات لأيتامك في مكان واحد، بكل شفافية ووضوح.</p>
+             </div>
           </div>
-          <div className="stat-card">
-            <span className="stat-icon">💰</span>
-            <div>
-              <div className="stat-num">{totalMonthly.toLocaleString('ar-YE')}</div>
-              <div className="stat-lbl">إجمالي شهري (ر.ي)</div>
-            </div>
-          </div>
-          {announcements.length > 0 && (
-            <div className="stat-card stat-announce">
-              <span className="stat-icon">📢</span>
+          
+          <div className="flex flex-col gap-4">
+            <div className="bg-white rounded-3xl p-6 border border-slate-200/60 shadow-sm flex items-center gap-4 hover:border-emerald-200 transition-colors">
+              <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shrink-0">
+                <Users size={24} />
+              </div>
               <div>
-                <div className="stat-num">{announcements.length}</div>
-                <div className="stat-lbl">إعلانات نشطة</div>
+                <div className="text-2xl font-black text-slate-800">{orphans.length}</div>
+                <div className="text-xs font-bold text-slate-500">يتيم مكفول</div>
               </div>
             </div>
-          )}
+            
+            <div className="bg-white rounded-3xl p-6 border border-slate-200/60 shadow-sm flex items-center gap-4 hover:border-blue-200 transition-colors">
+              <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shrink-0">
+                <span className="text-xl font-black">ر.ي</span>
+              </div>
+              <div>
+                <div className="text-2xl font-black text-slate-800">{totalMonthly.toLocaleString('ar-YE')}</div>
+                <div className="text-xs font-bold text-slate-500">إجمالي شهري</div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Orphans */}
-        <section className="section">
-          <h2 className="section-heading">أيتامي المكفولون</h2>
-
+        {/* Orphans Grid */}
+        <section>
+          <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
+            <Users className="text-emerald-600" size={22} /> محفظة الأيتام
+          </h3>
+          
           {loading ? (
-            <div className="loading">⏳ جارٍ التحميل…</div>
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+               {[1,2,3].map(i => <div key={i} className="h-48 bg-slate-200 animate-pulse rounded-3xl" />)}
+             </div>
           ) : orphans.length === 0 ? (
-            <div className="empty-card">
-              <span style={{ fontSize: '2.5rem' }}><User size={18} /></span>
-              <p>لا يوجد أيتام مكفولون بعد</p>
-            </div>
+             <div className="bg-white rounded-[2rem] p-12 text-center border border-slate-200/60 shadow-sm">
+               <span className="text-5xl opacity-30 mb-4 block">👨‍👩‍👧‍👦</span>
+               <p className="font-bold text-slate-500">لا يوجد أيتام مكفولون في هذه المحفظة</p>
+             </div>
           ) : (
-            <div className="orphan-grid">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {orphans.map((o) => (
-                <div key={o.id} className="orphan-card">
-                  <div className="orphan-head">
-                    <div className="orphan-avatar">
+                <div key={o.id} className="group bg-white rounded-3xl p-6 border border-slate-200/60 shadow-sm hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.05)] hover:border-emerald-200 transition-all duration-300 hover:-translate-y-1 relative overflow-hidden flex flex-col">
+                  <div className="absolute top-0 right-0 left-0 h-1 bg-gradient-to-r from-emerald-400 to-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  
+                  <div className="flex items-center gap-4 mb-5">
+                    <div className="w-12 h-12 bg-slate-100 border-2 border-white rounded-full shadow-sm flex items-center justify-center text-lg font-black text-slate-600 shrink-0">
                       {o.full_name?.charAt(0) || '؟'}
                     </div>
                     <div>
-                      <div className="orphan-name">{o.full_name}</div>
-                      <div className="orphan-meta">
-                        {o.gender === 'female' ? 'أنثى' : 'ذكر'}
-                        {o.governorate_ar && ` · ${o.governorate_ar}`}
-                      </div>
+                      <h4 className="text-sm font-black text-slate-800 mb-0.5 line-clamp-1">{o.full_name}</h4>
+                      <p className="text-xs font-semibold text-slate-400">{o.gender === 'female' ? 'أنثى' : 'ذكر'} • {o.governorate_ar}</p>
                     </div>
-                    {o.is_gifted && <span className="gifted-badge">🌟</span>}
+                    {o.is_gifted && <span className="mr-auto text-amber-500"><Heart size={16} fill="currentColor" /></span>}
                   </div>
-                  <div className="orphan-amount">
-                    <span className="amount-val">{Number(o.monthly_amount || 0).toLocaleString('ar-YE')}</span>
-                    <span className="amount-unit"> ر.ي / شهر</span>
+                  
+                  <div className="bg-slate-50 rounded-2xl p-4 mb-5 text-center border border-slate-100">
+                    <span className="block text-xl font-black text-emerald-700">{Number(o.monthly_amount || 0).toLocaleString('ar-YE')}</span>
+                    <span className="text-[0.65rem] font-bold text-slate-500">ريال يمني / شهرياً</span>
                   </div>
-                  <div className="orphan-meta-row">
-                    <span>📅 بدأت: {fmt(o.sponsorship_start)}</span>
-                    <span>👤 {o.agent_name}</span>
-                  </div>
+
                   <button
-                    className="btn-reports"
                     onClick={() => setDetailOrphan({ id: o.id, name: o.full_name })}
+                    className="mt-auto w-full py-3 bg-white border-2 border-slate-100 text-slate-700 rounded-xl font-bold text-xs hover:border-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 transition-colors flex items-center justify-center gap-2 group/btn"
                   >
-                    عرض التقارير ←
+                    السجلات والتقارير <ArrowLeft size={14} className="group-hover/btn:-translate-x-1 transition-transform" />
                   </button>
                 </div>
               ))}
@@ -412,16 +400,19 @@ function DashboardView({ token, sponsor, onLogout }) {
 
         {/* Announcements */}
         {announcements.length > 0 && (
-          <section className="section">
-            <h2 className="section-heading">📢 الإعلانات</h2>
-            <div className="announce-list">
+          <section>
+            <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
+              <Bell className="text-amber-500" size={22} fill="currentColor" fillOpacity={0.2} /> تعميمات هامة
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {announcements.map((a) => (
-                <div key={a.id} className="announce-card">
-                  <div className="announce-head">
-                    <h3 className="announce-title">{a.title}</h3>
-                    <span className="announce-date">{fmt(a.published_at)}</span>
+                <div key={a.id} className="bg-white rounded-3xl p-6 border border-slate-200/60 shadow-sm relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-1.5 h-full bg-amber-400" />
+                  <div className="pr-4">
+                    <span className="text-[0.65rem] font-bold text-slate-400 block mb-1">{fmt(a.published_at)}</span>
+                    <h4 className="text-sm font-black text-slate-800 mb-2">{a.title}</h4>
+                    <p className="text-xs font-semibold text-slate-500 leading-relaxed">{a.body}</p>
                   </div>
-                  <p className="announce-body">{a.body}</p>
                 </div>
               ))}
             </div>
@@ -429,7 +420,7 @@ function DashboardView({ token, sponsor, onLogout }) {
         )}
       </main>
 
-      {/* Orphan detail modal */}
+      {/* Modal */}
       {detailOrphan && (
         <OrphanDetailModal
           orphanId={detailOrphan.id}
@@ -438,75 +429,11 @@ function DashboardView({ token, sponsor, onLogout }) {
           onClose={() => setDetailOrphan(null)}
         />
       )}
-
-      <style jsx>{`
-        .dash { min-height:100vh; background:#f0f4f8; font-family:'Cairo','Tajawal',sans-serif; }
-
-        /* Header */
-        .header { background:linear-gradient(135deg,#0d3d5c,#1B5E8C); color:#fff; padding:1rem 2rem; display:flex; align-items:center; justify-content:space-between; }
-        .header-brand { display:flex; align-items:center; gap:.85rem; }
-        .header-logo { font-size:1.75rem; }
-        .header-title { font-size:1.1rem; font-weight:800; margin:0; }
-        .header-sub { font-size:.72rem; color:rgba(255,255,255,.65); margin:0; }
-        .header-user { display:flex; align-items:center; gap:.85rem; }
-        .header-name { font-size:.88rem; font-weight:600; }
-        .btn-logout { background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3); color:#fff; font-family:'Cairo',sans-serif; font-size:.8rem; font-weight:600; padding:.35rem .85rem; border-radius:.5rem; cursor:pointer; transition:background .15s; }
-        .btn-logout:hover { background:rgba(255,255,255,.25); }
-
-        /* Main */
-        .main { max-width:1100px; margin:0 auto; padding:2rem 1.5rem; display:flex; flex-direction:column; gap:2rem; }
-
-        /* Stats */
-        .stats-row { display:flex; gap:1rem; flex-wrap:wrap; }
-        .stat-card { flex:1; min-width:160px; background:#fff; border:1px solid #e5eaf0; border-radius:1rem; padding:1.25rem; display:flex; align-items:center; gap:.85rem; box-shadow:0 1px 4px rgba(27,94,140,.05); }
-        .stat-announce { border-color:#bfdbfe; background:#eff6ff; }
-        .stat-icon { font-size:1.75rem; }
-        .stat-num { font-size:1.6rem; font-weight:800; color:#0d3d5c; line-height:1; }
-        .stat-lbl { font-size:.75rem; color:#6b7a8d; font-weight:500; margin-top:.2rem; }
-
-        /* Section */
-        .section {}
-        .section-heading { font-size:1.05rem; font-weight:800; color:#0d3d5c; margin:0 0 1rem; }
-        .loading { text-align:center; padding:2rem; color:#9ca3af; font-size:.88rem; }
-        .empty-card { display:flex; flex-direction:column; align-items:center; gap:.5rem; padding:3rem; background:#fff; border-radius:1rem; border:1px solid #e5eaf0; text-align:center; }
-        .empty-card p { font-size:.88rem; color:#9ca3af; margin:0; }
-
-        /* Orphan grid */
-        .orphan-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1.1rem; }
-        .orphan-card { background:#fff; border:1px solid #e5eaf0; border-radius:1rem; padding:1.25rem; display:flex; flex-direction:column; gap:.85rem; box-shadow:0 1px 4px rgba(27,94,140,.05); transition:box-shadow .15s,transform .15s; }
-        .orphan-card:hover { box-shadow:0 4px 16px rgba(27,94,140,.1); transform:translateY(-1px); }
-        .orphan-head { display:flex; align-items:center; gap:.75rem; }
-        .orphan-avatar { width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg,#1B5E8C,#0d3d5c); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:700; flex-shrink:0; }
-        .orphan-name { font-size:.95rem; font-weight:700; color:#0d3d5c; }
-        .orphan-meta { font-size:.75rem; color:#6b7a8d; margin-top:.15rem; }
-        .gifted-badge { font-size:1.2rem; margin-right:auto; }
-        .orphan-amount { background:#f0f7ff; border:1px solid #bfdbfe; border-radius:.625rem; padding:.65rem .9rem; text-align:center; }
-        .amount-val { font-size:1.3rem; font-weight:800; color:#1B5E8C; }
-        .amount-unit { font-size:.78rem; color:#6b7a8d; }
-        .orphan-meta-row { display:flex; justify-content:space-between; font-size:.72rem; color:#9ca3af; }
-        .btn-reports { width:100%; padding:.6rem; background:none; border:1.5px solid #dde5f0; border-radius:.625rem; font-family:'Cairo',sans-serif; font-size:.82rem; font-weight:700; color:#1B5E8C; cursor:pointer; transition:all .15s; }
-        .btn-reports:hover { background:#f0f7ff; border-color:#1B5E8C; }
-
-        /* Announcements */
-        .announce-list { display:flex; flex-direction:column; gap:.75rem; }
-        .announce-card { background:#fff; border:1px solid #e5eaf0; border-radius:1rem; padding:1.25rem 1.5rem; }
-        .announce-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:.5rem; }
-        .announce-title { font-size:.95rem; font-weight:700; color:#0d3d5c; margin:0; }
-        .announce-date { font-size:.73rem; color:#9ca3af; }
-        .announce-body { font-size:.85rem; color:#374151; margin:0; line-height:1.7; }
-
-        @media (max-width:640px) {
-          .header { padding:.85rem 1rem; }
-          .main { padding:1.25rem 1rem; }
-          .stats-row { flex-direction:column; }
-          .orphan-grid { grid-template-columns:1fr; }
-        }
-      `}</style>
     </div>
   );
 }
 
-// ── Root Page ─────────────────────────────────────────────────────────────────
+// ── Root ──────────────────────────────────────────────────────────────────────
 export default function SponsorPortalPage() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token') || '';
@@ -528,11 +455,5 @@ export default function SponsorPortalPage() {
     return <LoginView token={token} onLogin={handleLogin} />;
   }
 
-  return (
-    <DashboardView
-      token={accessToken}
-      sponsor={sponsor}
-      onLogout={handleLogout}
-    />
-  );
+  return <DashboardView token={accessToken} sponsor={sponsor} onLogout={handleLogout} />;
 }

@@ -21,15 +21,21 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { AlertTriangle, User, Users, Handshake, CheckCircle2 } from 'lucide-react';
-
 import { useSearchParams, useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
+// ── Constants ──────────────────────────────────────────────────────────────────
 
-const MONTHS_AR = ['','يناير','فبراير','مارس','أبريل','مايو','يونيو',
-                      'يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+const MONTHS_AR = [
+  '', 'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+  'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
+];
+
+const ALLOWED_MIME_TYPES = ['image/png', 'image/jpeg'];
+const MAX_FILE_SIZE_BYTES = 3 * 1024 * 1024; // 3 MB
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
 
 const formatAmount = (n) =>
   n != null ? `${Number(n).toLocaleString('ar-YE')} ر.ي` : '—';
@@ -42,20 +48,27 @@ const fileToBase64 = (file) =>
     reader.readAsDataURL(file);
   });
 
+// ── Tailwind shorthand constants ───────────────────────────────────────────────
+
+const CLS_CARD     = 'bg-white border border-[#e5eaf0] rounded-2xl';
+const CLS_ERR_BANNER = 'flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm font-bold';
+const CLS_SKEL     = 'bg-gradient-to-r from-[#f0f4f8] via-[#e5eaf0] to-[#f0f4f8] bg-[length:200%_100%] animate-[shimmer_1.4s_infinite] rounded';
+
 // ── FingerprintUploader ────────────────────────────────────────────────────────
 
 function FingerprintUploader({ item, onUploaded }) {
-  const inputRef = useRef(null);
+  const inputRef              = useRef(null);
   const [uploading, setUploading] = useState(false);
-  const [error, setError]         = useState('');
+  const [error, setError]     = useState('');
 
   const handleFile = async (file) => {
     if (!file) return;
-    if (!['image/png', 'image/jpeg'].includes(file.type)) {
+
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
       setError('يُقبل PNG أو JPEG فقط');
       return;
     }
-    if (file.size > 3 * 1024 * 1024) {
+    if (file.size > MAX_FILE_SIZE_BYTES) {
       setError('الحجم الأقصى 3 ميغابايت');
       return;
     }
@@ -65,12 +78,13 @@ function FingerprintUploader({ item, onUploaded }) {
     try {
       const base64 = await fileToBase64(file);
       await api.post('/receipts/biometric', {
-        itemId: item.id,
+        itemId:            item.id,
         fingerprintBase64: base64,
-        mimeType: file.type,
+        mimeType:          file.type,
       });
       onUploaded(item.id);
     } catch (err) {
+      console.error('Error uploading fingerprint:', err);
       setError(err.response?.data?.error || 'فشل رفع البصمة');
     } finally {
       setUploading(false);
@@ -80,9 +94,11 @@ function FingerprintUploader({ item, onUploaded }) {
   // Already confirmed
   if (item.biometric_confirmed_at) {
     return (
-      <div className="confirmed-wrap">
-        <span className="confirmed-badge"><CheckCircle2 size={16} /> تم التأكيد</span>
-        <span className="confirmed-date">
+      <div className="flex flex-col items-end gap-[0.15rem] shrink-0">
+        <span className="inline-flex items-center gap-1.5 text-[0.8rem] font-bold text-[#059669] bg-[#ecfdf5] border border-[#6ee7b7] rounded-lg px-3 py-1.5 whitespace-nowrap">
+          <CheckCircle2 size={15} strokeWidth={2} /> تم التأكيد
+        </span>
+        <span className="text-[0.68rem] text-gray-400">
           {new Date(item.biometric_confirmed_at).toLocaleDateString('ar-YE', { dateStyle: 'short' })}
         </span>
       </div>
@@ -90,24 +106,24 @@ function FingerprintUploader({ item, onUploaded }) {
   }
 
   return (
-    <div className="uploader-wrap">
+    <div className="flex flex-col items-end gap-1.5 shrink-0">
       <input
         ref={inputRef}
         type="file"
-        accept="image/png,image/jpeg"
-        style={{ display: 'none' }}
+        accept={ALLOWED_MIME_TYPES.join(',')}
+        className="hidden"
         onChange={(e) => handleFile(e.target.files?.[0])}
       />
       <button
-        className={`upload-btn ${uploading ? 'uploading' : ''}`}
+        className={`inline-flex items-center gap-1.5 px-4 py-2 bg-[#1B5E8C] text-white font-cairo text-[0.82rem] font-bold border-none rounded-[0.625rem] cursor-pointer transition-colors duration-150 whitespace-nowrap hover:bg-[#134569] disabled:opacity-60 disabled:cursor-not-allowed ${uploading ? 'opacity-60 cursor-not-allowed' : ''}`}
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
       >
         {uploading
-          ? <><span className="spin" aria-hidden /> جارٍ الرفع…</>
+          ? <><span className="inline-block w-[13px] h-[13px] border-2 border-white/40 border-t-white rounded-full animate-spin" aria-hidden /> جارٍ الرفع…</>
           : '📷 رفع البصمة'}
       </button>
-      {error && <p className="upload-err">{error}</p>}
+      {error && <p className="text-[0.72rem] text-red-600 m-0">{error}</p>}
     </div>
   );
 }
@@ -120,21 +136,29 @@ function ListPicker({ onSelect }) {
   const [error,   setError]   = useState('');
 
   useEffect(() => {
-    api.get('/disbursements/agent/released')
-      .then(({ data }) => setLists(data.lists || []))
-      .catch(() => setError('تعذّر تحميل الكشوف. يرجى تحديث الصفحة.'))
-      .finally(() => setLoading(false));
+    const fetchLists = async () => {
+      try {
+        const { data } = await api.get('/disbursements/agent/released');
+        setLists(data.lists || []);
+      } catch (err) {
+        console.error('Error fetching released lists:', err);
+        setError('تعذّر تحميل الكشوف. يرجى تحديث الصفحة.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLists();
   }, []);
 
   if (loading) {
     return (
-      <div className="picker-wrap">
-        <p className="picker-hint">جارٍ تحميل كشوفك…</p>
-        <div className="picker-skeleton">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="skel-card">
-              <div className="skel" style={{ width: 100, height: 18 }} />
-              <div className="skel" style={{ width: 70, height: 14, marginTop: 6 }} />
+      <div className="flex flex-col gap-4">
+        <p className="text-[0.88rem] font-semibold text-[#6b7a8d] m-0">جارٍ تحميل كشوفك…</p>
+        <div className="flex flex-col gap-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className={`${CLS_CARD} p-5 flex flex-col gap-2`}>
+              <div className={`${CLS_SKEL} h-[18px] w-[100px]`} />
+              <div className={`${CLS_SKEL} h-[14px] w-[70px]`} />
             </div>
           ))}
         </div>
@@ -143,25 +167,25 @@ function ListPicker({ onSelect }) {
   }
 
   if (error) {
-    return (
-      <div className="err-banner"><AlertTriangle size={18} /> {error}</div>
-    );
+    return <div className={CLS_ERR_BANNER}><AlertTriangle size={18} /> {error}</div>;
   }
 
   if (lists.length === 0) {
     return (
-      <div className="picker-empty">
-        <span style={{ fontSize: '3rem' }}>📋</span>
-        <h3>لا توجد كشوف صرف جاهزة</h3>
-        <p>ستظهر هنا الكشوف الشهرية بعد أن يصدرها المدير العام ويصبح بإمكانك رفع بصمات الاستلام.</p>
+      <div className={`${CLS_CARD} flex flex-col items-center gap-3 min-h-[280px] justify-center text-center p-10`}>
+        <span className="text-5xl">📋</span>
+        <h3 className="text-[1.05rem] font-bold text-[#374151] m-0">لا توجد كشوف صرف جاهزة</h3>
+        <p className="text-[0.83rem] text-gray-400 m-0 max-w-[340px] leading-[1.7]">
+          ستظهر هنا الكشوف الشهرية بعد أن يصدرها المدير العام ويصبح بإمكانك رفع بصمات الاستلام.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="picker-wrap">
-      <p className="picker-hint">اختر كشف الصرف الذي تريد رفع بصمات استلامه:</p>
-      <div className="picker-list">
+    <div className="flex flex-col gap-4">
+      <p className="text-[0.88rem] font-semibold text-[#6b7a8d] m-0">اختر كشف الصرف الذي تريد رفع بصمات استلامه:</p>
+      <div className="flex flex-col gap-3">
         {lists.map((list) => {
           const confirmed = Number(list.confirmed_items ?? 0);
           const total     = Number(list.total_items ?? 0);
@@ -171,33 +195,28 @@ function ListPicker({ onSelect }) {
           return (
             <button
               key={list.id}
-              className={`picker-card ${done ? 'picker-card-done' : ''}`}
+              className={`flex items-center justify-between gap-4 w-full text-right font-cairo px-5 py-4 border-[1.5px] rounded-2xl cursor-pointer transition-all duration-150 hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(27,94,140,0.1)] ${done ? 'border-[#a7f3d0] bg-[#f0fdf4] hover:border-[#34d399]' : 'bg-white border-[#e5eaf0] hover:border-[#1B5E8C]'}`}
               onClick={() => onSelect(list.id)}
             >
-              <div className="picker-card-left">
-                <span className="picker-month">
+              <div className="flex flex-col gap-1 items-start">
+                <span className="text-[1rem] font-extrabold text-[#0d3d5c]">
                   {MONTHS_AR[list.month]} {list.year}
                 </span>
-                <span className="picker-progress-text">
-                  {done
-                    ? '🎉 اكتمل'
-                    : `${confirmed} من ${total} بصمة`}
+                <span className="text-[0.75rem] font-medium text-[#6b7a8d]">
+                  {done ? '🎉 اكتمل' : `${confirmed} من ${total} بصمة`}
                 </span>
               </div>
-              <div className="picker-card-right">
-                <div className="picker-bar-bg">
+              <div className="flex items-center gap-2.5 shrink-0">
+                <div className="w-[100px] h-[7px] bg-[#f0f4f8] rounded-full overflow-hidden">
                   <div
-                    className="picker-bar-fill"
-                    style={{
-                      width: `${pct}%`,
-                      background: done ? '#10b981' : '#1B5E8C',
-                    }}
+                    className="h-full rounded-full transition-[width_0.4s]"
+                    style={{ width: `${pct}%`, background: done ? '#10b981' : '#1B5E8C' }}
                   />
                 </div>
-                <span className="picker-pct" style={{ color: done ? '#10b981' : '#1B5E8C' }}>
+                <span className="text-[0.82rem] font-extrabold min-w-[35px] text-left" style={{ color: done ? '#10b981' : '#1B5E8C' }}>
                   {pct}%
                 </span>
-                <span className="picker-arrow">←</span>
+                <span className="text-[0.85rem] text-gray-400">←</span>
               </div>
             </button>
           );
@@ -226,6 +245,7 @@ function BatchView({ listId, onBack }) {
       setListDetail(detailRes.data);
       setSummary(summaryRes.data.summary);
     } catch (err) {
+      console.error('Error fetching batch data:', err);
       setError(err.response?.data?.error || 'تعذّر تحميل البيانات');
     } finally {
       setLoading(false);
@@ -267,41 +287,48 @@ function BatchView({ listId, onBack }) {
   const year  = listDetail?.year;
 
   return (
-    <div className="batch-view">
+    <div className="flex flex-col gap-5">
 
       {/* Back + title */}
-      <div className="batch-header">
-        <button className="back-btn" onClick={onBack}>← رجوع</button>
+      <div className="flex items-start gap-3">
+        <button
+          className="bg-transparent border-none font-cairo text-[0.82rem] font-semibold text-[#1B5E8C] cursor-pointer p-0 mt-1 whitespace-nowrap shrink-0 hover:underline"
+          onClick={onBack}
+        >
+          ← رجوع
+        </button>
         <div>
-          <h2 className="batch-title">
+          <h2 className="text-[1.45rem] font-extrabold text-[#0d3d5c] m-0 mb-1 flex items-center gap-2.5 flex-wrap">
             بصمات الاستلام
             {month && year && (
-              <span className="period-badge">{MONTHS_AR[month]} {year}</span>
+              <span className="text-[0.78rem] font-bold text-[#1d4ed8] bg-[#dbeafe] border border-[#bfdbfe] rounded-lg px-2.5 py-1">
+                {MONTHS_AR[month]} {year}
+              </span>
             )}
           </h2>
-          <p className="batch-sub">التقط بصمة كل مستفيد بعد تسليم المبلغ يدوياً</p>
+          <p className="text-[0.82rem] text-[#6b7a8d] m-0">التقط بصمة كل مستفيد بعد تسليم المبلغ يدوياً</p>
         </div>
       </div>
 
-      {error && <div className="err-banner"><AlertTriangle size={18} /> {error}</div>}
+      {error && <div className={CLS_ERR_BANNER}><AlertTriangle size={18} /> {error}</div>}
 
       {/* Progress bar */}
       {!loading && total > 0 && (
-        <div className="progress-card">
-          <div className="progress-header">
-            <span className="progress-label">
+        <div className={`${CLS_CARD} px-6 py-5`}>
+          <div className="flex justify-between items-center mb-2.5">
+            <span className="text-[0.88rem] font-bold text-[#374151]">
               {allDone ? '🎉 اكتملت جميع البصمات!' : `${confirmed} من ${total} مستفيد`}
             </span>
             <span
-              className="progress-pct"
+              className="text-[1.1rem] font-extrabold"
               style={{ color: allDone ? '#10b981' : '#1B5E8C' }}
             >
               {pct}%
             </span>
           </div>
-          <div className="progress-bg">
+          <div className="h-[10px] bg-[#f0f4f8] rounded-full overflow-hidden">
             <div
-              className="progress-fill"
+              className="h-full rounded-full transition-[width_0.4s_ease]"
               style={{
                 width: `${pct}%`,
                 background: allDone
@@ -311,24 +338,24 @@ function BatchView({ listId, onBack }) {
             />
           </div>
           {allDone && (
-            <p className="progress-done">
+            <p className="flex items-center gap-1.5 text-[0.82rem] text-[#059669] font-semibold mt-2.5 mb-0">
               <CheckCircle2 size={16} /> رائع! تم رفع جميع بصمات هذا الكشف بنجاح.
             </p>
           )}
         </div>
       )}
 
-      {/* Loading */}
+      {/* Loading skeleton */}
       {loading && (
-        <div className="items-list">
+        <div className="flex flex-col gap-3">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="item-card sk-card">
-              <div className="skel" style={{ width: 40, height: 40, borderRadius: '50%' }} />
-              <div style={{ flex: 1 }}>
-                <div className="skel" style={{ width: '55%', height: 14, marginBottom: 6 }} />
-                <div className="skel" style={{ width: '30%', height: 12 }} />
+            <div key={i} className={`${CLS_CARD} px-5 py-4 flex items-center gap-4 pointer-events-none`}>
+              <div className={`${CLS_SKEL} w-[42px] h-[42px] rounded-full shrink-0`} />
+              <div className="flex-1 flex flex-col gap-1.5">
+                <div className={`${CLS_SKEL} h-[14px] w-[55%]`} />
+                <div className={`${CLS_SKEL} h-[12px] w-[30%]`} />
               </div>
-              <div className="skel" style={{ width: 110, height: 36, borderRadius: 8 }} />
+              <div className={`${CLS_SKEL} h-[36px] w-[110px] rounded-lg shrink-0`} />
             </div>
           ))}
         </div>
@@ -336,38 +363,42 @@ function BatchView({ listId, onBack }) {
 
       {/* Empty */}
       {!loading && items.length === 0 && !error && (
-        <div className="batch-empty">
-          <span style={{ fontSize: '2.5rem' }}>📋</span>
-          <p>لا توجد بنود مشمولة في هذا الكشف باسمك</p>
+        <div className={`${CLS_CARD} flex flex-col items-center gap-2 min-h-[200px] justify-center text-center p-8 text-[0.9rem] text-gray-400 font-semibold`}>
+          <span className="text-4xl">📋</span>
+          <p className="m-0">لا توجد بنود مشمولة في هذا الكشف باسمك</p>
         </div>
       )}
 
-      {/* Items */}
+      {/* Items list */}
       {!loading && items.length > 0 && (
-        <div className="items-list">
+        <div className="flex flex-col gap-3">
           {items.map((item) => (
             <div
               key={item.id}
-              className={`item-card ${item.biometric_confirmed_at ? 'item-done' : ''}`}
+              className={`${CLS_CARD} px-5 py-4 flex items-center gap-4 transition-colors duration-150 sm:flex-row flex-wrap ${item.biometric_confirmed_at ? 'border-[#a7f3d0] bg-[#f0fdf4]' : ''}`}
             >
               {/* Avatar */}
-              <div className="item-avatar">
-                {item.beneficiary_type === 'orphan' ? '<User size={18} />' : '<Users size={18} />'}
+              <div className="w-[42px] h-[42px] rounded-full bg-[#f0f4f8] flex items-center justify-center shrink-0 text-[#64748b]">
+                {item.beneficiary_type === 'orphan'
+                  ? <User size={18} strokeWidth={1.8} />
+                  : <Users size={18} strokeWidth={1.8} />}
               </div>
 
               {/* Info */}
-              <div className="item-info">
-                <div className="item-name">{item.beneficiary_name}</div>
-                <div className="item-meta">
+              <div className="flex-1 min-w-0">
+                <div className="text-[0.9rem] font-bold text-[#1f2937]">{item.beneficiary_name}</div>
+                <div className="flex gap-2 flex-wrap items-center mt-1 text-[0.75rem] text-[#6b7a8d]">
                   <span>{item.governorate_ar || '—'}</span>
-                  <span className="item-amount">{formatAmount(item.amount)}</span>
+                  <span className="font-bold text-[#1B5E8C]">{formatAmount(item.amount)}</span>
                   {item.sponsor_name && (
-                    <span className="item-sponsor"><Handshake size={32} /> {item.sponsor_name}</span>
+                    <span className="flex items-center gap-1 text-gray-500">
+                      <Handshake size={14} strokeWidth={1.8} /> {item.sponsor_name}
+                    </span>
                   )}
                 </div>
               </div>
 
-              {/* Upload */}
+              {/* Upload / Confirmed */}
               <FingerprintUploader item={item} onUploaded={handleUploaded} />
             </div>
           ))}
@@ -384,205 +415,32 @@ export default function AgentReceiptsBatchPage() {
   const searchParams = useSearchParams();
   const listId       = searchParams.get('listId');
 
-  const selectList = (id) => {
-    router.push(`/receipts/batch?listId=${id}`);
-  };
-
-  const goBack = () => {
-    router.push('/receipts/batch');
-  };
+  const selectList = (id) => router.push(`/receipts/batch?listId=${id}`);
+  const goBack     = ()  => router.push('/receipts/batch');
 
   return (
     <AppShell>
-      <div className="page" dir="rtl">
+      <style jsx global>{`
+        @keyframes shimmer { to { background-position: -200% 0; } }
+      `}</style>
 
-        {/* Page heading (always visible) */}
+      <div className="max-w-[760px] mx-auto pb-16 font-cairo flex flex-col gap-5" dir="rtl">
+
+        {/* Page heading — only on list-picker view */}
         {!listId && (
-          <div className="page-top">
-            <h1 className="page-title">رفع بصمات الاستلام</h1>
-            <p className="page-sub">
+          <div>
+            <h1 className="text-[1.55rem] font-extrabold text-[#0d3d5c] m-0 mb-1">رفع بصمات الاستلام</h1>
+            <p className="text-[0.83rem] text-[#6b7a8d] m-0">
               اختر كشف الصرف ثم التقط بصمة كل مستفيد بعد تسليم المبلغ
             </p>
           </div>
         )}
 
-        {/* Either list picker or batch view */}
         {listId
           ? <BatchView listId={listId} onBack={goBack} />
-          : <ListPicker onSelect={selectList} />
-        }
+          : <ListPicker onSelect={selectList} />}
+
       </div>
-
-      <style jsx>{`
-        /* ── Page shell ────────────────────────────────────────────────── */
-        .page {
-          max-width: 760px; margin: 0 auto; padding-bottom: 4rem;
-          font-family: 'Cairo', 'Tajawal', sans-serif;
-          display: flex; flex-direction: column; gap: 1.25rem;
-        }
-        .page-top { }
-        .page-title { font-size: 1.55rem; font-weight: 800; color: #0d3d5c; margin: 0 0 .25rem; }
-        .page-sub { font-size: .83rem; color: #6b7a8d; margin: 0; }
-
-        /* ── Error banner ──────────────────────────────────────────────── */
-        .err-banner {
-          background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c;
-          padding: .85rem 1rem; border-radius: .75rem; font-size: .85rem;
-        }
-
-        /* ── List picker ───────────────────────────────────────────────── */
-        .picker-wrap { display: flex; flex-direction: column; gap: 1rem; }
-        .picker-hint { font-size: .88rem; color: #6b7a8d; margin: 0; font-weight: 600; }
-
-        .picker-list { display: flex; flex-direction: column; gap: .75rem; }
-        .picker-card {
-          display: flex; align-items: center; justify-content: space-between; gap: 1rem;
-          background: #fff; border: 1.5px solid #e5eaf0; border-radius: 1rem;
-          padding: 1.1rem 1.4rem; cursor: pointer; text-align: right;
-          font-family: 'Cairo', 'Tajawal', sans-serif;
-          transition: all .15s; width: 100%;
-        }
-        .picker-card:hover { border-color: #1B5E8C; box-shadow: 0 4px 16px rgba(27,94,140,.1); transform: translateY(-1px); }
-        .picker-card-done { border-color: #a7f3d0; background: #f0fdf4; }
-        .picker-card-done:hover { border-color: #34d399; }
-
-        .picker-card-left { display: flex; flex-direction: column; gap: .2rem; align-items: flex-start; }
-        .picker-month { font-size: 1rem; font-weight: 800; color: #0d3d5c; }
-        .picker-progress-text { font-size: .75rem; color: #6b7a8d; font-weight: 500; }
-
-        .picker-card-right {
-          display: flex; align-items: center; gap: .65rem; flex-shrink: 0;
-        }
-        .picker-bar-bg {
-          width: 100px; height: 7px; background: #f0f4f8; border-radius: 4px; overflow: hidden;
-        }
-        .picker-bar-fill { height: 100%; border-radius: 4px; transition: width .4s; }
-        .picker-pct { font-size: .82rem; font-weight: 800; min-width: 35px; text-align: left; }
-        .picker-arrow { font-size: .85rem; color: #9ca3af; }
-
-        /* Picker empty */
-        .picker-empty {
-          display: flex; flex-direction: column; align-items: center; gap: .75rem;
-          min-height: 280px; justify-content: center; text-align: center;
-          background: #fff; border: 1px solid #e5eaf0; border-radius: 1rem; padding: 2.5rem;
-        }
-        .picker-empty h3 { font-size: 1.05rem; font-weight: 700; color: #374151; margin: 0; }
-        .picker-empty p  { font-size: .83rem; color: #9ca3af; margin: 0; max-width: 340px; line-height: 1.7; }
-
-        /* Picker skeleton */
-        .picker-skeleton { display: flex; flex-direction: column; gap: .75rem; }
-        .skel-card {
-          background: #fff; border: 1px solid #e5eaf0; border-radius: 1rem;
-          padding: 1.1rem 1.4rem; display: flex; flex-direction: column; gap: .4rem;
-        }
-
-        /* ── Batch view ────────────────────────────────────────────────── */
-        .batch-view { display: flex; flex-direction: column; gap: 1.25rem; }
-        .batch-header { display: flex; align-items: flex-start; gap: .75rem; }
-        .back-btn {
-          background: none; border: none; font-family: 'Cairo', sans-serif;
-          font-size: .82rem; font-weight: 600; color: #1B5E8C; cursor: pointer;
-          padding: 0; margin-top: .3rem; white-space: nowrap; flex-shrink: 0;
-        }
-        .back-btn:hover { text-decoration: underline; }
-        .batch-title {
-          font-size: 1.45rem; font-weight: 800; color: #0d3d5c; margin: 0 0 .25rem;
-          display: flex; align-items: center; gap: .6rem; flex-wrap: wrap;
-        }
-        .period-badge {
-          font-size: .78rem; font-weight: 700; color: #1d4ed8;
-          background: #dbeafe; border: 1px solid #bfdbfe;
-          border-radius: .5rem; padding: .2rem .6rem;
-        }
-        .batch-sub { font-size: .82rem; color: #6b7a8d; margin: 0; }
-
-        /* Progress */
-        .progress-card {
-          background: #fff; border: 1px solid #e5eaf0; border-radius: 1rem;
-          padding: 1.25rem 1.5rem;
-        }
-        .progress-header {
-          display: flex; justify-content: space-between; align-items: center; margin-bottom: .65rem;
-        }
-        .progress-label { font-size: .88rem; font-weight: 700; color: #374151; }
-        .progress-pct   { font-size: 1.1rem; font-weight: 800; }
-        .progress-bg    { height: 10px; background: #f0f4f8; border-radius: 5px; overflow: hidden; }
-        .progress-fill  { height: 100%; border-radius: 5px; transition: width .4s ease; }
-        .progress-done  { font-size: .82rem; color: #059669; margin: .65rem 0 0; font-weight: 600; }
-
-        /* Items list */
-        .items-list { display: flex; flex-direction: column; gap: .75rem; }
-        .item-card {
-          background: #fff; border: 1px solid #e5eaf0; border-radius: 1rem;
-          padding: 1rem 1.25rem; display: flex; align-items: center; gap: 1rem;
-          transition: border-color .15s, background .15s;
-        }
-        .item-done { border-color: #a7f3d0; background: #f0fdf4; }
-        .sk-card   { pointer-events: none; }
-
-        .item-avatar {
-          width: 42px; height: 42px; border-radius: 50%; background: #f0f4f8;
-          display: flex; align-items: center; justify-content: center;
-          font-size: 1.2rem; flex-shrink: 0;
-        }
-        .item-info { flex: 1; min-width: 0; }
-        .item-name   { font-size: .9rem; font-weight: 700; color: #1f2937; }
-        .item-meta   {
-          display: flex; gap: .5rem; font-size: .75rem; color: #6b7a8d;
-          margin-top: .2rem; flex-wrap: wrap; align-items: center;
-        }
-        .item-amount  { font-weight: 700; color: #1B5E8C; }
-        .item-sponsor { color: #6b7280; }
-
-        /* Uploader */
-        .uploader-wrap  { display: flex; flex-direction: column; align-items: flex-end; gap: .3rem; flex-shrink: 0; }
-        .confirmed-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: .15rem; flex-shrink: 0; }
-        .confirmed-badge {
-          font-size: .8rem; font-weight: 700; color: #059669;
-          background: #ecfdf5; border: 1px solid #6ee7b7;
-          border-radius: .5rem; padding: .35rem .75rem; white-space: nowrap;
-        }
-        .confirmed-date { font-size: .68rem; color: #9ca3af; }
-        .upload-btn {
-          display: inline-flex; align-items: center; gap: .4rem;
-          padding: .55rem 1rem; background: #1B5E8C; color: #fff;
-          font-family: 'Cairo', sans-serif; font-size: .82rem; font-weight: 700;
-          border: none; border-radius: .625rem; cursor: pointer; transition: background .15s;
-          white-space: nowrap;
-        }
-        .upload-btn:hover:not(:disabled) { background: #134569; }
-        .upload-btn.uploading, .upload-btn:disabled { opacity: .65; cursor: not-allowed; }
-        .upload-err { font-size: .72rem; color: #dc2626; margin: 0; }
-
-        /* Batch empty */
-        .batch-empty {
-          display: flex; flex-direction: column; align-items: center; gap: .5rem;
-          min-height: 200px; justify-content: center; text-align: center;
-          background: #fff; border: 1px solid #e5eaf0; border-radius: 1rem;
-          padding: 2rem; font-size: .9rem; color: #9ca3af; font-weight: 600;
-        }
-
-        /* Skeleton */
-        .skel {
-          background: linear-gradient(90deg, #f0f4f8 25%, #e5eaf0 50%, #f0f4f8 75%);
-          background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 4px;
-        }
-        @keyframes shimmer { to { background-position: -200% 0; } }
-
-        /* Spinner */
-        .spin {
-          display: inline-block; width: 13px; height: 13px;
-          border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
-          border-radius: 50%; animation: spin .7s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        @media (max-width: 600px) {
-          .item-card     { flex-wrap: wrap; }
-          .uploader-wrap { align-items: flex-start; }
-          .picker-bar-bg { width: 70px; }
-        }
-      `}</style>
     </AppShell>
   );
 }

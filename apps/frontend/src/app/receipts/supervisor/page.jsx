@@ -1,282 +1,289 @@
 'use client';
 
+/**
+ * apps/frontend/src/app/receipts/supervisor/page.jsx
+ * Route:  /receipts/supervisor
+ * Roles:  supervisor, gm
+ *
+ * Shows a per-agent breakdown of fingerprint receipts for a selected
+ * disbursement list. Supervisors can see which beneficiaries have been
+ * confirmed and view the uploaded fingerprint image.
+ *
+ * API:
+ *   GET /api/disbursements                         → all lists (for selector)
+ *   GET /api/receipts/supervisor-log/:listId       → per-agent receipt log
+ */
+
 import { useState, useEffect } from 'react';
 import { AlertTriangle, CheckCircle2, Check } from 'lucide-react';
-
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
+import AppShell from '@/components/AppShell';
+
+// ── Constants ──────────────────────────────────────────────────────────────────
+
+/**
+ * NOTE (security): The fingerprint URL is constructed using the public S3
+ * bucket name env var. This works for public buckets but exposes the bucket
+ * name client-side. For private buckets, the backend should return a
+ * pre-signed URL instead.
+ * TODO: Replace with GET /api/receipts/fingerprint-url/:key when the backend
+ *       supports signed URLs.
+ */
+const S3_BUCKET = process.env.NEXT_PUBLIC_S3_BUCKET_NAME || '';
+
+const buildFingerprintUrl = (key) =>
+  S3_BUCKET ? `https://${S3_BUCKET}.s3.amazonaws.com/${key}` : '';
+
+// ── Tailwind shorthand constants ───────────────────────────────────────────────
+
+const CLS_ERR_BANNER = 'flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm font-bold';
+
+// ── Main Page ──────────────────────────────────────────────────────────────────
 
 export default function SupervisorBiometricLogPage() {
   const router = useRouter();
-  const [lists, setLists] = useState([]);
-  const [selectedListId, setSelectedListId] = useState('');
-  const [logData, setLogData] = useState(null);
+
+  const [lists,           setLists]           = useState([]);
+  const [selectedListId,  setSelectedListId]  = useState('');
+  const [logData,         setLogData]         = useState(null);
   const [selectedAgentId, setSelectedAgentId] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
- //i w
+  const [loading,         setLoading]         = useState(true);
+  const [error,           setError]           = useState('');
+
   // 1. Fetch available lists
   useEffect(() => {
-    api.get('/disbursements')
-      .then(({ data }) => {
+    const fetchLists = async () => {
+      try {
+        const { data } = await api.get('/disbursements');
         setLists(data.lists);
         // Default to the first (latest) released/approved list
         if (data.lists.length > 0) {
-          const list = data.lists[0];
-          setSelectedListId(list.id);
+          setSelectedListId(data.lists[0].id);
         } else {
           setLoading(false);
         }
-      })
-      .catch(() => {
+      } catch (err) {
+        console.error('Error fetching disbursement lists:', err);
         setError('تعذّر تحميل كشوفات الصرف.');
         setLoading(false);
-      });
+      }
+    };
+    fetchLists();
   }, []);
 
   // 2. Fetch supervisor log when list changes
   useEffect(() => {
     if (!selectedListId) return;
 
-    setLoading(true);
-    setLogData(null);
-    setSelectedAgentId('');
-
-    api.get(`/receipts/supervisor-log/${selectedListId}`)
-      .then(({ data }) => {
+    const fetchLog = async () => {
+      setLoading(true);
+      setLogData(null);
+      setSelectedAgentId('');
+      try {
+        const { data } = await api.get(`/receipts/supervisor-log/${selectedListId}`);
         setLogData(data);
-        if (data.agents && data.agents.length > 0) {
+        if (data.agents?.length > 0) {
           setSelectedAgentId(data.agents[0].agent_id);
         }
-      })
-      .catch((err) => setError(err.response?.data?.error || 'تعذّر تحميل سجل البصمات.'))
-      .finally(() => setLoading(false));
+      } catch (err) {
+        console.error('Error fetching supervisor log:', err);
+        setError(err.response?.data?.error || 'تعذّر تحميل سجل البصمات.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLog();
   }, [selectedListId]);
 
-  // ── Render Helpers ──────────────────────────────────────────────────────────
-
-  const activeAgent = logData?.agents?.find(a => a.agent_id === selectedAgentId);
-
+  const activeAgent = logData?.agents?.find((a) => a.agent_id === selectedAgentId);
 
   return (
-    <div className="supervisor-log-page" dir="rtl">
-      <button
-        type="button"
-        onClick={() => router.back()}
-        style={{
-          alignSelf: 'flex-start',
-          marginBottom: '1rem',
-          background: '#f1f5f9',
-          border: 'none',
-          borderRadius: '0.5rem',
-          padding: '0.5rem 1.2rem',
-          fontWeight: 700,
-          color: '#0d3d5c',
-          cursor: 'pointer',
-          fontSize: '1rem',
-          display: 'flex',
-          gap: '0.5rem',
-          alignItems: 'center',
-        }}
-        aria-label="عودة"
-      >
-        <span aria-hidden="true">←</span> عودة
-      </button>
-      <div className="header-row">
-        <div>
-          <h1 className="page-title">متابعة بصمات الصرف</h1>
-          <p className="page-sub">عرض تقرير إنجاز المندوبين لتسليم مبالغ الصرف</p>
+    <AppShell>
+      <div className="flex flex-col gap-7 font-cairo max-w-[1100px] mx-auto pb-12" dir="rtl">
+
+        {/* Back button */}
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="self-start flex items-center gap-2 bg-[#f1f5f9] border-none rounded-lg px-5 py-2 font-bold text-[#0d3d5c] cursor-pointer text-base transition-colors duration-150 hover:bg-[#e2e8f0]"
+          aria-label="عودة"
+        >
+          <span aria-hidden="true">←</span> عودة
+        </button>
+
+        {/* Header row */}
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] m-0 mb-1">متابعة بصمات الصرف</h1>
+            <p className="text-[0.9rem] text-[#6b7a8d] m-0">عرض تقرير إنجاز المندوبين لتسليم مبالغ الصرف</p>
+          </div>
+          {lists.length > 0 && (
+            <select
+              className="px-4 py-2.5 border border-gray-300 rounded-lg font-cairo text-[0.9rem] font-bold text-[#1f2937] bg-white outline-none cursor-pointer transition-all duration-150 focus:border-[#1B5E8C] focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)]"
+              value={selectedListId}
+              onChange={(e) => setSelectedListId(e.target.value)}
+            >
+              {lists.map((list) => (
+                <option key={list.id} value={list.id}>
+                  كشف شهر {list.month} / {list.year}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
-        {lists.length > 0 && (
-          <select 
-            className="list-select" 
-            value={selectedListId} 
-            onChange={(e) => setSelectedListId(e.target.value)}
-          >
-            {lists.map(list => (
-              <option key={list.id} value={list.id}>
-                كشف شهر {list.month} / {list.year}
-              </option>
-            ))}
-          </select>
+
+        {/* Error */}
+        {error && <div className={CLS_ERR_BANNER}><AlertTriangle size={18} /> {error}</div>}
+
+        {/* Loading skeleton */}
+        {loading ? (
+          <div
+            className="h-[300px] mt-8 rounded-2xl bg-gradient-to-r from-[#f0f4f8] via-[#e5eaf0] to-[#f0f4f8] bg-[length:200%_100%] animate-[shimmer_1.4s_infinite]"
+          />
+        ) : !logData ? (
+          <div className="text-center py-16 px-8 bg-white border border-[#e5eaf0] rounded-2xl text-[#6b7a8d]">
+            <h2 className="m-0 mb-2 font-bold text-[#374151]">لا توجد بيانات</h2>
+            <p className="m-0 text-sm">لم يتم العثور على سجل بصمات لهذا الكشف.</p>
+          </div>
+        ) : logData.agents.length === 0 ? (
+          <div className="text-center py-16 px-8 bg-white border border-[#e5eaf0] rounded-2xl text-[#6b7a8d]">
+            <h2 className="m-0 mb-2 font-bold text-[#374151]">لا يوجد مندوبين</h2>
+            <p className="m-0 text-sm">لا يوجد مستفيدين معتمدين في هذا الكشف.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-6 items-start">
+
+            {/* Sidebar: Agents List */}
+            <div className="bg-white border border-[#e5eaf0] rounded-2xl p-5 flex flex-col gap-4">
+              <h3 className="m-0 text-base font-bold text-[#0d3d5c]">
+                المندوبين ({logData.agents.length})
+              </h3>
+              <div className="flex flex-col gap-2 max-h-[600px] overflow-y-auto pr-1">
+                {logData.agents.map((agent) => (
+                  <div
+                    key={agent.agent_id}
+                    className={`px-4 py-3.5 border rounded-xl cursor-pointer transition-all duration-150 flex flex-col gap-1.5 ${
+                      selectedAgentId === agent.agent_id
+                        ? 'border-[#1B5E8C] bg-[#f0f9ff] shadow-[0_2px_4px_rgba(27,94,140,0.1)]'
+                        : 'border-[#e5eaf0] hover:border-[#cbd5e1] hover:bg-[#f8fafc]'
+                    }`}
+                    onClick={() => setSelectedAgentId(agent.agent_id)}
+                  >
+                    <div className="text-[0.95rem] font-extrabold text-[#1f2937]">{agent.agent_name}</div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[0.85rem] font-bold text-[#475569]">
+                        {agent.confirmed_items} / {agent.total_items}
+                      </span>
+                      <span
+                        className="text-[0.7rem] font-extrabold px-2 py-0.5 rounded-full"
+                        style={{
+                          background: agent.all_confirmed ? '#ecfdf5' : '#fffbeb',
+                          color:      agent.all_confirmed ? '#059669' : '#d97706',
+                        }}
+                      >
+                        {agent.all_confirmed
+                          ? <span className="flex items-center gap-1"><CheckCircle2 size={13} strokeWidth={2.5} /> مكتمل</span>
+                          : 'قيد التسليم ⏳'}
+                      </span>
+                    </div>
+                    {agent.batch_confirmed_at && (
+                      <div className="flex items-center gap-1 text-[0.75rem] font-bold text-[#059669] mt-0.5">
+                        تم تسليم الكشف <Check size={14} strokeWidth={2.5} />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Main Content: Agent Details */}
+            <div className="bg-white border border-[#e5eaf0] rounded-2xl p-6 flex flex-col gap-6">
+              {activeAgent ? (
+                <>
+                  <div className="flex justify-between items-center flex-wrap gap-4 border-b border-[#f1f5f9] pb-4">
+                    <h2 className="m-0 text-[1.4rem] font-extrabold text-[#0d3d5c]">{activeAgent.agent_name}</h2>
+                    <div className="flex gap-3">
+                      <div className="px-3.5 py-1.5 bg-[#f1f5f9] text-[#475569] rounded-full text-[0.85rem]">
+                        الإجمالي: <strong>{activeAgent.total_items}</strong>
+                      </div>
+                      <div className="px-3.5 py-1.5 bg-[#ecfdf5] text-[#065f46] rounded-full text-[0.85rem]">
+                        المسلمة: <strong>{activeAgent.confirmed_items}</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse text-right">
+                      <thead>
+                        <tr>
+                          {['المستفيد', 'النوع', 'الحالة', 'البصمة'].map((h) => (
+                            <th key={h} className="px-3 py-3 border-b-2 border-[#e5eaf0] text-[#6b7a8d] text-[0.85rem] font-bold">
+                              {h}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {activeAgent.items.map((item) => {
+                          const fpUrl = item.fingerprint_key
+                            ? buildFingerprintUrl(item.fingerprint_key)
+                            : '';
+                          return (
+                            <tr key={item.item_id}>
+                              <td className="px-3 py-3.5 border-b border-[#f1f5f9] text-[0.9rem] font-bold text-[#1f2937]">
+                                {item.beneficiary_name}
+                              </td>
+                              <td className="px-3 py-3.5 border-b border-[#f1f5f9] text-[0.9rem] text-[#6b7a8d]">
+                                {item.beneficiary_type === 'orphan' ? 'يتيم' : 'أسرة'}
+                              </td>
+                              <td className="px-3 py-3.5 border-b border-[#f1f5f9]">
+                                {item.receipt_id ? (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[0.75rem] font-extrabold bg-[#ecfdf5] text-[#059669]">
+                                    <CheckCircle2 size={14} strokeWidth={2} /> تم التسليم
+                                  </span>
+                                ) : (
+                                  <span className="inline-block px-2.5 py-1 rounded-full text-[0.75rem] font-extrabold bg-[#fffbeb] text-[#d97706]">
+                                    ⏳ قيد التسليم
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-3 py-3.5 border-b border-[#f1f5f9]">
+                                {fpUrl ? (
+                                  <a
+                                    href={fpUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-block bg-[#eff6ff] text-[#2563eb] px-3 py-1.5 rounded-lg text-[0.8rem] font-bold no-underline transition-colors duration-150 hover:bg-[#dbeafe]"
+                                  >
+                                    عرض البصمة 👆
+                                  </a>
+                                ) : (
+                                  <span className="text-[#6b7a8d]">—</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-16 text-[#6b7a8d]">
+                  <p className="m-0 text-sm">اختر مندوباً لعرض التفاصيل</p>
+                </div>
+              )}
+            </div>
+
+          </div>
         )}
+
       </div>
 
-      {error && <div className="err-banner"><AlertTriangle size={18} /> {error}</div>}
-
-      {loading ? (
-        <div className="skeleton-box" style={{ height: 300, marginTop: '2rem' }} />
-      ) : !logData ? (
-        <div className="empty-state">
-          <h2>لا توجد بيانات</h2>
-          <p>لم يتم العثور على سجل بصمات لهذا الكشف.</p>
-        </div>
-      ) : logData.agents.length === 0 ? (
-        <div className="empty-state">
-          <h2>لا يوجد مندوبين</h2>
-          <p>لا يوجد مستفيدين معتمدين في هذا الكشف.</p>
-        </div>
-      ) : (
-        <div className="layout-grid">
-          
-          {/* Sidebar: Agents List */}
-          <div className="agents-sidebar">
-            <h3 className="sidebar-title">المندوبين ({logData.agents.length})</h3>
-            <div className="agents-list">
-              {logData.agents.map(agent => (
-                <div 
-                  key={agent.agent_id} 
-                  className={`agent-card ${selectedAgentId === agent.agent_id ? 'active' : ''}`}
-                  onClick={() => setSelectedAgentId(agent.agent_id)}
-                >
-                  <div className="agent-name">{agent.agent_name}</div>
-                  <div className="agent-progress">
-                    <span className="progress-text">{agent.confirmed_items} / {agent.total_items}</span>
-                    <span className="progress-badge" style={{
-                      background: agent.all_confirmed ? '#ecfdf5' : '#fffbeb',
-                      color: agent.all_confirmed ? '#059669' : '#d97706'
-                    }}>
-                      {agent.all_confirmed ? 'مكتمل <CheckCircle2 size={16} />' : 'قيد التسليم ⏳'}
-                    </span>
-                  </div>
-                  {agent.batch_confirmed_at && (
-                    <div className="batch-confirmed-text">
-                      تم تسليم الكشف <Check size={16} />
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Main Content: Agent Details */}
-          <div className="agent-details">
-            {activeAgent ? (
-              <>
-                <div className="details-header">
-                  <h2>{activeAgent.agent_name}</h2>
-                  <div className="stats-row">
-                    <div className="stat-pill">
-                      الإجمالي: <strong>{activeAgent.total_items}</strong>
-                    </div>
-                    <div className="stat-pill success">
-                      المسلمة: <strong>{activeAgent.confirmed_items}</strong>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="table-wrap">
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>المستفيد</th>
-                        <th>النوع</th>
-                        <th>الحالة</th>
-                        <th>البصمة</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {activeAgent.items.map(item => (
-                        <tr key={item.item_id}>
-                          <td style={{ fontWeight: 700, color: '#1f2937' }}>
-                            {item.beneficiary_name}
-                          </td>
-                          <td className="muted">
-                            {item.beneficiary_type === 'orphan' ? 'يتيم' : 'أسرة'}
-                          </td>
-                          <td>
-                            {item.receipt_id ? (
-                              <span className="status-badge success"><CheckCircle2 size={16} /> تم التسليم</span>
-                            ) : (
-                              <span className="status-badge pending">⏳ قيد التسليم</span>
-                            )}
-                          </td>
-                          <td>
-                            {item.fingerprint_key ? (
-                              <a 
-                                href={`https://${process.env.NEXT_PUBLIC_S3_BUCKET_NAME}.s3.amazonaws.com/${item.fingerprint_key}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="thumb-link"
-                              >
-                                عرض البصمة 👆
-                              </a>
-                            ) : (
-                              <span className="muted">—</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            ) : (
-              <div className="empty-state">
-                <p>اختر مندوباً لعرض التفاصيل</p>
-              </div>
-            )}
-          </div>
-
-        </div>
-      )}
-
-      <style jsx>{`
-        .supervisor-log-page { display:flex; flex-direction:column; gap:1.75rem; font-family:'Cairo','Tajawal',sans-serif; max-width:1100px; margin:0 auto; padding-bottom:3rem; }
-        .header-row { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; }
-        .page-title { font-size:1.6rem; font-weight:800; color:#0d3d5c; margin:0 0 .2rem; }
-        .page-sub { font-size:.9rem; color:#6b7a8d; margin:0; }
-        
-        .list-select { padding:.6rem 1rem; border:1px solid #d1d5db; border-radius:.5rem; font-family:inherit; font-size:.9rem; font-weight:700; color:#1f2937; background:#fff; outline:none; cursor:pointer; }
-        .list-select:focus { border-color:#1B5E8C; box-shadow:0 0 0 3px rgba(27,94,140,0.1); }
-
-        .err-banner { background:#fef2f2; border:1px solid #fecaca; border-radius:.75rem; padding:.85rem 1rem; font-size:.85rem; color:#b91c1c; font-weight:700; }
-        
-        .skeleton-box { background:linear-gradient(90deg,#f0f4f8 25%,#e5eaf0 50%,#f0f4f8 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:1rem; }
-        @keyframes shimmer { to { background-position:-200% 0; } }
-
-        .empty-state { text-align:center; padding:4rem 2rem; background:#fff; border:1px solid #e5eaf0; border-radius:1rem; color:#6b7a8d; }
-
-        .layout-grid { display:grid; grid-template-columns:300px 1fr; gap:1.5rem; align-items:start; }
-
-        /* Sidebar */
-        .agents-sidebar { background:#fff; border:1px solid #e5eaf0; border-radius:1rem; padding:1.25rem; display:flex; flex-direction:column; gap:1rem; }
-        .sidebar-title { margin:0; font-size:1rem; color:#0d3d5c; }
-        .agents-list { display:flex; flex-direction:column; gap:.5rem; max-height:600px; overflow-y:auto; padding-right:.5rem; }
-        .agent-card { padding:.85rem 1rem; border:1px solid #e5eaf0; border-radius:.75rem; cursor:pointer; transition:all .15s; display:flex; flex-direction:column; gap:.4rem; }
-        .agent-card:hover { border-color:#cbd5e1; background:#f8fafc; }
-        .agent-card.active { border-color:#1B5E8C; background:#f0f9ff; box-shadow:0 2px 4px rgba(27,94,140,.1); }
-        .agent-name { font-weight:800; font-size:.95rem; color:#1f2937; }
-        .agent-progress { display:flex; justify-content:space-between; align-items:center; }
-        .progress-text { font-size:.85rem; font-weight:700; color:#475569; }
-        .progress-badge { font-size:.7rem; font-weight:800; padding:.15rem .5rem; border-radius:1rem; }
-        .batch-confirmed-text { font-size:.75rem; color:#059669; font-weight:700; margin-top:.25rem; }
-
-        /* Main Details */
-        .agent-details { background:#fff; border:1px solid #e5eaf0; border-radius:1rem; padding:1.5rem; display:flex; flex-direction:column; gap:1.5rem; }
-        .details-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; border-bottom:1px solid #f1f5f9; padding-bottom:1rem; }
-        .details-header h2 { margin:0; font-size:1.4rem; color:#0d3d5c; }
-        .stats-row { display:flex; gap:.75rem; }
-        .stat-pill { padding:.4rem .85rem; background:#f1f5f9; color:#475569; border-radius:2rem; font-size:.85rem; }
-        .stat-pill.success { background:#ecfdf5; color:#065f46; }
-
-        .table-wrap { overflow-x:auto; }
-        .table { width:100%; border-collapse:collapse; text-align:right; }
-        .table th { padding:.75rem; border-bottom:2px solid #e5eaf0; color:#6b7a8d; font-size:.85rem; font-weight:700; }
-        .table td { padding:.85rem .75rem; border-bottom:1px solid #f1f5f9; font-size:.9rem; vertical-align:middle; }
-        .muted { color:#6b7a8d; }
-
-        .status-badge { display:inline-block; padding:.2rem .6rem; border-radius:2rem; font-size:.75rem; font-weight:800; }
-        .status-badge.success { background:#ecfdf5; color:#059669; }
-        .status-badge.pending { background:#fffbeb; color:#d97706; }
-
-        .thumb-link { display:inline-block; background:#eff6ff; color:#2563eb; padding:.3rem .75rem; border-radius:.5rem; font-size:.8rem; font-weight:700; text-decoration:none; transition:background .15s; }
-        .thumb-link:hover { background:#dbeafe; }
-
-        @media (max-width: 800px) {
-          .layout-grid { grid-template-columns:1fr; }
-        }
+      <style jsx global>{`
+        @keyframes shimmer { to { background-position: -200% 0; } }
       `}</style>
-    </div>
+    </AppShell>
   );
 }

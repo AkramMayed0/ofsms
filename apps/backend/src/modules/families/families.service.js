@@ -1,105 +1,120 @@
 /**
  * families.service.js
- * All database queries for the families module.
+ * Business logic for the families module.
  *
- * updateFamilyStatus now fires a push notification to the agent on rejection
+ * updateFamilyStatus fires a push notification to the agent on rejection
  * (FR-007, FR-048) and on approval.
  */
 
 const { logAudit } = require('../../utils/auditLog');
-const { query } = require('../../config/db');
 const { sendPushNotification } = require('../notifications/notifications.service');
+const { uploadFile } = require('../../config/s3');
+const repository = require('./families.repository');
 
 /**
- * Create a new family record.
+ * Helper to upload documents to S3 and save to DB
+ */
+const _uploadDocument = async (file, familyId, docType, userId) => {
+  const { key } = await uploadFile({
+    buffer: file.buffer,
+    originalName: file.originalname,
+    mimetype: file.mimetype,
+    folder: 'documents',
+  });
+  return repository.addDocument({
+    entityType: 'family',
+    entityId: familyId,
+    docType,
+    fileKey: key,
+    originalName: file.originalname,
+    uploadedBy: userId,
+  });
+};
+
+/**
+ * Create a new family record and handle document uploads.
  * Initial status is always 'under_review'.
  */
-const createFamily = async ({ familyName, headOfFamily, memberCount, governorateId, agentId, notes }) => {
-  const { rows } = await query(
-    `INSERT INTO families
-       (family_name, head_of_family, member_count, governorate_id, agent_id, notes)
-     VALUES ($1, $2, $3, $4, $5, $6)
-     RETURNING *`,
-    [familyName, headOfFamily, memberCount, governorateId, agentId, notes || null]
-  );
-  return rows[0];
+const createFamily = async (
+  { familyName, headOfFamily, memberCount, governorateId, agentId, notes },
+  files = {}
+) => {
+  const family = await repository.createFamily({
+    familyName,
+    headOfFamily,
+    memberCount: parseInt(memberCount, 10),
+    governorateId: parseInt(governorateId, 10),
+    agentId,
+    notes,
+  });
+
+  const uploadedDocs = [];
+
+  // Optional: head of family ID document
+  const headIdFile = files.headOfFamilyId?.[0];
+  if (headIdFile) {
+    const doc = await _uploadDocument(headIdFile, family.id, 'guardian_id', agentId);
+    uploadedDocs.push(doc);
+  }
+
+  // Optional: additional docs (up to 5)
+  const additionalFiles = files.additionalDocs || [];
+  for (const file of additionalFiles.slice(0, 5)) {
+    const doc = await _uploadDocument(file, family.id, 'other', agentId);
+    uploadedDocs.push(doc);
+  }
+
+  return { family, documents: uploadedDocs };
 };
 
 /**
  * Get all families — supports filtering by status and agent.
  */
 const getFamilies = async ({ status, agentId } = {}) => {
-  const conditions = [];
-  const params = [];
-
-  if (status) {
-    params.push(status);
-    conditions.push(`f.status = $${params.length}`);
-  }
-  if (agentId) {
-    params.push(agentId);
-    conditions.push(`f.agent_id = $${params.length}`);
-  }
-
-  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-
-  const { rows } = await query(
-    `SELECT
-       f.id, f.family_name, f.head_of_family, f.member_count,
-       f.status, f.notes, f.created_at,
-       g.name_ar AS governorate_ar, g.name_en AS governorate_en,
-       u.full_name AS agent_name
-     FROM families f
-     LEFT JOIN governorates g ON g.id = f.governorate_id
-     LEFT JOIN users u ON u.id = f.agent_id
-     ${where}
-     ORDER BY f.created_at DESC`,
-    params
-  );
-  return rows;
+  return repository.getFamilies({ status, agentId });
 };
 
 /**
  * Get a single family by ID.
+ * Agents can only access their own families.
  */
-const getFamilyById = async (id) => {
-  const { rows } = await query(
-    `SELECT
-       f.*,
-       g.name_ar AS governorate_ar, g.name_en AS governorate_en,
-       u.full_name AS agent_name,
-       u.id AS agent_id,
-       sp.monthly_amount, sp.start_date AS sponsorship_start,
-       s.full_name AS sponsor_name
-     FROM families f
-     LEFT JOIN governorates g ON g.id = f.governorate_id
-     LEFT JOIN users u ON u.id = f.agent_id
-     LEFT JOIN sponsorships sp ON sp.beneficiary_id = f.id AND sp.beneficiary_type = 'family' AND sp.is_active = TRUE
-     LEFT JOIN sponsors s ON s.id = sp.sponsor_id
-     WHERE f.id = $1`,
-    [id]
-  );
-  return rows[0] || null;
+const getFamilyById = async (id, userRole, userId) => {
+  const family = await repository.getFamilyById(id);
+  if (!family) {
+    const err = new Error('الأسرة غير موجودة');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (userRole === 'agent' && family.agent_id !== userId) {
+    const err = new Error('ليس لديك صلاحية للوصول إلى هذا المورد');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  const documents = await repository.getFamilyDocuments(id);
+  return { family, documents };
 };
 
 /**
  * Update family status with optional notes.
  * Fires FCM push notification to the agent on rejection or approval (FR-007, FR-048).
  */
-const updateFamilyStatus = async (id, status, notes, reviewerName = 'المشرف', actorId = null) => {
-  // Grab old status before updating
-  const { rows: oldRows } = await query('SELECT status FROM families WHERE id = $1', [id]);
-  const oldStatus = oldRows[0]?.status;
+const updateFamilyStatus = async (id, status, notes, reviewerName, actorId, actorRole) => {
+  if (actorRole === 'supervisor' && status === 'under_sponsorship') {
+    const err = new Error('هذه الصلاحية للمدير العام فقط');
+    err.statusCode = 403;
+    throw err;
+  }
 
-  const { rows } = await query(
-    `UPDATE families
-     SET status = $1, notes = COALESCE($2, notes)
-     WHERE id = $3
-     RETURNING *`,
-    [status, notes || null, id]
-  );
+  const oldStatus = await repository.getFamilyStatus(id);
+  if (!oldStatus) {
+    const err = new Error('الأسرة غير موجودة');
+    err.statusCode = 404;
+    throw err;
+  }
 
-  const family = rows[0] || null;
+  const family = await repository.updateFamilyStatus(id, status, notes);
 
   // Write audit log
   if (family && actorId) {
@@ -142,71 +157,37 @@ const updateFamilyStatus = async (id, status, notes, reviewerName = 'المشر�
 };
 
 /**
- * Update family details (agent can edit while under_review).
+ * Update family details (agent can edit while under_review or rejected).
  */
-const updateFamily = async (id, { familyName, headOfFamily, memberCount, governorateId, notes }) => {
-  const { rows } = await query(
-    `UPDATE families
-     SET
-       family_name    = COALESCE($1, family_name),
-       head_of_family = COALESCE($2, head_of_family),
-       member_count   = COALESCE($3, member_count),
-       governorate_id = COALESCE($4, governorate_id),
-       notes          = COALESCE($5, notes),
-       status         = 'under_review'
-     WHERE id = $6
-     RETURNING *`,
-    [familyName, headOfFamily, memberCount, governorateId, notes, id]
-  );
-  return rows[0] || null;
+const updateFamily = async (id, updates, userRole, userId) => {
+  const existing = await repository.getFamilyById(id);
+  if (!existing) {
+    const err = new Error('الأسرة غير موجودة');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (userRole === 'agent') {
+    if (existing.agent_id !== userId) {
+      const err = new Error('ليس لديك صلاحية لتعديل هذه الأسرة');
+      err.statusCode = 403;
+      throw err;
+    }
+    if (existing.status !== 'under_review' && existing.status !== 'rejected') {
+      const err = new Error('لا يمكن تعديل الأسرة بعد اعتمادها');
+      err.statusCode = 400;
+      throw err;
+    }
+  }
+
+  return repository.updateFamily(id, updates);
 };
 
 /**
  * Get families under marketing (available for sponsorship assignment).
  */
 const getFamiliesUnderMarketing = async () => {
-  const { rows } = await query(
-    `SELECT
-       f.id, f.family_name, f.head_of_family, f.member_count,
-       f.created_at,
-       f.agent_id,
-       g.name_ar AS governorate_ar,
-       u.full_name AS agent_name
-     FROM families f
-     LEFT JOIN governorates g ON g.id = f.governorate_id
-     LEFT JOIN users u ON u.id = f.agent_id
-     WHERE f.status = 'under_marketing'
-     ORDER BY f.created_at ASC`
-  );
-  return rows;
-};
-
-/**
- * Get documents for a family.
- */
-const getFamilyDocuments = async (familyId) => {
-  const { rows } = await query(
-    `SELECT id, doc_type, file_key, original_name, uploaded_at
-     FROM documents
-     WHERE entity_type = 'family' AND entity_id = $1
-     ORDER BY uploaded_at DESC`,
-    [familyId]
-  );
-  return rows;
-};
-
-/**
- * Save a document record after S3 upload.
- */
-const addDocument = async ({ entityType, entityId, docType, fileKey, originalName, uploadedBy }) => {
-  const { rows } = await query(
-    `INSERT INTO documents
-       (entity_type, entity_id, doc_type, file_key, original_name, uploaded_by)
-     VALUES ($1, $2, $3, $4, $5, $6)
-     RETURNING *`,
-    [entityType, entityId, docType, fileKey, originalName, uploadedBy]
-  );
-  return rows[0];
+  return repository.getFamiliesUnderMarketing();
 };
 
 module.exports = {
@@ -216,6 +197,4 @@ module.exports = {
   updateFamilyStatus,
   updateFamily,
   getFamiliesUnderMarketing,
-  getFamilyDocuments,
-  addDocument,
 };
