@@ -3,18 +3,15 @@
 /**
  * Route: /sponsor/login
  * API:   POST /api/sponsor/login  { portalToken, password }
- *
- * Sponsors access via a unique URL:
- *   https://ofsms.org/sponsor/login?token=<portal_token>
- * The token is pre-filled from the query param.
  */
 
 import { useState, useEffect } from 'react';
-import { AlertTriangle } from 'lucide-react';
-
+import { AlertTriangle, Lock, ShieldCheck, ArrowLeft, KeyRound } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import useSponsorStore from '@/store/useSponsorStore';
+
+const API_LOGIN_URL = `${process.env.NEXT_PUBLIC_API_URL}/sponsor/login`;
 
 export default function SponsorLoginPage() {
   const router = useRouter();
@@ -27,7 +24,6 @@ export default function SponsorLoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Pre-fill token from URL ?token=xxx
   useEffect(() => {
     const t = searchParams.get('token');
     if (t) setPortalToken(t);
@@ -42,10 +38,10 @@ export default function SponsorLoginPage() {
     setLoading(true);
     setError('');
     try {
-      const { data } = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/sponsor/login`,
-        { portalToken: portalToken.trim(), password }
-      );
+      const { data } = await axios.post(API_LOGIN_URL, {
+        portalToken: portalToken.trim(),
+        password,
+      });
       setSponsorAuth(data.accessToken, data.sponsor);
       router.push('/sponsor/dashboard');
     } catch (err) {
@@ -56,162 +52,131 @@ export default function SponsorLoginPage() {
   };
 
   return (
-    <div className="root" dir="rtl">
-      {/* Decorative side */}
-      <aside className="brand">
-        <div className="brand-inner">
-          <img
-            src="/ikram-logo.png"
-            alt="مؤسسة إكرام النعمة الخيرية"
-            className="brand-logo"
-          />
+    <div className="flex flex-col md:flex-row-reverse min-h-screen font-sans bg-slate-50" dir="rtl">
+      
+      {/* ── Brand / Hero Panel (Right side in RTL) ── */}
+      <aside className="relative md:w-[45%] lg:w-[50%] bg-gradient-to-br from-[#0B2F44] via-[#124b6e] to-[#0A4A3E] flex items-center justify-center overflow-hidden shrink-0 min-h-[300px] md:min-h-screen">
+        {/* Subtle animated background elements */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-[10%] -right-[10%] w-[500px] h-[500px] rounded-full bg-[#1da07f] blur-[120px] mix-blend-screen animate-pulse" style={{ animationDuration: '8s' }} />
+          <div className="absolute bottom-[10%] -left-[10%] w-[400px] h-[400px] rounded-full bg-[#3b82f6] blur-[100px] mix-blend-screen animate-pulse" style={{ animationDuration: '10s' }} />
+        </div>
+        
+        {/* Glassmorphic Brand Card */}
+        <div className="relative z-10 w-[80%] max-w-[400px] flex flex-col items-center justify-center">
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-8 rounded-[2rem] shadow-2xl flex flex-col items-center w-full transform transition-transform duration-700 hover:scale-105">
+            <div className="w-20 h-20 bg-gradient-to-br from-[#1cd29c] to-[#0d7d59] rounded-2xl flex items-center justify-center shadow-[0_0_40px_rgba(28,210,156,0.3)] mb-6">
+              <ShieldCheck size={40} className="text-white" strokeWidth={1.5} />
+            </div>
+            <h1 className="text-3xl font-extrabold text-white mb-3 tracking-tight text-center">بوابة الكافل</h1>
+            <p className="text-sm font-medium text-blue-100/80 text-center leading-relaxed">
+              نافذتك المباشرة لمتابعة أيتامك، الاطلاع على تقاريرهم، والمساهمة في بناء مستقبلهم.
+            </p>
+            
+            <div className="w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent my-6" />
+            
+            <div className="flex items-center gap-2 text-white/90 text-xs font-semibold tracking-wider">
+              <span>مؤسسة إكرام النعمة الخيرية</span>
+            </div>
+          </div>
         </div>
       </aside>
 
-      {/* Login form */}
-      <main className="form-side">
-        <div className="form-card">
-          <div className="form-header">
-            <div className="form-icon"><ShieldIcon small /></div>
-            <h2 className="form-title">تسجيل دخول الكافل</h2>
-            <p className="form-hint">أدخل بياناتك للاطلاع على أيتامك ومتابعة تقاريرهم</p>
+      {/* ── Login Form Panel (Left side in RTL) ── */}
+      <main className="flex-1 flex items-center justify-center p-6 md:p-12 relative z-10 bg-slate-50">
+        <div className="w-full max-w-[440px]">
+          
+          <div className="mb-10">
+            <h2 className="text-[2rem] font-black text-slate-800 mb-3 tracking-tight">تسجيل الدخول</h2>
+            <p className="text-slate-500 font-medium">أدخل رمز البوابة وكلمة المرور للوصول لحسابك</p>
           </div>
 
-          <form onSubmit={handleSubmit} noValidate>
+          <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+            
+            {/* Error Alert */}
             {error && (
-              <div className="err-banner">
-                <span><AlertTriangle size={18} /></span> {error}
+              <div className="flex items-start gap-3 bg-red-50/80 backdrop-blur-sm border border-red-100 text-red-600 rounded-2xl p-4 animate-in slide-in-from-top-2 fade-in duration-300">
+                <AlertTriangle size={20} className="shrink-0 mt-0.5" />
+                <span className="text-sm font-semibold">{error}</span>
               </div>
             )}
 
-            <div className="field">
-              <label className="label">رمز البوابة</label>
-              <input
-                className="inp ltr"
-                type="text"
-                placeholder="أدخل رمز البوابة الخاص بك"
-                value={portalToken}
-                onChange={e => setPortalToken(e.target.value)}
-                disabled={loading}
-                dir="ltr"
-              />
-              <p className="field-hint">الرمز مُرسَل إليك من قِبَل المؤسسة أو موجود في الرابط</p>
+            {/* Portal Token Field */}
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-slate-700 ml-1">رمز البوابة</label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 group-focus-within:text-emerald-600 transition-colors">
+                  <KeyRound size={20} strokeWidth={2} />
+                </div>
+                <input
+                  type="text"
+                  className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pr-12 pl-4 text-slate-800 font-medium placeholder:text-slate-400 transition-all duration-200 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:opacity-60"
+                  placeholder="أدخل الرمز الخاص بك"
+                  value={portalToken}
+                  onChange={(e) => setPortalToken(e.target.value)}
+                  disabled={loading}
+                  dir="ltr"
+                />
+              </div>
             </div>
 
-            <div className="field">
-              <label className="label">كلمة المرور</label>
-              <div className="inp-wrap">
+            {/* Password Field */}
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-slate-700 ml-1">كلمة المرور</label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 group-focus-within:text-emerald-600 transition-colors">
+                  <Lock size={20} strokeWidth={2} />
+                </div>
                 <input
-                  className="inp ltr"
                   type={showPass ? 'text' : 'password'}
+                  className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pr-12 pl-12 text-slate-800 font-medium placeholder:text-slate-400 transition-all duration-200 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:opacity-60 tracking-widest"
                   placeholder="••••••••"
                   value={password}
-                  onChange={e => setPassword(e.target.value)}
+                  onChange={(e) => setPassword(e.target.value)}
                   disabled={loading}
                   dir="ltr"
                 />
                 <button
                   type="button"
-                  className="eye-btn"
-                  onClick={() => setShowPass(v => !v)}
+                  className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                  onClick={() => setShowPass(!showPass)}
                   tabIndex={-1}
                 >
-                  {showPass ? '🙈' : '👁'}
+                  <span className="text-lg">{showPass ? '🙈' : '👁'}</span>
                 </button>
               </div>
             </div>
 
-            <button type="submit" className="submit-btn" disabled={loading}>
-              {loading
-                ? <><span className="spin" />جارٍ تسجيل الدخول…</>
-                : 'دخول البوابة ←'
-              }
+            {/* Submit Button */}
+            <button
+              type="submit"
+              className="group relative w-full flex items-center justify-center gap-2 py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-base transition-all duration-200 overflow-hidden shadow-[0_8px_20px_rgba(15,23,42,0.15)] hover:shadow-[0_8px_25px_rgba(15,23,42,0.25)] hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+              disabled={loading}
+            >
+              {/* Subtle hover gradient effect */}
+              <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
+              
+              {loading ? (
+                <><span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> جاري الدخول...</>
+              ) : (
+                <>
+                  <span>متابعة للدخول</span>
+                  <ArrowLeft size={18} className="transition-transform group-hover:-translate-x-1" />
+                </>
+              )}
             </button>
           </form>
 
-          <p className="footer-note">
-            إذا لم يكن لديك رمز بوابة، تواصل مع مؤسسة إكرام النعمة الخيرية
-          </p>
+          {/* Footer Note */}
+          <div className="mt-10 text-center">
+            <p className="text-xs font-medium text-slate-400">
+              يتم إصدار بيانات الدخول حصرياً من قِبل إدارة المؤسسة.<br/>
+              في حال فقدان البيانات، يرجى التواصل مع الدعم الفني.
+            </p>
+          </div>
+
         </div>
       </main>
-
-      <style jsx>{`
-        .root { display:flex; flex-direction:row-reverse; min-height:100vh; font-family:'Cairo','Tajawal',sans-serif; background:#f5f7fa; }
-
-        /* Brand side */
-        .brand { position:relative; width:42%; background:linear-gradient(160deg,#1a4a2e 0%,#2d7a4a 55%,#1B5E8C 100%); display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; }
-        .brand-inner { position:relative; z-index:2; text-align:center; padding:2.5rem 2rem; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-        .brand-logo { max-width:300px; width:80%; height:auto; object-fit:contain; background:#fff; border-radius:1.5rem; padding:2rem; box-shadow:0 8px 32px rgba(0,0,0,.18); }
-
-        /* Form side */
-        .form-side { flex:1; display:flex; align-items:center; justify-content:center; padding:2rem 1.5rem; }
-        .form-card { width:100%; max-width:420px; background:#fff; border-radius:1.25rem; padding:2.5rem 2rem; box-shadow:0 4px 30px rgba(0,0,0,.08); border:1px solid rgba(0,0,0,.05); }
-        .form-header { text-align:center; margin-bottom:2rem; }
-        .form-icon { display:flex; justify-content:center; margin-bottom:1rem; }
-        .form-title { font-size:1.4rem; font-weight:800; color:#0d3d5c; margin:0 0 .4rem; }
-        .form-hint { font-size:.82rem; color:#6b7a8d; margin:0; line-height:1.6; }
-
-        /* Fields */
-        .field { display:flex; flex-direction:column; gap:.4rem; margin-bottom:1.1rem; }
-        .label { font-size:.82rem; font-weight:600; color:#374151; }
-        .field-hint { font-size:.72rem; color:#9ca3af; margin:0; }
-        .inp-wrap { position:relative; display:flex; align-items:center; }
-        .inp { width:100%; border:1.5px solid #d1d5db; border-radius:.75rem; padding:.7rem 1rem; font-size:.88rem; font-family:'Cairo',sans-serif; background:#fafafa; outline:none; box-sizing:border-box; transition:border-color .15s, box-shadow .15s; }
-        .inp:focus { border-color:#2d7a4a; box-shadow:0 0 0 3px rgba(45,122,74,.12); background:#fff; }
-        .eye-btn { position:absolute; left:.75rem; background:none; border:none; cursor:pointer; font-size:.9rem; color:#9ca3af; padding:.2rem; }
-
-        /* Error */
-        .err-banner { display:flex; align-items:center; gap:.5rem; background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; border-radius:.625rem; padding:.65rem .85rem; font-size:.83rem; font-weight:500; margin-bottom:1rem; }
-
-        /* Submit */
-        .submit-btn { width:100%; margin-top:.5rem; padding:.85rem; background:linear-gradient(135deg,#2d7a4a,#1a4a2e); color:#fff; border:none; border-radius:.75rem; font-family:'Cairo',sans-serif; font-size:.95rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:.5rem; box-shadow:0 2px 10px rgba(45,122,74,.3); transition:all .15s; }
-        .submit-btn:hover:not(:disabled) { transform:translateY(-1px); box-shadow:0 4px 16px rgba(45,122,74,.4); }
-        .submit-btn:disabled { opacity:.65; cursor:not-allowed; }
-
-        /* Spinner */
-        .spin { display:inline-block; width:15px; height:15px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; }
-        @keyframes spin { to { transform:rotate(360deg); } }
-
-        .footer-note { text-align:center; font-size:.72rem; color:#9ca3af; margin:1.5rem 0 0; }
-
-        @media(max-width:768px) {
-          .root { flex-direction:column; }
-          .brand { width:100%; min-height:180px; padding:1.5rem 1rem; }
-          .brand-logo { max-width:200px; padding:1rem; }
-          .form-side { padding:1.5rem 1rem; align-items:flex-start; }
-          .form-card { box-shadow:none; border:none; background:transparent; }
-        }
-      `}</style>
     </div>
-  );
-}
-
-function ShieldIcon({ small }) {
-  const size = small ? 40 : 72;
-  return (
-    <svg width={size} height={size} viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M36 4L8 18v20c0 15 11.5 29 28 33 16.5-4 28-18 28-33V18L36 4z"
-        fill={small ? '#2d7a4a' : 'rgba(255,255,255,.15)'}
-        stroke={small ? '#2d7a4a' : 'rgba(255,255,255,.8)'}
-        strokeWidth="2" />
-      <path d="M26 36l7 7 13-13" stroke={small ? '#fff' : 'rgba(255,255,255,.9)'}
-        strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function SvgPattern() {
-  return (
-    <svg aria-hidden="true" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: .06, pointerEvents: 'none' }} xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <pattern id="geo2" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
-          <polygon points="30,2 58,17 58,43 30,58 2,43 2,17" fill="none" stroke="white" strokeWidth="1" />
-          <circle cx="30" cy="30" r="5" fill="none" stroke="white" strokeWidth="1" />
-        </pattern>
-      </defs>
-      <rect width="100%" height="100%" fill="url(#geo2)" />
-      <circle cx="20%" cy="20%" r="100" fill="none" stroke="white" strokeWidth="1" opacity=".5" />
-      <circle cx="80%" cy="80%" r="150" fill="none" stroke="white" strokeWidth=".8" opacity=".4" />
-    </svg>
   );
 }

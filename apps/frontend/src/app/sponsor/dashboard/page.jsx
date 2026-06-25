@@ -5,33 +5,44 @@
  * APIs:
  *   GET /api/sponsor/me       → sponsor info
  *   GET /api/sponsor/orphans  → list of sponsored orphans
- *   GET /api/announcements    → public announcements board
+ *   GET /api/ads/sponsor/feed → sponsor announcements feed
  */
 
 import { useEffect, useState } from 'react';
-import { Search, AlertTriangle, User, Handshake } from 'lucide-react';
-
+import { Search, AlertTriangle, Users, Bell, LogOut, ArrowLeft, Heart, HandHeart, ShieldCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import sponsorApi from '@/lib/sponsorApi';
 import useSponsorStore from '@/store/useSponsorStore';
 
-const STATUS_CONFIG = {
-  under_review:      { label: 'قيد المراجعة', color: '#92400E', bg: '#FEF3C7' },
-  under_marketing:   { label: 'تحت التسويق',  color: '#1E40AF', bg: '#EFF6FF' },
-  under_sponsorship: { label: 'تحت الكفالة',  color: '#065F46', bg: '#ECFDF5' },
-  rejected:          { label: 'مرفوض',        color: '#991B1B', bg: '#FEF2F2' },
-  inactive:          { label: 'غير نشط',      color: '#6B7280', bg: '#F3F4F6' },
+const API_ENDPOINTS = {
+  ORPHANS:       '/sponsor/orphans',
+  SPONSOR_FEED:  '/ads/sponsor/feed',
 };
+
+const STATUS_CONFIG = {
+  under_review:      { label: 'قيد المراجعة', color: 'text-amber-700', bg: 'bg-amber-100', border: 'border-amber-200' },
+  under_marketing:   { label: 'تحت التسويق',  color: 'text-blue-700',  bg: 'bg-blue-100',  border: 'border-blue-200' },
+  under_sponsorship: { label: 'تحت الكفالة',  color: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-200' },
+  rejected:          { label: 'مرفوض',        color: 'text-rose-700',    bg: 'bg-rose-100',    border: 'border-rose-200' },
+  inactive:          { label: 'غير نشط',      color: 'text-slate-600',   bg: 'bg-slate-100',   border: 'border-slate-200' },
+};
+
+const mapAdToAnnouncement = (ad) => ({
+  id: ad.id,
+  title: ad.beneficiary_type === 'family' ? `طلب كفالة أسرة: ${ad.beneficiary_name}` : `طلب كفالة: ${ad.beneficiary_name}`,
+  body: ad.beneficiary_type === 'family' ? `من سيكفل هذه الأسرة؟ المحافظة: ${ad.governorate_ar || '—'}` : `من سيكفل هذا الطفل؟ المحافظة: ${ad.governorate_ar || '—'}`,
+  published_at: ad.published_at,
+});
 
 export default function SponsorDashboard() {
   const router = useRouter();
   const { sponsor, clearSponsorAuth, isAuthenticated } = useSponsorStore();
 
-  const [orphans, setOrphans]             = useState([]);
+  const [orphans,       setOrphans]       = useState([]);
   const [announcements, setAnnouncements] = useState([]);
-  const [loading, setLoading]             = useState(true);
-  const [error, setError]                 = useState('');
+  const [loading,       setLoading]       = useState(true);
+  const [error,         setError]         = useState('');
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -39,24 +50,14 @@ export default function SponsorDashboard() {
       return;
     }
     Promise.all([
-      sponsorApi.get('/sponsor/orphans'),
-      sponsorApi.get('/ads/sponsor/feed').catch(() => ({ data: { ads: [] } })),
+      sponsorApi.get(API_ENDPOINTS.ORPHANS),
+      sponsorApi.get(API_ENDPOINTS.SPONSOR_FEED).catch(() => ({ data: { ads: [] } })),
     ])
-      .then(([orphansRes, announcementsRes]) => {
+      .then(([orphansRes, feedRes]) => {
         setOrphans(orphansRes.data.orphans || []);
-        setAnnouncements((announcementsRes.data.ads || []).map(ad => ({
-          id: ad.id,
-          title: ad.beneficiary_type === 'family'
-            ? `طلب كفالة أسرة: ${ad.beneficiary_name}`
-            : `طلب كفالة: ${ad.beneficiary_name}`,
-          body: ad.beneficiary_type === 'family'
-            ? `من سيكفل هذه الأسرة؟ المحافظة: ${ad.governorate_ar || '—'}`
-            : `من سيكفل هذا الطفل؟ المحافظة: ${ad.governorate_ar || '—'}`,
-          published_at: ad.published_at,
-          is_active: true,
-        })));
+        setAnnouncements((feedRes.data.ads || []).map(mapAdToAnnouncement));
       })
-      .catch(() => setError('تعذّر تحميل البيانات'))
+      .catch(() => setError('تعذّر تحميل البيانات. يرجى المحاولة لاحقاً.'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -66,222 +67,213 @@ export default function SponsorDashboard() {
   };
 
   return (
-    <div className="root" dir="rtl">
-      {/* Header */}
-      <header className="header">
-        <div className="header-inner">
-          <div className="header-brand">
-            <span className="header-icon"><Handshake size={32} /></span>
+    <div className="min-h-screen bg-[#f8fafc] font-sans selection:bg-emerald-200 selection:text-emerald-900" dir="rtl">
+      
+      {/* ── Premium Glass Header ── */}
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)]">
+        <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-700 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+              <ShieldCheck className="text-white" size={22} strokeWidth={2} />
+            </div>
             <div>
-              <span className="header-title">بوابة الكافل</span>
-              <span className="header-org">مؤسسة إكرام النعمة الخيرية</span>
+              <h1 className="text-lg font-black text-slate-800 tracking-tight leading-none">بوابة الكافل</h1>
+              <span className="text-xs font-semibold text-slate-500">إكرام النعمة الخيرية</span>
             </div>
           </div>
-          <div className="header-user">
-            <span className="user-name">أهلاً، {sponsor?.name || 'الكافل'}</span>
-            <button className="logout-btn" onClick={handleLogout}>خروج</button>
+          <div className="flex items-center gap-5">
+            <div className="hidden sm:flex flex-col items-end">
+              <span className="text-xs font-semibold text-slate-500">مرحباً بك</span>
+              <span className="text-sm font-bold text-slate-800">{sponsor?.name || 'الكافل الكريم'}</span>
+            </div>
+            <div className="w-px h-8 bg-slate-200 hidden sm:block" />
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-rose-600 transition-colors group px-2 py-1"
+            >
+              <LogOut size={18} className="transition-transform group-hover:-translate-x-1" />
+              <span className="hidden sm:block">تسجيل خروج</span>
+            </button>
           </div>
         </div>
       </header>
 
-      <main className="main">
-
-        {error && <div className="err-banner"><AlertTriangle size={18} /> {error}</div>}
-
-        {/* Welcome card */}
-        <div className="welcome-card">
-          <div className="welcome-text">
-            <h1 className="welcome-title">مرحباً بك في بوابة الكافل</h1>
-            <p className="welcome-sub">يمكنك متابعة أيتامك وتقاريرهم الشهرية من هذه الصفحة</p>
+      <main className="max-w-6xl mx-auto px-6 py-8 md:py-12 flex flex-col gap-8">
+        
+        {error && (
+          <div className="flex items-center gap-3 bg-rose-50 border border-rose-100 text-rose-700 p-4 rounded-2xl shadow-sm animate-in fade-in slide-in-from-top-2">
+            <AlertTriangle size={20} /> <span className="font-semibold text-sm">{error}</span>
           </div>
-          <div className="welcome-stat">
-            <span className="stat-big">{loading ? '—' : orphans.length}</span>
-            <span className="stat-lbl">يتيم تحت كفالتك</span>
+        )}
+
+        {/* ── Hero Welcome Banner ── */}
+        <div className="relative overflow-hidden rounded-[2rem] bg-slate-900 shadow-2xl">
+          {/* Mesmerizing Background Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0B2F44] to-[#0A4A3E] z-0" />
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/20 blur-[100px] rounded-full mix-blend-overlay -translate-y-1/2 translate-x-1/3" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/20 blur-[100px] rounded-full mix-blend-overlay translate-y-1/3 -translate-x-1/3" />
+          
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between p-8 md:p-12 gap-8">
+            <div className="text-right">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-emerald-300 text-xs font-bold mb-6">
+                <HandHeart size={14} /> عطاؤكم يصنع الفارق
+              </div>
+              <h2 className="text-3xl md:text-4xl font-black text-white mb-4 leading-tight">
+                أهلاً بك في بوابة العطاء،<br/> <span className="text-transparent bg-clip-text bg-gradient-to-l from-emerald-300 to-teal-100">{sponsor?.name || 'الكافل الكريم'}</span>
+              </h2>
+              <p className="text-slate-300 font-medium max-w-lg leading-relaxed text-sm md:text-base">
+                من هنا يمكنك متابعة حالة الأيتام المشمولين برعايتك، الاطلاع على تقاريرهم الدورية، ومعرفة أثر كفالتك المباشر في حياتهم.
+              </p>
+            </div>
+            
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 md:p-8 flex flex-col items-center justify-center min-w-[200px] shrink-0 text-white shadow-xl">
+              <span className="text-xs font-bold text-slate-300 uppercase tracking-widest mb-2">إجمالي الأيتام</span>
+              <span className="text-5xl font-black tabular-nums bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-400">
+                {loading ? '—' : orphans.length}
+              </span>
+              <span className="text-sm font-semibold text-emerald-400 mt-2">في كفالتك حالياً</span>
+            </div>
           </div>
         </div>
 
-        <div className="content-grid">
-
-          {/* Orphans section */}
-          <section className="section orphans-section">
-            <h2 className="section-title">
-              <span className="section-icon"><User size={18} /></span>
-              أيتامك المكفولون
-            </h2>
+        {/* ── Dashboard Grid ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* Orphans List Column */}
+          <div className="lg:col-span-2 flex flex-col gap-5">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+              <h3 className="text-xl font-extrabold text-slate-800 flex items-center gap-2">
+                <Users className="text-emerald-600" size={24} /> الأيتام المكفولون
+              </h3>
+            </div>
 
             {loading ? (
-              <div className="orphans-list">
-                {[1,2,3].map(i => <SkeletonCard key={i} />)}
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => <PremiumSkeletonCard key={i} />)}
               </div>
             ) : orphans.length === 0 ? (
-              <div className="empty">
-                <span><Search size={16} /></span>
-                <p>لا يوجد أيتام مرتبطون بكفالتك حالياً</p>
+              <div className="bg-white rounded-3xl p-12 flex flex-col items-center justify-center text-center border border-slate-200/60 border-dashed shadow-sm">
+                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 mb-4">
+                  <Search size={28} />
+                </div>
+                <h4 className="text-lg font-bold text-slate-800 mb-2">لا يوجد أيتام حالياً</h4>
+                <p className="text-sm text-slate-500 max-w-sm">لم يتم ربط أي أيتام بحسابك حتى الآن. سيتم التحديث فور اعتماد الكفالات الجديدة.</p>
               </div>
             ) : (
-              <div className="orphans-list">
-                {orphans.map(orphan => (
-                  <OrphanCard key={orphan.id} orphan={orphan} />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {orphans.map((orphan) => (
+                  <PremiumOrphanCard key={orphan.id} orphan={orphan} />
                 ))}
               </div>
             )}
-          </section>
+          </div>
 
-          {/* Announcements */}
-          <section className="section">
-            <h2 className="section-title">
-              <span className="section-icon">📢</span>
-              إعلانات المؤسسة
-            </h2>
+          {/* Announcements Column */}
+          <div className="flex flex-col gap-5">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+              <h3 className="text-xl font-extrabold text-slate-800 flex items-center gap-2">
+                <Bell className="text-amber-500" size={22} fill="currentColor" fillOpacity={0.2} /> إعلانات المؤسسة
+              </h3>
+            </div>
 
             {loading ? (
-              <div className="ann-skeleton" />
+              <div className="h-48 rounded-3xl bg-slate-200 animate-pulse" />
             ) : announcements.length === 0 ? (
-              <div className="empty small">
-                <span>📭</span>
-                <p>لا توجد إعلانات حالياً</p>
+              <div className="bg-white rounded-3xl p-8 flex flex-col items-center text-center border border-slate-200/60 shadow-sm">
+                <span className="text-4xl mb-3 opacity-50">📭</span>
+                <p className="text-sm font-semibold text-slate-500">لا توجد إعلانات نشطة حالياً</p>
               </div>
             ) : (
-              <div className="ann-list">
-                {announcements.map(ann => (
-                  <div key={ann.id} className="ann-card">
-                    <span className="ann-dot" />
-                    <div>
-                      <p className="ann-title">{ann.title}</p>
-                      <p className="ann-body">{ann.body}</p>
-                      <span className="ann-date">
-                        {new Date(ann.published_at).toLocaleDateString('ar-YE', { day:'numeric', month:'long', year:'numeric' })}
-                      </span>
+              <div className="flex flex-col gap-4">
+                {announcements.map((ann) => (
+                  <div key={ann.id} className="group bg-white rounded-2xl p-5 border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+                    <div className="absolute right-0 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-400 to-amber-600 rounded-r-2xl" />
+                    <div className="pr-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[0.65rem] font-bold tracking-wider text-amber-600 uppercase bg-amber-50 px-2 py-0.5 rounded">إعلان جديد</span>
+                        <span className="text-[0.7rem] font-semibold text-slate-400">
+                          {new Date(ann.published_at).toLocaleDateString('ar-YE', { day: 'numeric', month: 'short' })}
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-bold text-slate-800 mb-1.5 leading-tight">{ann.title}</h4>
+                      <p className="text-xs font-medium text-slate-500 leading-relaxed">{ann.body}</p>
                     </div>
                   </div>
                 ))}
               </div>
             )}
-          </section>
+          </div>
 
         </div>
       </main>
-
-      <style jsx>{`
-        * { box-sizing: border-box; }
-        .root { min-height:100vh; background:#f0f4f8; font-family:'Cairo','Tajawal',sans-serif; }
-
-        /* Header */
-        .header { background:#fff; border-bottom:1px solid #e5eaf0; position:sticky; top:0; z-index:10; box-shadow:0 1px 4px rgba(0,0,0,.06); }
-        .header-inner { max-width:1100px; margin:0 auto; padding:.9rem 1.5rem; display:flex; align-items:center; justify-content:space-between; }
-        .header-brand { display:flex; align-items:center; gap:.75rem; }
-        .header-icon { font-size:1.5rem; }
-        .header-title { display:block; font-size:1rem; font-weight:800; color:#0d3d5c; line-height:1; }
-        .header-org { display:block; font-size:.7rem; color:#9ca3af; margin-top:.15rem; }
-        .header-user { display:flex; align-items:center; gap:1rem; }
-        .user-name { font-size:.85rem; font-weight:600; color:#374151; }
-        .logout-btn { background:none; border:1.5px solid #dde5f0; border-radius:.5rem; padding:.4rem .85rem; font-family:'Cairo',sans-serif; font-size:.78rem; font-weight:600; color:#6b7280; cursor:pointer; }
-        .logout-btn:hover { background:#f9fafb; color:#dc2626; border-color:#fca5a5; }
-
-        .main { max-width:1100px; margin:0 auto; padding:2rem 1.5rem; display:flex; flex-direction:column; gap:1.5rem; }
-
-        .err-banner { background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; padding:.75rem 1rem; border-radius:.75rem; font-size:.875rem; }
-
-        /* Welcome */
-        .welcome-card { background:linear-gradient(135deg,#1a4a2e,#2d7a4a); border-radius:1.25rem; padding:1.75rem 2rem; display:flex; align-items:center; justify-content:space-between; color:#fff; }
-        .welcome-title { font-size:1.3rem; font-weight:800; margin:0 0 .4rem; }
-        .welcome-sub { font-size:.83rem; color:rgba(255,255,255,.75); margin:0; }
-        .stat-big { display:block; font-size:2.5rem; font-weight:800; line-height:1; }
-        .stat-lbl { display:block; font-size:.75rem; color:rgba(255,255,255,.7); margin-top:.25rem; text-align:center; }
-
-        /* Grid */
-        .content-grid { display:grid; grid-template-columns:2fr 1fr; gap:1.5rem; }
-        @media(max-width:768px){ .content-grid{ grid-template-columns:1fr; } }
-
-        /* Section */
-        .section { background:#fff; border:1.5px solid #e5eaf0; border-radius:1rem; padding:1.25rem; }
-        .section-title { display:flex; align-items:center; gap:.6rem; font-size:.95rem; font-weight:700; color:#0d3d5c; margin:0 0 1.1rem; padding-bottom:.75rem; border-bottom:1.5px solid #f3f4f6; }
-        .section-icon { font-size:1.1rem; }
-
-        /* Orphan cards */
-        .orphans-list { display:flex; flex-direction:column; gap:.75rem; }
-
-        /* Announcements */
-        .ann-list { display:flex; flex-direction:column; gap:.85rem; }
-        .ann-card { display:flex; gap:.75rem; align-items:flex-start; }
-        .ann-dot { width:8px; height:8px; border-radius:50%; background:#2d7a4a; flex-shrink:0; margin-top:.35rem; }
-        .ann-title { font-size:.85rem; font-weight:700; color:#0d3d5c; margin:0 0 .25rem; }
-        .ann-body { font-size:.78rem; color:#6b7280; margin:0 0 .25rem; line-height:1.6; }
-        .ann-date { font-size:.68rem; color:#9ca3af; }
-        .ann-skeleton { height:180px; border-radius:.75rem; background:linear-gradient(90deg,#f3f4f6 25%,#e5e7eb 50%,#f3f4f6 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; }
-
-        .empty { display:flex; flex-direction:column; align-items:center; gap:.5rem; padding:2.5rem 1rem; color:#9ca3af; font-size:.83rem; text-align:center; }
-        .empty span { font-size:2rem; }
-        .empty p { margin:0; }
-        .empty.small { padding:1.5rem 1rem; }
-
-        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-      `}</style>
     </div>
   );
 }
 
-function OrphanCard({ orphan }) {
+// ── Premium Orphan Card ──
+function PremiumOrphanCard({ orphan }) {
   const cfg = STATUS_CONFIG[orphan.status] || STATUS_CONFIG.inactive;
   const age = orphan.date_of_birth
     ? Math.floor((Date.now() - new Date(orphan.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000))
     : null;
+  const initial = orphan.full_name?.charAt(0) || '؟';
 
   return (
-    <Link href={`/sponsor/orphans/${orphan.id}`} style={{ textDecoration:'none' }}>
-      <div className="ocard">
-        <div className="ocard-avatar">
-          {orphan.gender === 'female' ? '👧' : '<User size={18} />'}
-        </div>
-        <div className="ocard-info">
-          <div className="ocard-top">
-            <span className="ocard-name">{orphan.full_name}</span>
-            {orphan.is_gifted && <span className="gifted-tag">⭐ موهوب</span>}
-          </div>
-          <div className="ocard-meta">
-            {age !== null && <span>العمر: {age} سنة</span>}
-            <span>•</span>
-            <span>{orphan.governorate_ar}</span>
-          </div>
-          <div className="ocard-bottom">
-            <span className="status-badge" style={{ color:cfg.color, background:cfg.bg }}>
-              {cfg.label}
-            </span>
-            <span className="ocard-amount">
-              {parseFloat(orphan.monthly_amount || 0).toLocaleString('ar-YE')} ريال/شهر
-            </span>
-          </div>
-        </div>
-        <span className="ocard-arrow">←</span>
-      </div>
+    <Link href={`/sponsor/orphans/${orphan.id}`} className="block outline-none group">
+      <div className="bg-white rounded-3xl p-5 border border-slate-200/60 shadow-[0_4px_15px_-5px_rgba(0,0,0,0.05)] hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.1)] hover:border-emerald-200 transition-all duration-300 hover:-translate-y-1 relative overflow-hidden flex flex-col h-full">
+        
+        {/* Subtle background glow on hover */}
+        <div className="absolute -inset-24 bg-gradient-to-tr from-emerald-50 to-teal-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10 blur-2xl" />
 
-      <style jsx>{`
-        .ocard { display:flex; align-items:center; gap:.85rem; background:#fafafa; border:1.5px solid #e5eaf0; border-radius:.875rem; padding:.85rem 1rem; cursor:pointer; transition:all .15s; }
-        .ocard:hover { background:#f0f7ff; border-color:#93c5fd; transform:translateX(-2px); }
-        .ocard-avatar { font-size:1.8rem; flex-shrink:0; width:44px; height:44px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1.5px solid #e5eaf0; }
-        .ocard-info { flex:1; display:flex; flex-direction:column; gap:.3rem; }
-        .ocard-top { display:flex; align-items:center; gap:.5rem; }
-        .ocard-name { font-size:.9rem; font-weight:700; color:#0d3d5c; }
-        .gifted-tag { background:#FEF3C7; color:#92400E; font-size:.65rem; font-weight:700; padding:.15rem .45rem; border-radius:999px; }
-        .ocard-meta { font-size:.73rem; color:#9ca3af; display:flex; gap:.4rem; }
-        .ocard-bottom { display:flex; align-items:center; gap:.6rem; }
-        .status-badge { font-size:.68rem; font-weight:700; padding:.15rem .5rem; border-radius:999px; }
-        .ocard-amount { font-size:.75rem; font-weight:700; color:#2d7a4a; margin-right:auto; }
-        .ocard-arrow { color:#9ca3af; font-size:.85rem; flex-shrink:0; }
-      `}</style>
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3.5">
+            <div className="relative">
+              <div className="w-12 h-12 bg-gradient-to-br from-slate-100 to-slate-200 border-2 border-white rounded-full flex items-center justify-center text-lg font-black text-slate-600 shadow-sm z-10 relative">
+                {orphan.gender === 'female' ? '👧' : initial}
+              </div>
+              {orphan.is_gifted && (
+                <div className="absolute -bottom-1 -right-1 bg-amber-400 text-amber-900 rounded-full p-0.5 shadow-md border-2 border-white z-20" title="يتيم موهوب">
+                  <Heart size={10} fill="currentColor" />
+                </div>
+              )}
+            </div>
+            <div>
+              <h4 className="text-[0.95rem] font-bold text-slate-800 line-clamp-1">{orphan.full_name}</h4>
+              <div className="flex items-center gap-1.5 text-[0.75rem] font-medium text-slate-500 mt-0.5">
+                {age !== null && <span>العمر: {age}</span>}
+                {age !== null && <span className="w-1 h-1 rounded-full bg-slate-300" />}
+                <span>{orphan.governorate_ar}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
+          <span className={`text-[0.65rem] font-bold px-2.5 py-1 rounded-lg border ${cfg.bg} ${cfg.color} ${cfg.border}`}>
+            {cfg.label}
+          </span>
+          <div className="flex items-center gap-2 group-hover:text-emerald-600 transition-colors">
+            <span className="text-[0.8rem] font-bold text-slate-700 group-hover:text-emerald-600">
+              {parseFloat(orphan.monthly_amount || 0).toLocaleString('ar-YE')} ر.ي
+            </span>
+            <ArrowLeft size={16} className="text-slate-400 group-hover:text-emerald-500 transition-transform group-hover:-translate-x-1" />
+          </div>
+        </div>
+      </div>
     </Link>
   );
 }
 
-function SkeletonCard() {
+// ── Premium Skeleton ──
+function PremiumSkeletonCard() {
   return (
-    <div style={{ background:'#fafafa', border:'1.5px solid #e5eaf0', borderRadius:'.875rem', padding:'.85rem 1rem', display:'flex', gap:'.85rem', alignItems:'center' }}>
-      <div style={{ width:44, height:44, borderRadius:'50%', background:'#e5e7eb' }} />
-      <div style={{ flex:1, display:'flex', flexDirection:'column', gap:'.4rem' }}>
-        <div style={{ height:14, width:'40%', borderRadius:4, background:'#e5e7eb' }} />
-        <div style={{ height:11, width:'60%', borderRadius:4, background:'#f3f4f6' }} />
-        <div style={{ height:11, width:'30%', borderRadius:4, background:'#f3f4f6' }} />
+    <div className="bg-white rounded-3xl p-5 border border-slate-200/60 shadow-sm flex items-center gap-4">
+      <div className="w-12 h-12 rounded-full bg-slate-200 animate-pulse shrink-0" />
+      <div className="flex-1 space-y-2.5">
+        <div className="h-3.5 bg-slate-200 rounded-full w-1/3 animate-pulse" />
+        <div className="h-2.5 bg-slate-100 rounded-full w-1/4 animate-pulse" />
       </div>
+      <div className="h-8 w-20 bg-slate-100 rounded-lg animate-pulse" />
     </div>
   );
 }
