@@ -11,17 +11,19 @@ import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
 import ExportButtons from '../../components/ExportButtons';
 
+const MS_PER_YEAR = 365.25 * 24 * 60 * 60 * 1000;
+
 const STATUS = {
-  under_review:      { label: 'قيد المراجعة',  color: '#92400E', bg: '#FEF3C7' },
-  under_marketing:   { label: 'تحت التسويق',   color: '#1E40AF', bg: '#EFF6FF' },
-  under_sponsorship: { label: 'تحت الكفالة',   color: '#065F46', bg: '#ECFDF5' },
-  rejected:          { label: 'مرفوض',         color: '#991B1B', bg: '#FEF2F2' },
-  inactive:          { label: 'غير نشط',       color: '#6B7280', bg: '#F3F4F6' },
+  under_review:      { label: 'قيد المراجعة',  color: '#92400E', bg: '#FEF3C7', textClass: 'text-amber-800', bgClass: 'bg-amber-50', borderClass: 'border-amber-200' },
+  under_marketing:   { label: 'تحت التسويق',   color: '#1E40AF', bg: '#EFF6FF', textClass: 'text-blue-800', bgClass: 'bg-blue-50', borderClass: 'border-blue-200' },
+  under_sponsorship: { label: 'تحت الكفالة',   color: '#065F46', bg: '#ECFDF5', textClass: 'text-emerald-800', bgClass: 'bg-emerald-50', borderClass: 'border-emerald-200' },
+  rejected:          { label: 'مرفوض',         color: '#991B1B', bg: '#FEF2F2', textClass: 'text-red-800', bgClass: 'bg-red-50', borderClass: 'border-red-200' },
+  inactive:          { label: 'غير نشط',       color: '#6B7280', bg: '#F3F4F6', textClass: 'text-gray-800', bgClass: 'bg-gray-50', borderClass: 'border-gray-200' },
 };
 
 const calcAge = (dob) => {
   if (!dob) return '—';
-  return `${Math.floor((Date.now() - new Date(dob)) / (365.25 * 24 * 60 * 60 * 1000))} سنة`;
+  return `${Math.floor((Date.now() - new Date(dob)) / MS_PER_YEAR)} سنة`;
 };
 
 export default function GovernoratesPage() {
