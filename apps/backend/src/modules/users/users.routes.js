@@ -7,32 +7,10 @@
 const express = require('express');
 const router  = express.Router();
 const bcrypt  = require('bcryptjs');
-const { body, validationResult } = require('express-validator');
 const { authenticate, authorize } = require('../../middleware/rbac');
 const { query } = require('../../config/db');
 const { logAudit } = require('../../utils/auditLog');
-
-// ── Validation rules ───────────────────────────────────────────────────────
-
-const createUserRules = [
-  body('fullName').trim().notEmpty().withMessage('الاسم الكامل مطلوب'),
-  body('email').isEmail().withMessage('البريد الإلكتروني غير صحيح'),
-  body('password')
-    .isLength({ min: 8 }).withMessage('كلمة المرور يجب أن تكون 8 أحرف على الأقل'),
-  body('role')
-    .isIn(['agent', 'supervisor', 'finance', 'gm'])
-    .withMessage('الدور يجب أن يكون: agent, supervisor, finance, gm'),
-  body('phone').optional({ nullable: true }).isString(),
-];
-
-const updateUserRules = [
-  body('fullName').optional().trim().notEmpty().withMessage('الاسم لا يمكن أن يكون فارغاً'),
-  body('phone').optional({ nullable: true }).isString(),
-  body('role')
-    .optional()
-    .isIn(['agent', 'supervisor', 'finance', 'gm'])
-    .withMessage('الدور غير صحيح'),
-];
+const { createUserRules, updateUserRules, validateRequest } = require('./users.validators');
 
 // ── GET /api/users ─────────────────────────────────────────────────────────
 router.get('/', authenticate, authorize('gm'), async (_req, res, next) => {
@@ -47,16 +25,13 @@ router.get('/', authenticate, authorize('gm'), async (_req, res, next) => {
 });
 
 // ── POST /api/users ────────────────────────────────────────────────────────
-router.post('/', authenticate, authorize('gm'), createUserRules, async (req, res, next) => {
+router.post('/', authenticate, authorize('gm'), createUserRules, validateRequest, async (req, res, next) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
-
     const { fullName, email, password, role, phone } = req.body;
 
-    // Check duplicate email
+    // Check duplicate email (email already normalized by validator)
     const { rows: existing } = await query(
-      'SELECT id FROM users WHERE email = $1', [email.toLowerCase().trim()]
+      'SELECT id FROM users WHERE email = $1', [email]
     );
     if (existing.length > 0) {
       return res.status(409).json({ error: 'البريد الإلكتروني مستخدم بالفعل' });
@@ -67,7 +42,7 @@ router.post('/', authenticate, authorize('gm'), createUserRules, async (req, res
       `INSERT INTO users (full_name, email, password_hash, role, phone)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id, full_name, email, role, phone, is_active, created_at`,
-      [fullName.trim(), email.toLowerCase().trim(), passwordHash, role, phone || null]
+      [fullName.trim(), email, passwordHash, role, phone || null]
     );
 
     await logAudit({
@@ -81,11 +56,8 @@ router.post('/', authenticate, authorize('gm'), createUserRules, async (req, res
 });
 
 // ── PATCH /api/users/:id ───────────────────────────────────────────────────
-router.patch('/:id', authenticate, authorize('gm'), updateUserRules, async (req, res, next) => {
+router.patch('/:id', authenticate, authorize('gm'), updateUserRules, validateRequest, async (req, res, next) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
-
     const { fullName, phone, role } = req.body;
     const { rows } = await query(
       `UPDATE users
@@ -161,6 +133,12 @@ router.delete('/:id', authenticate, authorize('gm'), async (req, res, next) => {
       [req.params.id]
     );
     if (!rows[0]) return res.status(404).json({ error: 'المستخدم غير موجود' });
+
+    await logAudit({
+      userId: req.user.id, action: 'user_deleted',
+      entityType: 'user', entityId: req.params.id,
+      oldValue: { fullName: rows[0].full_name },
+    });
 
     return res.json({ message: `تم حذف المستخدم ${rows[0].full_name}` });
   } catch (err) { next(err); }
