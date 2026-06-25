@@ -23,6 +23,7 @@ const ROLE_DASHBOARD = {
   supervisor: '/dashboard/supervisor',
   agent:      '/dashboard',
   finance:    '/dashboard',
+  sponsor:    '/sponsor/portal',
 };
 
 export default function HomePage() {
