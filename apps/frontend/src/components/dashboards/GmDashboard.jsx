@@ -13,35 +13,14 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import SendNotificationModal from '../SendNotificationModal';
 import { Users, CheckCircle, ClipboardList, BookOpen, Banknote, Clock, Megaphone, Star, AlertTriangle } from 'lucide-react';
+import StatusBadge from '@/components/ui/StatusBadge';
 
 const formatDate = (iso) => {
   if (!iso) return '—';
   return new Date(iso).toLocaleDateString('ar-YE', { dateStyle: 'medium' });
 };
 
-const STATUS_MAP = {
-  under_review:      { label: 'قيد المراجعة',  color: '#f59e0b', bg: '#fffbeb' },
-  under_marketing:   { label: 'تحت التسويق',    color: '#3b82f6', bg: '#eff6ff' },
-  under_sponsorship: { label: 'تحت الكفالة',    color: '#10b981', bg: '#ecfdf5' },
-  rejected:          { label: 'مرفوض',           color: '#ef4444', bg: '#fef2f2' },
-  inactive:          { label: 'غير نشط',         color: '#9ca3af', bg: '#f9fafb' },
-};
 
-function StatusBadge({ status }) {
-  const cfg = STATUS_MAP[status] || STATUS_MAP.inactive;
-  return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: '.3rem',
-      padding: '.2rem .65rem', borderRadius: '2rem',
-      fontSize: '.72rem', fontWeight: 700,
-      color: cfg.color, background: cfg.bg,
-      border: `1px solid ${cfg.color}25`, whiteSpace: 'nowrap',
-    }}>
-      <span style={{ width: 5, height: 5, borderRadius: '50%', background: cfg.color, flexShrink: 0 }} />
-      {cfg.label}
-    </span>
-  );
-}
 
 function StatCard({ icon, label, value, sub, color = '#1B5E8C', onClick }) {
   return (

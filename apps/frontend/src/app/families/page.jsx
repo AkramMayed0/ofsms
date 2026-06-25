@@ -7,7 +7,7 @@ import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import { formatDate } from '@/components/disbursements/_constants';
 import StatPill from '@/components/families/StatPill';
-import StatusBadge, { STATUS_MAP } from '@/components/families/StatusBadge';
+import StatusBadge, { STATUS_MAP } from '@/components/ui/StatusBadge';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 
 export default function FamiliesManagementPage() {

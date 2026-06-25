@@ -13,6 +13,7 @@ import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import useAuthStore from '@/store/useAuthStore';
 import PrimaryButton from '@/components/ui/PrimaryButton';
+import StatusBadge from '@/components/ui/StatusBadge';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -28,11 +29,7 @@ const MONTHS_AR = [
   'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
 ];
 
-const STATUS_MAP = {
-  pending: { label: 'قيد المراجعة', color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', dot: 'bg-amber-500' },
-  approved: { label: 'معتمد', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', dot: 'bg-emerald-500' },
-  rejected: { label: 'مرفوض', color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', dot: 'bg-red-500' },
-};
+
 
 const formatDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('ar-YE', { dateStyle: 'medium' }) : '—';
@@ -43,16 +40,6 @@ const calcAge = (dob) => {
 };
 
 // ── Shared UI Components ───────────────────────────────────────────────────────
-
-function StatusBadge({ status }) {
-  const cfg = STATUS_MAP[status] || STATUS_MAP.pending;
-  return (
-    <span className={`inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-[0.72rem] font-bold whitespace-nowrap border ${cfg.color} ${cfg.bg} ${cfg.border}`}>
-      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${cfg.dot}`} />
-      {cfg.label}
-    </span>
-  );
-}
 
 // ── ApproveModal ───────────────────────────────────────────────────────────────
 

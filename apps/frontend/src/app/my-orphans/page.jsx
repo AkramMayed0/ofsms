@@ -17,16 +17,7 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import PrimaryButton from '@/components/ui/PrimaryButton';
-
-// ── Status config ──────────────────────────────────────────────────────────────
-
-const STATUS_MAP = {
-  under_review:       { label: 'قيد المراجعة',   color: '#f59e0b', bg: '#fffbeb', dot: '#f59e0b', textClass: 'text-amber-500', bgClass: 'bg-amber-50', borderClass: 'border-amber-500/20', dotClass: 'bg-amber-500' },
-  under_marketing:    { label: 'تحت التسويق',     color: '#3b82f6', bg: '#eff6ff', dot: '#3b82f6', textClass: 'text-blue-500', bgClass: 'bg-blue-50', borderClass: 'border-blue-500/20', dotClass: 'bg-blue-500' },
-  under_sponsorship:  { label: 'تحت الكفالة',     color: '#10b981', bg: '#ecfdf5', dot: '#10b981', textClass: 'text-emerald-500', bgClass: 'bg-emerald-50', borderClass: 'border-emerald-500/20', dotClass: 'bg-emerald-500' },
-  rejected:           { label: 'مرفوض',            color: '#ef4444', bg: '#fef2f2', dot: '#ef4444', textClass: 'text-red-500', bgClass: 'bg-red-50', borderClass: 'border-red-500/20', dotClass: 'bg-red-500' },
-  inactive:           { label: 'غير نشط',          color: '#9ca3af', bg: '#f9fafb', dot: '#9ca3af', textClass: 'text-gray-400', bgClass: 'bg-gray-50', borderClass: 'border-gray-400/20', dotClass: 'bg-gray-400' },
-};
+import StatusBadge, { STATUS_MAP } from '@/components/ui/StatusBadge';
 
 const GENDER_MAP = { male: 'ذكر', female: 'أنثى' };
 
@@ -55,17 +46,7 @@ const formatDate = (iso) => {
   return new Date(iso).toLocaleDateString('ar-YE', { dateStyle: 'medium' });
 };
 
-// ── StatusBadge ────────────────────────────────────────────────────────────────
 
-function StatusBadge({ status }) {
-  const cfg = STATUS_MAP[status] || STATUS_MAP.inactive;
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${cfg.bgClass} ${cfg.textClass} ${cfg.borderClass} whitespace-nowrap`}>
-      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.dotClass}`} />
-      {cfg.label}
-    </span>
-  );
-}
 
 // ── DetailDrawer ───────────────────────────────────────────────────────────────
 

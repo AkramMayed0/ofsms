@@ -7,7 +7,7 @@ import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import useAuthStore from '@/store/useAuthStore';
 import { MONTHS_AR, formatDate, formatAmount } from '@/components/disbursements/_constants';
-import StatusBadge from '@/components/disbursements/StatusBadge';
+import StatusBadge from '@/components/ui/StatusBadge';
 import ItemsDrawer from '@/components/disbursements/ItemsDrawer';
 
 export default function DisbursementsPage() {

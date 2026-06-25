@@ -23,15 +23,7 @@ import Link from 'next/link';
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
 import useAuthStore from '../../store/useAuthStore';
-
-// ── Constants ─────────────────────────────────────────────────────────────────
-const STATUS_CONFIG = {
-  under_review:      { label: 'قيد المراجعة',  color: '#D97706', bg: '#FEF3C7', dot: '#F59E0B', textClass: 'text-amber-700', bgClass: 'bg-amber-50', borderClass: 'border-amber-200', dotClass: 'bg-amber-500' },
-  under_marketing:   { label: 'تحت التسويق',   color: '#1D4ED8', bg: '#EFF6FF', dot: '#3B82F6', textClass: 'text-blue-700', bgClass: 'bg-blue-50', borderClass: 'border-blue-200', dotClass: 'bg-blue-500' },
-  under_sponsorship: { label: 'تحت الكفالة',   color: '#065F46', bg: '#ECFDF5', dot: '#10B981', textClass: 'text-emerald-700', bgClass: 'bg-emerald-50', borderClass: 'border-emerald-200', dotClass: 'bg-emerald-500' },
-  rejected:          { label: 'مرفوض',         color: '#991B1B', bg: '#FEF2F2', dot: '#EF4444', textClass: 'text-red-700', bgClass: 'bg-red-50', borderClass: 'border-red-200', dotClass: 'bg-red-500' },
-  inactive:          { label: 'غير نشط',       color: '#374151', bg: '#F3F4F6', dot: '#9CA3AF', textClass: 'text-gray-700', bgClass: 'bg-gray-50', borderClass: 'border-gray-200', dotClass: 'bg-gray-400' },
-};
+import StatusBadge from '@/components/ui/StatusBadge';
 
 const GENDER_LABELS = { male: 'ذكر', female: 'أنثى' };
 
@@ -109,16 +101,7 @@ const calcAge = (dob) => {
 const formatDate = (d) =>
   d ? new Date(d).toLocaleDateString('ar-YE', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 
-// ── Status badge ──────────────────────────────────────────────────────────────
-function StatusBadge({ status }) {
-  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.inactive;
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[0.72rem] font-bold border ${cfg.bgClass} ${cfg.textClass} ${cfg.borderClass} whitespace-nowrap`}>
-      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.dotClass}`} />
-      {cfg.label}
-    </span>
-  );
-}
+
 
 // ── Skeleton row ──────────────────────────────────────────────────────────────
 function SkeletonRow() {

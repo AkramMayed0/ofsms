@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { X, CheckCircle2, AlertTriangle, User, Users, DollarSign, Zap, Search } from 'lucide-react';
 
 import api from '@/lib/api';
-import StatusBadge from './StatusBadge';
+import StatusBadge from '@/components/ui/StatusBadge';
 import RejectModal from '@/components/RejectModal';
 import { MONTHS_AR, formatAmount } from './_constants';
 

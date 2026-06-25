@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import { MONTHS_AR, formatDate, formatAmount } from '@/components/disbursements/_constants';
-import StatusBadge from '@/components/disbursements/StatusBadge';
+import StatusBadge from '@/components/ui/StatusBadge';
 
 export default function DisbursementsHistoryPage() {
   const router = useRouter();

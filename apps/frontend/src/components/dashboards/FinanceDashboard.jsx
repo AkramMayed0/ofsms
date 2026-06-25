@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import { Clock, Banknote, CheckCircle, Calendar, Bell, CheckSquare, Folder, Archive, FileText, BarChart3, AlertTriangle } from 'lucide-react';
+import StatusBadge from '@/components/ui/StatusBadge';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -32,15 +33,7 @@ const daysUntil = (iso) => {
   return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
 };
 
-// ── Status config ──────────────────────────────────────────────────────────────
 
-const DISBURSE_STATUS = {
-  draft:                { label: 'مسودة',             color: '#9ca3af', bg: '#f9fafb' },
-  supervisor_approved:  { label: 'اعتمد المشرف',      color: '#f59e0b', bg: '#fffbeb' },
-  finance_approved:     { label: 'اعتمد المالي',      color: '#3b82f6', bg: '#eff6ff' },
-  released:             { label: 'تم الصرف',           color: '#10b981', bg: '#ecfdf5' },
-  rejected:             { label: 'مرفوض',              color: '#ef4444', bg: '#fef2f2' },
-};
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
@@ -72,21 +65,7 @@ function StatCard({ icon, label, value, sub, color = '#1B5E8C', onClick, urgent 
   );
 }
 
-function StatusBadge({ status }) {
-  const cfg = DISBURSE_STATUS[status] || DISBURSE_STATUS.draft;
-  return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: '.3rem',
-      padding: '.2rem .65rem', borderRadius: '2rem',
-      fontSize: '.72rem', fontWeight: 700,
-      color: cfg.color, background: cfg.bg,
-      border: `1px solid ${cfg.color}25`, whiteSpace: 'nowrap',
-    }}>
-      <span style={{ width: 5, height: 5, borderRadius: '50%', background: cfg.color, flexShrink: 0 }} />
-      {cfg.label}
-    </span>
-  );
-}
+
 
 function Skel({ w, h, r }) {
   return <div className="skel" style={{ width: w, height: h, borderRadius: r || 6 }} />;

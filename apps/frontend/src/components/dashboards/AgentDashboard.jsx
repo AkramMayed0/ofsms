@@ -16,16 +16,9 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import { Users, CheckCircle, Clock, BookOpen, ClipboardList, AlertTriangle, Star, Home, Plus, Fingerprint } from 'lucide-react';
+import StatusBadge, { STATUS_MAP } from '@/components/ui/StatusBadge';
 
-// ── Status config ──────────────────────────────────────────────────────────────
-
-const STATUS_MAP = {
-  under_review:      { label: 'قيد المراجعة',  color: '#f59e0b', bg: '#fffbeb' },
-  under_marketing:   { label: 'تحت التسويق',    color: '#3b82f6', bg: '#eff6ff' },
-  under_sponsorship: { label: 'تحت الكفالة',    color: '#10b981', bg: '#ecfdf5' },
-  rejected:          { label: 'مرفوض',           color: '#ef4444', bg: '#fef2f2' },
-  inactive:          { label: 'غير نشط',         color: '#9ca3af', bg: '#f9fafb' },
-};
+const ORPHAN_STATUS_KEYS = ['under_review', 'under_marketing', 'under_sponsorship', 'rejected', 'inactive'];
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -67,22 +60,7 @@ function StatCard({ icon, label, value, sub, color = '#1B5E8C', onClick }) {
   );
 }
 
-function StatusBadge({ status }) {
-  const cfg = STATUS_MAP[status] || STATUS_MAP.inactive;
-  return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: '.3rem',
-      padding: '.2rem .65rem', borderRadius: '2rem',
-      fontSize: '.72rem', fontWeight: 700,
-      color: cfg.color, background: cfg.bg,
-      border: `1px solid ${cfg.color}25`,
-      whiteSpace: 'nowrap',
-    }}>
-      <span style={{ width: 5, height: 5, borderRadius: '50%', background: cfg.color, flexShrink: 0 }} />
-      {cfg.label}
-    </span>
-  );
-}
+
 
 function SectionTitle({ children, action }) {
   return (
@@ -226,7 +204,8 @@ export default function AgentDashboard() {
         <div className="section">
           <SectionTitle>توزيع الحالات</SectionTitle>
           <div className="breakdown-card">
-            {Object.entries(STATUS_MAP).map(([status, cfg]) => {
+            {ORPHAN_STATUS_KEYS.map((status) => {
+              const cfg = STATUS_MAP[status];
               const count = counts[status] || 0;
               const pct = orphans.length ? Math.round((count / orphans.length) * 100) : 0;
               return (
