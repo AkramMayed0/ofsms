@@ -62,7 +62,16 @@
       "Bash(xargs grep -l \"biometric\\\\|receipt\")",
       "Bash(xargs grep -l \"agent_batch_confirmations\")",
       "Bash(Move-Item \"d:\\\\NawaDev\\\\ofsms\\\\apps\\\\frontend\\\\src\\\\components\\\\general\\\\RejectModal.jsx\" \"d:\\\\NawaDev\\\\ofsms\\\\apps\\\\frontend\\\\src\\\\components\\\\RejectModal.jsx\")",
-      "Bash(Remove-Item \"d:\\\\NawaDev\\\\ofsms\\\\apps\\\\frontend\\\\src\\\\components\\\\general\" -Recurse -Force)"
+      "Bash(Remove-Item \"d:\\\\NawaDev\\\\ofsms\\\\apps\\\\frontend\\\\src\\\\components\\\\general\" -Recurse -Force)",
+      "mcp__Claude_in_Chrome__browser_batch",
+      "Bash(npm list *)",
+      "Bash(npm install *)",
+      "Bash(npm root *)",
+      "Bash(NODE_PATH=$\\(npm root -g\\) node build-docx.js)",
+      "Read(//d//**)",
+      "Bash(python \"apps/frontend/../../$\\(find / -maxdepth 0\\)\")",
+      "Bash(python \"C:\\\\Users\\\\youss\\\\AppData\\\\Roaming\\\\Claude\\\\local-agent-mode-sessions\\\\skills-plugin\\\\f4aa2c64-c1a7-4bf3-9982-5596ac76ef98\\\\89ee50c5-5fdd-42db-b79d-726252567205\\\\skills\\\\docx\\\\scripts\\\\office\\\\validate.py\" \"D:\\\\Githubrepo\\\\ofsms\\\\apps\\\\frontend\\\\OFSMS-Pages-Screenshots.docx\")",
+      "Bash(node scratch/check_passwords.js)"
     ]
   }
 }

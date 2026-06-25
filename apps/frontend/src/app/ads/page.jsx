@@ -78,13 +78,13 @@ export default function AdsPage() {
         )}
 
         {loading ? (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
+          <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
             {[1, 2, 3].map((i) => <div key={i} className="h-[220px] rounded-xl bg-slate-200 animate-pulse" />)}
           </div>
         ) : ads.length === 0 ? (
           <div className="py-12 px-4 text-center text-slate-400 bg-white border border-slate-200 rounded-2xl">لا توجد إعلانات حالياً</div>
         ) : (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
+          <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
             {ads.map((ad) => (
               <AdCard
                 key={ad.id}
