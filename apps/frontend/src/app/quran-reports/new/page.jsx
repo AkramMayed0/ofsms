@@ -6,29 +6,38 @@
  * Task:   feature/ui-quran-report-submission
  *
  * Agent submits monthly Quran memorization report for one of their active orphans.
- *
- * Flow:
- *   1. Load agent's orphans that are under_sponsorship (active)
- *   2. Load quran thresholds to show the required juz for the orphan's age
- *   3. Submit → POST /api/quran-reports
- *   4. Show success with link to submit another
- *
- * After submit, orphan appears in supervisor's pending queue.
  */
 
 import { useState, useEffect, useMemo } from 'react';
 import { AlertTriangle, User, CheckCircle2, Info, Check, ClipboardList, Send } from 'lucide-react';
-
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
+
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 
-// ── Arabic month names ─────────────────────────────────────────────────────────
+// ── Constants ──────────────────────────────────────────────────────────────────
+
+const API = {
+  ORPHANS: '/orphans?status=under_sponsorship',
+  QURAN_THRESHOLDS: '/quran-thresholds',
+  QURAN_REPORTS: '/quran-reports',
+};
+
 const MONTHS_AR = [
   '', 'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
   'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
+];
+
+const JUZ_PRESETS = [
+  { value: 0, label: 'صفر', sub: '٠ جزء' },
+  { value: 0.25, label: 'ربع جزء', sub: '٠٫٢٥' },
+  { value: 0.5, label: 'نصف جزء', sub: '٠٫٥' },
+  { value: 1, label: 'جزء', sub: '١ كامل' },
+  { value: 1.5, label: 'جزء ونصف', sub: '١٫٥' },
+  { value: 2, label: 'جزءان', sub: '٢ كاملان' },
+  { value: 3, label: 'ثلاثة', sub: '٣ أجزاء' },
 ];
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -43,22 +52,11 @@ const getThresholdForAge = (age, thresholds) => {
   return thresholds.find((t) => age >= t.age_min && age <= t.age_max) || null;
 };
 
-// ── JuzSlider ─────────────────────────────────────────────────────────────────
-// Visual quick-pick for common juz values
-
-const JUZ_PRESETS = [
-  { value: 0,    label: 'صفر',       sub: '٠ جزء'    },
-  { value: 0.25, label: 'ربع جزء',   sub: '٠٫٢٥'     },
-  { value: 0.5,  label: 'نصف جزء',   sub: '٠٫٥'      },
-  { value: 1,    label: 'جزء',       sub: '١ كامل'   },
-  { value: 1.5,  label: 'جزء ونصف', sub: '١٫٥'      },
-  { value: 2,    label: 'جزءان',     sub: '٢ كاملان' },
-  { value: 3,    label: 'ثلاثة',     sub: '٣ أجزاء'  },
-];
+// ── Shared UI Components ───────────────────────────────────────────────────────
 
 function JuzQuickPick({ value, onChange }) {
   return (
-    <div style={{ display:'flex', gap:'.5rem', flexWrap:'wrap' }}>
+    <div className="flex gap-2 flex-wrap">
       {JUZ_PRESETS.map(({ value: v, label, sub }) => {
         const active = parseFloat(value) === v;
         return (
@@ -66,21 +64,12 @@ function JuzQuickPick({ value, onChange }) {
             key={v}
             type="button"
             onClick={() => onChange(v)}
-            style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
-              minWidth: 72, padding: '.5rem .9rem',
-              border: `1.5px solid ${active ? '#1B5E8C' : '#d1d5db'}`,
-              borderRadius: '.75rem',
-              background: active ? '#1B5E8C' : '#fff',
-              boxShadow: active ? '0 2px 8px rgba(27,94,140,.2)' : '0 1px 3px rgba(0,0,0,.06)',
-              cursor: 'pointer', transition: 'all .15s',
-              fontFamily: "'Cairo','Tajawal',sans-serif",
-            }}
+            className={`flex flex-col items-center gap-[2px] min-w-[72px] py-2 px-3.5 border-[1.5px] rounded-xl font-sans cursor-pointer transition-all ${active ? 'border-[#1B5E8C] bg-[#1B5E8C] shadow-[0_2px_8px_rgba(27,94,140,0.2)]' : 'border-gray-300 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] hover:border-[#1B5E8C]'}`}
           >
-            <span style={{ fontSize: '.82rem', fontWeight: 700, color: active ? '#fff' : '#1f2937', lineHeight: 1.3 }}>
+            <span className={`text-[0.82rem] font-bold leading-tight ${active ? 'text-white' : 'text-gray-800'}`}>
               {label}
             </span>
-            <span style={{ fontSize: '.67rem', fontWeight: 500, color: active ? 'rgba(255,255,255,.75)' : '#9ca3af', direction: 'ltr', lineHeight: 1 }}>
+            <span className={`text-[0.67rem] font-medium leading-none ltr ${active ? 'text-white/75' : 'text-gray-400'}`}>
               {sub}
             </span>
           </button>
@@ -90,24 +79,31 @@ function JuzQuickPick({ value, onChange }) {
   );
 }
 
-// ── ThresholdHint ─────────────────────────────────────────────────────────────
-
 function ThresholdHint({ threshold, juzValue, age }) {
   if (!threshold) return null;
   const juz = parseFloat(juzValue) || 0;
   const meets = juz >= threshold.min_juz_per_month;
+  
+  const statusClass = meets 
+    ? 'bg-emerald-50 border-emerald-300 text-emerald-800' 
+    : juz === 0 
+      ? 'bg-gray-50 border-gray-200 text-gray-700' 
+      : 'bg-amber-50 border-amber-200 text-amber-800';
+  
   return (
-    <div className={`threshold-hint ${meets ? 'hint-ok' : juz === 0 ? 'hint-neutral' : 'hint-warn'}`}>
-      <span className="hint-icon">{meets ? <CheckCircle2 size={16} /> : juz === 0 ? <Info size={16} /> : <AlertTriangle size={18} />}</span>
+    <div className={`flex items-start gap-2.5 py-3 px-4 rounded-xl text-[0.82rem] leading-relaxed border ${statusClass}`}>
+      <span className="text-[1rem] shrink-0 mt-0.5">
+        {meets ? <CheckCircle2 size={16} className="text-emerald-600" /> : juz === 0 ? <Info size={16} className="text-gray-500" /> : <AlertTriangle size={18} className="text-amber-500" />}
+      </span>
       <div>
-        <span className="hint-label">{threshold.label}</span>
-        <span className="hint-body">
+        <span className="font-bold ml-1">{threshold.label}</span>
+        <span>
           {` · الحد الأدنى: `}
           <strong>{threshold.min_juz_per_month} جزء/شهر</strong>
           {juz > 0 && (
             meets
-              ? <span className="hint-ok-text"> — يستوفي الشرط <Check size={16} /></span>
-              : <span className="hint-warn-text"> — لا يستوفي الشرط (قد يُوقف الصرف)</span>
+              ? <span className="text-emerald-600 font-bold"> — يستوفي الشرط <Check size={16} className="inline-block align-text-bottom" /></span>
+              : <span className="text-amber-600 font-bold"> — لا يستوفي الشرط (قد يُوقف الصرف)</span>
           )}
         </span>
       </div>
@@ -120,16 +116,16 @@ function ThresholdHint({ threshold, juzValue, age }) {
 export default function QuranReportSubmissionPage() {
   const router = useRouter();
 
-  const [orphans,     setOrphans]     = useState([]);
-  const [thresholds,  setThresholds]  = useState([]);
+  const [orphans, setOrphans] = useState([]);
+  const [thresholds, setThresholds] = useState([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [submitState, setSubmitState] = useState('idle'); // idle | loading | success | error
-  const [apiError,    setApiError]    = useState('');
-  const [submitted,   setSubmitted]   = useState(null); // last submitted report info
+  const [apiError, setApiError] = useState('');
+  const [submitted, setSubmitted] = useState(null);
 
   const now = new Date();
-  const defaultMonth = now.getMonth() + 1; // 1-12
-  const defaultYear  = now.getFullYear();
+  const defaultMonth = now.getMonth() + 1;
+  const defaultYear = now.getFullYear();
 
   const {
     register,
@@ -140,19 +136,18 @@ export default function QuranReportSubmissionPage() {
     reset,
   } = useForm({
     defaultValues: {
-      orphanId:     '',
-      month:        defaultMonth,
-      year:         defaultYear,
+      orphanId: '',
+      month: defaultMonth,
+      year: defaultYear,
       juzMemorized: '',
     },
   });
 
   const selectedOrphanId = watch('orphanId');
-  const juzValue         = watch('juzMemorized');
-  const selectedMonth    = watch('month');
-  const selectedYear     = watch('year');
+  const juzValue = watch('juzMemorized');
+  const selectedMonth = watch('month');
+  const selectedYear = watch('year');
 
-  // Selected orphan object
   const selectedOrphan = useMemo(
     () => orphans.find((o) => o.id === selectedOrphanId) || null,
     [selectedOrphanId, orphans]
@@ -161,12 +156,11 @@ export default function QuranReportSubmissionPage() {
   const orphanAge = selectedOrphan ? calcAge(selectedOrphan.date_of_birth) : null;
   const threshold = getThresholdForAge(orphanAge, thresholds);
 
-  // Load data
   useEffect(() => {
     setDataLoading(true);
     Promise.all([
-      api.get('/orphans?status=under_sponsorship'),
-      api.get('/quran-thresholds'),
+      api.get(API.ORPHANS),
+      api.get(API.QURAN_THRESHOLDS),
     ])
       .then(([orphanRes, thresholdRes]) => {
         setOrphans(orphanRes.data.orphans || []);
@@ -179,24 +173,23 @@ export default function QuranReportSubmissionPage() {
       .finally(() => setDataLoading(false));
   }, []);
 
-  // Generate year options (current year ± 1)
   const yearOptions = [defaultYear - 1, defaultYear, defaultYear + 1];
 
   const onSubmit = async (data) => {
     setSubmitState('loading');
     setApiError('');
     try {
-      const res = await api.post('/quran-reports', {
-        orphanId:     data.orphanId,
-        month:        parseInt(data.month),
-        year:         parseInt(data.year),
+      await api.post(API.QURAN_REPORTS, {
+        orphanId: data.orphanId,
+        month: parseInt(data.month),
+        year: parseInt(data.year),
         juzMemorized: parseFloat(data.juzMemorized),
       });
       setSubmitted({
         orphanName: selectedOrphan?.full_name,
-        month:      parseInt(data.month),
-        year:       parseInt(data.year),
-        juz:        parseFloat(data.juzMemorized),
+        month: parseInt(data.month),
+        year: parseInt(data.year),
+        juz: parseFloat(data.juzMemorized),
         meetsThreshold: threshold ? parseFloat(data.juzMemorized) >= threshold.min_juz_per_month : null,
       });
       setSubmitState('success');
@@ -213,22 +206,21 @@ export default function QuranReportSubmissionPage() {
     }
   };
 
-  // ── Main form ──────────────────────────────────────────────────────────────
   return (
     <AppShell>
       {/* ── Success modal ──────────────────────────────────────────────── */}
       {submitState === 'success' && submitted && (
-        <div className="modal-overlay" dir="rtl">
-          <div className="modal-card">
-            <div className="modal-ico">
+        <div className="fixed inset-0 z-[1000] bg-black/45 backdrop-blur-[3px] flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease]" dir="rtl">
+          <div className="bg-white rounded-[1.25rem] p-10 px-8 max-w-[460px] w-full text-center shadow-[0_20px_60px_rgba(0,0,0,0.2)] flex flex-col items-center gap-4 animate-[slideUp_0.25s_ease]">
+            <div className="flex items-center justify-center">
               {submitted.meetsThreshold === true
-                ? <CheckCircle2 size={48} color="#10b981" />
+                ? <CheckCircle2 size={48} className="text-emerald-500" />
                 : submitted.meetsThreshold === false
-                  ? <AlertTriangle size={48} color="#f59e0b" />
-                  : <ClipboardList size={48} color="#1B5E8C" />}
+                  ? <AlertTriangle size={48} className="text-amber-500" />
+                  : <ClipboardList size={48} className="text-[#1B5E8C]" />}
             </div>
-            <h2 className="modal-title">تم رفع التقرير بنجاح</h2>
-            <p className="modal-body">
+            <h2 className="text-[1.35rem] font-extrabold text-[#0d3d5c] m-0">تم رفع التقرير بنجاح</h2>
+            <p className="text-[0.88rem] text-gray-700 leading-relaxed m-0">
               تم رفع تقرير حفظ القرآن لـ <strong>{submitted.orphanName}</strong>
               {' '}عن شهر{' '}
               <strong>{MONTHS_AR[submitted.month]} {submitted.year}</strong>
@@ -236,15 +228,15 @@ export default function QuranReportSubmissionPage() {
             </p>
 
             {submitted.meetsThreshold === false && (
-              <div className="modal-warning">
-                <AlertTriangle size={16} />
+              <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl py-3 px-4 text-[0.82rem] text-amber-800 text-right w-full">
+                <AlertTriangle size={16} className="shrink-0 mt-0.5" />
                 <span>مقدار الحفظ أقل من الحد الأدنى المطلوب. قد يقرر المشرف تعليق الصرف هذا الشهر.</span>
               </div>
             )}
 
-            <p className="modal-status" style={{ display:'flex', alignItems:'center', gap:'.4rem', justifyContent:'center' }}><Send size={14} /> التقرير الآن في قائمة انتظار المشرف للمراجعة.</p>
+            <p className="text-[0.82rem] text-gray-500 m-0 flex items-center justify-center gap-1.5"><Send size={14} /> التقرير الآن في قائمة انتظار المشرف للمراجعة.</p>
 
-            <div className="modal-actions">
+            <div className="flex gap-3 justify-center flex-wrap mt-1">
               <PrimaryButton
                 onClick={() => {
                   setSubmitState('idle');
@@ -253,7 +245,7 @@ export default function QuranReportSubmissionPage() {
               >
                 رفع تقرير آخر
               </PrimaryButton>
-              <button className="btn-ghost" onClick={() => router.push('/my-orphans')}>
+              <button className="inline-flex items-center gap-1.5 py-2.5 px-5 bg-transparent text-[#1B5E8C] font-sans text-[0.88rem] font-semibold border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-colors hover:bg-blue-50 hover:border-[#1B5E8C]" onClick={() => router.push('/my-orphans')}>
                 عرض أيتامي
               </button>
             </div>
@@ -261,118 +253,122 @@ export default function QuranReportSubmissionPage() {
         </div>
       )}
 
-      <div className="page" dir="rtl">
+      <div className="max-w-[780px] mx-auto pb-16 font-sans flex flex-col gap-5" dir="rtl">
 
         {/* Page header */}
-        <div className="page-top">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div>
-            <h1 className="page-title">رفع تقرير حفظ القرآن</h1>
-            <p className="page-sub">
+            <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] m-0 mb-1">رفع تقرير حفظ القرآن</h1>
+            <p className="text-[0.85rem] text-gray-500 m-0 max-w-[520px] leading-relaxed">
               أدخل مقدار ما حفظه اليتيم هذا الشهر. سيراجع المشرف التقرير ويقرر الاستحقاق المالي.
             </p>
           </div>
-          <button type="button" className="btn-ghost" onClick={() => router.back()}>
+          <button type="button" className="inline-flex items-center gap-1.5 py-2.5 px-5 bg-transparent text-[#1B5E8C] font-sans text-[0.88rem] font-semibold border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-colors hover:bg-blue-50 hover:border-[#1B5E8C]" onClick={() => router.back()}>
             ← رجوع
           </button>
         </div>
 
         {/* Info banner */}
-        <div className="info-banner">
-          <span>ℹ</span>
-          <p>
+        <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-[0.875rem] py-3.5 px-4 text-[0.82rem] text-blue-700 leading-relaxed">
+          <span className="shrink-0 text-blue-600 mt-0.5">ℹ</span>
+          <p className="m-0">
             التقرير يُرفع مرة واحدة لكل يتيم كل شهر. إذا تم رفع تقرير سابق لنفس الشهر، سيتم استبداله تلقائياً.
           </p>
         </div>
 
         {dataLoading ? (
-          <div className="loading-card">
-            <div className="spin-lg" />
-            <p>جارٍ تحميل قائمة الأيتام…</p>
+          <div className="flex flex-col items-center gap-4 bg-white border border-gray-200 rounded-2xl p-12 text-center text-[0.88rem] text-gray-500">
+            <div className="w-9 h-9 border-4 border-gray-200 border-t-[#1B5E8C] rounded-full animate-[spin_0.7s_linear_infinite]" />
+            <p className="m-0">جارٍ تحميل قائمة الأيتام…</p>
           </div>
         ) : orphans.length === 0 ? (
-          <div className="empty-card">
-            <div><ClipboardList size={48} color="#1B5E8C" /></div>
-            <h3>لا يوجد أيتام نشطون</h3>
-            <p>لديك حالياً لا أيتام مكفولين. لا يمكن رفع تقارير إلا للأيتام تحت الكفالة.</p>
-            <button className="btn-ghost" onClick={() => router.push('/my-orphans')}>
+          <div className="flex flex-col items-center gap-3 bg-white border border-gray-200 rounded-2xl p-12 text-center">
+            <div><ClipboardList size={48} className="text-[#1B5E8C]" /></div>
+            <h3 className="text-[1rem] font-bold text-gray-700 m-0">لا يوجد أيتام نشطون</h3>
+            <p className="text-[0.85rem] text-gray-400 m-0">لديك حالياً لا أيتام مكفولين. لا يمكن رفع تقارير إلا للأيتام تحت الكفالة.</p>
+            <button className="mt-2 inline-flex items-center gap-1.5 py-2.5 px-5 bg-transparent text-[#1B5E8C] font-sans text-[0.88rem] font-semibold border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-colors hover:bg-blue-50 hover:border-[#1B5E8C]" onClick={() => router.push('/my-orphans')}>
               عرض أيتامي
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit(onSubmit)} noValidate className="form-card">
+          <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-5">
 
             {/* ── Step 1: Select orphan ── */}
-            <div className="form-section">
-              <div className="section-head">
-                <div className="section-num">١</div>
+            <div className="bg-white border border-gray-200 rounded-2xl p-7 shadow-[0_1px_4px_rgba(27,94,140,0.05)] flex flex-col gap-4">
+              <div className="flex items-start gap-4 pb-3 border-b-[1.5px] border-gray-50">
+                <div className="w-10 h-10 rounded-[10px] bg-gradient-to-br from-[#1B5E8C] to-[#0d3d5c] text-white flex items-center justify-center text-[1.1rem] font-bold shrink-0 font-sans">١</div>
                 <div>
-                  <h2 className="section-title">اختيار اليتيم</h2>
-                  <p className="section-sub">اختر اليتيم الذي تريد رفع تقرير حفظه</p>
+                  <h2 className="text-[1.05rem] font-bold text-[#0d3d5c] m-0 mb-0.5">اختيار اليتيم</h2>
+                  <p className="text-[0.78rem] text-gray-400 m-0">اختر اليتيم الذي تريد رفع تقرير حفظه</p>
                 </div>
               </div>
 
-              <div className="orphan-grid">
+              <div className="flex flex-col gap-2">
                 {orphans.map((o) => {
                   const age = calcAge(o.date_of_birth);
                   const isSelected = selectedOrphanId === o.id;
                   return (
                     <label
                       key={o.id}
-                      className={`orphan-card ${isSelected ? 'orphan-card-selected' : ''}`}
+                      className={`flex items-center gap-3.5 py-3 px-4 border-[1.5px] rounded-[0.875rem] cursor-pointer transition-all ${isSelected ? 'border-[#1B5E8C] bg-blue-50 shadow-[0_0_0_2px_rgba(27,94,140,0.12)]' : 'border-gray-200 bg-gray-50 hover:border-[#1B5E8C] hover:bg-blue-50/50'}`}
                     >
                       <input
                         type="radio"
                         value={o.id}
                         {...register('orphanId', { required: 'يرجى اختيار اليتيم' })}
-                        style={{ display: 'none' }}
+                        className="hidden"
                       />
-                      <div className="orphan-avatar">
+                      <div className="w-10 h-10 rounded-full shrink-0 bg-gradient-to-br from-[#1B5E8C] to-[#0d3d5c] text-white flex items-center justify-center text-[1rem] font-bold">
                         {o.full_name?.charAt(0) || '؟'}
                       </div>
-                      <div className="orphan-info">
-                        <div className="orphan-name">{o.full_name}</div>
-                        <div className="orphan-meta">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[0.9rem] font-bold text-gray-800">{o.full_name}</div>
+                        <div className="text-[0.75rem] text-gray-500 mt-0.5">
                           {age != null ? `${age} سنة` : ''}{o.governorate_ar ? ` · ${o.governorate_ar}` : ''}
                         </div>
                       </div>
-                      {isSelected && <span className="orphan-check"><Check size={16} /></span>}
+                      {isSelected && <span className="text-[#1B5E8C] font-extrabold text-[1rem] shrink-0"><Check size={16} /></span>}
                     </label>
                   );
                 })}
               </div>
-              {errors.orphanId && <p className="ferr mt">{errors.orphanId.message}</p>}
+              {errors.orphanId && <p className="text-[0.77rem] text-red-600 m-0 mt-1">{errors.orphanId.message}</p>}
             </div>
 
             {/* ── Step 2: Period ── */}
-            <div className="form-section">
-              <div className="section-head">
-                <div className="section-num">٢</div>
+            <div className="bg-white border border-gray-200 rounded-2xl p-7 shadow-[0_1px_4px_rgba(27,94,140,0.05)] flex flex-col gap-4">
+              <div className="flex items-start gap-4 pb-3 border-b-[1.5px] border-gray-50">
+                <div className="w-10 h-10 rounded-[10px] bg-gradient-to-br from-[#1B5E8C] to-[#0d3d5c] text-white flex items-center justify-center text-[1.1rem] font-bold shrink-0 font-sans">٢</div>
                 <div>
-                  <h2 className="section-title">الفترة الزمنية</h2>
-                  <p className="section-sub">الشهر والسنة الذي يغطيهما التقرير</p>
+                  <h2 className="text-[1.05rem] font-bold text-[#0d3d5c] m-0 mb-0.5">الفترة الزمنية</h2>
+                  <p className="text-[0.78rem] text-gray-400 m-0">الشهر والسنة الذي يغطيهما التقرير</p>
                 </div>
               </div>
 
-              <div className="period-row">
-                <div className="fg">
-                  <label className="lbl">الشهر <span className="req">*</span></label>
-                  <select className="inp sel" {...register('month', { required: true })}>
+              <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-4 items-end">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[0.82rem] font-semibold text-gray-700">الشهر <span className="text-red-600">*</span></label>
+                  <select className="w-full p-2.5 bg-gray-50 border-[1.5px] border-gray-300 rounded-xl text-[0.88rem] text-gray-800 font-sans outline-none transition-colors appearance-none cursor-pointer focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10"
+                    style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")", backgroundRepeat: 'no-repeat', backgroundPosition: 'left 0.6rem center' }}
+                    {...register('month', { required: true })}>
                     {MONTHS_AR.slice(1).map((name, i) => (
                       <option key={i + 1} value={i + 1}>{name}</option>
                     ))}
                   </select>
                 </div>
-                <div className="fg">
-                  <label className="lbl">السنة <span className="req">*</span></label>
-                  <select className="inp sel" {...register('year', { required: true })}>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[0.82rem] font-semibold text-gray-700">السنة <span className="text-red-600">*</span></label>
+                  <select className="w-full p-2.5 bg-gray-50 border-[1.5px] border-gray-300 rounded-xl text-[0.88rem] text-gray-800 font-sans outline-none transition-colors appearance-none cursor-pointer focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10"
+                    style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")", backgroundRepeat: 'no-repeat', backgroundPosition: 'left 0.6rem center' }}
+                    {...register('year', { required: true })}>
                     {yearOptions.map((y) => (
                       <option key={y} value={y}>{y}</option>
                     ))}
                   </select>
                 </div>
-                <div className="period-preview">
-                  <span className="period-label">الفترة</span>
-                  <span className="period-value">
+                <div className="flex flex-col gap-1.5 py-2.5 px-4 bg-blue-50 border-[1.5px] border-blue-200 rounded-[0.625rem] whitespace-nowrap col-span-1 sm:col-span-full md:col-auto">
+                  <span className="text-[0.7rem] font-bold text-gray-400 uppercase tracking-wider">الفترة</span>
+                  <span className="text-[0.92rem] font-extrabold text-[#1B5E8C]">
                     {MONTHS_AR[parseInt(selectedMonth)]} {selectedYear}
                   </span>
                 </div>
@@ -380,12 +376,12 @@ export default function QuranReportSubmissionPage() {
             </div>
 
             {/* ── Step 3: Juz memorized ── */}
-            <div className="form-section">
-              <div className="section-head">
-                <div className="section-num">٣</div>
+            <div className="bg-white border border-gray-200 rounded-2xl p-7 shadow-[0_1px_4px_rgba(27,94,140,0.05)] flex flex-col gap-4">
+              <div className="flex items-start gap-4 pb-3 border-b-[1.5px] border-gray-50">
+                <div className="w-10 h-10 rounded-[10px] bg-gradient-to-br from-[#1B5E8C] to-[#0d3d5c] text-white flex items-center justify-center text-[1.1rem] font-bold shrink-0 font-sans">٣</div>
                 <div>
-                  <h2 className="section-title">مقدار الحفظ</h2>
-                  <p className="section-sub">أدخل عدد الأجزاء المحفوظة هذا الشهر (يمكن كسر)</p>
+                  <h2 className="text-[1.05rem] font-bold text-[#0d3d5c] m-0 mb-0.5">مقدار الحفظ</h2>
+                  <p className="text-[0.78rem] text-gray-400 m-0">أدخل عدد الأجزاء المحفوظة هذا الشهر (يمكن كسر)</p>
                 </div>
               </div>
 
@@ -399,8 +395,8 @@ export default function QuranReportSubmissionPage() {
               )}
 
               {/* Quick pick */}
-              <div className="fg">
-                <label className="lbl">اختر سريعاً أو أدخل يدوياً</label>
+              <div className="flex flex-col gap-1.5 mt-2">
+                <label className="text-[0.82rem] font-semibold text-gray-700">اختر سريعاً أو أدخل يدوياً</label>
                 <JuzQuickPick
                   value={juzValue}
                   onChange={(v) => setValue('juzMemorized', v, { shouldValidate: true })}
@@ -408,18 +404,18 @@ export default function QuranReportSubmissionPage() {
               </div>
 
               {/* Manual input */}
-              <div className="fg">
-                <label className="lbl" htmlFor="juzMemorized">
-                  عدد الأجزاء <span className="req">*</span>
+              <div className="flex flex-col gap-1.5 mt-2">
+                <label className="text-[0.82rem] font-semibold text-gray-700" htmlFor="juzMemorized">
+                  عدد الأجزاء <span className="text-red-600">*</span>
                 </label>
-                <div className="juz-input-wrap">
+                <div className="flex items-center gap-3">
                   <input
                     id="juzMemorized"
                     type="number"
                     min="0"
                     max="30"
                     step="0.25"
-                    className={`inp juz-inp ${errors.juzMemorized ? 'inp-err' : ''}`}
+                    className={`flex-1 p-2.5 bg-gray-50 border-[1.5px] rounded-xl text-[1.1rem] font-bold text-gray-800 font-sans outline-none text-center ltr transition-colors focus:bg-white ${errors.juzMemorized ? 'border-red-600 focus:ring-[3px] focus:ring-red-600/10' : 'border-gray-300 focus:border-[#1B5E8C] focus:ring-[3px] focus:ring-[#1B5E8C]/10'}`}
                     placeholder="مثال: 1 أو 0.5"
                     {...register('juzMemorized', {
                       required: 'مقدار الحفظ مطلوب',
@@ -427,32 +423,30 @@ export default function QuranReportSubmissionPage() {
                       max: { value: 30, message: 'القيمة كبيرة جداً' },
                     })}
                   />
-                  <span className="juz-unit">جزء / شهر</span>
+                  <span className="text-[0.83rem] font-semibold text-gray-500 whitespace-nowrap">جزء / شهر</span>
                 </div>
-                {errors.juzMemorized && <p className="ferr">{errors.juzMemorized.message}</p>}
+                {errors.juzMemorized && <p className="text-[0.77rem] text-red-600 m-0">{errors.juzMemorized.message}</p>}
               </div>
 
               {/* Visual progress bar if threshold exists */}
               {threshold && juzValue !== '' && parseFloat(juzValue) >= 0 && (
-                <div className="progress-section">
-                  <div className="progress-labels">
+                <div className="flex flex-col gap-1.5 mt-2">
+                  <div className="flex justify-between text-[0.75rem] text-gray-500">
                     <span>٠</span>
-                    <span style={{ color: '#1B5E8C', fontWeight: 700 }}>
+                    <span className="text-[#1B5E8C] font-bold">
                       الهدف: {threshold.min_juz_per_month}
                     </span>
                   </div>
-                  <div className="progress-track">
+                  <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden relative">
                     <div
-                      className="progress-fill"
+                      className="h-full rounded-full transition-all duration-400 ease-in-out"
                       style={{
                         width: `${Math.min((parseFloat(juzValue) / threshold.min_juz_per_month) * 100, 100)}%`,
                         background: parseFloat(juzValue) >= threshold.min_juz_per_month ? '#10b981' : '#f59e0b',
                       }}
                     />
-                    {/* Target marker */}
-                    <div className="progress-target" />
                   </div>
-                  <p className="progress-pct">
+                  <p className="text-[0.75rem] text-gray-500 font-semibold m-0">
                     {Math.round((parseFloat(juzValue) / threshold.min_juz_per_month) * 100)}% من الهدف
                   </p>
                 </div>
@@ -461,24 +455,24 @@ export default function QuranReportSubmissionPage() {
 
             {/* ── Summary ── */}
             {selectedOrphan && juzValue !== '' && (
-              <div className="summary-card">
-                <div className="summary-title" style={{ display:'flex', alignItems:'center', gap:'.4rem' }}><ClipboardList size={16} /> ملخص التقرير</div>
-                <div className="summary-grid">
-                  <div className="summary-item">
-                    <span className="summary-lbl">اليتيم</span>
-                    <span className="summary-val">{selectedOrphan.full_name}</span>
+              <div className="bg-blue-50/50 border-[1.5px] border-blue-100 rounded-2xl p-5 px-6">
+                <div className="text-[0.85rem] font-bold text-[#1B5E8C] mb-3.5 flex items-center gap-1.5"><ClipboardList size={16} /> ملخص التقرير</div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[0.72rem] font-semibold text-gray-400">اليتيم</span>
+                    <span className="text-[0.88rem] font-bold text-gray-800">{selectedOrphan.full_name}</span>
                   </div>
-                  <div className="summary-item">
-                    <span className="summary-lbl">الفترة</span>
-                    <span className="summary-val">{MONTHS_AR[parseInt(selectedMonth)]} {selectedYear}</span>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[0.72rem] font-semibold text-gray-400">الفترة</span>
+                    <span className="text-[0.88rem] font-bold text-gray-800">{MONTHS_AR[parseInt(selectedMonth)]} {selectedYear}</span>
                   </div>
-                  <div className="summary-item">
-                    <span className="summary-lbl">الحفظ</span>
-                    <span className="summary-val">{juzValue} جزء</span>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[0.72rem] font-semibold text-gray-400">الحفظ</span>
+                    <span className="text-[0.88rem] font-bold text-gray-800">{juzValue} جزء</span>
                   </div>
-                  <div className="summary-item">
-                    <span className="summary-lbl">الحالة</span>
-                    <span className="summary-val" style={{ color: '#f59e0b' }}>قيد المراجعة</span>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[0.72rem] font-semibold text-gray-400">الحالة</span>
+                    <span className="text-[0.88rem] font-bold text-amber-500">قيد المراجعة</span>
                   </div>
                 </div>
               </div>
@@ -486,18 +480,18 @@ export default function QuranReportSubmissionPage() {
 
             {/* API error */}
             {submitState === 'error' && apiError && (
-              <div className="err-banner">
-                <span><AlertTriangle size={18} /></span>
+              <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4">
+                <span className="text-[1.2rem] shrink-0 text-red-600"><AlertTriangle size={18} /></span>
                 <div>
-                  <strong>فشل الإرسال</strong>
-                  <p>{apiError}</p>
+                  <strong className="block text-[0.9rem] text-red-700 mb-1">فشل الإرسال</strong>
+                  <p className="text-[0.83rem] text-red-600 m-0">{apiError}</p>
                 </div>
               </div>
             )}
 
             {/* Submit */}
-            <div className="submit-row">
-              <button type="button" className="btn-ghost" onClick={() => router.back()}>
+            <div className="flex justify-end items-center gap-4 p-5 px-6 bg-white border border-gray-200 rounded-2xl">
+              <button type="button" className="inline-flex items-center gap-1.5 py-2.5 px-5 bg-transparent text-[#1B5E8C] font-sans text-[0.88rem] font-semibold border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-colors hover:bg-blue-50 hover:border-[#1B5E8C]" onClick={() => router.back()}>
                 إلغاء
               </button>
               <PrimaryButton
@@ -505,219 +499,13 @@ export default function QuranReportSubmissionPage() {
                 disabled={submitState === 'loading'}
               >
                 {submitState === 'loading'
-                  ? <><span className="spin" /> جارٍ الإرسال…</>
+                  ? <><span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-[spin_0.7s_linear_infinite] shrink-0" /> جارٍ الإرسال…</>
                   : 'إرسال التقرير ←'}
               </PrimaryButton>
             </div>
           </form>
         )}
       </div>
-
-      <style jsx>{`
-        /* ── Page ─────────────────────────────────────────────────────── */
-        .page { max-width: 780px; margin: 0 auto; padding-bottom: 4rem; font-family: 'Cairo', 'Tajawal', sans-serif; }
-        .page-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
-        .page-title { font-size: 1.6rem; font-weight: 800; color: #0d3d5c; margin: 0 0 .25rem; }
-        .page-sub { font-size: .85rem; color: #6b7a8d; margin: 0; max-width: 520px; line-height: 1.7; }
-
-        /* ── Info banner ──────────────────────────────────────────────── */
-        .info-banner {
-          display: flex; align-items: flex-start; gap: .75rem;
-          background: #eff6ff; border: 1px solid #bfdbfe; border-radius: .875rem;
-          padding: .9rem 1.1rem; margin-bottom: 1.25rem;
-          font-size: .82rem; color: #1d4ed8; line-height: 1.7;
-        }
-        .info-banner span { flex-shrink: 0; }
-        .info-banner p { margin: 0; }
-
-        /* ── Loading / Empty ──────────────────────────────────────────── */
-        .loading-card {
-          display: flex; flex-direction: column; align-items: center; gap: 1rem;
-          background: #fff; border: 1px solid #e5eaf0; border-radius: 1rem;
-          padding: 3rem; text-align: center; color: #6b7a8d; font-size: .88rem;
-        }
-        .spin-lg {
-          width: 36px; height: 36px;
-          border: 3px solid #e5eaf0; border-top-color: #1B5E8C;
-          border-radius: 50%; animation: spin .7s linear infinite;
-        }
-        .empty-card {
-          display: flex; flex-direction: column; align-items: center; gap: .75rem;
-          background: #fff; border: 1px solid #e5eaf0; border-radius: 1rem;
-          padding: 3rem; text-align: center;
-        }
-        .empty-card h3 { font-size: 1rem; font-weight: 700; color: #374151; margin: 0; }
-        .empty-card p { font-size: .85rem; color: #9ca3af; margin: 0; }
-
-        /* ── Form card ────────────────────────────────────────────────── */
-        .form-card { display: flex; flex-direction: column; gap: 1.25rem; }
-
-        /* ── Section ──────────────────────────────────────────────────── */
-        .form-section {
-          background: #fff; border: 1px solid #e5eaf0; border-radius: 1rem;
-          padding: 1.75rem; box-shadow: 0 1px 4px rgba(27,94,140,.05);
-          display: flex; flex-direction: column; gap: 1rem;
-        }
-        .section-head { display: flex; align-items: flex-start; gap: 1rem; padding-bottom: .85rem; border-bottom: 1.5px solid #f0f4f8; }
-        .section-num {
-          width: 38px; height: 38px; border-radius: 10px;
-          background: linear-gradient(135deg, #1B5E8C, #0d3d5c);
-          color: #fff; display: flex; align-items: center; justify-content: center;
-          font-size: 1.1rem; font-weight: 700; flex-shrink: 0; font-family: 'Cairo', sans-serif;
-        }
-        .section-title { font-size: 1.05rem; font-weight: 700; color: #0d3d5c; margin: 0 0 .15rem; }
-        .section-sub { font-size: .78rem; color: #94a3b8; margin: 0; }
-
-        /* ── Orphan grid ──────────────────────────────────────────────── */
-        .orphan-grid { display: flex; flex-direction: column; gap: .5rem; }
-        .orphan-card {
-          display: flex; align-items: center; gap: .85rem;
-          padding: .85rem 1rem; border: 1.5px solid #e5eaf0; border-radius: .875rem;
-          cursor: pointer; transition: all .15s; background: #fafafa;
-        }
-        .orphan-card:hover { border-color: #1B5E8C; background: #f0f7ff; }
-        .orphan-card-selected { border-color: #1B5E8C; background: #eff6ff; box-shadow: 0 0 0 2px rgba(27,94,140,.12); }
-        .orphan-avatar {
-          width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
-          background: linear-gradient(135deg, #1B5E8C, #0d3d5c);
-          color: #fff; display: flex; align-items: center; justify-content: center;
-          font-size: 1rem; font-weight: 700;
-        }
-        .orphan-info { flex: 1; min-width: 0; }
-        .orphan-name { font-size: .9rem; font-weight: 700; color: #1f2937; }
-        .orphan-meta { font-size: .75rem; color: #6b7a8d; margin-top: .1rem; }
-        .orphan-check { color: #1B5E8C; font-weight: 800; font-size: 1rem; flex-shrink: 0; }
-
-        /* ── Period row ───────────────────────────────────────────────── */
-        .period-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; align-items: end; }
-        .period-preview {
-          display: flex; flex-direction: column; gap: .3rem;
-          padding: .65rem 1rem; background: #f0f7ff; border: 1.5px solid #bfdbfe;
-          border-radius: .625rem; white-space: nowrap;
-        }
-        .period-label { font-size: .7rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; }
-        .period-value { font-size: .92rem; font-weight: 800; color: #1B5E8C; }
-
-        /* ── Threshold hint ───────────────────────────────────────────── */
-        .threshold-hint {
-          display: flex; align-items: flex-start; gap: .65rem;
-          padding: .85rem 1rem; border-radius: .75rem; font-size: .82rem; line-height: 1.6;
-        }
-        .hint-neutral { background: #f8fafc; border: 1px solid #e5eaf0; color: #374151; }
-        .hint-ok      { background: #ecfdf5; border: 1px solid #6ee7b7; color: #065f46; }
-        .hint-warn    { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
-        .hint-icon { font-size: 1rem; flex-shrink: 0; }
-        .hint-label { font-weight: 700; margin-left: .3rem; }
-        .hint-ok-text   { color: #059669; font-weight: 700; }
-        .hint-warn-text { color: #d97706; font-weight: 700; }
-
-        /* juz-presets: now fully inline-styled */
-
-        /* ── Juz input ────────────────────────────────────────────────── */
-        .juz-input-wrap { display: flex; align-items: center; gap: .75rem; }
-        .juz-inp { flex: 1; direction: ltr; text-align: center; font-size: 1.1rem; font-weight: 700; }
-        .juz-unit { font-size: .83rem; font-weight: 600; color: #6b7a8d; white-space: nowrap; }
-
-        /* ── Progress ─────────────────────────────────────────────────── */
-        .progress-section { display: flex; flex-direction: column; gap: .35rem; }
-        .progress-labels { display: flex; justify-content: space-between; font-size: .75rem; color: #6b7a8d; }
-        .progress-track { height: 10px; background: #f0f4f8; border-radius: 5px; overflow: hidden; position: relative; }
-        .progress-fill { height: 100%; border-radius: 5px; transition: width .4s ease, background .3s; }
-        .progress-pct { font-size: .75rem; color: #6b7a8d; font-weight: 600; }
-
-        /* ── Summary ──────────────────────────────────────────────────── */
-        .summary-card { background: #f8fbff; border: 1.5px solid #dbeafe; border-radius: 1rem; padding: 1.25rem 1.5rem; }
-        .summary-title { font-size: .85rem; font-weight: 700; color: #1B5E8C; margin-bottom: .85rem; }
-        .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem; }
-        .summary-item { display: flex; flex-direction: column; gap: .2rem; }
-        .summary-lbl { font-size: .72rem; font-weight: 600; color: #94a3b8; }
-        .summary-val { font-size: .88rem; font-weight: 700; color: #1f2937; }
-
-        /* ── Error ────────────────────────────────────────────────────── */
-        .err-banner {
-          display: flex; align-items: flex-start; gap: .75rem;
-          background: #fef2f2; border: 1px solid #fecaca; border-radius: .75rem;
-          padding: 1rem 1.25rem;
-        }
-        .err-banner span { font-size: 1.2rem; flex-shrink: 0; }
-        .err-banner strong { display: block; font-size: .9rem; color: #b91c1c; margin-bottom: .2rem; }
-        .err-banner p { font-size: .83rem; color: #dc2626; margin: 0; }
-
-        /* ── Submit row ───────────────────────────────────────────────── */
-        .submit-row {
-          display: flex; justify-content: flex-end; align-items: center; gap: 1rem;
-          padding: 1rem 1.25rem; background: #fff; border: 1px solid #e5eaf0;
-          border-radius: 1rem;
-        }
-
-        /* ── Success modal ────────────────────────────────────────────── */
-        .modal-overlay {
-          position: fixed; inset: 0; z-index: 1000;
-          background: rgba(0,0,0,.45); backdrop-filter: blur(3px);
-          display: flex; align-items: center; justify-content: center;
-          padding: 1rem;
-          animation: fadeIn .2s ease;
-        }
-        @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-        .modal-card {
-          background: #fff; border-radius: 1.25rem; padding: 2.5rem 2rem;
-          max-width: 460px; width: 100%; text-align: center;
-          box-shadow: 0 20px 60px rgba(0,0,0,.2);
-          display: flex; flex-direction: column; align-items: center; gap: 1rem;
-          animation: slideUp .25s ease;
-        }
-        @keyframes slideUp { from { transform: translateY(24px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
-        .modal-ico { display: flex; align-items: center; justify-content: center; }
-        .modal-title { font-size: 1.35rem; font-weight: 800; color: #0d3d5c; margin: 0; }
-        .modal-body { font-size: .88rem; color: #374151; line-height: 1.8; margin: 0; }
-        .modal-warning {
-          display: flex; align-items: flex-start; gap: .5rem;
-          background: #fffbeb; border: 1px solid #fde68a; border-radius: .75rem;
-          padding: .75rem 1rem; font-size: .82rem; color: #92400e; text-align: right; width: 100%;
-        }
-        .modal-status { font-size: .82rem; color: #6b7a8d; margin: 0; }
-        .modal-actions { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; margin-top: .25rem; }
-
-        /* ── Field helpers ────────────────────────────────────────────── */
-        .fg { display: flex; flex-direction: column; gap: .35rem; }
-        .lbl { font-size: .82rem; font-weight: 600; color: #374151; }
-        .req { color: #dc2626; }
-        .inp {
-          width: 100%; border: 1.5px solid #d1d5db; border-radius: .625rem;
-          padding: .65rem .9rem; font-size: .88rem; font-family: 'Cairo', sans-serif;
-          color: #1f2937; background: #fafafa; outline: none; box-sizing: border-box;
-          transition: border-color .15s, box-shadow .15s;
-        }
-        .inp:focus { border-color: #1B5E8C; background: #fff; box-shadow: 0 0 0 3px rgba(27,94,140,.1); }
-        .inp-err { border-color: #dc2626 !important; }
-        .sel { appearance: none; cursor: pointer; }
-        .ferr { font-size: .77rem; color: #dc2626; margin: 0; }
-        .ferr.mt { margin-top: .25rem; }
-
-        .btn-ghost {
-          display: inline-flex; align-items: center; gap: .4rem;
-          padding: .7rem 1.25rem; background: none; color: #1B5E8C;
-          font-family: 'Cairo', sans-serif; font-size: .88rem; font-weight: 600;
-          border: 1.5px solid #dde5f0; border-radius: .75rem; cursor: pointer; transition: all .15s;
-        }
-        .btn-ghost:hover { background: #f0f7ff; border-color: #1B5E8C; }
-
-        /* ── Spinner ──────────────────────────────────────────────────── */
-        .spin {
-          display: inline-block; width: 15px; height: 15px;
-          border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
-          border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* ── Responsive ───────────────────────────────────────────────── */
-        @media (max-width: 640px) {
-          .page-top { flex-direction: column; }
-          .period-row { grid-template-columns: 1fr 1fr; }
-          .period-preview { grid-column: 1 / -1; }
-          .summary-grid { grid-template-columns: 1fr 1fr; }
-        }
-      `}</style>
     </AppShell>
   );
 }
