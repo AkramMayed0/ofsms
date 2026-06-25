@@ -33,6 +33,7 @@ module.exports = {
         gvFade:   { from: { opacity: '0', transform: 'translateX(12px)' }, to: { opacity: '1', transform: 'none' } },
         gvSlideIn: { from: { opacity: '0', transform: 'translateY(10px)' }, to: { opacity: '1', transform: 'none' } },
         gvBar:    { from: { width: '0' } },
+        slideInLeft: { 'from': { transform: 'translateX(-100%)' }, 'to': { transform: 'translateX(0)' } },
       },
       animation: {
         shimmer: 'shimmer 1.4s infinite',
@@ -42,6 +43,7 @@ module.exports = {
         gvFade:  'gvFade 0.25s ease',
         gvSlideIn: 'gvSlideIn 0.2s ease',
         gvBar:   'gvBar 0.6s ease both',
+        slideInLeft: 'slideInLeft 0.25s ease',
       },
     },
   },
