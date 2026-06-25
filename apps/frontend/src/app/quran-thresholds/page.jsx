@@ -16,7 +16,7 @@ import { AlertTriangle, X, Info, Check, Plus } from 'lucide-react';
 
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
-import PrimaryButton from '@/components/ui/PrimaryButton';
+import Button from '@/components/ui/Button';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -327,11 +327,11 @@ function AddThresholdModal({ onClose, onSaved }) {
           >
             إلغاء
           </button>
-          <PrimaryButton disabled={!isValid || saving} onClick={handleSubmit}>
+          <Button variant="primary" disabled={!isValid || saving} onClick={handleSubmit}>
             {saving
               ? <span className="inline-block w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-[spin_0.6s_linear_infinite]" />
               : 'إضافة'}
-          </PrimaryButton>
+          </Button>
         </div>
       </div>
     </>

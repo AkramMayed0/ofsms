@@ -15,7 +15,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
-import PrimaryButton from '@/components/ui/PrimaryButton';
+import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 import { 
   Search, 
@@ -125,9 +125,9 @@ function CreateSponsorModal({ onClose, onCreated }) {
 
           <div className="flex gap-3 justify-end pt-2 border-t border-[#f0f4f8] mt-2">
             <button type="button" className="inline-flex items-center px-5 py-2.5 bg-transparent text-primary font-sans text-[0.88rem] font-semibold border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-all duration-150 hover:bg-[#f0f7ff]" onClick={onClose}>إلغاء</button>
-            <PrimaryButton type="submit" disabled={saving}>
+            <Button variant="primary" type="submit" disabled={saving}>
               {saving ? <><Spinner size="sm" />جارٍ الحفظ…</> : 'إضافة الكافل'}
-            </PrimaryButton>
+            </Button>
           </div>
         </form>
       </div>
@@ -185,10 +185,10 @@ export default function SponsorManagementPage() {
               {loading ? 'جارٍ التحميل…' : `${sponsors.length} كافل · ${totalActive} كفالة نشطة`}
             </p>
           </div>
-          <PrimaryButton onClick={() => setShowCreate(true)}>
+          <Button variant="primary" onClick={() => setShowCreate(true)}>
             <Plus size={18} />
             <span>إضافة كافل جديد</span>
-          </PrimaryButton>
+          </Button>
         </div>
 
         {/* Search */}
@@ -242,9 +242,9 @@ export default function SponsorManagementPage() {
               {search ? 'جرّب تغيير معايير البحث' : 'ابدأ بإضافة كافل جديد'}
             </p>
             {!search && (
-              <PrimaryButton className="mt-2" onClick={() => setShowCreate(true)}>
+              <Button variant="primary" className="mt-2" onClick={() => setShowCreate(true)}>
                 <Plus size={18} /> إضافة كافل جديد
-              </PrimaryButton>
+              </Button>
             )}
           </div>
         )}

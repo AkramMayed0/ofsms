@@ -15,7 +15,7 @@ import { useForm } from 'react-hook-form';
 
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
-import PrimaryButton from '@/components/ui/PrimaryButton';
+import Button from '@/components/ui/Button';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -237,17 +237,18 @@ export default function QuranReportSubmissionPage() {
             <p className="text-[0.82rem] text-gray-500 m-0 flex items-center justify-center gap-1.5"><Send size={14} /> التقرير الآن في قائمة انتظار المشرف للمراجعة.</p>
 
             <div className="flex gap-3 justify-center flex-wrap mt-1">
-              <PrimaryButton
+              <Button
+                variant="primary"
                 onClick={() => {
                   setSubmitState('idle');
                   reset({ orphanId: '', month: defaultMonth, year: defaultYear, juzMemorized: '' });
                 }}
               >
                 رفع تقرير آخر
-              </PrimaryButton>
-              <button className="inline-flex items-center gap-1.5 py-2.5 px-5 bg-transparent text-[#1B5E8C] font-sans text-[0.88rem] font-semibold border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-colors hover:bg-blue-50 hover:border-[#1B5E8C]" onClick={() => router.push('/my-orphans')}>
+              </Button>
+              <Button variant="outline" onClick={() => router.push('/my-orphans')}>
                 عرض أيتامي
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -263,9 +264,9 @@ export default function QuranReportSubmissionPage() {
               أدخل مقدار ما حفظه اليتيم هذا الشهر. سيراجع المشرف التقرير ويقرر الاستحقاق المالي.
             </p>
           </div>
-          <button type="button" className="inline-flex items-center gap-1.5 py-2.5 px-5 bg-transparent text-[#1B5E8C] font-sans text-[0.88rem] font-semibold border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-colors hover:bg-blue-50 hover:border-[#1B5E8C]" onClick={() => router.back()}>
+          <Button variant="outline" type="button" onClick={() => router.back()}>
             ← رجوع
-          </button>
+          </Button>
         </div>
 
         {/* Info banner */}
@@ -286,9 +287,9 @@ export default function QuranReportSubmissionPage() {
             <div><ClipboardList size={48} className="text-[#1B5E8C]" /></div>
             <h3 className="text-[1rem] font-bold text-gray-700 m-0">لا يوجد أيتام نشطون</h3>
             <p className="text-[0.85rem] text-gray-400 m-0">لديك حالياً لا أيتام مكفولين. لا يمكن رفع تقارير إلا للأيتام تحت الكفالة.</p>
-            <button className="mt-2 inline-flex items-center gap-1.5 py-2.5 px-5 bg-transparent text-[#1B5E8C] font-sans text-[0.88rem] font-semibold border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-colors hover:bg-blue-50 hover:border-[#1B5E8C]" onClick={() => router.push('/my-orphans')}>
+            <Button variant="outline" className="mt-2" onClick={() => router.push('/my-orphans')}>
               عرض أيتامي
-            </button>
+            </Button>
           </div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-5">
@@ -491,17 +492,18 @@ export default function QuranReportSubmissionPage() {
 
             {/* Submit */}
             <div className="flex justify-end items-center gap-4 p-5 px-6 bg-white border border-gray-200 rounded-2xl">
-              <button type="button" className="inline-flex items-center gap-1.5 py-2.5 px-5 bg-transparent text-[#1B5E8C] font-sans text-[0.88rem] font-semibold border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-colors hover:bg-blue-50 hover:border-[#1B5E8C]" onClick={() => router.back()}>
+              <Button variant="outline" type="button" onClick={() => router.back()}>
                 إلغاء
-              </button>
-              <PrimaryButton
+              </Button>
+              <Button
+                variant="primary"
                 type="submit"
                 disabled={submitState === 'loading'}
               >
                 {submitState === 'loading'
                   ? <><span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-[spin_0.7s_linear_infinite] shrink-0" /> جارٍ الإرسال…</>
                   : 'إرسال التقرير ←'}
-              </PrimaryButton>
+              </Button>
             </div>
           </form>
         )}

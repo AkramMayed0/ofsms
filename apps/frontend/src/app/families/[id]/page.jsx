@@ -18,7 +18,7 @@ import AppShell from '../../../components/AppShell';
 import useAuthStore from '../../../store/useAuthStore';
 import TransferSponsorModal from '../../../components/TransferSponsorModal';
 import ShareAdModal from '../../../components/ShareAdModal';
-import PrimaryButton from '@/components/ui/PrimaryButton';
+import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 
 // ── Status config ─────────────────────────────────────────────────────────────
@@ -296,7 +296,7 @@ function AssignSponsorModal({ isOpen, onClose, onSuccess, familyName, familyId, 
 
         {/* Footer */}
         <div className="flex justify-end gap-3 py-4 px-6 border-t border-t-[#f0f4f8]">
-          <button className="inline-flex items-center gap-1.5 py-2.5 px-5 bg-transparent text-gray-500 font-sans text-[0.88rem] font-semibold border-[1.5px] border-[#e5eaf0] rounded-xl cursor-pointer hover:bg-gray-50" onClick={onClose} disabled={loading}>إلغاء</button>
+          <Button variant="secondary" onClick={onClose} disabled={loading}>إلغاء</Button>
           <button className={`inline-flex items-center gap-1.5 py-2.5 px-6 font-sans text-[0.9rem] font-bold border-none rounded-xl transition-all ${loading ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-gradient-to-br from-emerald-600 to-emerald-700 text-white cursor-pointer shadow-[0_2px_8px_rgba(5,150,105,0.3)] hover:-translate-y-[1px] hover:shadow-[0_4px_14px_rgba(5,150,105,0.4)]'}`} onClick={handleSubmit} disabled={loading}>
             {loading ? (
               <><Spinner size="sm" />جارٍ التعيين…</>
@@ -418,7 +418,7 @@ export default function FamilyDetailPage() {
               )}
 
               {isGM && family && (
-                <button className="inline-flex items-center gap-1.5 py-2.5 px-4 bg-white text-red-600 border-[1.5px] border-red-300 rounded-xl font-sans text-[0.875rem] font-bold cursor-pointer transition-all hover:bg-red-50 hover:border-red-600 hover:-translate-y-[1px]" onClick={() => setDeleteConfirm(true)}>
+                <Button variant="danger-outline" onClick={() => setDeleteConfirm(true)}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="3 6 5 6 21 6"/>
                     <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
@@ -426,7 +426,7 @@ export default function FamilyDetailPage() {
                     <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
                   </svg>
                   حذف
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -584,9 +584,9 @@ export default function FamilyDetailPage() {
                       <Handshake size={40} strokeWidth={1.5} />
                       <p className="text-[0.82rem] m-0">لا يوجد كافل مُعيَّن بعد</p>
                       {family.status === 'under_marketing' && isGM && (
-                        <PrimaryButton onClick={() => setAssignOpen(true)}>
+                        <Button variant="primary" onClick={() => setAssignOpen(true)}>
                           تعيين كافل
-                        </PrimaryButton>
+                        </Button>
                       )}
                     </div>
                   )}
@@ -625,9 +625,9 @@ export default function FamilyDetailPage() {
               <button className="py-2.5 px-6 bg-transparent border-[1.5px] border-gray-300 rounded-xl text-gray-700 font-sans text-[0.875rem] font-semibold cursor-pointer transition-all hover:border-gray-400 hover:bg-gray-50" onClick={() => setDeleteConfirm(false)} disabled={deleting}>
                 إلغاء
               </button>
-              <button className="py-2.5 px-6 bg-gradient-to-br from-red-600 to-red-700 text-white border-none rounded-xl font-sans text-[0.875rem] font-bold cursor-pointer shadow-[0_2px_8px_rgba(220,38,38,0.3)] transition-all disabled:opacity-65 disabled:cursor-not-allowed hover:not(:disabled):-translate-y-[1px] hover:not(:disabled):shadow-[0_4px_14px_rgba(220,38,38,0.4)]" onClick={handleDelete} disabled={deleting}>
+              <Button variant="danger" onClick={handleDelete} disabled={deleting}>
                 {deleting ? 'جارٍ الحذف…' : 'نعم، احذف'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

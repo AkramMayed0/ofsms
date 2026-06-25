@@ -11,6 +11,8 @@ const VARIANTS = {
     'inline-flex items-center gap-1.5 px-5 py-2.5 bg-transparent text-[#1B5E8C] text-sm font-semibold rounded-xl border-[1.5px] border-[#dde5f0] cursor-pointer hover:bg-[#f0f7ff] hover:border-[#1B5E8C] disabled:opacity-60 disabled:cursor-not-allowed active:scale-[.99] transition-all duration-150',
   ghost:
     'inline-flex items-center gap-1.5 px-5 py-2.5 bg-transparent text-primary text-sm font-medium rounded-xl border-none cursor-pointer hover:bg-primary/10 disabled:opacity-60 disabled:cursor-not-allowed active:scale-95 transition-all duration-150',
+  'danger-outline':
+    'inline-flex items-center gap-1.5 px-5 py-2.5 bg-white text-red-600 text-sm font-bold rounded-xl border-[1.5px] border-red-300 cursor-pointer hover:bg-red-50 hover:border-red-600 hover:-translate-y-px disabled:opacity-60 disabled:cursor-not-allowed active:scale-[.99] transition-all duration-150',
   danger:
     'inline-flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-br from-red-600 to-red-700 text-white text-sm font-bold rounded-xl border-none cursor-pointer shadow-[0_2px_8px_rgba(220,38,38,.3)] hover:from-red-500 hover:to-red-600 hover:-translate-y-px active:scale-[.99] disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0 transition-all duration-150 whitespace-nowrap',
 };
@@ -20,6 +22,7 @@ const SPINNER_VARIANT = {
   secondary: 'primary',
   outline: 'primary',
   ghost: 'primary',
+  'danger-outline': 'white',
   danger: 'white',
 };
 

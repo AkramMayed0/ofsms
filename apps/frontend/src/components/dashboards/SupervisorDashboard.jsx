@@ -9,7 +9,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-import PrimaryButton from '@/components/ui/PrimaryButton';
+import Button from '@/components/ui/Button';
 import { ClipboardList, BookOpen, Banknote, Calendar, Siren, AlarmClock, CheckCircle, AlertTriangle, FileText, Fingerprint } from 'lucide-react';
 
 const formatDate = (iso) => {
@@ -111,9 +111,9 @@ export default function SupervisorDashboard() {
           <h1 className="greeting-title">لوحة تحكم المشرف</h1>
           <p className="greeting-sub">{today}</p>
         </div>
-        <PrimaryButton onClick={() => router.push('/registrations')} className="max-sm:w-full max-sm:justify-center">
+        <Button variant="primary" onClick={() => router.push('/registrations')} className="max-sm:w-full max-sm:justify-center">
           مراجعة الطلبات ←
-        </PrimaryButton>
+        </Button>
       </div>
 
       {error && <div className="err-banner"><AlertTriangle size={15}/> {error}</div>}

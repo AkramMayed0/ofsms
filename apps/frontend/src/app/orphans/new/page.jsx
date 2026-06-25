@@ -17,7 +17,6 @@ import { useForm } from 'react-hook-form';
 import { Upload, FileText, Image, X, Plus, AlertCircle, CheckCircle2, File, AlertTriangle, Check } from 'lucide-react';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
-import PrimaryButton from '@/components/ui/PrimaryButton';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 
@@ -523,15 +522,16 @@ export default function OrphanRegistrationPage() {
               تم إرسال بيانات اليتيم إلى قائمة انتظار مراجعة المشرف.
             </p>
             <div className="flex gap-3 justify-center flex-wrap">
-              <PrimaryButton onClick={handleRegisterAnother}>
+              <Button variant="primary" onClick={handleRegisterAnother}>
                 تسجيل يتيم آخر
-              </PrimaryButton>
-              <button
-                className="px-6 py-3 bg-transparent text-[#1B5E8C] border-[1.5px] border-[#dde5f0] rounded-xl font-cairo text-[0.9rem] font-semibold cursor-pointer transition-all duration-150 hover:bg-[#f0f7ff] hover:border-[#1B5E8C]"
+              </Button>
+              <Button
+                variant="outline"
+                className="py-3"
                 onClick={() => router.push('/my-orphans')}
               >
                 عرض أيتامي
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1686,18 +1686,19 @@ export default function OrphanRegistrationPage() {
             )}
 
             {currentPage < 5 ? (
-              <PrimaryButton type="button" onClick={handleNext}>
+              <Button variant="primary" type="button" onClick={handleNext}>
                 التالي ←
-              </PrimaryButton>
+              </Button>
             ) : (
-              <PrimaryButton
+              <Button
+                variant="primary"
                 type="submit"
                 disabled={submitState === 'loading'}
               >
                 {submitState === 'loading'
                   ? <><Spinner size="sm" /> جارٍ الإرسال…</>
                   : 'إرسال للمراجعة ←'}
-              </PrimaryButton>
+              </Button>
             )}
           </div>
 

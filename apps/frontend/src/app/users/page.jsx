@@ -21,7 +21,7 @@ import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import useAuthStore from '@/store/useAuthStore';
-import PrimaryButton from '@/components/ui/PrimaryButton';
+import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -482,9 +482,9 @@ export default function UserManagementPage() {
             >
               <RefreshCw size={18} strokeWidth={2.5} />
             </button>
-            <PrimaryButton onClick={() => setShowAdd(true)} className="h-11">
+            <Button variant="primary" onClick={() => setShowAdd(true)} className="h-11">
               <Plus size={18} strokeWidth={2.5} /> إضافة مستخدم
-            </PrimaryButton>
+            </Button>
           </div>
         </div>
 
@@ -590,9 +590,9 @@ export default function UserManagementPage() {
             </div>
             {!search && roleFilter === 'all' && (
               <div className="mt-2">
-                <PrimaryButton onClick={() => setShowAdd(true)}>
+                <Button variant="primary" onClick={() => setShowAdd(true)}>
                   <Plus size={18} strokeWidth={2.5} /> إضافة مستخدم
-                </PrimaryButton>
+                </Button>
               </div>
             )}
           </div>

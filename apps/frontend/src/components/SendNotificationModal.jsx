@@ -14,7 +14,6 @@
 
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
-import PrimaryButton from '@/components/ui/PrimaryButton';
 import Button from '@/components/ui/Button';
 import { UserRound, Eye, Banknote, Building2, Megaphone, Users, Search, CheckCircle, AlertTriangle, X, User, Check } from 'lucide-react';
 
@@ -135,7 +134,7 @@ export default function SendNotificationModal({ onClose, onSent }) {
               )}
             </p>
             <div className="success-msg-preview">{message}</div>
-            <PrimaryButton onClick={onClose}>إغلاق</PrimaryButton>
+            <Button variant="primary" onClick={onClose}>إغلاق</Button>
           </div>
         </div>
         <Styles />
@@ -341,7 +340,8 @@ export default function SendNotificationModal({ onClose, onSent }) {
           <Button variant="secondary" onClick={onClose} disabled={sending}>
             إلغاء
           </Button>
-          <PrimaryButton
+          <Button
+            variant="primary"
             onClick={handleSend}
             disabled={!canSend || sending}
           >
@@ -360,7 +360,7 @@ export default function SendNotificationModal({ onClose, onSent }) {
                 )}
               </>
             )}
-          </PrimaryButton>
+          </Button>
         </div>
       </div>
 

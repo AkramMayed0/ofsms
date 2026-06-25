@@ -5,7 +5,7 @@ import { Megaphone, Plus, Pencil, Trash2, RefreshCw, AlertTriangle, X, Eye, EyeO
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
 import useAuthStore from '../../store/useAuthStore';
-import PrimaryButton from '@/components/ui/PrimaryButton';
+import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -321,9 +321,9 @@ export default function AnnouncementsPage() {
           </div>
           <div className="flex items-center gap-2">
             {isGM && (
-              <PrimaryButton onClick={openCreate}>
+              <Button variant="primary" onClick={openCreate}>
                 <Plus size={16} /> إعلان جديد
-              </PrimaryButton>
+              </Button>
             )}
             <button
               className="flex items-center justify-center w-9 h-9 border-[1.5px] border-gray-200 rounded-[0.625rem] bg-white text-gray-500 cursor-pointer transition-all duration-150 hover:border-primary hover:text-primary hover:bg-blue-50"

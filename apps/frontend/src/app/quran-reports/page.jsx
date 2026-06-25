@@ -12,7 +12,7 @@ import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import useAuthStore from '@/store/useAuthStore';
-import PrimaryButton from '@/components/ui/PrimaryButton';
+import Button from '@/components/ui/Button';
 import StatusBadge from '@/components/ui/StatusBadge';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -283,10 +283,10 @@ function SubmitReportModal({ orphans, onClose, onSubmitted }) {
           </div>
 
           <div className="flex justify-end gap-3 border-t border-gray-100 pt-4 mt-2">
-            <button type="button" className="inline-flex items-center py-2.5 px-5 bg-transparent text-[#1B5E8C] font-semibold text-[0.88rem] border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-colors hover:bg-blue-50" onClick={onClose}>إلغاء</button>
-            <PrimaryButton type="submit" disabled={saving}>
+            <Button variant="outline" type="button" onClick={onClose}>إلغاء</Button>
+            <Button variant="primary" type="submit" disabled={saving}>
               {saving ? 'جارٍ الرفع…' : 'رفع التقرير'}
-            </PrimaryButton>
+            </Button>
           </div>
         </form>
       </div>
@@ -375,9 +375,9 @@ export default function QuranReportsPage() {
             </p>
           </div>
           {role === 'agent' && (
-            <PrimaryButton onClick={() => setShowSubmit(true)}>
+            <Button variant="primary" onClick={() => setShowSubmit(true)}>
               + رفع تقرير جديد
-            </PrimaryButton>
+            </Button>
           )}
         </div>
 
@@ -475,9 +475,9 @@ export default function QuranReportsPage() {
             </p>
             {role === 'agent' && filterStatus === 'all' && (
               <div className="mt-3">
-                <PrimaryButton onClick={() => setShowSubmit(true)}>
+                <Button variant="primary" onClick={() => setShowSubmit(true)}>
                   <BookOpen size={16} /> رفع أول تقرير
-                </PrimaryButton>
+                </Button>
               </div>
             )}
           </div>

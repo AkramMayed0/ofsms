@@ -7,7 +7,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
-import PrimaryButton from '@/components/ui/PrimaryButton';
+import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 
 function SectionHeader({ number, title, subtitle }) {
@@ -119,9 +119,9 @@ export default function FamilyEditPage() {
               تم تحديث بيانات الأسرة وإرسالها إلى قائمة انتظار المراجعة.
             </p>
             <div className="flex gap-3 justify-center flex-wrap">
-              <PrimaryButton onClick={() => router.push('/dashboard')}>
+              <Button variant="primary" onClick={() => router.push('/dashboard')}>
                 العودة للوحة القيادة
-              </PrimaryButton>
+              </Button>
             </div>
           </div>
         </div>
@@ -138,9 +138,9 @@ export default function FamilyEditPage() {
             <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] m-0 mb-1">تعديل بيانات الأسرة</h1>
             <p className="text-[0.85rem] text-slate-500 m-0">قم بتعديل البيانات وإعادة الإرسال للمراجعة</p>
           </div>
-          <button type="button" className="inline-flex items-center gap-1.5 py-2.5 px-5 bg-transparent text-[#1B5E8C] font-sans text-[0.88rem] font-semibold border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-all hover:bg-blue-50 hover:border-[#1B5E8C]" onClick={() => router.back()}>
+          <Button variant="outline" type="button" onClick={() => router.back()}>
             ← رجوع
-          </button>
+          </Button>
         </div>
 
         {loading ? (
@@ -283,17 +283,18 @@ export default function FamilyEditPage() {
             )}
 
             <div className="flex justify-end items-center gap-4 py-4 px-5 bg-white border border-[#e5eaf0] rounded-2xl">
-              <button type="button" className="inline-flex items-center gap-1.5 py-2.5 px-5 bg-transparent text-[#1B5E8C] font-sans text-[0.88rem] font-semibold border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-all hover:bg-blue-50 hover:border-[#1B5E8C]" onClick={() => router.back()}>
+              <Button variant="outline" type="button" onClick={() => router.back()}>
                 إلغاء
-              </button>
-              <PrimaryButton
+              </Button>
+              <Button
+                variant="primary"
                 type="submit"
                 disabled={submitState === 'loading'}
               >
                 {submitState === 'loading'
                   ? <><Spinner size="sm" />جارٍ الحفظ…</>
                   : 'حفظ وإعادة إرسال ←'}
-              </PrimaryButton>
+              </Button>
             </div>
 
           </form>

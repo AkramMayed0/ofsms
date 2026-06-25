@@ -8,7 +8,7 @@ import AppShell from '@/components/AppShell';
 import { formatDate } from '@/components/disbursements/_constants';
 import StatPill from '@/components/families/StatPill';
 import StatusBadge, { STATUS_MAP } from '@/components/ui/StatusBadge';
-import PrimaryButton from '@/components/ui/PrimaryButton';
+import Button from '@/components/ui/Button';
 
 export default function FamiliesManagementPage() {
   const router = useRouter();
@@ -78,9 +78,9 @@ export default function FamiliesManagementPage() {
                 : `${families.length} أسرة · ${counts.under_review || 0} قيد المراجعة · ${totalMembers} فرد مكفول`}
             </p>
           </div>
-          <PrimaryButton onClick={() => router.push('/families/new')}>
+          <Button variant="primary" onClick={() => router.push('/families/new')}>
             + تسجيل أسرة جديدة
-          </PrimaryButton>
+          </Button>
         </div>
 
         {!loading && (
@@ -196,9 +196,9 @@ export default function FamiliesManagementPage() {
                 : 'جرّب تغيير معايير البحث أو الفلتر'}
             </p>
             {families.length === 0 && (
-              <PrimaryButton onClick={() => router.push('/families/new')}>
+              <Button variant="primary" onClick={() => router.push('/families/new')}>
                 + تسجيل أسرة جديدة
-              </PrimaryButton>
+              </Button>
             )}
           </div>
         )}

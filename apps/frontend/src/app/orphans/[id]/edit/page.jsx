@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import useAuthStore from '@/store/useAuthStore';
-import PrimaryButton from '@/components/ui/PrimaryButton';
+import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -353,9 +353,9 @@ export default function OrphanEditPage() {
               {isGM ? 'قم بتعديل البيانات — الحالة لن تتغير' : 'قم بتعديل البيانات وإعادة الإرسال للمراجعة'}
             </p>
           </div>
-          <button type="button" className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-transparent text-[#1B5E8C] font-cairo font-semibold text-sm border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-all duration-150 hover:bg-[#f0f7ff] hover:border-[#1B5E8C]" onClick={() => router.back()}>
+          <Button variant="outline" type="button" onClick={() => router.back()}>
             ← رجوع
-          </button>
+          </Button>
         </div>
 
         {loading ? (
@@ -1248,17 +1248,18 @@ export default function OrphanEditPage() {
 
             {/* Submit row */}
             <div className="flex justify-end items-center gap-4 p-4 px-5 bg-white border border-[#e5eaf0] rounded-2xl">
-              <button type="button" className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-transparent text-[#1B5E8C] font-cairo font-semibold text-sm border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-all duration-150 hover:bg-[#f0f7ff] hover:border-[#1B5E8C]" onClick={() => router.back()}>
+              <Button variant="outline" type="button" onClick={() => router.back()}>
                 إلغاء
-              </button>
-              <PrimaryButton
+              </Button>
+              <Button
+                variant="primary"
                 type="submit"
                 disabled={submitState === 'loading'}
               >
                 {submitState === 'loading'
                   ? <><Spinner size="sm" />جارٍ الحفظ…</>
                   : isGM ? 'حفظ التعديلات ←' : 'حفظ وإعادة إرسال ←'}
-              </PrimaryButton>
+              </Button>
             </div>
 
           </form>

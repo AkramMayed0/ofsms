@@ -14,7 +14,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-import PrimaryButton from '@/components/ui/PrimaryButton';
+import Button from '@/components/ui/Button';
 import { Users, CheckCircle, Clock, BookOpen, ClipboardList, AlertTriangle, Star, Home, Plus, Fingerprint } from 'lucide-react';
 import StatusBadge, { STATUS_MAP } from '@/components/ui/StatusBadge';
 
@@ -119,9 +119,9 @@ export default function AgentDashboard() {
           <h1 className="greeting-title">مرحباً</h1>
           <p className="greeting-sub">{today}</p>
         </div>
-        <PrimaryButton onClick={() => router.push('/orphans/new')} className="max-sm:w-full max-sm:justify-center">
+        <Button variant="primary" onClick={() => router.push('/orphans/new')} className="max-sm:w-full max-sm:justify-center">
           + تسجيل يتيم جديد
-        </PrimaryButton>
+        </Button>
       </div>
 
       {error && <div className="err-banner"><AlertTriangle size={15}/> {error}</div>}
@@ -249,7 +249,7 @@ export default function AgentDashboard() {
           <div className="empty">
             <Users size={40} color="#9ca3af"/>
             <p style={{ fontSize: '.9rem', color: '#6b7a8d', margin: 0, fontWeight: 600 }}>لا يوجد أيتام مسجّلون بعد</p>
-            <PrimaryButton onClick={() => router.push('/orphans/new')} className="max-sm:w-full max-sm:justify-center">+ تسجيل يتيم جديد</PrimaryButton>
+            <Button variant="primary" onClick={() => router.push('/orphans/new')} className="max-sm:w-full max-sm:justify-center">+ تسجيل يتيم جديد</Button>
           </div>
         ) : (
           <div className="table-wrap">
