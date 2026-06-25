@@ -4,11 +4,11 @@
  */
 
 const { Router } = require('express');
-const { body } = require('express-validator');
 const multer = require('multer');
 const { authenticate, authorize } = require('../../middleware/rbac');
 const { scanUploadedFiles } = require('../../middleware/fileScanner');
 const controller = require('./families.controller');
+const validators = require('./families.validators');
 
 const router = Router();
 
@@ -30,30 +30,6 @@ const uploadFields = upload.fields([
   { name: 'headOfFamilyId', maxCount: 1 },
   { name: 'additionalDocs', maxCount: 5 },
 ]);
-
-// ── Validation rules ──────────────────────────────────────────
-const createFamilyRules = [
-  body('familyName')
-    .trim()
-    .notEmpty().withMessage('اسم الأسرة مطلوب')
-    .isLength({ min: 3 }).withMessage('الاسم يجب أن يكون 3 أحرف على الأقل'),
-  body('headOfFamily')
-    .trim()
-    .notEmpty().withMessage('اسم رب الأسرة مطلوب'),
-  body('memberCount')
-    .isInt({ min: 1 }).withMessage('عدد الأفراد يجب أن يكون 1 على الأقل'),
-  body('governorateId')
-    .isInt({ min: 1 }).withMessage('المحافظة مطلوبة'),
-];
-
-const updateStatusRules = [
-  body('status')
-    .isIn(['under_marketing', 'under_sponsorship', 'rejected', 'inactive'])
-    .withMessage('حالة غير صحيحة'),
-  body('notes')
-    .if(body('status').equals('rejected'))
-    .notEmpty().withMessage('ملاحظات الرفض مطلوبة'),
-];
 
 // ── Routes ────────────────────────────────────────────────────
 
@@ -80,7 +56,7 @@ router.post(
   authorize('agent'),
   uploadFields,
   scanUploadedFiles,
-  createFamilyRules,
+  validators.createFamilyRules,
   controller.createFamily
 );
 
@@ -97,6 +73,7 @@ router.patch(
   '/:id',
   authenticate,
   authorize('agent', 'supervisor', 'gm'),
+  validators.updateFamilyRules,
   controller.updateFamily
 );
 
@@ -105,7 +82,7 @@ router.patch(
   '/:id/status',
   authenticate,
   authorize('supervisor', 'gm'),
-  updateStatusRules,
+  validators.updateStatusRules,
   controller.updateFamilyStatus
 );
 
