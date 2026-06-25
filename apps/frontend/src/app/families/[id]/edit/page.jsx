@@ -11,11 +11,11 @@ import PrimaryButton from '@/components/ui/PrimaryButton';
 
 function SectionHeader({ number, title, subtitle }) {
   return (
-    <div className="sec-head">
-      <div className="sec-num">{number}</div>
+    <div className="flex items-start gap-4 mb-6 pb-4 border-b-[1.5px] border-[#f0f4f8]">
+      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#1B5E8C] to-[#0d3d5c] text-white flex items-center justify-center text-[1.1rem] font-bold shrink-0 font-sans">{number}</div>
       <div>
-        <h2 className="sec-title">{title}</h2>
-        {subtitle && <p className="sec-sub">{subtitle}</p>}
+        <h2 className="text-[1.05rem] font-bold text-[#0d3d5c] m-0 mb-0.5">{title}</h2>
+        {subtitle && <p className="text-[0.78rem] text-slate-400 m-0">{subtitle}</p>}
       </div>
     </div>
   );
@@ -26,11 +26,11 @@ function CounterInput({ value, onChange, min = 1, max = 30, error }) {
   const inc = () => onChange(Math.min(max, value + 1));
 
   return (
-    <div className={`counter-wrap ${error ? 'counter-err' : ''}`}>
-      <button type="button" className="counter-btn" onClick={dec} disabled={value <= min}>−</button>
-      <span className="counter-val">{value}</span>
-      <button type="button" className="counter-btn" onClick={inc} disabled={value >= max}>+</button>
-      <span className="counter-label">فرد</span>
+    <div className={`inline-flex items-center gap-3 bg-slate-50 border-[1.5px] ${error ? 'border-red-600' : 'border-[#e5eaf0]'} rounded-xl py-2 px-4`}>
+      <button type="button" className="w-8 h-8 rounded-full border-[1.5px] border-gray-300 bg-white text-[1.1rem] font-bold text-gray-700 cursor-pointer flex items-center justify-center transition-all leading-none hover:not(:disabled):border-[#1B5E8C] hover:not(:disabled):text-[#1B5E8C] hover:not(:disabled):bg-blue-50 disabled:opacity-35 disabled:cursor-not-allowed" onClick={dec} disabled={value <= min}>−</button>
+      <span className="min-w-[2.5rem] text-center text-[1.75rem] font-extrabold text-[#0d3d5c] font-sans">{value}</span>
+      <button type="button" className="w-8 h-8 rounded-full border-[1.5px] border-gray-300 bg-white text-[1.1rem] font-bold text-gray-700 cursor-pointer flex items-center justify-center transition-all leading-none hover:not(:disabled):border-[#1B5E8C] hover:not(:disabled):text-[#1B5E8C] hover:not(:disabled):bg-blue-50 disabled:opacity-35 disabled:cursor-not-allowed" onClick={inc} disabled={value >= max}>+</button>
+      <span className="text-[0.82rem] text-slate-500 font-semibold">فرد</span>
     </div>
   );
 }
@@ -110,14 +110,14 @@ export default function FamilyEditPage() {
   if (submitState === 'success') {
     return (
       <AppShell>
-        <div className="success-wrap">
-          <div className="success-card">
-            <div className="success-ico"><CheckCircle2 size={16} /></div>
-            <h2 className="success-title">تمت إعادة الإرسال بنجاح</h2>
-            <p className="success-body">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center max-w-[420px] bg-white rounded-3xl py-12 px-8 border border-[#e5eaf0] shadow-sm">
+            <div className="text-[3rem] mb-4 text-emerald-500 flex justify-center"><CheckCircle2 size={48} strokeWidth={1.5} /></div>
+            <h2 className="text-[1.4rem] font-extrabold text-[#0d3d5c] m-0 mb-3">تمت إعادة الإرسال بنجاح</h2>
+            <p className="text-[0.88rem] text-[#6b7a8d] leading-relaxed m-0 mb-8">
               تم تحديث بيانات الأسرة وإرسالها إلى قائمة انتظار المراجعة.
             </p>
-            <div className="success-actions">
+            <div className="flex gap-3 justify-center flex-wrap">
               <PrimaryButton onClick={() => router.push('/dashboard')}>
                 العودة للوحة القيادة
               </PrimaryButton>
@@ -130,50 +130,50 @@ export default function FamilyEditPage() {
 
   return (
     <AppShell>
-      <div className="page" dir="rtl">
+      <div className="max-w-[760px] mx-auto pb-16 font-sans" dir="rtl">
 
-        <div className="page-top">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
           <div>
-            <h1 className="page-title">تعديل بيانات الأسرة</h1>
-            <p className="page-sub">قم بتعديل البيانات وإعادة الإرسال للمراجعة</p>
+            <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] m-0 mb-1">تعديل بيانات الأسرة</h1>
+            <p className="text-[0.85rem] text-slate-500 m-0">قم بتعديل البيانات وإعادة الإرسال للمراجعة</p>
           </div>
-          <button type="button" className="btn-ghost" onClick={() => router.back()}>
+          <button type="button" className="inline-flex items-center gap-1.5 py-2.5 px-5 bg-transparent text-[#1B5E8C] font-sans text-[0.88rem] font-semibold border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-all hover:bg-blue-50 hover:border-[#1B5E8C]" onClick={() => router.back()}>
             ← رجوع
           </button>
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '3rem' }}>جارٍ التحميل…</div>
+          <div className="text-center py-12 text-slate-500">جارٍ التحميل…</div>
         ) : (
-          <form onSubmit={handleSubmit(onSubmit)} noValidate className="form">
+          <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-5">
 
-            <div className="card">
+            <div className="bg-white border border-[#e5eaf0] rounded-2xl p-7 shadow-sm">
               <SectionHeader number="١" title="بيانات الأسرة" subtitle="المعلومات الأساسية للأسرة المحتاجة" />
-              <div className="grid">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-                <div className="fg span2">
-                  <label className="lbl" htmlFor="familyName">
-                    اسم الأسرة <span className="req">*</span>
+                <div className="flex flex-col gap-1 sm:col-span-2">
+                  <label className="text-[0.82rem] font-semibold text-gray-700" htmlFor="familyName">
+                    اسم الأسرة <span className="text-red-600 mr-[2px]">*</span>
                   </label>
                   <input
                     id="familyName"
-                    className={`inp ${errors.familyName ? 'inp-err' : ''}`}
+                    className={`w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-all focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10 ${errors.familyName ? '!border-red-600 !bg-red-50 focus:!ring-red-600/10' : ''}`}
                     placeholder="مثال: أسرة محمد أحمد"
                     {...register('familyName', {
                       required: 'اسم الأسرة مطلوب',
                       minLength: { value: 3, message: 'الاسم يجب أن يكون 3 أحرف على الأقل' },
                     })}
                   />
-                  {errors.familyName && <p className="ferr">{errors.familyName.message}</p>}
+                  {errors.familyName && <p className="text-red-600 text-xs mt-1">{errors.familyName.message}</p>}
                 </div>
 
-                <div className="fg span2">
-                  <label className="lbl" htmlFor="governorateId">
-                    المحافظة <span className="req">*</span>
+                <div className="flex flex-col gap-1 sm:col-span-2">
+                  <label className="text-[0.82rem] font-semibold text-gray-700" htmlFor="governorateId">
+                    المحافظة <span className="text-red-600 mr-[2px]">*</span>
                   </label>
                   <select
                     id="governorateId"
-                    className={`inp sel ${errors.governorateId ? 'inp-err' : ''}`}
+                    className={`w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-all focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10 appearance-none cursor-pointer ${errors.governorateId ? '!border-red-600 !bg-red-50 focus:!ring-red-600/10' : ''}`}
                     disabled={govLoading}
                     {...register('governorateId', { required: 'المحافظة مطلوبة' })}
                   >
@@ -182,56 +182,56 @@ export default function FamilyEditPage() {
                       <option key={g.id} value={g.id}>{g.name_ar}</option>
                     ))}
                   </select>
-                  {errors.governorateId && <p className="ferr">{errors.governorateId.message}</p>}
+                  {errors.governorateId && <p className="text-red-600 text-xs mt-1">{errors.governorateId.message}</p>}
                 </div>
 
               </div>
             </div>
 
-            <div className="card">
+            <div className="bg-white border border-[#e5eaf0] rounded-2xl p-7 shadow-sm">
               <SectionHeader number="٢" title="المعيل" subtitle="بيانات رب الأسرة أو المسؤول عنها" />
-              <div className="grid">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-                <div className="fg span2">
-                  <label className="lbl" htmlFor="headOfFamily">
-                    اسم المعيل <span className="req">*</span>
+                <div className="flex flex-col gap-1 sm:col-span-2">
+                  <label className="text-[0.82rem] font-semibold text-gray-700" htmlFor="headOfFamily">
+                    اسم المعيل <span className="text-red-600 mr-[2px]">*</span>
                   </label>
                   <input
                     id="headOfFamily"
-                    className={`inp ${errors.headOfFamily ? 'inp-err' : ''}`}
+                    className={`w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-all focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10 ${errors.headOfFamily ? '!border-red-600 !bg-red-50 focus:!ring-red-600/10' : ''}`}
                     placeholder="الاسم الكامل لرب الأسرة أو المسؤول"
                     {...register('headOfFamily', {
                       required: 'اسم المعيل مطلوب',
                       minLength: { value: 3, message: 'الاسم يجب أن يكون 3 أحرف على الأقل' },
                     })}
                   />
-                  {errors.headOfFamily && <p className="ferr">{errors.headOfFamily.message}</p>}
+                  {errors.headOfFamily && <p className="text-red-600 text-xs mt-1">{errors.headOfFamily.message}</p>}
                 </div>
 
               </div>
             </div>
 
-            <div className="card">
+            <div className="bg-white border border-[#e5eaf0] rounded-2xl p-7 shadow-sm">
               <SectionHeader number="٣" title="التفاصيل" subtitle="عدد الأفراد وملاحظات إضافية" />
-              <div className="grid">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-                <div className="fg span2">
-                  <label className="lbl">
-                    عدد أفراد الأسرة <span className="req">*</span>
+                <div className="flex flex-col gap-1 sm:col-span-2">
+                  <label className="text-[0.82rem] font-semibold text-gray-700">
+                    عدد أفراد الأسرة <span className="text-red-600 mr-[2px]">*</span>
                   </label>
-                  <div className="member-count-section">
+                  <div className="flex flex-col sm:flex-row sm:items-start gap-6 flex-wrap">
                     <CounterInput
                       value={memberCount}
                       onChange={setMemberCount}
                       min={1}
                       max={30}
                     />
-                    <div className="member-hint">
-                      <div className="member-hint-row">
-                        <span className="member-hint-icon"><Users size={18} />‍<User size={18} /></span>
+                    <div className="flex flex-col gap-2 pt-1">
+                      <div className="flex items-center gap-2 text-[0.8rem] text-slate-500">
+                        <span className="text-[1rem]"><Users size={18} />‍<User size={18} /></span>
                         <span>يشمل جميع أفراد الأسرة المعيشية بما فيهم المعيل</span>
                       </div>
-                      <div className="member-scale">
+                      <div className="flex gap-1.5 flex-wrap">
                         {[
                           { max: 3,  label: 'أسرة صغيرة',  color: '#10b981' },
                           { max: 6,  label: 'أسرة متوسطة', color: '#f59e0b' },
@@ -239,7 +239,7 @@ export default function FamilyEditPage() {
                         ].map(({ max, label, color }) => (
                           <span
                             key={max}
-                            className="scale-tag"
+                            className="text-[0.72rem] py-1 px-2.5 rounded-full font-medium"
                             style={{
                               color,
                               background: `${color}15`,
@@ -255,13 +255,13 @@ export default function FamilyEditPage() {
                   </div>
                 </div>
 
-                <div className="fg span2">
-                  <label className="lbl" htmlFor="notes">
-                    ملاحظات إضافية <span className="opt">(اختياري)</span>
+                <div className="flex flex-col gap-1 sm:col-span-2">
+                  <label className="text-[0.82rem] font-semibold text-gray-700" htmlFor="notes">
+                    ملاحظات إضافية <span className="text-slate-400 font-normal text-[0.75rem]">(اختياري)</span>
                   </label>
                   <textarea
                     id="notes"
-                    className="inp ta"
+                    className="w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-all focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10 resize-y min-h-[100px]"
                     rows={4}
                     placeholder="أي معلومات إضافية عن الأسرة — وضعها الاجتماعي، ظروفها الخاصة، احتياجاتها…"
                     {...register('notes')}
@@ -272,17 +272,17 @@ export default function FamilyEditPage() {
             </div>
 
             {submitState === 'error' && apiError && (
-              <div className="err-banner" role="alert">
-                <span><AlertTriangle size={18} /></span>
+              <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl py-4 px-5 text-red-600 text-[0.83rem]" role="alert">
+                <span className="text-[1.2rem] shrink-0"><AlertTriangle size={18} /></span>
                 <div>
-                  <strong>فشل الإرسال</strong>
-                  <p>{apiError}</p>
+                  <strong className="block text-[0.9rem] text-red-700 mb-1">فشل الإرسال</strong>
+                  <p className="m-0 text-red-600">{apiError}</p>
                 </div>
               </div>
             )}
 
-            <div className="submit-row">
-              <button type="button" className="btn-ghost" onClick={() => router.back()}>
+            <div className="flex justify-end items-center gap-4 py-4 px-5 bg-white border border-[#e5eaf0] rounded-2xl">
+              <button type="button" className="inline-flex items-center gap-1.5 py-2.5 px-5 bg-transparent text-[#1B5E8C] font-sans text-[0.88rem] font-semibold border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-all hover:bg-blue-50 hover:border-[#1B5E8C]" onClick={() => router.back()}>
                 إلغاء
               </button>
               <PrimaryButton
@@ -290,7 +290,7 @@ export default function FamilyEditPage() {
                 disabled={submitState === 'loading'}
               >
                 {submitState === 'loading'
-                  ? <><span className="spin" aria-hidden />جارٍ الحفظ…</>
+                  ? <><span className="inline-block w-[15px] h-[15px] border-2 border-white/40 border-t-white rounded-full animate-spin shrink-0" aria-hidden />جارٍ الحفظ…</>
                   : 'حفظ وإعادة إرسال ←'}
               </PrimaryButton>
             </div>
@@ -298,77 +298,6 @@ export default function FamilyEditPage() {
           </form>
         )}
       </div>
-
-      <style jsx>{`
-        .page { max-width:760px; margin:0 auto; padding-bottom:4rem; font-family:'Cairo','Tajawal',sans-serif; }
-        .page-top { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; margin-bottom:1.5rem; }
-        .page-title { font-size:1.6rem; font-weight:800; color:#0d3d5c; margin:0 0 .25rem; }
-        .page-sub { font-size:.85rem; color:#6b7a8d; margin:0; }
-
-        .form { display:flex; flex-direction:column; gap:1.25rem; }
-        .card { background:#fff; border:1px solid #e5eaf0; border-radius:1rem; padding:1.75rem; box-shadow:0 1px 4px rgba(27,94,140,.05); }
-
-        .sec-head { display:flex; align-items:flex-start; gap:1rem; margin-bottom:1.5rem; padding-bottom:1rem; border-bottom:1.5px solid #f0f4f8; }
-        .sec-num { width:38px; height:38px; border-radius:10px; background:linear-gradient(135deg,#1B5E8C,#0d3d5c); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:700; flex-shrink:0; font-family:'Cairo',sans-serif; }
-        .sec-title { font-size:1.05rem; font-weight:700; color:#0d3d5c; margin:0 0 .15rem; }
-        .sec-sub { font-size:.78rem; color:#94a3b8; margin:0; }
-
-        .grid { display:grid; grid-template-columns:1fr 1fr; gap:1.1rem; }
-        .fg { display:flex; flex-direction:column; gap:.3rem; }
-        .span2 { grid-column:1 / -1; }
-
-        .lbl { font-size:.82rem; font-weight:600; color:#374151; }
-        .req { color:#dc2626; margin-right:2px; }
-        .opt { color:#94a3b8; font-weight:400; font-size:.75rem; }
-
-        .inp { width:100%; border:1.5px solid #d1d5db; border-radius:.625rem; padding:.65rem .9rem; font-size:.88rem; font-family:'Cairo',sans-serif; color:#1f2937; background:#fafafa; outline:none; transition:border-color .15s,box-shadow .15s,background .15s; box-sizing:border-box; }
-        .inp:focus { border-color:#1B5E8C; background:#fff; box-shadow:0 0 0 3px rgba(27,94,140,.1); }
-        .inp-err { border-color:#dc2626!important; background:#fff8f8!important; }
-        .sel { appearance:none; cursor:pointer; }
-        .ta { resize:vertical; min-height:100px; }
-
-        .member-count-section { display:flex; align-items:flex-start; gap:1.5rem; flex-wrap:wrap; }
-        .counter-wrap { display:inline-flex; align-items:center; gap:.75rem; background:#f8fafc; border:1.5px solid #e5eaf0; border-radius:.75rem; padding:.5rem 1rem; }
-        .counter-err { border-color:#dc2626; }
-        .counter-btn { width:32px; height:32px; border-radius:50%; border:1.5px solid #d1d5db; background:#fff; font-size:1.1rem; font-weight:700; color:#374151; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s; line-height:1; }
-        .counter-btn:hover:not(:disabled) { border-color:#1B5E8C; color:#1B5E8C; background:#f0f7ff; }
-        .counter-btn:disabled { opacity:.35; cursor:not-allowed; }
-        .counter-val { font-size:1.75rem; font-weight:800; color:#0d3d5c; min-width:2.5rem; text-align:center; font-family:'Cairo',sans-serif; }
-        .counter-label { font-size:.82rem; color:#6b7a8d; font-weight:600; }
-
-        .member-hint { display:flex; flex-direction:column; gap:.5rem; padding-top:.25rem; }
-        .member-hint-row { display:flex; align-items:center; gap:.5rem; font-size:.8rem; color:#6b7a8d; }
-        .member-hint-icon { font-size:1rem; }
-        .member-scale { display:flex; gap:.4rem; flex-wrap:wrap; }
-        .scale-tag { font-size:.72rem; padding:.2rem .6rem; border-radius:2rem; font-weight:500; }
-
-        .err-banner { display:flex; align-items:flex-start; gap:.75rem; background:#fef2f2; border:1px solid #fecaca; border-radius:.75rem; padding:1rem 1.25rem; }
-        .err-banner span { font-size:1.2rem; flex-shrink:0; }
-        .err-banner strong { display:block; font-size:.9rem; color:#b91c1c; margin-bottom:.2rem; }
-        .err-banner p { font-size:.83rem; color:#dc2626; margin:0; }
-
-        .submit-row { display:flex; justify-content:flex-end; align-items:center; gap:1rem; padding:1rem 1.25rem; background:#fff; border:1px solid #e5eaf0; border-radius:1rem; }
-
-        .btn-ghost { display:inline-flex; align-items:center; gap:.4rem; padding:.7rem 1.25rem; background:none; color:#1B5E8C; font-family:'Cairo',sans-serif; font-size:.88rem; font-weight:600; border:1.5px solid #dde5f0; border-radius:.75rem; cursor:pointer; transition:all .15s; }
-        .btn-ghost:hover { background:#f0f7ff; border-color:#1B5E8C; }
-
-        .spin { display:inline-block; width:15px; height:15px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; flex-shrink:0; }
-        @keyframes spin { to { transform:rotate(360deg); } }
-
-        .success-wrap { display:flex; align-items:center; justify-content:center; min-height:60vh; }
-        .success-card { text-align:center; max-width:420px; background:#fff; border-radius:1.25rem; padding:3rem 2rem; border:1px solid #e5eaf0; box-shadow:0 4px 24px rgba(27,94,140,.08); }
-        .success-ico { font-size:3rem; margin-bottom:1rem; }
-        .success-title { font-size:1.4rem; font-weight:800; color:#0d3d5c; margin:0 0 .75rem; }
-        .success-body { font-size:.88rem; color:#6b7a8d; line-height:1.75; margin:0 0 2rem; }
-        .success-actions { display:flex; gap:.75rem; justify-content:center; flex-wrap:wrap; }
-
-        @media (max-width: 640px) {
-          .grid { grid-template-columns:1fr; }
-          .span2 { grid-column:1; }
-          .page-top { flex-direction:column; }
-          .member-count-section { flex-direction:column; }
-        }
-      `}</style>
     </AppShell>
   );
 }
