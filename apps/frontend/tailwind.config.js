@@ -25,7 +25,20 @@ module.exports = {
       boxShadow: {
         card: '0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.07)',
       },
+      keyframes: {
+        shimmer:  { '0%': { backgroundPosition: '200% 0' }, '100%': { backgroundPosition: '-200% 0' } },
+        toastIn:  { from: { opacity: '0', transform: 'translateX(-50%) translateY(8px)' }, to: { opacity: '1', transform: 'translateX(-50%) translateY(0)' } },
+        fadeIn:   { from: { opacity: '0' }, to: { opacity: '1' } },
+        slideUp:  { from: { opacity: '0', transform: 'translateY(20px)' }, to: { opacity: '1', transform: 'none' } },
+      },
+      animation: {
+        shimmer: 'shimmer 1.4s infinite',
+        toastIn: 'toastIn 0.25s ease',
+        fadeIn:  'fadeIn 0.18s ease',
+        slideUp: 'slideUp 0.22s cubic-bezier(.22,1,.36,1)',
+      },
     },
   },
   plugins: [],
 };
+

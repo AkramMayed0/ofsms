@@ -12,19 +12,19 @@ const TOAST_DURATION   = 3000; // ms
 const SKELETON_COUNT   = 4;
 const TITLE_MAX_LENGTH = 120;
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 const fmtDate = (d) =>
   d ? new Date(d).toLocaleDateString('ar-YE', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 
 // ── SkeletonCard ──────────────────────────────────────────────────────────────
 function SkeletonCard() {
   return (
-    <div className="sk-card">
-      <div className="sk-icon" />
-      <div className="sk-body">
-        <div className="sk-line" style={{ width: '55%' }} />
-        <div className="sk-line" style={{ width: '80%', height: 10 }} />
-        <div className="sk-line" style={{ width: '35%', height: 10 }} />
+    <div className="flex items-center gap-3.5 bg-white border-[1.5px] border-gray-200 rounded-2xl p-4 px-5">
+      <div className="w-[38px] h-[38px] rounded-[10px] flex-shrink-0 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] animate-shimmer" />
+      <div className="flex-1 flex flex-col gap-[7px]">
+        <div className="h-[13px] rounded-md bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] animate-shimmer" style={{ width: '55%' }} />
+        <div className="h-[10px] rounded-md bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] animate-shimmer" style={{ width: '80%' }} />
+        <div className="h-[10px] rounded-md bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] animate-shimmer" style={{ width: '35%' }} />
       </div>
     </div>
   );
@@ -35,50 +35,60 @@ function AnnouncementCard({ ann, isGM, togglingId, onEdit, onDelete, onToggle })
   const isToggling = togglingId === ann.id;
 
   return (
-    <div className={`card ${ann.is_active ? '' : 'card-inactive'}`}>
+    <div className={`flex flex-col rounded-[1.125rem] overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,.06)] border-[1.5px] border-[#e5eaf0] border-r-4 transition-[box-shadow,transform] duration-[180ms] hover:shadow-[0_8px_28px_rgba(13,61,92,.13)] hover:-translate-y-0.5 ${ann.is_active ? 'border-r-primary' : 'opacity-50 grayscale-[30%] border-r-transparent'}`}>
 
       {/* ── Gradient header section ── */}
-      <div className={`card-header ${ann.is_active ? 'card-header-active' : 'card-header-inactive'}`}>
-        <div className="card-header-icon">
+      <div className={`flex items-center gap-3.5 px-5 py-4 ${ann.is_active ? 'bg-gradient-to-br from-[#0d3d5c] to-primary' : 'bg-gradient-to-br from-gray-500 to-gray-400'}`}>
+        <div className="w-[42px] h-[42px] rounded-xl bg-white/[.18] flex items-center justify-center text-white flex-shrink-0">
           <Megaphone size={20} />
         </div>
-        <h3 className="card-title">{ann.title}</h3>
-        <span className={`badge ${ann.is_active ? 'badge-active' : 'badge-inactive'}`}>
+        <h3 className="flex-1 m-0 text-xl font-black text-white truncate tracking-tight">{ann.title}</h3>
+        <span className={`inline-flex items-center gap-1 text-[0.68rem] font-bold px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${ann.is_active ? 'bg-white/[.22] text-white' : 'bg-white/[.15] text-white/75'}`}>
           {ann.is_active ? <><Eye size={11} /> نشط</> : <><EyeOff size={11} /> مخفي</>}
         </span>
       </div>
 
       {/* ── Body section ── */}
-      <div className="card-body-wrap">
-        <p className="card-body">{ann.body}</p>
+      <div className="bg-white px-5 py-[1.35rem] border-b border-slate-100">
+        <p className="m-0 text-sm text-gray-700 leading-[1.9] line-clamp-4">{ann.body}</p>
       </div>
 
       {/* ── Footer bar ── */}
-      <div className="card-footer">
-        <div className="card-meta-group">
+      <div className="flex items-center justify-between gap-3 flex-wrap px-5 py-[0.65rem] bg-slate-50">
+        <div className="flex items-center gap-2 flex-wrap">
           {ann.created_by_name && (
-            <span className="card-meta-chip">
+            <span className="text-xs font-bold text-primary bg-blue-50 px-2 py-0.5 rounded-full">
               {ann.created_by_name}
             </span>
           )}
-          <span className="card-meta-date">{fmtDate(ann.published_at)}</span>
+          <span className="text-xs text-gray-400">{fmtDate(ann.published_at)}</span>
         </div>
 
         {isGM && (
-          <div className="card-actions">
-            <button className="btn-icon btn-del" onClick={() => onDelete(ann)} title="حذف">
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <button
+              className="flex items-center justify-center w-7 h-7 rounded-lg border-[1.5px] border-red-200 text-red-600 bg-transparent cursor-pointer transition-all duration-[130ms] hover:bg-red-50 hover:border-red-300"
+              onClick={() => onDelete(ann)}
+              title="حذف"
+            >
               <Trash2 size={14} />
             </button>
-            <button className="btn-icon btn-edit" onClick={() => onEdit(ann)} title="تعديل">
+            <button
+              className="flex items-center justify-center w-7 h-7 rounded-lg border-[1.5px] border-blue-200 text-primary bg-transparent cursor-pointer transition-all duration-[130ms] hover:bg-blue-50 hover:border-blue-300"
+              onClick={() => onEdit(ann)}
+              title="تعديل"
+            >
               <Pencil size={14} />
             </button>
             <button
-              className={`toggle ${ann.is_active ? 'toggle-on' : 'toggle-off'} ${isToggling ? 'toggle-busy' : ''}`}
+              className={`relative w-[38px] h-[22px] border-none rounded-full cursor-pointer transition-colors duration-200 flex-shrink-0 p-0 ${ann.is_active ? 'bg-green-600' : 'bg-gray-300'} ${isToggling ? 'opacity-50 cursor-not-allowed' : ''}`}
               onClick={() => onToggle(ann)}
               disabled={isToggling}
               title={ann.is_active ? 'إخفاء الإعلان' : 'إظهار الإعلان'}
             >
-              <span className="toggle-thumb" />
+              <span
+                className={`absolute top-[3px] w-4 h-4 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,.25)] transition-[right,left] duration-200 ${ann.is_active ? 'right-[3px] left-auto' : 'left-[3px] right-auto'}`}
+              />
             </button>
           </div>
         )}
@@ -88,29 +98,30 @@ function AnnouncementCard({ ann, isGM, togglingId, onEdit, onDelete, onToggle })
   );
 }
 
+// ── SponsorAdCard ─────────────────────────────────────────────────────────────
 function SponsorAdCard({ ad, isGM, deletingAdId, onDelete }) {
   const isOrphan = ad.beneficiary_type === 'orphan';
   const isDeleting = deletingAdId === ad.id;
 
   return (
-    <div className="ad-card">
-      <div className="ad-main">
-        <div className="ad-avatar">
+    <div className="flex items-center justify-between gap-4 bg-white border-[1.5px] border-blue-100 border-r-4 border-r-teal-600 rounded-[1.125rem] px-5 py-4 shadow-[0_2px_8px_rgba(0,0,0,.06)] max-sm:flex-col max-sm:items-stretch">
+      <div className="flex items-start gap-[0.85rem] min-w-0">
+        <div className="w-[42px] h-[42px] rounded-xl bg-emerald-50 text-teal-600 flex items-center justify-center flex-shrink-0">
           {isOrphan ? <User size={18} /> : <Users size={18} />}
         </div>
-        <div className="ad-content">
-          <div className="ad-title-row">
-            <h3 className="ad-title">
+        <div className="min-w-0 flex flex-col gap-[0.35rem]">
+          <div className="flex items-center gap-[0.55rem] flex-wrap">
+            <h3 className="m-0 text-[0.98rem] font-black text-[#0d3d5c]">
               {isOrphan ? 'طلب كفالة يتيم' : 'طلب كفالة أسرة'}: {ad.beneficiary_name || '—'}
             </h3>
-            <span className={`sponsor-badge ${ad.is_sponsored ? 'sponsor-badge-done' : 'sponsor-badge-wait'}`}>
+            <span className={`w-fit rounded-full px-[0.6rem] py-[0.22rem] text-[0.7rem] font-black ${ad.is_sponsored ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-700'}`}>
               {ad.is_sponsored ? 'مكفول' : 'في انتظار الكفيل'}
             </span>
           </div>
-          <p className="ad-body">
+          <p className="m-0 text-sm text-slate-600">
             {isOrphan ? 'من سيكفل هذا الطفل؟' : 'من سيكفل هذه الأسرة؟'}
           </p>
-          <div className="ad-meta">
+          <div className="flex flex-wrap gap-[0.45rem] text-slate-400 text-[0.74rem]">
             <span>{ad.governorate_ar || '—'}</span>
             <span>{ad.agent_name || '—'}</span>
             {!isOrphan && <span>{ad.member_count || '—'} أفراد</span>}
@@ -120,7 +131,11 @@ function SponsorAdCard({ ad, isGM, deletingAdId, onDelete }) {
       </div>
 
       {isGM && ad.is_sponsored && (
-        <button className="ad-delete" onClick={() => onDelete(ad)} disabled={isDeleting}>
+        <button
+          className="inline-flex items-center gap-[0.35rem] border border-red-200 rounded-[0.65rem] bg-red-50 text-red-700 px-3 py-[0.48rem] font-sans text-[0.78rem] font-extrabold cursor-pointer flex-shrink-0 disabled:opacity-60 disabled:cursor-not-allowed max-sm:justify-center"
+          onClick={() => onDelete(ad)}
+          disabled={isDeleting}
+        >
           <Trash2 size={14} /> {isDeleting ? 'جارٍ الحذف…' : 'حذف الإعلان'}
         </button>
       )}
@@ -135,7 +150,7 @@ export default function AnnouncementsPage() {
 
   // data
   const [announcements, setAnnouncements] = useState([]);
-  const [ads, setAds] = useState([]);
+  const [ads, setAds]                     = useState([]);
   const [loading, setLoading]             = useState(true);
   const [error, setError]                 = useState('');
 
@@ -235,7 +250,7 @@ export default function AnnouncementsPage() {
       closeModal();
     } catch (err) {
       console.error('[AnnouncementsPage] save failed:', err);
-      setFormError('حدث خطأ. يرجى المحاولة مجددًا.');
+      setFormError('حدث خطأ. يرجى المحاولة مجدداً.');
     } finally {
       setSaving(false);
     }
@@ -270,7 +285,7 @@ export default function AnnouncementsPage() {
       showToast('تم حذف الإعلان');
     } catch (err) {
       console.error('[AnnouncementsPage] delete failed:', err);
-      showToast('فشل الحذف. يرجى المحاولة مجددًا.', 'error');
+      showToast('فشل الحذف. يرجى المحاولة مجدداً.', 'error');
     } finally {
       setDeleting(false);
     }
@@ -293,23 +308,27 @@ export default function AnnouncementsPage() {
   // ── Render ───────────────────────────────────────────────────────────────
   return (
     <AppShell>
-      <div className="page" dir="rtl">
+      <div className="max-w-[860px] mx-auto flex flex-col gap-4 font-sans pb-12" dir="rtl">
 
         {/* ── Page header ── */}
-        <div className="page-header">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="page-title">الإعلانات</h1>
-            <p className="page-sub">
+            <h1 className="text-[1.6rem] font-black text-[#0d3d5c] m-0 mb-1">الإعلانات</h1>
+            <p className="text-[0.82rem] text-gray-400 m-0">
               {loading ? '…' : `${totalCount} إعلان`}
             </p>
           </div>
-          <div className="header-actions">
+          <div className="flex items-center gap-2">
             {isGM && (
               <PrimaryButton onClick={openCreate}>
                 <Plus size={16} /> إعلان جديد
               </PrimaryButton>
             )}
-            <button className="btn-refresh" onClick={fetchAnnouncements} title="تحديث">
+            <button
+              className="flex items-center justify-center w-9 h-9 border-[1.5px] border-gray-200 rounded-[0.625rem] bg-white text-gray-500 cursor-pointer transition-all duration-150 hover:border-primary hover:text-primary hover:bg-blue-50"
+              onClick={fetchAnnouncements}
+              title="تحديث"
+            >
               <RefreshCw size={14} />
             </button>
           </div>
@@ -317,32 +336,32 @@ export default function AnnouncementsPage() {
 
         {/* ── Error banner ── */}
         {error && !loading && (
-          <div className="err-banner">
+          <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
             <AlertTriangle size={16} /> {error}
           </div>
         )}
 
         {/* ── Skeleton loader ── */}
         {loading && (
-          <div className="list">
+          <div className="flex flex-col gap-4">
             {Array.from({ length: SKELETON_COUNT }).map((_, i) => <SkeletonCard key={i} />)}
           </div>
         )}
 
         {/* ── Empty state ── */}
         {!loading && !error && announcements.length === 0 && ads.length === 0 && (
-          <div className="empty-state">
+          <div className="flex flex-col items-center gap-1.5 py-16 px-4 text-center text-gray-400">
             <Megaphone size={40} strokeWidth={1.5} />
-            <p className="empty-title">لا توجد إعلانات</p>
-            <p className="empty-sub">
+            <p className="text-[0.95rem] text-gray-700 font-bold mt-2 mb-0">لا توجد إعلانات</p>
+            <p className="text-[0.82rem] text-gray-400 m-0">
               {isGM ? 'اضغط «إعلان جديد» لنشر أول إعلان.' : 'لا توجد إعلانات نشطة حالياً.'}
             </p>
           </div>
         )}
 
-        {/* ── Announcements list ── */}
+        {/* ── Sponsor ads list ── */}
         {!loading && ads.length > 0 && (
-          <div className="list">
+          <div className="flex flex-col gap-4">
             {ads.map((ad) => (
               <SponsorAdCard
                 key={ad.id}
@@ -355,8 +374,9 @@ export default function AnnouncementsPage() {
           </div>
         )}
 
+        {/* ── Announcements list ── */}
         {!loading && announcements.length > 0 && (
-          <div className="list">
+          <div className="flex flex-col gap-4">
             {announcements.map((ann) => (
               <AnnouncementCard
                 key={ann.id}
@@ -373,28 +393,40 @@ export default function AnnouncementsPage() {
 
         {/* ── Create / Edit modal ── */}
         {modalOpen && (
-          <div className="modal-overlay" onClick={closeModal}>
-            <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-
+          <div
+            className="fixed inset-0 bg-[rgba(13,61,92,0.45)] backdrop-blur-[4px] z-[400] flex items-center justify-center p-4 font-sans direction-rtl animate-fadeIn"
+            onClick={closeModal}
+          >
+            <div
+              className="bg-white border border-[#e5eaf0] rounded-[1.25rem] w-full max-w-[480px] shadow-[0_32px_80px_rgba(13,61,92,0.22)] overflow-hidden animate-slideUp"
+              onClick={(e) => e.stopPropagation()}
+            >
               {/* header */}
-              <div className="modal-header">
-                <div className="modal-icon"><Megaphone size={18} /></div>
+              <div className="flex items-start gap-3.5 px-6 py-5 bg-blue-50 border-b border-blue-200">
+                <div className="text-primary flex-shrink-0 mt-0.5"><Megaphone size={18} /></div>
                 <div>
-                  <h3 className="modal-title">
+                  <h3 className="text-base font-extrabold text-[#0d3d5c] m-0 mb-0.5">
                     {editTarget ? 'تعديل الإعلان' : 'إعلان جديد'}
                   </h3>
-                  <p className="modal-sub">
+                  <p className="text-[0.78rem] text-gray-500 m-0">
                     {editTarget ? 'عدّل العنوان أو النص ثم احفظ.' : 'سيُرسَل إشعار لجميع المستخدمين.'}
                   </p>
                 </div>
-                <button className="modal-close" onClick={closeModal}><X size={16} /></button>
+                <button
+                  className="mr-auto w-7 h-7 bg-black/[.06] border-none rounded-[7px] text-gray-500 cursor-pointer flex items-center justify-center flex-shrink-0 transition-colors duration-[120ms] hover:bg-black/[.12]"
+                  onClick={closeModal}
+                >
+                  <X size={16} />
+                </button>
               </div>
 
-              {/* title input */}
-              <div className="modal-body">
-                <label className="field-label">العنوان <span className="req">*</span></label>
+              {/* body */}
+              <div className="px-6 py-5 flex flex-col gap-1.5">
+                <label className="block text-[0.8rem] font-bold text-gray-700">
+                  العنوان <span className="text-red-600">*</span>
+                </label>
                 <input
-                  className="field-input"
+                  className="w-full box-border border-[1.5px] border-[#e5eaf0] rounded-xl px-3.5 py-[0.65rem] text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-[border-color,box-shadow] duration-150 focus:border-primary focus:shadow-[0_0_0_3px_rgba(27,94,140,.1)] focus:bg-white"
                   placeholder="عنوان الإعلان…"
                   value={form.title}
                   onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
@@ -402,30 +434,40 @@ export default function AnnouncementsPage() {
                   autoFocus
                 />
 
-                {/* body textarea */}
-                <label className="field-label mt-4">
-                  النص <span className="req">*</span>
+                <label className="block text-[0.8rem] font-bold text-gray-700 mt-4">
+                  النص <span className="text-red-600">*</span>
                 </label>
                 <textarea
-                  className="field-input field-textarea"
+                  className="w-full box-border border-[1.5px] border-[#e5eaf0] rounded-xl px-3.5 py-[0.65rem] text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-[border-color,box-shadow] duration-150 focus:border-primary focus:shadow-[0_0_0_3px_rgba(27,94,140,.1)] focus:bg-white resize-y min-h-[110px]"
                   placeholder="اكتب نص الإعلان هنا…"
                   rows={5}
                   value={form.body}
                   onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
                 />
 
-                {/* inline form error */}
                 {formError && (
-                  <p className="form-err"><AlertTriangle size={13} /> {formError}</p>
+                  <p className="flex items-center gap-1.5 text-[0.78rem] text-red-600 mt-1.5">
+                    <AlertTriangle size={13} /> {formError}
+                  </p>
                 )}
               </div>
 
               {/* footer */}
-              <div className="modal-footer">
-                <button className="btn-ghost" onClick={closeModal} disabled={saving}>إلغاء</button>
-                <button className="btn-save" onClick={handleSave} disabled={saving}>
+              <div className="flex gap-3 px-6 py-4 border-t-[1.5px] border-[#e5eaf0] bg-white">
+                <button
+                  className="flex-1 py-[0.7rem] bg-transparent border-[1.5px] border-gray-200 rounded-xl font-sans text-[0.85rem] font-semibold text-gray-500 cursor-pointer transition-all duration-150 hover:not-disabled:border-gray-400 hover:not-disabled:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={closeModal}
+                  disabled={saving}
+                >
+                  إلغاء
+                </button>
+                <button
+                  className="flex-[2] py-[0.7rem] bg-gradient-to-br from-[#0d3d5c] to-primary text-white font-sans text-[0.88rem] font-bold border-none rounded-xl cursor-pointer flex items-center justify-center gap-1.5 shadow-[0_2px_8px_rgba(13,61,92,.25)] transition-[transform,box-shadow] duration-[120ms] hover:not-disabled:-translate-y-px hover:not-disabled:shadow-[0_4px_14px_rgba(13,61,92,.35)] disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleSave}
+                  disabled={saving}
+                >
                   {saving
-                    ? <><span className="spin" /> جارٍ الحفظ…</>
+                    ? <><span className="inline-block w-3.5 h-3.5 border-2 border-white/35 border-t-white rounded-full animate-spin flex-shrink-0" /> جارٍ الحفظ…</>
                     : editTarget ? 'حفظ التعديلات' : 'نشر الإعلان'}
                 </button>
               </div>
@@ -436,23 +478,46 @@ export default function AnnouncementsPage() {
 
         {/* ── Delete confirm modal ── */}
         {deleteTarget && (
-          <div className="modal-overlay" onClick={() => setDeleteTarget(null)}>
-            <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header modal-header-danger">
-                <div className="modal-icon modal-icon-danger"><Trash2 size={18} /></div>
+          <div
+            className="fixed inset-0 bg-[rgba(13,61,92,0.45)] backdrop-blur-[4px] z-[400] flex items-center justify-center p-4 font-sans animate-fadeIn"
+            onClick={() => setDeleteTarget(null)}
+          >
+            <div
+              className="bg-white border border-[#e5eaf0] rounded-[1.25rem] w-full max-w-[480px] shadow-[0_32px_80px_rgba(13,61,92,0.22)] overflow-hidden animate-slideUp"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-start gap-3.5 px-6 py-5 bg-red-50 border-b border-red-200">
+                <div className="text-red-600 flex-shrink-0 mt-0.5"><Trash2 size={18} /></div>
                 <div>
-                  <h3 className="modal-title text-red-700">حذف الإعلان</h3>
-                  <p className="modal-sub">«{deleteTarget.title}»</p>
+                  <h3 className="text-base font-extrabold text-red-700 m-0 mb-0.5">حذف الإعلان</h3>
+                  <p className="text-[0.78rem] text-gray-500 m-0">«{deleteTarget.title}»</p>
                 </div>
-                <button className="modal-close" onClick={() => setDeleteTarget(null)}><X size={16} /></button>
+                <button
+                  className="mr-auto w-7 h-7 bg-black/[.06] border-none rounded-[7px] text-gray-500 cursor-pointer flex items-center justify-center flex-shrink-0 transition-colors duration-[120ms] hover:bg-black/[.12]"
+                  onClick={() => setDeleteTarget(null)}
+                >
+                  <X size={16} />
+                </button>
               </div>
-              <div className="modal-body">
-                <p className="delete-msg">سيُحذف هذا الإعلان نهائياً ولن يمكن التراجع عن هذا الإجراء.</p>
+              <div className="px-6 py-5">
+                <p className="text-sm text-gray-600 m-0">سيُحذف هذا الإعلان نهائياً ولن يمكن التراجع عن هذا الإجراء.</p>
               </div>
-              <div className="modal-footer">
-                <button className="btn-ghost" onClick={() => setDeleteTarget(null)} disabled={deleting}>إلغاء</button>
-                <button className="btn-danger" onClick={handleDelete} disabled={deleting}>
-                  {deleting ? <><span className="spin" /> جارٍ الحذف…</> : <><Trash2 size={14} /> تأكيد الحذف</>}
+              <div className="flex gap-3 px-6 py-4 border-t-[1.5px] border-[#e5eaf0] bg-white">
+                <button
+                  className="flex-1 py-[0.7rem] bg-transparent border-[1.5px] border-gray-200 rounded-xl font-sans text-[0.85rem] font-semibold text-gray-500 cursor-pointer transition-all duration-150 hover:not-disabled:border-gray-400 hover:not-disabled:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => setDeleteTarget(null)}
+                  disabled={deleting}
+                >
+                  إلغاء
+                </button>
+                <button
+                  className="flex-[2] py-[0.7rem] bg-gradient-to-br from-red-600 to-red-700 text-white font-sans text-[0.88rem] font-bold border-none rounded-xl cursor-pointer flex items-center justify-center gap-1.5 shadow-[0_2px_8px_rgba(220,38,38,.25)] transition-[transform,box-shadow] duration-[120ms] hover:not-disabled:-translate-y-px hover:not-disabled:shadow-[0_4px_14px_rgba(220,38,38,.35)] disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                >
+                  {deleting
+                    ? <><span className="inline-block w-3.5 h-3.5 border-2 border-white/35 border-t-white rounded-full animate-spin flex-shrink-0" /> جارٍ الحذف…</>
+                    : <><Trash2 size={14} /> تأكيد الحذف</>}
                 </button>
               </div>
             </div>
@@ -461,374 +526,12 @@ export default function AnnouncementsPage() {
 
         {/* ── Toast ── */}
         {toast && (
-          <div className={`toast ${toast.type === 'error' ? 'toast-err' : 'toast-ok'}`}>
+          <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full text-[0.85rem] font-semibold z-[500] whitespace-nowrap shadow-[0_4px_20px_rgba(0,0,0,.15)] animate-toastIn ${toast.type === 'error' ? 'bg-red-600 text-white' : 'bg-[#0d3d5c] text-white'}`}>
             {toast.msg}
           </div>
         )}
 
       </div>
-
-      <style jsx global>{`
-        .page {
-          max-width: 860px;
-          margin: 0 auto;
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-          font-family: 'Cairo', 'Tajawal', sans-serif;
-          padding-bottom: 3rem;
-        }
-        .page-header {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: 1rem;
-          flex-wrap: wrap;
-        }
-        .page-title {
-          font-size: 1.6rem;
-          font-weight: 800;
-          color: #0d3d5c;
-          margin: 0 0 0.2rem;
-        }
-        .page-sub { font-size: 0.82rem; color: #9ca3af; margin: 0; }
-        .header-actions { display: flex; align-items: center; gap: 0.5rem; }
-        .btn-refresh {
-          display: flex; align-items: center; justify-content: center;
-          width: 2.25rem; height: 2.25rem;
-          border: 1.5px solid #e5e7eb; border-radius: 0.625rem;
-          background: #fff; color: #6b7280; cursor: pointer; transition: all 0.15s;
-        }
-        .btn-refresh:hover { border-color: #1B5E8C; color: #1B5E8C; background: #f0f7ff; }
-        .btn-icon {
-          display: flex; align-items: center; justify-content: center;
-          width: 28px; height: 28px; border-radius: 7px;
-          border: 1.5px solid transparent; cursor: pointer;
-          transition: all 0.13s; background: transparent;
-        }
-        .btn-edit { color: #1B5E8C; border-color: #bfdbfe; }
-        .btn-edit:hover { background: #eff6ff; border-color: #93c5fd; }
-        .btn-del { color: #dc2626; border-color: #fecaca; }
-        .btn-del:hover { background: #fef2f2; border-color: #f87171; }
-        .list { display: flex; flex-direction: column; gap: 1rem; }
-
-        /* ── card shell ── */
-        .card {
-          display: flex;
-          flex-direction: column;
-          border-radius: 1.125rem;
-          overflow: hidden;
-          box-shadow: 0 2px 8px rgba(0,0,0,.06);
-          border: 1.5px solid #e5eaf0;
-          border-right: 4px solid transparent;
-          transition: box-shadow 0.18s, transform 0.18s;
-        }
-        .card:hover {
-          box-shadow: 0 8px 28px rgba(13,61,92,.13);
-          transform: translateY(-2px);
-        }
-        .card:not(.card-inactive) { border-right-color: #1B5E8C; }
-        .card-inactive { opacity: 0.5; filter: grayscale(30%); }
-
-        .ad-card {
-          display: flex; align-items: center; justify-content: space-between; gap: 1rem;
-          background: #fff; border: 1.5px solid #dbeafe; border-right: 4px solid #0f766e;
-          border-radius: 1.125rem; padding: 1rem 1.2rem;
-          box-shadow: 0 2px 8px rgba(0,0,0,.06);
-        }
-        .ad-main { display: flex; align-items: flex-start; gap: .85rem; min-width: 0; }
-        .ad-avatar {
-          width: 42px; height: 42px; border-radius: 12px; background: #ecfdf5; color: #0f766e;
-          display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-        }
-        .ad-content { min-width: 0; display: flex; flex-direction: column; gap: .35rem; }
-        .ad-title-row { display: flex; align-items: center; gap: .55rem; flex-wrap: wrap; }
-        .ad-title { margin: 0; font-size: .98rem; font-weight: 900; color: #0d3d5c; }
-        .ad-body { margin: 0; font-size: .86rem; color: #475569; }
-        .ad-meta { display: flex; flex-wrap: wrap; gap: .45rem; color: #94a3b8; font-size: .74rem; }
-        .sponsor-badge {
-          width: fit-content; border-radius: 999px; padding: .22rem .6rem;
-          font-size: .7rem; font-weight: 900;
-        }
-        .sponsor-badge-done { background: #dcfce7; color: #166534; }
-        .sponsor-badge-wait { background: #dbeafe; color: #1d4ed8; }
-        .ad-delete {
-          display: inline-flex; align-items: center; gap: .35rem;
-          border: 1px solid #fecaca; border-radius: .65rem; background: #fef2f2; color: #b91c1c;
-          padding: .48rem .75rem; font-family: 'Cairo', sans-serif; font-size: .78rem; font-weight: 800;
-          cursor: pointer; flex-shrink: 0;
-        }
-        .ad-delete:disabled { opacity: .6; cursor: not-allowed; }
-        @media (max-width: 640px) {
-          .ad-card { align-items: stretch; flex-direction: column; }
-          .ad-delete { justify-content: center; }
-        }
-
-        /* ── card header ── */
-        .card-header {
-          display: flex;
-          align-items: center;
-          gap: 0.875rem;
-          padding: 1rem 1.25rem;
-        }
-        .card-header-active {
-          background: linear-gradient(135deg, #0d3d5c 0%, #1B5E8C 100%);
-        }
-        .card-header-inactive {
-          background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
-        }
-        .card-header-icon {
-          width: 42px; height: 42px;
-          border-radius: 12px;
-          background: rgba(255,255,255,0.18);
-          display: flex; align-items: center; justify-content: center;
-          color: #fff;
-          flex-shrink: 0;
-        }
-
-        /* title */
-        .card-title {
-          flex: 1; margin: 0;
-          font-size: 1.2rem; font-weight: 900;
-          color: #fff;
-          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-          letter-spacing: -0.01em;
-        }
-
-        /* badge */
-        .badge {
-          display: inline-flex; align-items: center; gap: 0.25rem;
-          font-size: 0.68rem; font-weight: 700;
-          padding: 0.25rem 0.65rem; border-radius: 999px;
-          white-space: nowrap; flex-shrink: 0;
-        }
-        .badge-active   { background: rgba(255,255,255,0.22); color: #fff; }
-        .badge-inactive { background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.75); }
-
-        /* body */
-        .card-body-wrap {
-          background: #fff;
-          padding: 1.35rem 1.25rem;
-          border-bottom: 1px solid #f1f5f9;
-        }
-        .card-body {
-          margin: 0;
-          font-size: 0.9rem; color: #374151; line-height: 1.9;
-          display: -webkit-box;
-          -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
-        }
-
-        /* footer */
-        .card-footer {
-          display: flex; align-items: center;
-          justify-content: space-between;
-          gap: 0.75rem; flex-wrap: wrap;
-          padding: 0.65rem 1.25rem;
-          background: #f8fafc;
-        }
-        .card-meta-group {
-          display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
-        }
-        .card-meta-chip {
-          font-size: 0.75rem; font-weight: 700;
-          color: #1B5E8C;
-          background: #eff6ff;
-          padding: 0.15rem 0.55rem;
-          border-radius: 999px;
-        }
-        .card-meta-date { font-size: 0.75rem; color: #9ca3af; }
-
-
-        /* toggle */
-        .toggle {
-          position: relative; width: 38px; height: 22px;
-          border: none; border-radius: 999px; cursor: pointer;
-          transition: background 0.2s; flex-shrink: 0; padding: 0;
-        }
-        .toggle-on   { background: #16a34a; }
-        .toggle-off  { background: #d1d5db; }
-        .toggle-busy { opacity: 0.5; cursor: not-allowed; }
-        .toggle-thumb {
-          position: absolute; top: 3px;
-          width: 16px; height: 16px;
-          background: #fff; border-radius: 50%;
-          transition: right 0.2s, left 0.2s;
-          box-shadow: 0 1px 3px rgba(0,0,0,.25);
-        }
-        .toggle-on  .toggle-thumb { right: 3px; left: auto; }
-        .toggle-off .toggle-thumb { left: 3px; right: auto; }
-
-        /* modal overlay */
-        .modal-overlay {
-          position: fixed; inset: 0;
-          background: rgba(13,61,92,0.45);
-          backdrop-filter: blur(4px);
-          z-index: 400;
-          display: flex; align-items: center; justify-content: center;
-          padding: 1rem;
-          font-family: 'Cairo', 'Tajawal', sans-serif;
-          direction: rtl;
-          animation: fadeIn 0.18s ease;
-        }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .modal-box {
-          background: #fff; border: 1px solid #e5eaf0;
-          border-radius: 1.25rem; width: 100%; max-width: 480px;
-          box-shadow: 0 32px 80px rgba(13,61,92,0.22);
-          overflow: hidden;
-          animation: slideUp 0.22s cubic-bezier(.22,1,.36,1);
-        }
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to   { opacity: 1; transform: none; }
-        }
-        .modal-header {
-          display: flex; align-items: flex-start; gap: 0.875rem;
-          padding: 1.25rem 1.5rem;
-          background: #f0f7ff; border-bottom: 1px solid #bfdbfe;
-        }
-        .modal-header-danger { background: #fef2f2; border-bottom-color: #fecaca; }
-        .modal-icon { color: #1B5E8C; flex-shrink: 0; margin-top: 2px; }
-        .modal-icon-danger { color: #dc2626; }
-        .modal-title { font-size: 1rem; font-weight: 800; color: #0d3d5c; margin: 0 0 0.15rem; }
-        .modal-sub   { font-size: 0.78rem; color: #6b7280; margin: 0; }
-        .modal-close {
-          margin-right: auto; width: 28px; height: 28px;
-          background: rgba(0,0,0,0.06); border: none; border-radius: 7px;
-          color: #6b7280; cursor: pointer; display: flex;
-          align-items: center; justify-content: center;
-          flex-shrink: 0; transition: background 0.12s;
-        }
-        .modal-close:hover { background: rgba(0,0,0,0.12); }
-        .modal-body {
-          padding: 1.25rem 1.5rem;
-          display: flex; flex-direction: column; gap: 0.35rem;
-        }
-        .field-label {
-          display: block; font-size: 0.8rem;
-          font-weight: 700; color: #374151;
-        }
-        .req { color: #dc2626; }
-        .field-input {
-          width: 100%; box-sizing: border-box;
-          border: 1.5px solid #e5eaf0; border-radius: 0.75rem;
-          padding: 0.65rem 0.9rem;
-          font-size: 0.88rem; font-family: 'Cairo', sans-serif; color: #1f2937;
-          background: #fafafa; outline: none;
-          transition: border-color 0.15s, box-shadow 0.15s;
-        }
-        .field-input:focus {
-          border-color: #1B5E8C;
-          box-shadow: 0 0 0 3px rgba(27,94,140,.1);
-          background: #fff;
-        }
-        .field-textarea { resize: vertical; min-height: 110px; }
-        .form-err {
-          display: flex; align-items: center; gap: 0.35rem;
-          font-size: 0.78rem; color: #dc2626;
-          margin-top: 0.4rem;
-        }
-        .modal-footer {
-          display: flex; gap: 0.75rem;
-          padding: 1rem 1.5rem;
-          border-top: 1.5px solid #e5eaf0;
-          background: #fff;
-        }
-        .btn-ghost {
-          flex: 1; padding: 0.7rem;
-          background: none; border: 1.5px solid #e5eaf0; border-radius: 0.75rem;
-          font-family: 'Cairo', sans-serif; font-size: 0.85rem; font-weight: 600;
-          color: #6b7280; cursor: pointer; transition: all 0.15s;
-        }
-        .btn-ghost:hover:not(:disabled) { border-color: #9ca3af; color: #374151; }
-        .btn-ghost:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-save {
-          flex: 2; padding: 0.7rem;
-          background: linear-gradient(135deg, #0d3d5c, #1B5E8C);
-          color: #fff; font-family: 'Cairo', sans-serif;
-          font-size: 0.88rem; font-weight: 700;
-          border: none; border-radius: 0.75rem; cursor: pointer;
-          display: flex; align-items: center; justify-content: center; gap: 0.4rem;
-          box-shadow: 0 2px 8px rgba(13,61,92,.25);
-          transition: transform 0.12s, box-shadow 0.12s;
-        }
-        .btn-save:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(13,61,92,.35); }
-        .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-danger {
-          flex: 2; padding: 0.7rem;
-          background: linear-gradient(135deg, #dc2626, #b91c1c);
-          color: #fff; font-family: 'Cairo', sans-serif;
-          font-size: 0.88rem; font-weight: 700;
-          border: none; border-radius: 0.75rem; cursor: pointer;
-          display: flex; align-items: center; justify-content: center; gap: 0.4rem;
-          box-shadow: 0 2px 8px rgba(220,38,38,.25);
-          transition: transform 0.12s, box-shadow 0.12s;
-        }
-        .btn-danger:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(220,38,38,.35); }
-        .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
-        .spin {
-          display: inline-block; width: 14px; height: 14px;
-          border: 2px solid rgba(255,255,255,.35);
-          border-top-color: #fff; border-radius: 50%;
-          animation: spinning .6s linear infinite; flex-shrink: 0;
-        }
-        @keyframes spinning { to { transform: rotate(360deg); } }
-
-        /* skeleton */
-        .sk-card {
-          display: flex; align-items: center; gap: 0.85rem;
-          background: #fff; border: 1.5px solid #e5eaf0;
-          border-radius: 1rem; padding: 1rem 1.25rem;
-        }
-        .sk-icon {
-          width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
-        }
-        .sk-body { flex: 1; display: flex; flex-direction: column; gap: 0.45rem; }
-        .sk-line  { height: 13px; border-radius: 6px; }
-        .sk-icon, .sk-line {
-          background: linear-gradient(90deg, #f3f4f6 25%, #e9ecef 50%, #f3f4f6 75%);
-          background-size: 200% 100%;
-          animation: shimmer 1.4s infinite;
-        }
-        @keyframes shimmer {
-          0%   { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-
-        /* empty state */
-        .empty-state {
-          display: flex; flex-direction: column; align-items: center;
-          gap: 0.4rem; padding: 4rem 1rem; text-align: center;
-          color: #9ca3af;
-        }
-        .empty-title { font-size: 0.95rem; color: #374151; font-weight: 700; margin: 0.5rem 0 0; }
-        .empty-sub   { font-size: 0.82rem; color: #9ca3af; margin: 0; }
-
-        /* error banner */
-        .err-banner {
-          display: flex; align-items: center; gap: 0.5rem;
-          background: #fef2f2; border: 1px solid #fecaca;
-          color: #b91c1c; padding: 0.75rem 1rem;
-          border-radius: 0.75rem; font-size: 0.85rem;
-        }
-
-        /* toast */
-        .toast {
-          position: fixed; bottom: 2rem; left: 50%;
-          transform: translateX(-50%);
-          padding: 0.75rem 1.5rem; border-radius: 999px;
-          font-size: 0.85rem; font-weight: 600;
-          z-index: 500; white-space: nowrap;
-          box-shadow: 0 4px 20px rgba(0,0,0,.15);
-          animation: toastIn 0.25s ease;
-        }
-        .toast-ok  { background: #0d3d5c; color: #fff; }
-        .toast-err { background: #dc2626; color: #fff; }
-        @keyframes toastIn {
-          from { opacity: 0; transform: translateX(-50%) translateY(12px); }
-          to   { opacity: 1; transform: translateX(-50%) translateY(0); }
-        }
-      `}</style>
     </AppShell>
   );
 }
