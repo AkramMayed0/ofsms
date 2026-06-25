@@ -233,8 +233,9 @@ export default function AnnouncementsPage() {
         showToast('تم نشر الإعلان');
       }
       closeModal();
-    } catch {
-      setFormError('حدث خطأ. يرجى المحاولة مجدداً.');
+    } catch (err) {
+      console.error('[AnnouncementsPage] save failed:', err);
+      setFormError('حدث خطأ. يرجى المحاولة مجددًا.');
     } finally {
       setSaving(false);
     }
@@ -250,7 +251,8 @@ export default function AnnouncementsPage() {
       setAnnouncements((prev) =>
         prev.map((a) => (a.id === ann.id ? data.announcement : a))
       );
-    } catch {
+    } catch (err) {
+      console.error('[AnnouncementsPage] toggle failed:', err);
       showToast('فشل تغيير الحالة.', 'error');
     } finally {
       setTogglingId(null);
@@ -266,8 +268,9 @@ export default function AnnouncementsPage() {
       setAnnouncements((prev) => prev.filter((a) => a.id !== deleteTarget.id));
       setDeleteTarget(null);
       showToast('تم حذف الإعلان');
-    } catch {
-      showToast('فشل الحذف. يرجى المحاولة مجدداً.', 'error');
+    } catch (err) {
+      console.error('[AnnouncementsPage] delete failed:', err);
+      showToast('فشل الحذف. يرجى المحاولة مجددًا.', 'error');
     } finally {
       setDeleting(false);
     }
@@ -280,7 +283,8 @@ export default function AnnouncementsPage() {
       setAds((prev) => prev.filter((item) => item.id !== ad.id));
       showToast('تم حذف الإعلان من صفحة الإعلانات');
     } catch (err) {
-      showToast(err.response?.data?.error || 'فشل حذف الإعلان.', 'error');
+      console.error('[AnnouncementsPage] delete ad failed:', err);
+      showToast('فشل حذف الإعلان.', 'error');
     } finally {
       setDeletingAdId(null);
     }
@@ -634,18 +638,6 @@ export default function AnnouncementsPage() {
         }
         .card-meta-date { font-size: 0.75rem; color: #9ca3af; }
 
-        /* actions */
-        .card-actions { display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0; }
-        .btn-icon {
-          display: flex; align-items: center; justify-content: center;
-          width: 30px; height: 30px; border-radius: 8px;
-          border: 1.5px solid transparent; cursor: pointer;
-          transition: all 0.13s; background: transparent;
-        }
-        .btn-edit { color: #1B5E8C; border-color: #bfdbfe; }
-        .btn-edit:hover { background: #eff6ff; border-color: #93c5fd; }
-        .btn-del  { color: #dc2626; border-color: #fecaca; }
-        .btn-del:hover  { background: #fef2f2; border-color: #f87171; }
 
         /* toggle */
         .toggle {
