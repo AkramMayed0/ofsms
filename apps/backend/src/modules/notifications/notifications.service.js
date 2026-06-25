@@ -13,11 +13,12 @@
  *   saveNotificationRecord(recipientId, message, type, relatedEntityId?)
  *     → Saves to notifications table (for in-app notification bell).
  *
- * FCM token registration is handled by notifications.routes.js.
+ * FCM token registration is handled by notifications.repository.js / notifications.controller.js.
  */
 
 const { messaging } = require('../../config/firebase');
 const { query }     = require('../../config/db');
+const repository    = require('./notifications.repository');
 
 // ── Internal: fetch all FCM tokens for a user ─────────────────────────────────
 const getUserTokens = async (userId) => {
@@ -161,8 +162,53 @@ const sendBulkNotification = async (userIds, title, body, data = {}, type = 'gen
   return { total: userIds.length, sent: totalSent, failed: totalFailed };
 };
 
+// ── broadcast: resolve recipients and send ────────────────────────────────────
+/**
+ * Business logic for the GM broadcast endpoint.
+ * Resolves recipient IDs from targets/userIds and sends bulk notification.
+ */
+const broadcastNotification = async (message, targets, userIds, senderId) => {
+  // Must provide either targets or userIds
+  if (!targets?.length && !userIds?.length) {
+    const err = new Error('يجب تحديد targets (أدوار) أو userIds (مستخدمين محددين)');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  let recipientIds = [];
+
+  if (userIds?.length) {
+    recipientIds = await repository.getActiveUsersByIds(userIds);
+    if (recipientIds.length === 0) {
+      const err = new Error('لم يُعثر على مستخدمين نشطين بالمعرفات المحددة');
+      err.statusCode = 404;
+      throw err;
+    }
+  } else {
+    if (targets.includes('all')) {
+      recipientIds = await repository.getAllActiveStaffIds();
+    } else {
+      recipientIds = await repository.getActiveUsersByRoles(targets);
+    }
+    if (recipientIds.length === 0) {
+      const err = new Error('لا يوجد مستخدمون نشطون في الأدوار المحددة');
+      err.statusCode = 404;
+      throw err;
+    }
+  }
+
+  return sendBulkNotification(
+    recipientIds,
+    'إشعار من المدير العام',
+    message,
+    { sentBy: senderId },
+    'general'
+  );
+};
+
 module.exports = {
   sendPushNotification,
   sendBulkNotification,
+  broadcastNotification,
   saveNotificationRecord,
 };
