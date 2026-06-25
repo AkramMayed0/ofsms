@@ -3,37 +3,27 @@
 /**
  * Route: /sponsor/login
  * API:   POST /api/sponsor/login  { portalToken, password }
- *
- * Sponsors access via a unique URL:
- *   https://ofsms.org/sponsor/login?token=<portal_token>
- * The token is pre-filled from the query param.
  */
 
 import { useState, useEffect } from 'react';
-import { AlertTriangle } from 'lucide-react';
-
+import { AlertTriangle, Lock, ShieldCheck, ArrowLeft, KeyRound } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import useSponsorStore from '@/store/useSponsorStore';
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-
 const API_LOGIN_URL = `${process.env.NEXT_PUBLIC_API_URL}/sponsor/login`;
 
-// ── Page ──────────────────────────────────────────────────────────────────────
-
 export default function SponsorLoginPage() {
-  const router         = useRouter();
-  const searchParams   = useSearchParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const setSponsorAuth = useSponsorStore((s) => s.setSponsorAuth);
 
   const [portalToken, setPortalToken] = useState('');
-  const [password,    setPassword]    = useState('');
-  const [showPass,    setShowPass]    = useState(false);
-  const [loading,     setLoading]     = useState(false);
-  const [error,       setError]       = useState('');
+  const [password, setPassword] = useState('');
+  const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  // Pre-fill token from URL ?token=xxx
   useEffect(() => {
     const t = searchParams.get('token');
     if (t) setPortalToken(t);
@@ -62,63 +52,84 @@ export default function SponsorLoginPage() {
   };
 
   return (
-    <div className="flex flex-row-reverse min-h-screen font-sans bg-gray-100" dir="rtl">
-
-      {/* Decorative side */}
-      <aside className="relative w-[42%] bg-gradient-to-[160deg] from-[#1a4a2e] via-[#2d7a4a] to-[#1B5E8C] flex items-center justify-center overflow-hidden shrink-0 hidden md:flex">
-        <div className="relative z-10 text-center py-10 px-8 flex flex-col items-center justify-center">
-          <img
-            src="/ikram-logo.png"
-            alt="مؤسسة إكرام النعمة الخيرية"
-            className="max-w-[300px] w-4/5 h-auto object-contain bg-white rounded-3xl p-8 shadow-[0_8px_32px_rgba(0,0,0,0.18)]"
-          />
+    <div className="flex flex-col md:flex-row-reverse min-h-screen font-sans bg-slate-50" dir="rtl">
+      
+      {/* ── Brand / Hero Panel (Right side in RTL) ── */}
+      <aside className="relative md:w-[45%] lg:w-[50%] bg-gradient-to-br from-[#0B2F44] via-[#124b6e] to-[#0A4A3E] flex items-center justify-center overflow-hidden shrink-0 min-h-[300px] md:min-h-screen">
+        {/* Subtle animated background elements */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-[10%] -right-[10%] w-[500px] h-[500px] rounded-full bg-[#1da07f] blur-[120px] mix-blend-screen animate-pulse" style={{ animationDuration: '8s' }} />
+          <div className="absolute bottom-[10%] -left-[10%] w-[400px] h-[400px] rounded-full bg-[#3b82f6] blur-[100px] mix-blend-screen animate-pulse" style={{ animationDuration: '10s' }} />
+        </div>
+        
+        {/* Glassmorphic Brand Card */}
+        <div className="relative z-10 w-[80%] max-w-[400px] flex flex-col items-center justify-center">
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-8 rounded-[2rem] shadow-2xl flex flex-col items-center w-full transform transition-transform duration-700 hover:scale-105">
+            <div className="w-20 h-20 bg-gradient-to-br from-[#1cd29c] to-[#0d7d59] rounded-2xl flex items-center justify-center shadow-[0_0_40px_rgba(28,210,156,0.3)] mb-6">
+              <ShieldCheck size={40} className="text-white" strokeWidth={1.5} />
+            </div>
+            <h1 className="text-3xl font-extrabold text-white mb-3 tracking-tight text-center">بوابة الكافل</h1>
+            <p className="text-sm font-medium text-blue-100/80 text-center leading-relaxed">
+              نافذتك المباشرة لمتابعة أيتامك، الاطلاع على تقاريرهم، والمساهمة في بناء مستقبلهم.
+            </p>
+            
+            <div className="w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent my-6" />
+            
+            <div className="flex items-center gap-2 text-white/90 text-xs font-semibold tracking-wider">
+              <span>مؤسسة إكرام النعمة الخيرية</span>
+            </div>
+          </div>
         </div>
       </aside>
 
-      {/* Login form */}
-      <main className="flex-1 flex items-center justify-center py-8 px-6">
-        <div className="w-full max-w-[420px] bg-white rounded-2xl py-10 px-8 shadow-[0_4px_30px_rgba(0,0,0,0.08)] border border-black/5">
-
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="flex justify-center mb-4">
-              <ShieldIcon />
-            </div>
-            <h2 className="text-[1.4rem] font-extrabold text-[#0d3d5c] m-0 mb-1.5">تسجيل دخول الكافل</h2>
-            <p className="text-[0.82rem] text-[#6b7a8d] m-0 leading-relaxed">أدخل بياناتك للاطلاع على أيتامك ومتابعة تقاريرهم</p>
+      {/* ── Login Form Panel (Left side in RTL) ── */}
+      <main className="flex-1 flex items-center justify-center p-6 md:p-12 relative z-10 bg-slate-50">
+        <div className="w-full max-w-[440px]">
+          
+          <div className="mb-10">
+            <h2 className="text-[2rem] font-black text-slate-800 mb-3 tracking-tight">تسجيل الدخول</h2>
+            <p className="text-slate-500 font-medium">أدخل رمز البوابة وكلمة المرور للوصول لحسابك</p>
           </div>
 
-          <form onSubmit={handleSubmit} noValidate>
-
-            {/* Error */}
+          <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+            
+            {/* Error Alert */}
             {error && (
-              <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl py-2.5 px-3.5 text-[0.83rem] font-medium mb-4">
-                <AlertTriangle size={18} /> {error}
+              <div className="flex items-start gap-3 bg-red-50/80 backdrop-blur-sm border border-red-100 text-red-600 rounded-2xl p-4 animate-in slide-in-from-top-2 fade-in duration-300">
+                <AlertTriangle size={20} className="shrink-0 mt-0.5" />
+                <span className="text-sm font-semibold">{error}</span>
               </div>
             )}
 
-            {/* Portal token field */}
-            <div className="flex flex-col gap-1.5 mb-4">
-              <label className="text-[0.82rem] font-semibold text-gray-700">رمز البوابة</label>
-              <input
-                className="w-full border-[1.5px] border-gray-300 rounded-xl py-2.5 px-4 text-[0.88rem] font-sans bg-gray-50 outline-none box-border transition-colors focus:border-[#2d7a4a] focus:shadow-[0_0_0_3px_rgba(45,122,74,0.12)] focus:bg-white disabled:opacity-60"
-                type="text"
-                placeholder="أدخل رمز البوابة الخاص بك"
-                value={portalToken}
-                onChange={(e) => setPortalToken(e.target.value)}
-                disabled={loading}
-                dir="ltr"
-              />
-              <p className="text-[0.72rem] text-gray-400 m-0">الرمز مُرسَل إليك من قِبَل المؤسسة أو موجود في الرابط</p>
+            {/* Portal Token Field */}
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-slate-700 ml-1">رمز البوابة</label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 group-focus-within:text-emerald-600 transition-colors">
+                  <KeyRound size={20} strokeWidth={2} />
+                </div>
+                <input
+                  type="text"
+                  className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pr-12 pl-4 text-slate-800 font-medium placeholder:text-slate-400 transition-all duration-200 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:opacity-60"
+                  placeholder="أدخل الرمز الخاص بك"
+                  value={portalToken}
+                  onChange={(e) => setPortalToken(e.target.value)}
+                  disabled={loading}
+                  dir="ltr"
+                />
+              </div>
             </div>
 
-            {/* Password field */}
-            <div className="flex flex-col gap-1.5 mb-4">
-              <label className="text-[0.82rem] font-semibold text-gray-700">كلمة المرور</label>
-              <div className="relative flex items-center">
+            {/* Password Field */}
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-slate-700 ml-1">كلمة المرور</label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 group-focus-within:text-emerald-600 transition-colors">
+                  <Lock size={20} strokeWidth={2} />
+                </div>
                 <input
-                  className="w-full border-[1.5px] border-gray-300 rounded-xl py-2.5 px-4 text-[0.88rem] font-sans bg-gray-50 outline-none box-border transition-colors focus:border-[#2d7a4a] focus:shadow-[0_0_0_3px_rgba(45,122,74,0.12)] focus:bg-white disabled:opacity-60"
                   type={showPass ? 'text' : 'password'}
+                  className="w-full bg-white border-2 border-slate-200 rounded-2xl py-3.5 pr-12 pl-12 text-slate-800 font-medium placeholder:text-slate-400 transition-all duration-200 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:opacity-60 tracking-widest"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -127,56 +138,45 @@ export default function SponsorLoginPage() {
                 />
                 <button
                   type="button"
-                  className="absolute left-3 bg-transparent border-none cursor-pointer text-[0.9rem] text-gray-400 p-0.5"
-                  onClick={() => setShowPass((v) => !v)}
+                  className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                  onClick={() => setShowPass(!showPass)}
                   tabIndex={-1}
-                  aria-label={showPass ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
                 >
-                  {showPass ? '🙈' : '👁'}
+                  <span className="text-lg">{showPass ? '🙈' : '👁'}</span>
                 </button>
               </div>
             </div>
 
-            {/* Submit */}
+            {/* Submit Button */}
             <button
               type="submit"
-              className="w-full mt-2 py-3.5 bg-gradient-to-br from-[#2d7a4a] to-[#1a4a2e] text-white border-none rounded-xl font-sans text-[0.95rem] font-bold cursor-pointer flex items-center justify-center gap-2 shadow-[0_2px_10px_rgba(45,122,74,0.3)] transition-all hover:not(:disabled):-translate-y-px hover:not(:disabled):shadow-[0_4px_16px_rgba(45,122,74,0.4)] disabled:opacity-65 disabled:cursor-not-allowed"
+              className="group relative w-full flex items-center justify-center gap-2 py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-base transition-all duration-200 overflow-hidden shadow-[0_8px_20px_rgba(15,23,42,0.15)] hover:shadow-[0_8px_25px_rgba(15,23,42,0.25)] hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
               disabled={loading}
             >
-              {loading
-                ? <><span className="inline-block w-[15px] h-[15px] border-2 border-white/40 border-t-white rounded-full animate-spin" />جارٍ تسجيل الدخول…</>
-                : 'دخول البوابة ←'
-              }
+              {/* Subtle hover gradient effect */}
+              <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
+              
+              {loading ? (
+                <><span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> جاري الدخول...</>
+              ) : (
+                <>
+                  <span>متابعة للدخول</span>
+                  <ArrowLeft size={18} className="transition-transform group-hover:-translate-x-1" />
+                </>
+              )}
             </button>
           </form>
 
-          <p className="text-center text-[0.72rem] text-gray-400 mt-6 mb-0">
-            إذا لم يكن لديك رمز بوابة، تواصل مع مؤسسة إكرام النعمة الخيرية
-          </p>
+          {/* Footer Note */}
+          <div className="mt-10 text-center">
+            <p className="text-xs font-medium text-slate-400">
+              يتم إصدار بيانات الدخول حصرياً من قِبل إدارة المؤسسة.<br/>
+              في حال فقدان البيانات، يرجى التواصل مع الدعم الفني.
+            </p>
+          </div>
+
         </div>
       </main>
     </div>
-  );
-}
-
-// ── ShieldIcon ────────────────────────────────────────────────────────────────
-
-function ShieldIcon() {
-  return (
-    <svg width={40} height={40} viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path
-        d="M36 4L8 18v20c0 15 11.5 29 28 33 16.5-4 28-18 28-33V18L36 4z"
-        fill="#2d7a4a"
-        stroke="#2d7a4a"
-        strokeWidth="2"
-      />
-      <path
-        d="M26 36l7 7 13-13"
-        stroke="#fff"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }
