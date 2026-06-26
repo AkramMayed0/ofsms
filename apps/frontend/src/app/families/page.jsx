@@ -7,7 +7,7 @@ import SearchField from '@/components/ui/SearchField';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import { formatDate } from '@/components/disbursements/_constants';
-import StatPill from '@/components/families/StatPill';
+import StatPill from '@/components/ui/StatPill';
 import StatusBadge, { STATUS_MAP } from '@/components/ui/StatusBadge';
 import Button from '@/components/ui/Button';
 import Select from '@/components/ui/Select';

@@ -17,6 +17,7 @@ import {
 import SearchField from '@/components/ui/SearchField';
 import EmptyState from '@/components/ui/EmptyState';
 import { SkeletonTableRow } from '@/components/ui/Skeleton';
+import StatPill from '@/components/ui/StatPill';
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
 
@@ -49,18 +50,6 @@ const formatDate = (dateStr) =>
   dateStr
     ? new Date(dateStr).toLocaleDateString(DATE_LOCALE, { dateStyle: 'medium' })
     : '—';
-
-// ── StatPill ──────────────────────────────────────────────────────────────────
-function StatPill({ label, count, color }) {
-  return (
-    <div className="inline-flex flex-col items-center gap-0.5 py-2.5 px-4 bg-white border-[1.5px] border-gray-200 rounded-xl min-w-[80px] shadow-sm">
-      <span className="text-[1.35rem] font-extrabold leading-none" style={{ color }}>
-        {count}
-      </span>
-      <span className="text-[0.72rem] font-semibold text-gray-500 whitespace-nowrap">{label}</span>
-    </div>
-  );
-}
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function MarketingPoolPage() {

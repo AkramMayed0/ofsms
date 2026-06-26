@@ -23,6 +23,7 @@ import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import Textarea from '@/components/ui/Textarea';
 import EmptyState from '@/components/ui/EmptyState';
+import StatPill from '@/components/ui/StatPill';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -372,9 +373,9 @@ export default function RegistrationsPage() {
   const familyCount = queue.filter((r) => r.record_type === 'family').length;
 
   const STAT_PILLS = [
-    { label: 'إجمالي الطلبات', count: queue.length,  colorClass: 'text-[#1B5E8C]' },
-    { label: 'أيتام',           count: orphanCount,   colorClass: 'text-amber-500' },
-    { label: 'أسر',             count: familyCount,   colorClass: 'text-emerald-500' },
+    { label: 'إجمالي الطلبات', count: queue.length,  color: '#1B5E8C' },
+    { label: 'أيتام',           count: orphanCount,   color: '#F59E0B' },
+    { label: 'أسر',             count: familyCount,   color: '#10B981' },
   ];
 
   const FILTER_TABS = [
@@ -423,13 +424,8 @@ export default function RegistrationsPage() {
 
         {/* ── Stat pills ── */}
         <div className="flex gap-2.5 flex-wrap">
-          {STAT_PILLS.map(({ label, count, colorClass }) => (
-            <div key={label} className="inline-flex flex-col items-center gap-0.5 py-2.5 px-4 bg-white border-[1.5px] border-gray-200 rounded-xl min-w-[80px] flex-1 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-              <span className={`text-[1.35rem] font-extrabold leading-none ${colorClass}`}>
-                {loading ? '…' : count}
-              </span>
-              <span className="text-[0.72rem] font-semibold text-gray-500 whitespace-nowrap">{label}</span>
-            </div>
+          {STAT_PILLS.map(({ label, count, color }) => (
+            <StatPill key={label} label={label} count={loading ? '…' : count} color={color} className="flex-1" />
           ))}
         </div>
 
