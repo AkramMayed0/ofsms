@@ -15,7 +15,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { AlertTriangle, X, Trash2, Edit2, Users, Search, RefreshCw, Plus, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, X, Trash2, Edit2, Users, RefreshCw, Plus, CheckCircle2 } from 'lucide-react';
+import SearchField from '@/components/ui/SearchField';
 
 import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
@@ -500,26 +501,14 @@ export default function UserManagementPage() {
         {/* Filters Bar */}
         <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200/60 bg-white/60 p-4 shadow-sm backdrop-blur-md">
           {/* Search */}
-          <div className="relative min-w-[240px] flex-1">
-            <span className="absolute right-3 top-1/2 flex -translate-y-1/2 text-slate-400 pointer-events-none">
-              <Search size={18} strokeWidth={2} />
-            </span>
-            <input
-              type="text"
-              placeholder="ابحث بالاسم أو البريد الإلكتروني…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-10 pr-10 text-sm font-medium text-slate-800 outline-none transition-all hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
-            />
-            {search && (
-              <button 
-                onClick={() => setSearch('')} 
-                className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition-colors"
-              >
-                <X size={16} strokeWidth={2.5} />
-              </button>
-            )}
-          </div>
+          <SearchField
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onClear={() => setSearch('')}
+            placeholder="ابحث بالاسم أو البريد الإلكتروني…"
+            className="min-w-[240px] flex-1"
+            inputClassName="rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-10 text-sm font-medium text-slate-800 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+          />
 
           {/* Role Tabs */}
           <div className="flex flex-wrap gap-2">

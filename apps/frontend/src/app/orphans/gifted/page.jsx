@@ -10,6 +10,7 @@ import { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import { Star, Search, X, AlertCircle, CheckCircle2 } from 'lucide-react';
+import SearchField from '@/components/ui/SearchField';
 
 // Components
 import StatsBar from './components/StatsBar';
@@ -97,23 +98,14 @@ export default function GiftedOrphansPage() {
         {/* Search */}
         {orphans.length > 0 && (
           <div className="flex items-center gap-4">
-            <div className="relative flex-1 max-w-xl">
-              <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-              <input
-                className="w-full border-2 border-slate-200 rounded-2xl py-3 pr-10 pl-10 text-sm text-slate-800 bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none shadow-sm"
-                placeholder="ابحث بالاسم أو المحافظة أو الكافل…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              {search && (
-                <button 
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 w-6 h-6 rounded-full flex items-center justify-center transition-colors"
-                  onClick={() => setSearch('')}
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
+            <SearchField
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onClear={() => setSearch('')}
+              placeholder="ابحث بالاسم أو المحافظة أو الكافل…"
+              className="flex-1 max-w-xl"
+              inputClassName="border-2 border-slate-200 rounded-2xl py-3 pr-10 pl-10 text-sm text-slate-800 bg-white shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+            />
             <span className="text-sm font-bold text-slate-400 hidden sm:block">
               {filtered.length} من {orphans.length}
             </span>

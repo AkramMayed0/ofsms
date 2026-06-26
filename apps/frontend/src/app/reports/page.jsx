@@ -13,6 +13,7 @@
 
 import { useEffect, useState } from 'react';
 import { Search, X, CheckCircle2, FileText, Check, Wallet, MapPin, FileSpreadsheet, Lightbulb } from 'lucide-react';
+import SearchField from '@/components/ui/SearchField';
 
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
@@ -257,25 +258,14 @@ function DisbursementsTab() {
 
       {/* Toolbar */}
       <div className="flex gap-2.5 flex-wrap items-center p-4 border-b border-[#f0f4f8]">
-        <div className="relative flex-1 min-w-[180px]">
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-            <Search size={16} />
-          </span>
-          <input
-            className="w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2 px-8 pl-8 pr-9 text-[0.83rem] font-cairo bg-[#fafafa] outline-none box-border"
-            placeholder="ابحث بالشهر أو السنة أو المُنشئ…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-          {search && (
-            <button
-              onClick={() => setSearch('')}
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 bg-none border-none cursor-pointer text-gray-400 hover:text-gray-600"
-            >
-              <X size={16} />
-            </button>
-          )}
-        </div>
+        <SearchField
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          onClear={() => setSearch('')}
+          placeholder="ابحث بالشهر أو السنة أو المُنشئ…"
+          className="flex-1 min-w-[180px]"
+          inputClassName="border-gray-300 py-2 text-[0.83rem] font-cairo bg-[#fafafa]"
+        />
         <div className="flex gap-1.5 flex-wrap">
           {[{ key: 'all', label: 'الكل' }, ...Object.entries(DISB_STATUS).map(([k, v]) => ({ key: k, label: v.label }))].map(({ key, label }) => (
             <button
@@ -516,25 +506,14 @@ function GovernoratesTab() {
 
       {/* Toolbar */}
       <div className="p-4 border-b border-[#f0f4f8]">
-        <div className="relative max-w-[340px]">
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-            <Search size={16} />
-          </span>
-          <input
-            className="w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2 px-8 pl-8 pr-9 text-[0.83rem] font-cairo bg-[#fafafa] outline-none box-border"
-            placeholder="ابحث باسم المحافظة…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-          {search && (
-            <button
-              onClick={() => setSearch('')}
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 bg-none border-none cursor-pointer text-gray-400 hover:text-gray-600"
-            >
-              <X size={16} />
-            </button>
-          )}
-        </div>
+        <SearchField
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          onClear={() => setSearch('')}
+          placeholder="ابحث باسم المحافظة…"
+          className="max-w-[340px]"
+          inputClassName="border-gray-300 py-2 text-[0.83rem] font-cairo bg-[#fafafa]"
+        />
       </div>
 
       {/* Export bar */}
