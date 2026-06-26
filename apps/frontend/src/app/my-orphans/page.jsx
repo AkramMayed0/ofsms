@@ -11,7 +11,8 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Search, AlertTriangle, X, User, CheckCircle2, FileText } from 'lucide-react';
+import { AlertTriangle, X, User, CheckCircle2, FileText } from 'lucide-react';
+import SearchField from '@/components/ui/SearchField';
 
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
@@ -237,18 +238,13 @@ export default function MyOrphansPage() {
 
         {/* Search + filter bar */}
         <div className="flex flex-col gap-3 mb-5">
-          <div className="relative flex items-center">
-            <span className="absolute right-3.5 text-[0.9rem] pointer-events-none text-gray-400"><Search size={16} /></span>
-            <input
-              className="w-full border-[1.5px] border-gray-300 rounded-[0.75rem] py-2.5 pl-10 pr-9.5 text-[0.88rem] text-gray-800 bg-gray-50 outline-none transition-all duration-150 box-border focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10"
-              placeholder="ابحث بالاسم أو المحافظة أو الوصي…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            {search && (
-              <button className="absolute left-3 bg-transparent border-none cursor-pointer text-gray-400 text-[0.85rem] p-1 transition-colors duration-150 hover:text-gray-700" onClick={() => setSearch('')}><X size={16} /></button>
-            )}
-          </div>
+          <SearchField
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onClear={() => setSearch('')}
+            placeholder="ابحث بالاسم أو المحافظة أو الوصي…"
+            inputClassName="rounded-[0.75rem] border-gray-300 pl-10 pr-9.5 text-[0.88rem] focus:ring-4 focus:ring-primary/10"
+          />
 
           {/* Status filter tabs */}
           <div className="flex gap-1.5 flex-wrap">
