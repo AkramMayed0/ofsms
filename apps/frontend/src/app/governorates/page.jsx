@@ -6,6 +6,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { Search, AlertTriangle, X, User, MapPin, Map, Users, Star, ArrowRight } from 'lucide-react';
+import SearchField from '@/components/ui/SearchField';
 
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
@@ -210,18 +211,14 @@ export default function GovernoratesPage() {
                   {/* Toolbar */}
                   {!loadingRight && orphans.length > 0 && (
                     <div className={`flex gap-2.5 flex-wrap ${isMobile ? 'flex-col items-stretch' : 'flex-row items-center'}`}>
-                      <div className={`relative flex-1 ${isMobile ? 'min-w-0' : 'min-w-[180px]'}`}>
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[0.85rem] pointer-events-none text-gray-400"><Search size={16} /></span>
-                        <input
-                          className="w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2 pl-8 pr-9 text-[0.82rem] bg-gray-50 outline-none box-border transition-all duration-150 focus:border-primary focus:ring-4 focus:ring-primary/10 focus:bg-white"
-                          placeholder="ابحث بالاسم أو الكافل أو المندوب…"
-                          value={search}
-                          onChange={e => setSearch(e.target.value)}
-                        />
-                        {search && (
-                          <button onClick={() => setSearch('')} className="absolute left-2.5 top-1/2 -translate-y-1/2 bg-transparent border-0 cursor-pointer text-gray-400 text-[0.8rem]"><X size={16} /></button>
-                        )}
-                      </div>
+                      <SearchField
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        onClear={() => setSearch('')}
+                        placeholder="ابحث بالاسم أو الكافل أو المندوب…"
+                        className={`flex-1 ${isMobile ? 'min-w-0' : 'min-w-[180px]'}`}
+                        inputClassName="py-2 border-gray-300 text-[0.82rem] focus:ring-4 focus:ring-primary/10"
+                      />
                       <div className="flex gap-1.5 flex-wrap">
                         {[{ key:'all', label:'الكل' }, ...Object.entries(STATUS).map(([k,v]) => ({ key:k, label:v.label }))].map(({ key, label }) => (
                           <button

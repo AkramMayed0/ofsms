@@ -11,9 +11,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  AlertTriangle, X, Download, Search,
+  AlertTriangle, X, Download,
   Filter, Star, RefreshCw, Users,
 } from 'lucide-react';
+import SearchField from '@/components/ui/SearchField';
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
 
@@ -291,27 +292,14 @@ export default function MarketingPoolPage() {
         {/* ── Filters bar ─────────────────────────────────────────── */}
         <div className="flex gap-2.5 flex-wrap items-center bg-white border border-[#e5eaf0] rounded-[0.875rem] px-4 py-3.5 shadow-sm">
           {/* Search */}
-          <div className="relative flex-1 min-w-[200px]">
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 flex pointer-events-none">
-              <Search size={15} />
-            </span>
-            <input
-              type="text"
-              className="w-full py-[0.55rem] pr-9 pl-8 border-[1.5px] border-gray-200 rounded-[0.625rem] font-sans text-[0.875rem] text-gray-800 bg-gray-50 outline-none box-border transition-[border-color,box-shadow] focus:border-[#1B5E8C] focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)] focus:bg-white placeholder:text-[#c4cdd8]"
-              placeholder="ابحث بالاسم أو المحافظة أو المندوب…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            {search && (
-              <button
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 bg-transparent border-none text-gray-400 cursor-pointer p-0.5 hover:text-gray-600"
-                onClick={() => setSearch('')}
-                aria-label="مسح البحث"
-              >
-                <X size={16} />
-              </button>
-            )}
-          </div>
+          <SearchField
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onClear={() => setSearch('')}
+            placeholder="ابحث بالاسم أو المحافظة أو المندوب…"
+            className="flex-1 min-w-[200px]"
+            inputClassName="py-[0.55rem] font-sans placeholder:text-[#c4cdd8] focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)] focus:ring-0"
+          />
 
           {/* Type filter */}
           <div className="relative">

@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, AlertTriangle, X, Users, Filter } from 'lucide-react';
+import { AlertTriangle, X, Users, Filter } from 'lucide-react';
+import SearchField from '@/components/ui/SearchField';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import { formatDate } from '@/components/disbursements/_constants';
@@ -95,24 +96,14 @@ export default function FamiliesManagementPage() {
 
         <div className="flex gap-2.5 flex-wrap items-center bg-white border border-[#e5eaf0] rounded-[0.875rem] px-4 py-3.5 shadow-sm">
           {/* Search */}
-          <div className="relative flex-1 min-w-[200px]">
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 flex pointer-events-none">
-              <Search size={16} />
-            </span>
-            <input
-              type="text"
-              placeholder="ابحث باسم الأسرة أو المعيل أو المندوب…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pr-9 pl-8 py-2 border border-gray-200 rounded-lg text-sm text-gray-800 bg-gray-50 hover:border-gray-300 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 focus:bg-white transition"
-            />
-            {search && (
-              <button
-                onClick={() => setSearch('')}
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer p-0.5"
-              ><X size={16} /></button>
-            )}
-          </div>
+          <SearchField
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onClear={() => setSearch('')}
+            placeholder="ابحث باسم الأسرة أو المعيل أو المندوب…"
+            className="flex-1 min-w-[200px]"
+            inputClassName="border rounded-lg py-2 text-sm hover:border-gray-300 focus:ring-2 focus:ring-primary/10"
+          />
 
           {/* Status filter */}
           <div className="relative">

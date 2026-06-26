@@ -17,6 +17,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { AlertTriangle, X, User } from 'lucide-react';
+import SearchField from '@/components/ui/SearchField';
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -38,13 +39,6 @@ const ALL_STATUSES = [
 ];
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
-const IconSearch = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-  </svg>
-);
-
 const IconFilter = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
     strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -255,24 +249,14 @@ export default function OrphansListPage() {
         {/* ── Filters bar ─────────────────────────────────────────── */}
         <div className="flex gap-2.5 flex-wrap items-center bg-white border border-[#e5eaf0] rounded-[0.875rem] p-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           {/* Search */}
-          <div className="relative flex-1 min-w-[200px]">
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 flex pointer-events-none">
-              <IconSearch />
-            </span>
-            <input
-              type="text"
-              placeholder="ابحث بالاسم أو اسم الوصي أو المحافظة…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full py-2.5 pl-9 pr-10 border-[1.5px] border-gray-200 rounded-[0.625rem] text-[0.875rem] bg-gray-50 outline-none box-border text-right transition-all duration-150 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10"
-            />
-            {search && (
-              <button
-                onClick={() => setSearch('')}
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 bg-transparent border-none text-gray-400 cursor-pointer text-[0.8rem] p-1 transition-colors duration-120 hover:text-gray-700"
-              ><X size={16} /></button>
-            )}
-          </div>
+          <SearchField
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onClear={() => setSearch('')}
+            placeholder="ابحث بالاسم أو اسم الوصي أو المحافظة…"
+            className="flex-1 min-w-[200px]"
+            inputClassName="pl-9 pr-10 focus:ring-4 focus:ring-primary/10"
+          />
 
           {/* Status filter */}
           <div className="relative">

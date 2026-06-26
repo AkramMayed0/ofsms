@@ -18,14 +18,14 @@ import AppShell from '@/components/AppShell';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Spinner from '@/components/ui/Spinner';
-import { 
-  Search, 
-  Plus, 
-  X, 
-  User, 
-  AlertTriangle, 
-  Handshake 
+import {
+  Plus,
+  X,
+  User,
+  AlertTriangle,
+  Handshake
 } from 'lucide-react';
+import SearchField from '@/components/ui/SearchField';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const MIN_NAME_LENGTH = 3;
@@ -196,20 +196,13 @@ export default function SponsorManagementPage() {
         </div>
 
         {/* Search */}
-        <div className="relative flex items-center">
-          <Search className="absolute right-3.5 pointer-events-none" size={18} color="#9ca3af" />
-          <input
-            className="w-full border-[1.5px] border-gray-300 rounded-xl py-2.5 pl-10 pr-10 text-[0.88rem] font-sans text-gray-800 bg-[#fafafa] outline-none transition-all duration-150 box-border focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)]"
-            placeholder="ابحث بالاسم أو البريد أو رقم الهاتف…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          {search && (
-            <button className="absolute left-2 bg-transparent border-none cursor-pointer text-gray-400 flex items-center justify-center p-1 rounded-full transition-all duration-150 hover:bg-slate-100 hover:text-red-500" onClick={() => setSearch('')}>
-              <X size={16} />
-            </button>
-          )}
-        </div>
+        <SearchField
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onClear={() => setSearch('')}
+          placeholder="ابحث بالاسم أو البريد أو رقم الهاتف…"
+          inputClassName="rounded-xl border-gray-300 pr-10 pl-10 font-sans text-[0.88rem] bg-[#fafafa] focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)] focus:ring-0"
+        />
 
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-[0.625rem] px-3.5 py-2.5 text-[0.82rem] text-red-700 font-medium flex items-center gap-2">
