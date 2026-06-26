@@ -16,16 +16,11 @@ import {
 } from 'lucide-react';
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
-const SELECT_CHEVRON_STYLE = {
-  backgroundImage:
-    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")",
-  backgroundRepeat: 'no-repeat',
-  backgroundPosition: 'left 0.6rem center',
-};
 
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
 import useAuthStore from '../../store/useAuthStore';
+import Select from '@/components/ui/Select';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const DATE_LOCALE = 'ar-YE';
@@ -323,9 +318,8 @@ export default function MarketingPoolPage() {
             <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 flex pointer-events-none z-[1]">
               <Filter size={15} />
             </span>
-            <select
-              className="appearance-none py-[0.55rem] pr-9 pl-7 border-[1.5px] border-gray-200 rounded-[0.625rem] font-sans text-[0.82rem] text-gray-700 bg-gray-50 outline-none cursor-pointer transition-[border-color] focus:border-[#1B5E8C]"
-              style={SELECT_CHEVRON_STYLE}
+            <Select
+              className="py-[0.55rem] pr-9 pl-7 border-gray-200 text-[0.82rem] text-gray-700 focus:ring-0"
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
               aria-label="تصفية حسب النوع"
@@ -333,7 +327,7 @@ export default function MarketingPoolPage() {
               <option value="all">الكل (أيتام + أسر)</option>
               <option value="orphan">الأيتام فقط</option>
               <option value="family">الأسر فقط</option>
-            </select>
+            </Select>
           </div>
 
           {/* Governorate filter */}
@@ -341,9 +335,8 @@ export default function MarketingPoolPage() {
             <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 flex pointer-events-none z-[1]">
               <Filter size={15} />
             </span>
-            <select
-              className="appearance-none py-[0.55rem] pr-9 pl-7 border-[1.5px] border-gray-200 rounded-[0.625rem] font-sans text-[0.82rem] text-gray-700 bg-gray-50 outline-none cursor-pointer transition-[border-color] focus:border-[#1B5E8C]"
-              style={SELECT_CHEVRON_STYLE}
+            <Select
+              className="py-[0.55rem] pr-9 pl-7 border-gray-200 text-[0.82rem] text-gray-700 focus:ring-0"
               value={govFilter}
               onChange={(e) => setGovFilter(e.target.value)}
               aria-label="تصفية حسب المحافظة"
@@ -352,7 +345,7 @@ export default function MarketingPoolPage() {
               {governorates.map((g) => (
                 <option key={g.id} value={g.name_ar}>{g.name_ar}</option>
               ))}
-            </select>
+            </Select>
           </div>
 
           {/* Gifted filter */}
@@ -360,9 +353,8 @@ export default function MarketingPoolPage() {
             <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 flex pointer-events-none z-[1]">
               <Filter size={15} />
             </span>
-            <select
-              className="appearance-none py-[0.55rem] pr-9 pl-7 border-[1.5px] border-gray-200 rounded-[0.625rem] font-sans text-[0.82rem] text-gray-700 bg-gray-50 outline-none cursor-pointer transition-[border-color] focus:border-[#1B5E8C]"
-              style={SELECT_CHEVRON_STYLE}
+            <Select
+              className="py-[0.55rem] pr-9 pl-7 border-gray-200 text-[0.82rem] text-gray-700 focus:ring-0"
               value={giftedFilter}
               onChange={(e) => setGiftedFilter(e.target.value)}
               aria-label="تصفية حسب الموهبة"
@@ -370,7 +362,7 @@ export default function MarketingPoolPage() {
               <option value="">الكل (موهوب + عادي)</option>
               <option value="true">الموهوبون فقط ⭐</option>
               <option value="false">غير الموهوبين</option>
-            </select>
+            </Select>
           </div>
 
           {/* Clear filters */}
