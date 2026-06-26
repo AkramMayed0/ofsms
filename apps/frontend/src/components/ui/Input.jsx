@@ -19,6 +19,4 @@ const Input = forwardRef(function Input({ error, className, ...props }, ref) {
   );
 });
 
-export { default as Textarea } from './Textarea';
-
 export default Input;
