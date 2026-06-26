@@ -14,6 +14,7 @@
 import { useEffect, useState } from 'react';
 import { Search, X, CheckCircle2, FileText, Check, Wallet, MapPin, FileSpreadsheet, Lightbulb } from 'lucide-react';
 import SearchField from '@/components/ui/SearchField';
+import { SkeletonRows } from '@/components/ui/Skeleton';
 
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
@@ -124,25 +125,6 @@ function MiniSpinner({ color = '#1B5E8C' }) {
   );
 }
 
-// ── Skeleton row ──────────────────────────────────────────────────────────────
-function SkeletonRows({ count = 5 }) {
-  return (
-    <>
-      {Array.from({ length: count }).map((_, i) => (
-        <tr key={i}>
-          {Array.from({ length: 5 }).map((__, j) => (
-            <td key={j} className="py-3 px-4 border-b border-[#f8fafc]">
-              <div
-                style={{ width: `${60 + (i + j) * 7}%` }}
-                className="h-[14px] rounded bg-gradient-to-r from-[#f0f4f8] via-[#e5eaf0] to-[#f0f4f8] bg-[length:200%_100%] animate-shimmer"
-              />
-            </td>
-          ))}
-        </tr>
-      ))}
-    </>
-  );
-}
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
 function Toast({ msg, type = 'error', onClose }) {
@@ -319,7 +301,7 @@ function DisbursementsTab() {
           </thead>
           <tbody>
             {loading ? (
-              <SkeletonRows count={5} />
+              <SkeletonRows count={5} widths={[65, 72, 79, 55, 68]} cellClassName="py-3 px-4 border-b border-[#f8fafc]" barClassName="h-[14px]" />
             ) : filtered.length === 0 ? (
               <tr>
                 <td colSpan={7} className="p-12 text-[#9ca3af] text-[0.85rem]">
@@ -552,7 +534,7 @@ function GovernoratesTab() {
           </thead>
           <tbody>
             {loading ? (
-              <SkeletonRows count={8} />
+              <SkeletonRows count={8} widths={[65, 72, 79, 55, 68]} cellClassName="py-3 px-4 border-b border-[#f8fafc]" barClassName="h-[14px]" />
             ) : filtered.length === 0 ? (
               <tr>
                 <td colSpan={5} className="p-12 text-center text-[#9ca3af] text-[0.85rem]">

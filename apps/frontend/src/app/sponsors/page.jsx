@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import SearchField from '@/components/ui/SearchField';
 import EmptyState from '@/components/ui/EmptyState';
+import { SkeletonListRow } from '@/components/ui/Skeleton';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const MIN_NAME_LENGTH = 3;
@@ -215,17 +216,7 @@ export default function SponsorManagementPage() {
         {/* Loading skeleton */}
         {loading && (
           <div className="bg-white border border-[#e5eaf0] rounded-2xl overflow-hidden shadow-[0_1px_4px_rgba(27,94,140,0.05)]">
-            {[1,2,3,4,5].map(i => (
-              <div key={i} className="flex items-center gap-4 px-5 py-3 border-b border-slate-50">
-                <div className="bg-gradient-to-r from-[#f0f4f8] via-[#e5eaf0] to-[#f0f4f8] bg-[length:400%_100%] animate-shimmer rounded-full shrink-0" style={{ width: 40, height: 40 }} />
-                <div style={{ flex: 1 }}>
-                  <div className="bg-gradient-to-r from-[#f0f4f8] via-[#e5eaf0] to-[#f0f4f8] bg-[length:400%_100%] animate-shimmer rounded mb-1.5" style={{ width: '40%', height: 14 }} />
-                  <div className="bg-gradient-to-r from-[#f0f4f8] via-[#e5eaf0] to-[#f0f4f8] bg-[length:400%_100%] animate-shimmer rounded" style={{ width: '25%', height: 12 }} />
-                </div>
-                <div className="bg-gradient-to-r from-[#f0f4f8] via-[#e5eaf0] to-[#f0f4f8] bg-[length:400%_100%] animate-shimmer rounded-full" style={{ width: 60, height: 24 }} />
-                <div className="bg-gradient-to-r from-[#f0f4f8] via-[#e5eaf0] to-[#f0f4f8] bg-[length:400%_100%] animate-shimmer rounded" style={{ width: 100, height: 14 }} />
-              </div>
-            ))}
+            {[1,2,3,4,5].map(i => <SkeletonListRow key={i} className="px-5 py-3 border-slate-50" />)}
           </div>
         )}
 
