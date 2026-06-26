@@ -20,6 +20,7 @@ import { AlertTriangle, X, User } from 'lucide-react';
 import SearchField from '@/components/ui/SearchField';
 import EmptyState from '@/components/ui/EmptyState';
 import { SkeletonTableRow } from '@/components/ui/Skeleton';
+import StatPill from '@/components/ui/StatPill';
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -92,19 +93,6 @@ const formatDate = (d) =>
 
 
 
-// ── Stat pill ─────────────────────────────────────────────────────────────────
-function StatPill({ label, count, color }) {
-  return (
-    <div className="inline-flex flex-col items-center gap-0.5 px-4.5 py-2.5 bg-white border-[1.5px] border-gray-200 rounded-[12px] min-w-[80px] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-      <span className="text-[1.35rem] font-extrabold leading-none" style={{ color }}>
-        {count}
-      </span>
-      <span className="text-[0.72rem] font-semibold text-gray-500 whitespace-nowrap">
-        {label}
-      </span>
-    </div>
-  );
-}
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function OrphansListPage() {

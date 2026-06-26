@@ -18,6 +18,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { AlertTriangle, X, Trash2, Edit2, Users, RefreshCw, Plus, CheckCircle2 } from 'lucide-react';
 import SearchField from '@/components/ui/SearchField';
 import EmptyState from '@/components/ui/EmptyState';
+import StatPill from '@/components/ui/StatPill';
 
 import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
@@ -68,24 +69,6 @@ function SuccessPopup({ title, msg, type = 'success', onClose }) {
         <h3 className="text-xl font-bold text-slate-800">{title}</h3>
         {msg && <p className="mt-2 text-sm text-slate-500 leading-relaxed">{msg}</p>}
       </div>
-    </div>
-  );
-}
-
-// ── StatPill ───────────────────────────────────────────────────────────────────
-
-function StatPill({ label, count, roleKey }) {
-  const cfg = roleKey ? ROLE_MAP[roleKey] : { color: 'text-slate-800' };
-  
-  return (
-    <div className="group relative flex min-w-[90px] flex-col items-center justify-center gap-1 overflow-hidden rounded-2xl border border-slate-200/60 bg-white/60 p-4 backdrop-blur-md transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200/50">
-      <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-      <span className={`relative z-10 text-2xl font-black leading-none tracking-tight ${cfg.color}`}>
-        {count}
-      </span>
-      <span className="relative z-10 whitespace-nowrap text-xs font-bold text-slate-500">
-        {label}
-      </span>
     </div>
   );
 }
@@ -492,11 +475,11 @@ export default function UserManagementPage() {
 
         {/* Stat Pills */}
         <div className="flex flex-wrap gap-3">
-          <StatPill label="الإجمالي" count={users.length} />
-          <StatPill label="مدير عام" count={roleCounts.gm || 0} roleKey="gm" />
-          <StatPill label="مشرف أيتام" count={roleCounts.supervisor || 0} roleKey="supervisor" />
-          <StatPill label="مندوب" count={roleCounts.agent || 0} roleKey="agent" />
-          <StatPill label="قسم مالي" count={roleCounts.finance || 0} roleKey="finance" />
+          <StatPill label="الإجمالي"   count={users.length}              color="#1e293b" />
+          <StatPill label="مدير عام"   count={roleCounts.gm || 0}        color="#7e22ce" />
+          <StatPill label="مشرف أيتام" count={roleCounts.supervisor || 0} color="#1d4ed8" />
+          <StatPill label="مندوب"      count={roleCounts.agent || 0}      color="#047857" />
+          <StatPill label="قسم مالي"   count={roleCounts.finance || 0}    color="#b45309" />
         </div>
 
         {/* Filters Bar */}
