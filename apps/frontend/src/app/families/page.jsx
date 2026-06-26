@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, AlertTriangle, X, Users, Filter, ChevronDown } from 'lucide-react';
+import { Search, AlertTriangle, X, Users, Filter } from 'lucide-react';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import { formatDate } from '@/components/disbursements/_constants';
 import StatPill from '@/components/families/StatPill';
 import StatusBadge, { STATUS_MAP } from '@/components/ui/StatusBadge';
 import Button from '@/components/ui/Button';
+import Select from '@/components/ui/Select';
 
 export default function FamiliesManagementPage() {
   const router = useRouter();
@@ -118,34 +119,28 @@ export default function FamiliesManagementPage() {
             <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 flex pointer-events-none z-[1]">
               <Filter size={15} />
             </span>
-            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 flex pointer-events-none z-[1]">
-              <ChevronDown size={13} />
-            </span>
-            <select
+            <Select
+              className="py-2 pr-9 pl-7 border border-gray-200 rounded-lg text-sm text-gray-700 hover:border-gray-300 focus:ring-2 focus:ring-primary/10"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="appearance-none pr-9 pl-7 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 bg-gray-50 cursor-pointer focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 hover:border-gray-300 transition"
             >
               <option value="all">جميع الحالات</option>
               {Object.entries(STATUS_MAP).map(([val, cfg]) => (
                 <option key={val} value={val}>{cfg.label}</option>
               ))}
-            </select>
+            </Select>
           </div>
 
           {/* Governorate filter */}
-          <div className="relative">
-            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 flex pointer-events-none z-[1]">
-              <ChevronDown size={13} />
-            </span>
-            <select
+          <div>
+            <Select
+              className="py-2 pr-3.5 pl-7 border border-gray-200 rounded-lg text-sm text-gray-700 hover:border-gray-300 focus:ring-2 focus:ring-primary/10"
               value={filterGov}
               onChange={(e) => setFilterGov(e.target.value)}
-              className="appearance-none pr-3.5 pl-7 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 bg-gray-50 cursor-pointer focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 hover:border-gray-300 transition"
             >
               <option value="all">جميع المحافظات</option>
               {uniqueGovs.map(g => <option key={g} value={g}>{g}</option>)}
-            </select>
+            </Select>
           </div>
 
           {/* Clear filters */}
