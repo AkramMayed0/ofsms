@@ -17,8 +17,7 @@ import StatsBar from './components/StatsBar';
 import OrphanCard from './components/OrphanCard';
 import BenefitsDrawer from './components/BenefitsDrawer';
 import RevokeModal from './components/RevokeModal';
-import EmptyState from './components/EmptyState';
-import UIEmptyState from '@/components/ui/EmptyState';
+import EmptyState from '@/components/ui/EmptyState';
 import LoadingSkeleton from './components/LoadingSkeleton';
 
 export default function GiftedOrphansPage() {
@@ -124,11 +123,19 @@ export default function GiftedOrphansPage() {
         {loading && <LoadingSkeleton />}
 
         {/* Empty state */}
-        {!loading && !error && orphans.length === 0 && <EmptyState />}
+        {!loading && !error && orphans.length === 0 && (
+          <EmptyState
+            icon={<Star className="w-16 h-16 text-amber-500 fill-amber-500 mb-2 drop-shadow-md" />}
+            heading="لا يوجد أيتام موهوبون بعد"
+            description="يمكنك تصنيف يتيم كموهوب من صفحة إدارة الأيتام أو عند تسجيل يتيم جديد."
+            card
+            className="min-h-[350px] border-slate-200 rounded-3xl shadow-sm gap-4 animate-in fade-in duration-500"
+          />
+        )}
 
         {/* No results from search */}
         {!loading && orphans.length > 0 && filtered.length === 0 && (
-          <UIEmptyState
+          <EmptyState
             icon={<Search className="w-12 h-12 text-slate-300 mb-1" />}
             heading="لا توجد نتائج مطابقة للبحث"
             card
