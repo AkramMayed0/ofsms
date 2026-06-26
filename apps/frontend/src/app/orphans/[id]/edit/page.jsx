@@ -9,6 +9,7 @@ import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import useAuthStore from '@/store/useAuthStore';
 import Button from '@/components/ui/Button';
+import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Spinner from '@/components/ui/Spinner';
@@ -326,24 +327,20 @@ export default function OrphanEditPage() {
     <AppShell>
 
       {/* ── Success toast popup ─────────────────────────────────────────── */}
-      {toastVisible && (
-        <div className="fixed inset-0 bg-black/45 flex items-center justify-center z-[1000] p-4 animate-[fadeIn_0.2s_ease]" onClick={() => { setToastVisible(false); router.push(`/orphans/${id}`); }}>
-          <div className="bg-white rounded-[1.25rem] p-9 max-w-[400px] w-full text-center shadow-2xl animate-[scaleIn_0.2s_ease]" onClick={(e) => e.stopPropagation()} dir="rtl">
-            <div className="flex justify-center mb-4">
-              <CheckCircle2 size={40} color="#10B981" strokeWidth={1.8} />
-            </div>
-            <h3 className="text-[1.2rem] font-extrabold text-[#0d3d5c] m-0 mb-2.5">{isGM ? 'تم الحفظ بنجاح' : 'تمت إعادة الإرسال بنجاح'}</h3>
-            <p className="text-sm text-gray-500 leading-relaxed m-0 mb-6">
-              {isGM
-                ? 'تم تحديث بيانات اليتيم بنجاح.'
-                : 'تم تحديث بيانات اليتيم وإرسالها إلى قائمة انتظار المراجعة.'}
-            </p>
-            <button className="inline-flex items-center justify-center px-8 py-3 bg-gradient-to-br from-[#1B5E8C] to-[#134569] text-white border-none rounded-xl font-cairo text-sm font-bold cursor-pointer shadow-md shadow-sky-950/25 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg" onClick={() => { setToastVisible(false); router.push(`/orphans/${id}`); }}>
-              العودة لصفحة اليتيم
-            </button>
-          </div>
+      <Modal open={toastVisible} onClose={() => { setToastVisible(false); router.push(`/orphans/${id}`); }} className="p-9 max-w-[400px] text-center">
+        <div className="flex justify-center mb-4">
+          <CheckCircle2 size={40} color="#10B981" strokeWidth={1.8} />
         </div>
-      )}
+        <h3 className="text-[1.2rem] font-extrabold text-[#0d3d5c] m-0 mb-2.5">{isGM ? 'تم الحفظ بنجاح' : 'تمت إعادة الإرسال بنجاح'}</h3>
+        <p className="text-sm text-gray-500 leading-relaxed m-0 mb-6">
+          {isGM
+            ? 'تم تحديث بيانات اليتيم بنجاح.'
+            : 'تم تحديث بيانات اليتيم وإرسالها إلى قائمة انتظار المراجعة.'}
+        </p>
+        <button className="inline-flex items-center justify-center px-8 py-3 bg-gradient-to-br from-[#1B5E8C] to-[#134569] text-white border-none rounded-xl font-cairo text-sm font-bold cursor-pointer shadow-md shadow-sky-950/25 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg" onClick={() => { setToastVisible(false); router.push(`/orphans/${id}`); }}>
+          العودة لصفحة اليتيم
+        </button>
+      </Modal>
 
       <div className="max-w-[860px] mx-auto pb-16 font-cairo" dir="rtl">
 
@@ -1273,10 +1270,6 @@ export default function OrphanEditPage() {
         )}
       </div>
 
-      <style jsx global>{`
-        @keyframes scaleIn { from { opacity:0; transform:scale(.93); } to { opacity:1; transform:none; } }
-        @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
-      `}</style>
     </AppShell>
   );
 }

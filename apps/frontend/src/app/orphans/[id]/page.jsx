@@ -19,6 +19,7 @@ import useAuthStore from '../../../store/useAuthStore';
 import TransferSponsorModal from '../../../components/TransferSponsorModal';
 import Button from '@/components/ui/Button';
 import EmptyState from '@/components/ui/EmptyState';
+import Modal from '@/components/ui/Modal';
 import ShareAdModal from '../../../components/ShareAdModal';
 
 // Constants
@@ -510,32 +511,28 @@ export default function OrphanDetailPage() {
       )}
 
       {/* ── Delete Confirm Modal ────────────────────────────────────── */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/45 flex items-center justify-center z-[1000] p-4 animate-[fadeIn_0.15s_ease]" onClick={() => !deleting && setDeleteConfirm(false)}>
-          <div className="bg-white rounded-[1.25rem] p-8 max-w-[420px] w-full shadow-2xl animate-[scaleIn_0.15s_ease]" onClick={(e) => e.stopPropagation()} dir="rtl">
-            <div className="flex justify-center mb-3">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="3 6 5 6 21 6"/>
-                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                <path d="M10 11v6"/><path d="M14 11v6"/>
-                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-              </svg>
-            </div>
-            <h3 className="text-[1.15rem] font-extrabold text-[#0d3d5c] text-center m-0 mb-3">تأكيد الحذف</h3>
-            <p className="text-sm text-gray-500 text-center leading-relaxed m-0 mb-6">
-              هل أنت متأكد من حذف <strong>{orphan?.full_name}</strong>؟ لا يمكن التراجع عن هذا الإجراء.
-            </p>
-            <div className="flex gap-3 justify-center">
-              <button className="p-2.5 px-6 bg-transparent border-[1.5px] border-gray-300 rounded-xl text-gray-700 font-cairo text-sm font-semibold cursor-pointer transition-all duration-150 hover:border-gray-400 hover:bg-gray-50" onClick={() => setDeleteConfirm(false)} disabled={deleting}>
-                إلغاء
-              </button>
-              <Button variant="danger" onClick={handleDelete} disabled={deleting}>
-                {deleting ? 'جارٍ الحذف…' : 'نعم، احذف'}
-              </Button>
-            </div>
-          </div>
+      <Modal open={deleteConfirm} onClose={() => !deleting && setDeleteConfirm(false)} className="p-8">
+        <div className="flex justify-center mb-3">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            <path d="M10 11v6"/><path d="M14 11v6"/>
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+          </svg>
         </div>
-      )}
+        <h3 className="text-[1.15rem] font-extrabold text-[#0d3d5c] text-center m-0 mb-3">تأكيد الحذف</h3>
+        <p className="text-sm text-gray-500 text-center leading-relaxed m-0 mb-6">
+          هل أنت متأكد من حذف <strong>{orphan?.full_name}</strong>؟ لا يمكن التراجع عن هذا الإجراء.
+        </p>
+        <div className="flex gap-3 justify-center">
+          <button className="p-2.5 px-6 bg-transparent border-[1.5px] border-gray-300 rounded-xl text-gray-700 font-cairo text-sm font-semibold cursor-pointer transition-all duration-150 hover:border-gray-400 hover:bg-gray-50" onClick={() => setDeleteConfirm(false)} disabled={deleting}>
+            إلغاء
+          </button>
+          <Button variant="danger" onClick={handleDelete} disabled={deleting}>
+            {deleting ? 'جارٍ الحذف…' : 'نعم، احذف'}
+          </Button>
+        </div>
+      </Modal>
 
       {/* ── Transfer Modal ──────────────────────────────────────────── */}
       {orphan && (
@@ -563,8 +560,6 @@ export default function OrphanDetailPage() {
       )}
 
       <style jsx global>{`
-        @keyframes scaleIn { from { opacity:0; transform:scale(.95); } to { opacity:1; transform:none; } }
-        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
         @keyframes slideDown { from { opacity:0; transform:translateY(-6px);} to {opacity:1; transform:none;} }
       `}</style>
     </AppShell>
