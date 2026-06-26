@@ -7,6 +7,7 @@ import AppShell from '@/components/AppShell';
 import { MONTHS_AR, formatDate, formatAmount } from '@/components/disbursements/_constants';
 import StatusBadge from '@/components/ui/StatusBadge';
 import EmptyState from '@/components/ui/EmptyState';
+import DataTable from '@/components/ui/DataTable';
 
 export default function DisbursementsHistoryPage() {
   const router = useRouter();
@@ -38,47 +39,43 @@ export default function DisbursementsHistoryPage() {
         )}
 
         {!loading && lists.length > 0 && (
-          <div className="bg-white border border-[#e5eaf0] rounded-2xl shadow-[0_1px_4px_rgba(27,94,140,0.05)] overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-[0.83rem] min-w-[480px]">
-                <thead>
-                  <tr className="bg-[#f8fafc]">
-                    {['الشهر / السنة', 'المستفيدون', 'المبلغ الإجمالي', 'الحالة', 'تاريخ الإنشاء'].map(h => (
-                      <th key={h} className="px-4 py-3 text-right text-[0.72rem] font-bold text-[#6b7a8d] border-b border-[#e5eaf0] whitespace-nowrap">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {lists.map(list => (
-                    <tr
-                      key={list.id}
-                      onClick={() => router.push(`/disbursements/${list.id}`)}
-                      className="border-b border-[#f8fafc] cursor-pointer transition-colors hover:bg-[#f0f7ff]"
-                    >
-                      <td className="px-4 py-3.5 font-bold text-[#0d3d5c] whitespace-nowrap">
-                        {MONTHS_AR[list.month]} {list.year}
-                      </td>
-                      <td className="px-4 py-3.5 text-[#6b7a8d] whitespace-nowrap">
-                        <span className="text-emerald-500 font-bold">{list.included_count}</span>
-                        {list.excluded_count > 0 && (
-                          <span className="text-red-500 mr-1.5">(-{list.excluded_count})</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3.5 font-bold text-[#1B5E8C] whitespace-nowrap">
-                        {formatAmount(list.total_amount)}
-                      </td>
-                      <td className="px-4 py-3.5">
-                        <StatusBadge status={list.status} />
-                      </td>
-                      <td className="px-4 py-3.5 text-[#6b7a8d] text-[0.78rem] whitespace-nowrap">
-                        {formatDate(list.created_at)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <DataTable
+            columns={[
+              { label: 'الشهر / السنة' },
+              { label: 'المستفيدون' },
+              { label: 'المبلغ الإجمالي' },
+              { label: 'الحالة' },
+              { label: 'تاريخ الإنشاء' },
+            ]}
+            minWidth="480px"
+          >
+            {lists.map(list => (
+              <tr
+                key={list.id}
+                onClick={() => router.push(`/disbursements/${list.id}`)}
+                className="border-b border-[#f8fafc] cursor-pointer transition-colors hover:bg-[#f0f7ff]"
+              >
+                <td className="px-4 py-3.5 font-bold text-[#0d3d5c] whitespace-nowrap text-[0.83rem]">
+                  {MONTHS_AR[list.month]} {list.year}
+                </td>
+                <td className="px-4 py-3.5 text-[#6b7a8d] whitespace-nowrap text-[0.83rem]">
+                  <span className="text-emerald-500 font-bold">{list.included_count}</span>
+                  {list.excluded_count > 0 && (
+                    <span className="text-red-500 mr-1.5">(-{list.excluded_count})</span>
+                  )}
+                </td>
+                <td className="px-4 py-3.5 font-bold text-[#1B5E8C] whitespace-nowrap text-[0.83rem]">
+                  {formatAmount(list.total_amount)}
+                </td>
+                <td className="px-4 py-3.5 text-[0.83rem]">
+                  <StatusBadge status={list.status} />
+                </td>
+                <td className="px-4 py-3.5 text-[#6b7a8d] text-[0.78rem] whitespace-nowrap">
+                  {formatDate(list.created_at)}
+                </td>
+              </tr>
+            ))}
+          </DataTable>
         )}
 
         {!loading && lists.length === 0 && !error && (

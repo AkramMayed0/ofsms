@@ -11,6 +11,7 @@ import StatusBadge from '@/components/ui/StatusBadge';
 import ItemsDrawer from '@/components/disbursements/ItemsDrawer';
 import Spinner from '@/components/ui/Spinner';
 import EmptyState from '@/components/ui/EmptyState';
+import DataTable from '@/components/ui/DataTable';
 
 export default function DisbursementsPage() {
   const user = useAuthStore((s) => s.user);
@@ -147,86 +148,82 @@ export default function DisbursementsPage() {
 
         {/* Table */}
         {!loading && lists.length > 0 && (
-          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-[0_1px_4px_rgba(27,94,140,0.05)]">
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse min-w-[520px]">
-                <thead>
-                  <tr className="bg-slate-50">
-                    {['الشهر / السنة', 'المستفيدون', 'المبلغ الإجمالي', 'الحالة', 'تاريخ الإنشاء', ''].map((h, i) => (
-                      <th key={i} className="px-[1.1rem] py-3 text-right text-[0.72rem] font-bold text-slate-500 border-b border-slate-200 whitespace-nowrap">
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {lists.map((list) => {
-                    const needsMyAction =
-                      (role === 'supervisor' && list.status === 'draft') ||
-                      (role === 'finance'    && list.status === 'supervisor_approved') ||
-                      (role === 'gm'         && list.status === 'finance_approved');
+          <DataTable
+            columns={[
+              { label: 'الشهر / السنة' },
+              { label: 'المستفيدون' },
+              { label: 'المبلغ الإجمالي' },
+              { label: 'الحالة' },
+              { label: 'تاريخ الإنشاء' },
+              { label: '' },
+            ]}
+            minWidth="520px"
+            className="border-slate-200"
+          >
+            {lists.map((list) => {
+              const needsMyAction =
+                (role === 'supervisor' && list.status === 'draft') ||
+                (role === 'finance'    && list.status === 'supervisor_approved') ||
+                (role === 'gm'         && list.status === 'finance_approved');
 
-                    return (
-                      <tr
-                        key={list.id}
-                        onClick={() => setSelected(list.id)}
-                        tabIndex={0}
-                        onKeyDown={(e) => e.key === 'Enter' && setSelected(list.id)}
-                        className={[
-                          'cursor-pointer transition-colors duration-100 last:border-b-0',
-                          'border-b border-slate-50',
-                          needsMyAction  ? 'bg-amber-50 hover:bg-amber-100/60' : 'hover:bg-blue-50/40',
-                          selected === list.id ? '!bg-blue-50 border-r-[3px] border-r-primary' : '',
-                        ].join(' ')}
-                      >
-                        <td className="px-[1.1rem] py-[0.85rem] text-[0.83rem] align-middle whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            {needsMyAction && (
-                              <span
-                                title="يحتاج إجراءك"
-                                className="w-2 h-2 rounded-full bg-amber-400 shrink-0 animate-[pulse_1.5s_infinite]"
-                              />
-                            )}
-                            <span className="text-[0.85rem] font-bold text-[#0d3d5c]">
-                              {MONTHS_AR[list.month]} {list.year}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-[1.1rem] py-[0.85rem] text-[0.83rem] align-middle whitespace-nowrap text-slate-500">
-                          <span className="font-bold text-emerald-500">{list.included_count}</span>
-                          {list.excluded_count > 0 && (
-                            <span className="text-red-500 mr-1.5">(-{list.excluded_count})</span>
-                          )}
-                        </td>
-                        <td className="px-[1.1rem] py-[0.85rem] text-[0.83rem] align-middle whitespace-nowrap font-bold text-primary">
-                          {formatAmount(list.total_amount)}
-                        </td>
-                        <td className="px-[1.1rem] py-[0.85rem] text-[0.83rem] align-middle whitespace-nowrap">
-                          <StatusBadge status={list.status} />
-                        </td>
-                        <td className="px-[1.1rem] py-[0.85rem] text-[0.83rem] align-middle whitespace-nowrap text-slate-500">
-                          {formatDate(list.created_at)}
-                        </td>
-                        <td className="px-[1.1rem] py-[0.85rem] text-[0.83rem] align-middle whitespace-nowrap">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setSelected(list.id); }}
-                            className={[
-                              'bg-transparent border rounded-lg px-2.5 py-1.5 text-[0.78rem] font-semibold cursor-pointer whitespace-nowrap transition-all',
-                              needsMyAction
-                                ? 'border-amber-300 text-amber-700 bg-amber-50 font-bold hover:bg-amber-100'
-                                : 'border-slate-200 text-primary hover:bg-blue-50 hover:border-primary',
-                            ].join(' ')}
-                          >
-                            {needsMyAction ? 'مراجعة واعتماد ←' : 'عرض ←'}
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
+              return (
+                <tr
+                  key={list.id}
+                  onClick={() => setSelected(list.id)}
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === 'Enter' && setSelected(list.id)}
+                  className={[
+                    'cursor-pointer transition-colors duration-100 last:border-b-0',
+                    'border-b border-slate-50',
+                    needsMyAction  ? 'bg-amber-50 hover:bg-amber-100/60' : 'hover:bg-blue-50/40',
+                    selected === list.id ? '!bg-blue-50 border-r-[3px] border-r-primary' : '',
+                  ].join(' ')}
+                >
+                  <td className="px-[1.1rem] py-[0.85rem] text-[0.83rem] align-middle whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      {needsMyAction && (
+                        <span
+                          title="يحتاج إجراءك"
+                          className="w-2 h-2 rounded-full bg-amber-400 shrink-0 animate-[pulse_1.5s_infinite]"
+                        />
+                      )}
+                      <span className="text-[0.85rem] font-bold text-[#0d3d5c]">
+                        {MONTHS_AR[list.month]} {list.year}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-[1.1rem] py-[0.85rem] text-[0.83rem] align-middle whitespace-nowrap text-slate-500">
+                    <span className="font-bold text-emerald-500">{list.included_count}</span>
+                    {list.excluded_count > 0 && (
+                      <span className="text-red-500 mr-1.5">(-{list.excluded_count})</span>
+                    )}
+                  </td>
+                  <td className="px-[1.1rem] py-[0.85rem] text-[0.83rem] align-middle whitespace-nowrap font-bold text-primary">
+                    {formatAmount(list.total_amount)}
+                  </td>
+                  <td className="px-[1.1rem] py-[0.85rem] text-[0.83rem] align-middle whitespace-nowrap">
+                    <StatusBadge status={list.status} />
+                  </td>
+                  <td className="px-[1.1rem] py-[0.85rem] text-[0.83rem] align-middle whitespace-nowrap text-slate-500">
+                    {formatDate(list.created_at)}
+                  </td>
+                  <td className="px-[1.1rem] py-[0.85rem] text-[0.83rem] align-middle whitespace-nowrap">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setSelected(list.id); }}
+                      className={[
+                        'bg-transparent border rounded-lg px-2.5 py-1.5 text-[0.78rem] font-semibold cursor-pointer whitespace-nowrap transition-all',
+                        needsMyAction
+                          ? 'border-amber-300 text-amber-700 bg-amber-50 font-bold hover:bg-amber-100'
+                          : 'border-slate-200 text-primary hover:bg-blue-50 hover:border-primary',
+                      ].join(' ')}
+                    >
+                      {needsMyAction ? 'مراجعة واعتماد ←' : 'عرض ←'}
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </DataTable>
         )}
       </div>
 
