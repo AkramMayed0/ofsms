@@ -8,7 +8,8 @@ import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import Button from '@/components/ui/Button';
-import Input, { Textarea } from '@/components/ui/Input';
+import Input from '@/components/ui/Input';
+import Textarea from '@/components/ui/Textarea';
 import Spinner from '@/components/ui/Spinner';
 
 function SectionHeader({ number, title, subtitle }) {

@@ -19,15 +19,6 @@ const Input = forwardRef(function Input({ error, className, ...props }, ref) {
   );
 });
 
-export const Textarea = forwardRef(function Textarea({ error, className, ...props }, ref) {
-  return (
-    <textarea
-      ref={ref}
-      className={twMerge(BASE, 'resize-y', error && ERROR, className)}
-      aria-invalid={error ? 'true' : undefined}
-      {...props}
-    />
-  );
-});
+export { default as Textarea } from './Textarea';
 
 export default Input;
