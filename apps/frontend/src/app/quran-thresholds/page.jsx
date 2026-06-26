@@ -17,6 +17,7 @@ import { AlertTriangle, X, Info, Check, Plus } from 'lucide-react';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -272,8 +273,8 @@ function AddThresholdModal({ onClose, onSaved }) {
 
           <div className="flex flex-col gap-1.5">
             <label className="text-[0.82rem] font-semibold text-gray-700">التسمية</label>
-            <input
-              className="w-full border-[1.5px] border-gray-300 rounded-xl py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-colors focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10"
+            <Input
+              className="rounded-xl"
               value={form.label}
               onChange={e => set('label', e.target.value)}
               placeholder="مثال: أطفال صغار (5-9)"
@@ -283,8 +284,8 @@ function AddThresholdModal({ onClose, onSaved }) {
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <label className="text-[0.82rem] font-semibold text-gray-700">من (سنة)</label>
-              <input
-                className="w-full border-[1.5px] border-gray-300 rounded-xl py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-colors focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10"
+              <Input
+                className="rounded-xl"
                 type="number"
                 min={0}
                 value={form.age_min}
@@ -294,8 +295,8 @@ function AddThresholdModal({ onClose, onSaved }) {
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-[0.82rem] font-semibold text-gray-700">إلى (سنة)</label>
-              <input
-                className="w-full border-[1.5px] border-gray-300 rounded-xl py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-colors focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10"
+              <Input
+                className="rounded-xl"
                 type="number"
                 min={1}
                 value={form.age_max}
@@ -307,8 +308,8 @@ function AddThresholdModal({ onClose, onSaved }) {
 
           <div className="flex flex-col gap-1.5">
             <label className="text-[0.82rem] font-semibold text-gray-700">الحد الأدنى (جزء/شهر)</label>
-            <input
-              className="w-full border-[1.5px] border-gray-300 rounded-xl py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-colors focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10"
+            <Input
+              className="rounded-xl"
               type="number"
               min={0}
               step={0.25}

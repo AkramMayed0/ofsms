@@ -6,7 +6,7 @@ import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
 import useAuthStore from '../../store/useAuthStore';
 import Button from '@/components/ui/Button';
-import { Textarea } from '@/components/ui/Input';
+import Input, { Textarea } from '@/components/ui/Input';
 import Spinner from '@/components/ui/Spinner';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -427,8 +427,8 @@ export default function AnnouncementsPage() {
                 <label className="block text-[0.8rem] font-bold text-gray-700">
                   العنوان <span className="text-red-600">*</span>
                 </label>
-                <input
-                  className="w-full box-border border-[1.5px] border-[#e5eaf0] rounded-xl px-3.5 py-[0.65rem] text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-[border-color,box-shadow] duration-150 focus:border-primary focus:shadow-[0_0_0_3px_rgba(27,94,140,.1)] focus:bg-white"
+                <Input
+                  className="rounded-xl border-[#e5eaf0] py-[0.65rem]"
                   placeholder="عنوان الإعلان…"
                   value={form.title}
                   onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
