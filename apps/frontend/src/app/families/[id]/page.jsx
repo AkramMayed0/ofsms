@@ -20,6 +20,7 @@ import useAuthStore from '../../../store/useAuthStore';
 import TransferSponsorModal from '../../../components/TransferSponsorModal';
 import ShareAdModal from '../../../components/ShareAdModal';
 import Button from '@/components/ui/Button';
+import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Spinner from '@/components/ui/Spinner';
 
@@ -608,32 +609,28 @@ export default function FamilyDetailPage() {
       </div>
 
       {/* ── Delete Confirm Modal ────────────────────────────────────── */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/45 flex items-center justify-center z-[1000] p-4 animate-[fadeIn_0.15s_ease]" onClick={() => !deleting && setDeleteConfirm(false)}>
-          <div className="bg-white rounded-2xl py-8 px-7 max-w-[420px] w-full shadow-[0_20px_60px_rgba(0,0,0,0.2)] animate-[scaleIn_0.15s_ease]" onClick={(e) => e.stopPropagation()} dir="rtl">
-            <div className="flex justify-center mb-3">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="3 6 5 6 21 6"/>
-              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-              <path d="M10 11v6"/><path d="M14 11v6"/>
-              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-            </svg>
-          </div>
-            <h3 className="text-[1.15rem] font-extrabold text-[#0d3d5c] text-center m-0 mb-3">تأكيد الحذف</h3>
-            <p className="text-[0.875rem] text-gray-500 text-center leading-relaxed m-0 mb-6">
-              هل أنت متأكد من حذف أسرة <strong>{family?.family_name}</strong>؟ لا يمكن التراجع عن هذا الإجراء.
-            </p>
-            <div className="flex gap-3 justify-center">
-              <button className="py-2.5 px-6 bg-transparent border-[1.5px] border-gray-300 rounded-xl text-gray-700 font-sans text-[0.875rem] font-semibold cursor-pointer transition-all hover:border-gray-400 hover:bg-gray-50" onClick={() => setDeleteConfirm(false)} disabled={deleting}>
-                إلغاء
-              </button>
-              <Button variant="danger" onClick={handleDelete} disabled={deleting}>
-                {deleting ? 'جارٍ الحذف…' : 'نعم، احذف'}
-              </Button>
-            </div>
-          </div>
+      <Modal open={deleteConfirm} onClose={() => !deleting && setDeleteConfirm(false)} className="py-8 px-7 shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
+        <div className="flex justify-center mb-3">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            <path d="M10 11v6"/><path d="M14 11v6"/>
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+          </svg>
         </div>
-      )}
+        <h3 className="text-[1.15rem] font-extrabold text-[#0d3d5c] text-center m-0 mb-3">تأكيد الحذف</h3>
+        <p className="text-[0.875rem] text-gray-500 text-center leading-relaxed m-0 mb-6">
+          هل أنت متأكد من حذف أسرة <strong>{family?.family_name}</strong>؟ لا يمكن التراجع عن هذا الإجراء.
+        </p>
+        <div className="flex gap-3 justify-center">
+          <button className="py-2.5 px-6 bg-transparent border-[1.5px] border-gray-300 rounded-xl text-gray-700 font-sans text-[0.875rem] font-semibold cursor-pointer transition-all hover:border-gray-400 hover:bg-gray-50" onClick={() => setDeleteConfirm(false)} disabled={deleting}>
+            إلغاء
+          </button>
+          <Button variant="danger" onClick={handleDelete} disabled={deleting}>
+            {deleting ? 'جارٍ الحذف…' : 'نعم، احذف'}
+          </Button>
+        </div>
+      </Modal>
 
       {/* ── Transfer Modal ──────────────────────────────────────────── */}
       {family && (

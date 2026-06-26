@@ -18,6 +18,7 @@ import { Upload, FileText, Image, X, Plus, AlertCircle, CheckCircle2, File, Aler
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import Button from '@/components/ui/Button';
+import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import Select from '@/components/ui/Select';
@@ -507,36 +508,31 @@ export default function OrphanRegistrationPage() {
   return (
     <AppShell>
       <style jsx global>{`
-        @keyframes scaleIn { from { opacity:0; transform:scale(.93); } to { opacity:1; transform:none; } }
         @keyframes fadeIn  { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
       `}</style>
 
       {/* ── Success toast popup ─────────────────────────────────────────── */}
-      {submitState === 'success' && (
-        <div className="fixed inset-0 bg-black/45 flex items-center justify-center z-[1000] p-4 animate-[fadeIn_0.2s_ease]">
-          <div className="bg-white rounded-[1.25rem] p-9 px-8 max-w-[420px] w-full text-center shadow-2xl animate-[scaleIn_0.2s_ease]" dir="rtl">
-            <div className="flex justify-center mb-4">
-              <CheckCircle2 size={40} color="#10B981" strokeWidth={1.8} />
-            </div>
-            <h3 className="text-[1.2rem] font-extrabold text-[#0d3d5c] m-0 mb-2.5">تم التسجيل بنجاح</h3>
-            <p className="text-[0.875rem] text-gray-500 leading-[1.7] m-0 mb-6">
-              تم إرسال بيانات اليتيم إلى قائمة انتظار مراجعة المشرف.
-            </p>
-            <div className="flex gap-3 justify-center flex-wrap">
-              <Button variant="primary" onClick={handleRegisterAnother}>
-                تسجيل يتيم آخر
-              </Button>
-              <Button
-                variant="outline"
-                className="py-3"
-                onClick={() => router.push('/my-orphans')}
-              >
-                عرض أيتامي
-              </Button>
-            </div>
-          </div>
+      <Modal open={submitState === 'success'} className="p-9 px-8 text-center">
+        <div className="flex justify-center mb-4">
+          <CheckCircle2 size={40} color="#10B981" strokeWidth={1.8} />
         </div>
-      )}
+        <h3 className="text-[1.2rem] font-extrabold text-[#0d3d5c] m-0 mb-2.5">تم التسجيل بنجاح</h3>
+        <p className="text-[0.875rem] text-gray-500 leading-[1.7] m-0 mb-6">
+          تم إرسال بيانات اليتيم إلى قائمة انتظار مراجعة المشرف.
+        </p>
+        <div className="flex gap-3 justify-center flex-wrap">
+          <Button variant="primary" onClick={handleRegisterAnother}>
+            تسجيل يتيم آخر
+          </Button>
+          <Button
+            variant="outline"
+            className="py-3"
+            onClick={() => router.push('/my-orphans')}
+          >
+            عرض أيتامي
+          </Button>
+        </div>
+      </Modal>
 
       <div className="max-w-[860px] mx-auto pb-16 font-cairo" dir="rtl">
 
