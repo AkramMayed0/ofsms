@@ -17,6 +17,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AlertTriangle, X, Trash2, Edit2, Users, RefreshCw, Plus, CheckCircle2 } from 'lucide-react';
 import SearchField from '@/components/ui/SearchField';
+import EmptyState from '@/components/ui/EmptyState';
 
 import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
@@ -565,26 +566,18 @@ export default function UserManagementPage() {
         )}
 
         {!loading && filtered.length === 0 && (
-          <div className="flex min-h-[350px] flex-col items-center justify-center gap-4 rounded-3xl border border-slate-200/60 bg-white/60 p-8 text-center shadow-sm backdrop-blur-md">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-50 shadow-inner">
-              <Users size={40} strokeWidth={1.5} className="text-slate-400" />
-            </div>
-            <div className="space-y-1">
-              <h3 className="text-xl font-extrabold text-slate-800">
-                {search || roleFilter !== 'all' ? 'لا توجد نتائج مطابقة' : 'لا يوجد مستخدمون بعد'}
-              </h3>
-              <p className="text-sm font-medium text-slate-500">
-                {search || roleFilter !== 'all' ? 'جرّب تغيير معايير البحث' : 'ابدأ بإضافة مستخدم جديد إلى النظام'}
-              </p>
-            </div>
-            {!search && roleFilter === 'all' && (
-              <div className="mt-2">
-                <Button variant="primary" onClick={() => setShowAdd(true)}>
-                  <Plus size={18} strokeWidth={2.5} /> إضافة مستخدم
-                </Button>
-              </div>
+          <EmptyState
+            icon={<div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-50 shadow-inner"><Users size={40} strokeWidth={1.5} className="text-slate-400" /></div>}
+            heading={search || roleFilter !== 'all' ? 'لا توجد نتائج مطابقة' : 'لا يوجد مستخدمون بعد'}
+            description={search || roleFilter !== 'all' ? 'جرّب تغيير معايير البحث' : 'ابدأ بإضافة مستخدم جديد إلى النظام'}
+            action={!search && roleFilter === 'all' && (
+              <Button variant="primary" onClick={() => setShowAdd(true)}>
+                <Plus size={18} strokeWidth={2.5} /> إضافة مستخدم
+              </Button>
             )}
-          </div>
+            card
+            className="min-h-[350px]"
+          />
         )}
 
         {!loading && filtered.length > 0 && (

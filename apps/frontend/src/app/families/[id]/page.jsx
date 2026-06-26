@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { Handshake, Search, AlertTriangle, Users, CheckCircle2, Check, X, Plus, User, Share2 } from 'lucide-react';
 import api from '../../../lib/api';
 import AppShell from '../../../components/AppShell';
+import EmptyState from '@/components/ui/EmptyState';
 import useAuthStore from '../../../store/useAuthStore';
 import TransferSponsorModal from '../../../components/TransferSponsorModal';
 import ShareAdModal from '../../../components/ShareAdModal';
@@ -581,28 +582,28 @@ export default function FamilyDetailPage() {
                       </div>
                     </>
                   ) : (
-                    <div className="text-center p-6 flex flex-col items-center gap-2 text-gray-400">
-                      <Handshake size={40} strokeWidth={1.5} />
-                      <p className="text-[0.82rem] m-0">لا يوجد كافل مُعيَّن بعد</p>
-                      {family.status === 'under_marketing' && isGM && (
+                    <EmptyState
+                      icon={<Handshake size={40} strokeWidth={1.5} />}
+                      description="لا يوجد كافل مُعيَّن بعد"
+                      action={family.status === 'under_marketing' && isGM && (
                         <Button variant="primary" onClick={() => setAssignOpen(true)}>
                           تعيين كافل
                         </Button>
                       )}
-                    </div>
+                      className="p-6 gap-2"
+                    />
                   )}
                 </Section>
               </div>
             </div>
           </>
         ) : (
-          <div className="text-center py-16 text-gray-400 flex flex-col items-center gap-3">
-            <span className="text-[2.5rem]"><Search size={16} /></span>
-            <p className="text-[0.9rem]">لم يُعثر على الأسرة</p>
-            <button onClick={() => router.back()} className="text-[#1B5E8C] bg-transparent border-[1.5px] border-[#1B5E8C] rounded-[0.625rem] py-2 px-5 font-sans font-semibold cursor-pointer text-[0.875rem] transition-colors hover:bg-blue-50">
-              رجوع
-            </button>
-          </div>
+          <EmptyState
+            icon={<span className="text-[2.5rem]"><Search size={16} /></span>}
+            description="لم يُعثر على الأسرة"
+            action={<button onClick={() => router.back()} className="text-[#1B5E8C] bg-transparent border-[1.5px] border-[#1B5E8C] rounded-[0.625rem] py-2 px-5 font-sans font-semibold cursor-pointer text-[0.875rem] transition-colors hover:bg-blue-50">رجوع</button>}
+            className="py-16 gap-3"
+          />
         )}
       </div>
 

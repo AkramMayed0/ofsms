@@ -25,6 +25,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import Spinner from '@/components/ui/Spinner';
+import EmptyState from '@/components/ui/EmptyState';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -173,13 +174,13 @@ function ListPicker({ onSelect }) {
 
   if (lists.length === 0) {
     return (
-      <div className={`${CLS_CARD} flex flex-col items-center gap-3 min-h-[280px] justify-center text-center p-10`}>
-        <span className="text-5xl">📋</span>
-        <h3 className="text-[1.05rem] font-bold text-[#374151] m-0">لا توجد كشوف صرف جاهزة</h3>
-        <p className="text-[0.83rem] text-gray-400 m-0 max-w-[340px] leading-[1.7]">
-          ستظهر هنا الكشوف الشهرية بعد أن يصدرها المدير العام ويصبح بإمكانك رفع بصمات الاستلام.
-        </p>
-      </div>
+      <EmptyState
+        icon={<span className="text-5xl">📋</span>}
+        heading="لا توجد كشوف صرف جاهزة"
+        description="ستظهر هنا الكشوف الشهرية بعد أن يصدرها المدير العام ويصبح بإمكانك رفع بصمات الاستلام."
+        card
+        className="min-h-[280px] p-10"
+      />
     );
   }
 
@@ -364,10 +365,12 @@ function BatchView({ listId, onBack }) {
 
       {/* Empty */}
       {!loading && items.length === 0 && !error && (
-        <div className={`${CLS_CARD} flex flex-col items-center gap-2 min-h-[200px] justify-center text-center p-8 text-[0.9rem] text-gray-400 font-semibold`}>
-          <span className="text-4xl">📋</span>
-          <p className="m-0">لا توجد بنود مشمولة في هذا الكشف باسمك</p>
-        </div>
+        <EmptyState
+          icon={<span className="text-4xl">📋</span>}
+          description="لا توجد بنود مشمولة في هذا الكشف باسمك"
+          card
+          className="min-h-[200px]"
+        />
       )}
 
       {/* Items list */}

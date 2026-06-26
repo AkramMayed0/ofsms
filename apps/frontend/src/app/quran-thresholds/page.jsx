@@ -18,6 +18,7 @@ import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import EmptyState from '@/components/ui/EmptyState';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -430,10 +431,11 @@ export default function QuranThresholdsPage() {
               ? Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} index={i} />)
               : thresholds.length === 0
                 ? (
-                  <div className="flex flex-col items-center gap-2 py-12 px-4 text-[0.85rem] text-gray-400">
-                    <span className="text-[2rem]">📋</span>
-                    <p className="m-0">لا توجد فئات محددة بعد</p>
-                  </div>
+                  <EmptyState
+                    icon={<span className="text-[2rem]">📋</span>}
+                    description="لا توجد فئات محددة بعد"
+                    className="py-12 px-4 gap-2"
+                  />
                 )
                 : thresholds.map((t, i) => (
                   <ThresholdRow key={t.id} threshold={t} index={i} />

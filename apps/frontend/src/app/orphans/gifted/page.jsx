@@ -18,6 +18,7 @@ import OrphanCard from './components/OrphanCard';
 import BenefitsDrawer from './components/BenefitsDrawer';
 import RevokeModal from './components/RevokeModal';
 import EmptyState from './components/EmptyState';
+import UIEmptyState from '@/components/ui/EmptyState';
 import LoadingSkeleton from './components/LoadingSkeleton';
 
 export default function GiftedOrphansPage() {
@@ -127,10 +128,12 @@ export default function GiftedOrphansPage() {
 
         {/* No results from search */}
         {!loading && orphans.length > 0 && filtered.length === 0 && (
-          <div className="flex flex-col items-center justify-center min-h-[250px] gap-3 text-center bg-slate-50 border border-slate-200 rounded-3xl animate-in fade-in duration-300">
-            <Search className="w-12 h-12 text-slate-300 mb-1" />
-            <p className="text-sm font-bold text-slate-500">لا توجد نتائج مطابقة للبحث</p>
-          </div>
+          <UIEmptyState
+            icon={<Search className="w-12 h-12 text-slate-300 mb-1" />}
+            heading="لا توجد نتائج مطابقة للبحث"
+            card
+            className="min-h-[250px] border-slate-200 bg-slate-50 rounded-3xl animate-in fade-in duration-300"
+          />
         )}
 
         {/* Card grid */}

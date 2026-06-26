@@ -18,6 +18,7 @@ import AppShell from '../../../components/AppShell';
 import useAuthStore from '../../../store/useAuthStore';
 import TransferSponsorModal from '../../../components/TransferSponsorModal';
 import Button from '@/components/ui/Button';
+import EmptyState from '@/components/ui/EmptyState';
 import ShareAdModal from '../../../components/ShareAdModal';
 
 // Constants
@@ -467,28 +468,28 @@ export default function OrphanDetailPage() {
                       </div>
                     </>
                   ) : (
-                    <div className="text-center p-6 flex flex-col items-center gap-2 text-gray-400">
-                      <Handshake size={40} strokeWidth={1.5} />
-                      <p className="text-[13px] m-0">لا يوجد كافل مُعيَّن بعد</p>
-                      {orphan.status === 'under_marketing' && isGM && (
+                    <EmptyState
+                      icon={<Handshake size={40} strokeWidth={1.5} />}
+                      description="لا يوجد كافل مُعيَّن بعد"
+                      action={orphan.status === 'under_marketing' && isGM && (
                         <Button variant="primary" onClick={() => router.push('/sponsors')}>
                           تعيين كافل
                         </Button>
                       )}
-                    </div>
+                      className="p-6 gap-2"
+                    />
                   )}
                 </Section>
               </div>
             </div>
           </>
         ) : (
-          <div className="text-center p-16 text-gray-400 flex flex-col items-center gap-3">
-            <span><Search size={16} /></span>
-            <p className="text-sm">لم يُعثر على اليتيم</p>
-            <button onClick={() => router.back()} className="text-[#1B5E8C] bg-transparent border-[1.5px] border-[#1B5E8C] rounded-xl p-2 px-5 font-semibold cursor-pointer text-sm transition-colors duration-125 hover:bg-[#f0f7ff]">
-              رجوع
-            </button>
-          </div>
+          <EmptyState
+            icon={<span><Search size={16} /></span>}
+            description="لم يُعثر على اليتيم"
+            action={<button onClick={() => router.back()} className="text-[#1B5E8C] bg-transparent border-[1.5px] border-[#1B5E8C] rounded-xl p-2 px-5 font-semibold cursor-pointer text-sm transition-colors duration-125 hover:bg-[#f0f7ff]">رجوع</button>}
+            className="p-16 gap-3"
+          />
         )}
       </div>
 
