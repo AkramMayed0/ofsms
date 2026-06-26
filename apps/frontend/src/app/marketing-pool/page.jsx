@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import SearchField from '@/components/ui/SearchField';
 import EmptyState from '@/components/ui/EmptyState';
+import { SkeletonTableRow } from '@/components/ui/Skeleton';
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
 
@@ -58,22 +59,6 @@ function StatPill({ label, count, color }) {
       </span>
       <span className="text-[0.72rem] font-semibold text-gray-500 whitespace-nowrap">{label}</span>
     </div>
-  );
-}
-
-// ── SkeletonRow ───────────────────────────────────────────────────────────────
-function SkeletonRow() {
-  return (
-    <tr>
-      {[80, 50, 70, 90, 60].map((w, i) => (
-        <td key={i} className="py-4 px-4 border-b border-gray-50">
-          <div
-            className="h-4 rounded bg-gradient-to-r from-[#f0f4f8] via-[#e5eaf0] to-[#f0f4f8] bg-[length:200%_100%] animate-[shimmer_1.4s_infinite]"
-            style={{ width: `${w}%` }}
-          />
-        </td>
-      ))}
-    </tr>
   );
 }
 
@@ -412,7 +397,7 @@ export default function MarketingPoolPage() {
               </thead>
               <tbody>
                 {loading ? (
-                  Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)
+                  Array.from({ length: 6 }).map((_, i) => <SkeletonTableRow key={i} widths={[80, 50, 70, 90, 60]} cellClassName="py-4 px-4 border-b border-gray-50" barClassName="h-4" />)
                 ) : !error && filtered.length === 0 ? (
                   <tr>
                     <td colSpan="7">

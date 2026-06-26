@@ -12,6 +12,7 @@ import StatusBadge, { STATUS_MAP } from '@/components/ui/StatusBadge';
 import Button from '@/components/ui/Button';
 import Select from '@/components/ui/Select';
 import EmptyState from '@/components/ui/EmptyState';
+import { SkeletonListRow } from '@/components/ui/Skeleton';
 
 export default function FamiliesManagementPage() {
   const router = useRouter();
@@ -156,17 +157,7 @@ export default function FamiliesManagementPage() {
         {/* Skeleton */}
         {loading && (
           <div className="bg-white border border-[#e5eaf0] rounded-2xl overflow-hidden shadow-[0_1px_4px_rgba(27,94,140,.05)]">
-            {[1, 2, 3, 4, 5].map(i => (
-              <div key={i} className="flex items-center gap-4 px-4 py-3.5 border-b border-gray-50 last:border-b-0">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-r from-[#f0f4f8] via-[#e5eaf0] to-[#f0f4f8] bg-[length:200%_100%] animate-[shimmer_1.4s_infinite] shrink-0" />
-                <div className="flex-1 flex flex-col gap-1.5">
-                  <div className="h-3 w-[45%] rounded bg-gradient-to-r from-[#f0f4f8] via-[#e5eaf0] to-[#f0f4f8] bg-[length:200%_100%] animate-[shimmer_1.4s_infinite]" />
-                  <div className="h-2.5 w-[30%] rounded bg-gradient-to-r from-[#f0f4f8] via-[#e5eaf0] to-[#f0f4f8] bg-[length:200%_100%] animate-[shimmer_1.4s_infinite]" />
-                </div>
-                <div className="w-[90px] h-5 rounded-full bg-gradient-to-r from-[#f0f4f8] via-[#e5eaf0] to-[#f0f4f8] bg-[length:200%_100%] animate-[shimmer_1.4s_infinite]" />
-                <div className="w-20 h-3 rounded bg-gradient-to-r from-[#f0f4f8] via-[#e5eaf0] to-[#f0f4f8] bg-[length:200%_100%] animate-[shimmer_1.4s_infinite]" />
-              </div>
-            ))}
+            {[1, 2, 3, 4, 5].map(i => <SkeletonListRow key={i} />)}
           </div>
         )}
 

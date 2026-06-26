@@ -19,6 +19,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { AlertTriangle, X, User } from 'lucide-react';
 import SearchField from '@/components/ui/SearchField';
 import EmptyState from '@/components/ui/EmptyState';
+import { SkeletonTableRow } from '@/components/ui/Skeleton';
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -90,18 +91,6 @@ const formatDate = (d) =>
 
 
 
-// ── Skeleton row ──────────────────────────────────────────────────────────────
-function SkeletonRow() {
-  return (
-    <tr className="border-b border-slate-100">
-      {[40, 80, 50, 70, 90, 60, 50].map((w, i) => (
-        <td key={i} className="p-3.5">
-          <div className="animate-shimmer bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] h-3.5 rounded" style={{ width: `${w}%` }} />
-        </td>
-      ))}
-    </tr>
-  );
-}
 
 // ── Stat pill ─────────────────────────────────────────────────────────────────
 function StatPill({ label, count, color }) {
@@ -335,7 +324,7 @@ export default function OrphansListPage() {
               </thead>
               <tbody>
                 {loading ? (
-                  Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)
+                  Array.from({ length: 6 }).map((_, i) => <SkeletonTableRow key={i} className="border-b border-slate-100" widths={[40, 80, 50, 70, 90, 60, 50]} cellClassName="p-3.5" />)
                 ) : filtered.length === 0 ? (
                   <tr>
                     <td colSpan="9">
