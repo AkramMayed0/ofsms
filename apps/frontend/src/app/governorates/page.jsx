@@ -7,6 +7,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Search, AlertTriangle, X, User, MapPin, Map, Users, Star, ArrowRight } from 'lucide-react';
 import SearchField from '@/components/ui/SearchField';
+import EmptyState from '@/components/ui/EmptyState';
 
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
@@ -239,15 +240,14 @@ export default function GovernoratesPage() {
                   {loadingRight ? <RightSkeleton /> : errorRight ? (
                     <div className="p-8 text-center text-[#b91c1c] text-[0.85rem]"><AlertTriangle size={18} /> {errorRight}</div>
                   ) : filteredOrphans.length === 0 ? (
-                    <div className="flex flex-col items-center gap-2 py-12 px-8 text-gray-400 text-center">
-                      {orphans.length === 0 ? <Users size={40} strokeWidth={1.2} className="text-gray-300" /> : <Search size={28} className="text-gray-300" />}
-                      <p className="font-bold text-gray-700 mb-1 text-[0.9rem]">
-                        {orphans.length === 0 ? 'لا يوجد أيتام في هذه المحافظة' : 'لا توجد نتائج مطابقة'}
-                      </p>
-                      <p className="text-[0.8rem] m-0">
-                        {orphans.length === 0 ? 'لم يُسجَّل أي يتيم بعد' : 'جرّب تغيير معايير البحث'}
-                      </p>
-                    </div>
+                    <EmptyState
+                      icon={orphans.length === 0
+                        ? <Users size={40} strokeWidth={1.2} className="text-gray-300" />
+                        : <Search size={28} className="text-gray-300" />}
+                      heading={orphans.length === 0 ? 'لا يوجد أيتام في هذه المحافظة' : 'لا توجد نتائج مطابقة'}
+                      description={orphans.length === 0 ? 'لم يُسجَّل أي يتيم بعد' : 'جرّب تغيير معايير البحث'}
+                      className="py-12 px-8 gap-2"
+                    />
                   ) : (
                     <div className="animate-gvFade">
                       <div className="overflow-x-auto [webkit-overflow-scrolling:touch]">

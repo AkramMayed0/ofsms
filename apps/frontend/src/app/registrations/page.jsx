@@ -22,6 +22,7 @@ import {
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import Textarea from '@/components/ui/Textarea';
+import EmptyState from '@/components/ui/EmptyState';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -469,11 +470,12 @@ export default function RegistrationsPage() {
               ? Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} />)
               : displayed.length === 0
                 ? (
-                  <div className="flex flex-col items-center gap-1.5 py-16 px-4 text-center">
-                    <span className="text-emerald-500 flex"><CheckCircle2 size={40} strokeWidth={1.5} /></span>
-                    <p className="text-[0.9rem] font-bold text-gray-700 m-0">لا توجد طلبات معلّقة</p>
-                    <p className="text-[0.8rem] text-gray-400 m-0">كل الطلبات تمت مراجعتها</p>
-                  </div>
+                  <EmptyState
+                    icon={<span className="text-emerald-500 flex"><CheckCircle2 size={40} strokeWidth={1.5} /></span>}
+                    heading="لا توجد طلبات معلّقة"
+                    description="كل الطلبات تمت مراجعتها"
+                    className="py-16 px-4 gap-1.5"
+                  />
                 )
                 : displayed.map((record) => {
                   const isOrphan = record.record_type === 'orphan';

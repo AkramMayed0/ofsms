@@ -16,6 +16,7 @@ import Button from '@/components/ui/Button';
 import Textarea from '@/components/ui/Textarea';
 import Select from '@/components/ui/Select';
 import StatusBadge from '@/components/ui/StatusBadge';
+import EmptyState from '@/components/ui/EmptyState';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -457,26 +458,26 @@ export default function QuranReportsPage() {
 
         {/* Empty */}
         {!loading && filtered.length === 0 && (
-          <div className="flex flex-col items-center justify-center min-h-[300px] gap-2.5 text-center bg-white border border-gray-200 rounded-2xl p-10">
-            <div className="w-16 h-16 rounded-full bg-blue-50 border-[1.5px] border-blue-200 flex items-center justify-center mb-1">
-              <BookOpen size={32} className="text-[#1B5E8C]" />
-            </div>
-            <h3 className="text-[1rem] font-bold text-gray-700 m-0">
-              {filterStatus !== 'all' ? 'لا توجد تقارير بهذه الحالة' : 'لا توجد تقارير حفظ بعد'}
-            </h3>
-            <p className="text-[0.82rem] text-gray-400 m-0 max-w-[320px] leading-relaxed">
-              {filterStatus !== 'all'
-                ? 'جرّب تغيير فلتر الحالة لعرض تقارير أخرى'
-                : 'ستظهر التقارير هنا بمجرد رفعها من المندوبين'}
-            </p>
-            {role === 'agent' && filterStatus === 'all' && (
+          <EmptyState
+            icon={
+              <div className="w-16 h-16 rounded-full bg-blue-50 border-[1.5px] border-blue-200 flex items-center justify-center mb-1">
+                <BookOpen size={32} className="text-[#1B5E8C]" />
+              </div>
+            }
+            heading={filterStatus !== 'all' ? 'لا توجد تقارير بهذه الحالة' : 'لا توجد تقارير حفظ بعد'}
+            description={filterStatus !== 'all'
+              ? 'جرّب تغيير فلتر الحالة لعرض تقارير أخرى'
+              : 'ستظهر التقارير هنا بمجرد رفعها من المندوبين'}
+            action={role === 'agent' && filterStatus === 'all' && (
               <div className="mt-3">
                 <Button variant="primary" onClick={() => setShowSubmit(true)}>
                   <BookOpen size={16} /> رفع أول تقرير
                 </Button>
               </div>
             )}
-          </div>
+            card
+            className="min-h-[300px] border-gray-200 p-10 gap-2.5"
+          />
         )}
 
         {/* Table */}

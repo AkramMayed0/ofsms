@@ -11,6 +11,7 @@ import StatPill from '@/components/families/StatPill';
 import StatusBadge, { STATUS_MAP } from '@/components/ui/StatusBadge';
 import Button from '@/components/ui/Button';
 import Select from '@/components/ui/Select';
+import EmptyState from '@/components/ui/EmptyState';
 
 export default function FamiliesManagementPage() {
   const router = useRouter();
@@ -171,22 +172,18 @@ export default function FamiliesManagementPage() {
 
         {/* Empty */}
         {!loading && filtered.length === 0 && (
-          <div className="flex flex-col items-center justify-center min-h-[300px] gap-3 text-center bg-white border border-[#e5eaf0] rounded-2xl p-8">
-            <div className="text-gray-300"><Users size={40} /></div>
-            <h3 className="text-base font-bold text-gray-700 m-0">
-              {families.length === 0 ? 'لا توجد أسر مسجّلة بعد' : 'لا توجد نتائج مطابقة'}
-            </h3>
-            <p className="text-sm text-gray-400 m-0">
-              {families.length === 0
-                ? 'ابدأ بتسجيل أول أسرة'
-                : 'جرّب تغيير معايير البحث أو الفلتر'}
-            </p>
-            {families.length === 0 && (
+          <EmptyState
+            icon={<div className="text-gray-300"><Users size={40} /></div>}
+            heading={families.length === 0 ? 'لا توجد أسر مسجّلة بعد' : 'لا توجد نتائج مطابقة'}
+            description={families.length === 0 ? 'ابدأ بتسجيل أول أسرة' : 'جرّب تغيير معايير البحث أو الفلتر'}
+            action={families.length === 0 && (
               <Button variant="primary" onClick={() => router.push('/families/new')}>
                 + تسجيل أسرة جديدة
               </Button>
             )}
-          </div>
+            card
+            className="min-h-[300px]"
+          />
         )}
 
         {/* Table */}
