@@ -14,6 +14,7 @@ import { useState, useEffect } from 'react';
 import { AlertTriangle, X, User, CheckCircle2, FileText } from 'lucide-react';
 import SearchField from '@/components/ui/SearchField';
 import EmptyState from '@/components/ui/EmptyState';
+import DetailDrawer from '@/components/ui/DetailDrawer';
 
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
@@ -49,123 +50,6 @@ const formatDate = (iso) => {
 };
 
 
-
-// ── DetailDrawer ───────────────────────────────────────────────────────────────
-
-function DetailDrawer({ orphan, onClose }) {
-  const [docs, setDocs]       = useState([]);
-  const [docsLoading, setDL]  = useState(true);
-
-  useEffect(() => {
-    if (!orphan) return;
-    async function fetchDocs() {
-      setDL(true);
-      try {
-        const { data } = await api.get(`/orphans/${orphan.id}`);
-        setDocs(data.documents || []);
-      } catch (err) {
-        console.error(`Failed to fetch documents for orphan ID ${orphan.id}:`, err);
-        setDocs([]);
-      } finally {
-        setDL(false);
-      }
-    }
-    fetchDocs();
-  }, [orphan?.id]);
-
-  if (!orphan) return null;
-
-  return (
-    <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/35 z-40 animate-fadeIn" onClick={onClose} />
-
-      {/* Drawer */}
-      <aside className="fixed top-0 left-0 w-[420px] max-w-[95vw] h-screen bg-white z-50 flex flex-col shadow-[-4px_0_24px_rgba(0,0,0,0.12)] animate-slideInLeft" dir="rtl">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4 p-6 border-b border-[#f0f4f8]">
-          <div>
-            <h2 className="text-[1.15rem] font-extrabold text-[#0d3d5c] mb-2">{orphan.full_name}</h2>
-            <StatusBadge status={orphan.status} />
-          </div>
-          <button className="bg-transparent border-none text-[1.1rem] text-gray-400 cursor-pointer px-1.5 py-1 rounded-[6px] transition-all duration-150 hover:bg-gray-100 hover:text-gray-700 flex-shrink-0" onClick={onClose} aria-label="إغلاق"><X size={16} /></button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-5">
-
-          {/* Info grid */}
-          <div className="info-section">
-            <h3 className="text-[0.78rem] font-bold text-slate-400 uppercase tracking-[0.06em] mb-3">البيانات الأساسية</h3>
-            <div className="flex flex-col gap-2">
-              <InfoRow label="العمر"        value={calcAge(orphan.date_of_birth)} />
-              <InfoRow label="تاريخ الميلاد" value={formatDate(orphan.date_of_birth)} />
-              <InfoRow label="الجنس"        value={GENDER_MAP[orphan.gender] || '—'} />
-              <InfoRow label="المحافظة"     value={orphan.governorate_ar || '—'} />
-              <InfoRow label="اسم الوصي"   value={orphan.guardian_name || '—'} />
-              <InfoRow label="صلة الوصي"   value={RELATION_MAP[orphan.guardian_relation] || '—'} />
-              <InfoRow label="تاريخ التسجيل" value={formatDate(orphan.created_at)} />
-              {orphan.is_gifted && <InfoRow label="موهوب" value={<span className="inline-flex items-center gap-1.5"><CheckCircle2 size={14} /> نعم</span>} highlight />}
-            </div>
-          </div>
-
-          {/* Sponsorship info */}
-          {orphan.status === 'under_sponsorship' && (
-            <div className="info-section">
-              <h3 className="text-[0.78rem] font-bold text-slate-400 uppercase tracking-[0.06em] mb-3">بيانات الكفالة</h3>
-              <div className="flex flex-col gap-2">
-                <InfoRow label="اسم الكافل"    value={orphan.sponsor_name || '—'} />
-                <InfoRow label="المبلغ الشهري" value={orphan.monthly_amount ? `${orphan.monthly_amount.toLocaleString('ar-YE')} ر.ي` : '—'} />
-                <InfoRow label="تاريخ البداية" value={formatDate(orphan.sponsorship_start)} />
-              </div>
-            </div>
-          )}
-
-          {/* Rejection notes */}
-          {orphan.status === 'rejected' && orphan.notes && (
-            <div className="flex gap-3 bg-red-50 border border-red-200 rounded-[0.75rem] p-4">
-              <span className="text-[1.1rem] flex-shrink-0 text-red-600"><AlertTriangle size={18} /></span>
-              <div>
-                <strong className="block text-[0.85rem] font-bold text-red-700 mb-1">سبب الرفض</strong>
-                <p className="text-[0.82rem] text-red-600 m-0 leading-relaxed">{orphan.notes}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Documents */}
-          <div className="info-section">
-            <h3 className="text-[0.78rem] font-bold text-slate-400 uppercase tracking-[0.06em] mb-3">المستندات المرفوعة</h3>
-            {docsLoading ? (
-              <p className="text-[0.83rem] text-slate-400 m-0">جارٍ التحميل…</p>
-            ) : docs.length === 0 ? (
-              <p className="text-[0.83rem] text-slate-400 m-0">لا توجد مستندات مرفوعة</p>
-            ) : (
-              <div className="flex flex-col gap-1.5">
-                {docs.map((d) => (
-                  <div key={d.id} className="flex items-center gap-2 px-2.5 py-2 bg-slate-50 border border-[#e5eaf0] rounded-[0.5rem] text-[0.78rem]">
-                    <span><FileText size={16} /></span>
-                    <span className="flex-1 text-gray-700 font-medium overflow-hidden text-ellipsis whitespace-nowrap [direction:ltr] text-left">{d.original_name || d.doc_type}</span>
-                    <span className="text-slate-400 flex-shrink-0">{formatDate(d.uploaded_at)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Footer actions */}
-        <div className="px-6 py-4 border-t border-[#f0f4f8] flex gap-3 justify-end">
-          {orphan.status === 'rejected' && (
-            <a href={`/orphans/${orphan.id}/edit`} className="inline-flex items-center px-4 py-2 bg-gradient-to-br from-[#1B5E8C] to-[#134569] text-white text-[.82rem] font-bold rounded-lg no-underline hover:from-[#2E7EB8] hover:to-[#1B5E8C] transition-all">
-              تعديل وإعادة الإرسال
-            </a>
-          )}
-          <Button variant="outline" className="rounded-[0.625rem] text-[0.82rem]" onClick={onClose}>إغلاق</Button>
-        </div>
-      </aside>
-    </>
-  );
-}
-
 function InfoRow({ label, value, highlight }) {
   return (
     <div className="flex justify-between items-start gap-3 py-1.5 border-b border-slate-50 min-w-0">
@@ -186,6 +70,18 @@ export default function MyOrphansPage() {
   const [selected,  setSelected]  = useState(null); // orphan for drawer
   const [search,    setSearch]    = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [docs,      setDocs]      = useState([]);
+  const [docsLoading, setDL]      = useState(true);
+
+  // Fetch orphan documents when selection changes
+  useEffect(() => {
+    if (!selected) return;
+    setDL(true);
+    api.get(`/orphans/${selected.id}`)
+      .then(({ data }) => setDocs(data.documents || []))
+      .catch(() => setDocs([]))
+      .finally(() => setDL(false));
+  }, [selected?.id]);
 
   // Fetch orphans
   useEffect(() => {
@@ -366,7 +262,89 @@ export default function MyOrphansPage() {
       </div>
 
       {/* Detail drawer */}
-      <DetailDrawer orphan={selected} onClose={() => setSelected(null)} />
+      {selected && (
+        <DetailDrawer open onClose={() => setSelected(null)}>
+          {/* Header */}
+          <div className="flex items-start justify-between gap-4 p-6 border-b border-[#f0f4f8]">
+            <div>
+              <h2 className="text-[1.15rem] font-extrabold text-[#0d3d5c] mb-2">{selected.full_name}</h2>
+              <StatusBadge status={selected.status} />
+            </div>
+            <button className="bg-transparent border-none text-[1.1rem] text-gray-400 cursor-pointer px-1.5 py-1 rounded-[6px] transition-all duration-150 hover:bg-gray-100 hover:text-gray-700 flex-shrink-0" onClick={() => setSelected(null)} aria-label="إغلاق"><X size={16} /></button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-5">
+
+            {/* Info grid */}
+            <div className="info-section">
+              <h3 className="text-[0.78rem] font-bold text-slate-400 uppercase tracking-[0.06em] mb-3">البيانات الأساسية</h3>
+              <div className="flex flex-col gap-2">
+                <InfoRow label="العمر"          value={calcAge(selected.date_of_birth)} />
+                <InfoRow label="تاريخ الميلاد"  value={formatDate(selected.date_of_birth)} />
+                <InfoRow label="الجنس"          value={GENDER_MAP[selected.gender] || '—'} />
+                <InfoRow label="المحافظة"       value={selected.governorate_ar || '—'} />
+                <InfoRow label="اسم الوصي"     value={selected.guardian_name || '—'} />
+                <InfoRow label="صلة الوصي"     value={RELATION_MAP[selected.guardian_relation] || '—'} />
+                <InfoRow label="تاريخ التسجيل" value={formatDate(selected.created_at)} />
+                {selected.is_gifted && <InfoRow label="موهوب" value={<span className="inline-flex items-center gap-1.5"><CheckCircle2 size={14} /> نعم</span>} highlight />}
+              </div>
+            </div>
+
+            {/* Sponsorship info */}
+            {selected.status === 'under_sponsorship' && (
+              <div className="info-section">
+                <h3 className="text-[0.78rem] font-bold text-slate-400 uppercase tracking-[0.06em] mb-3">بيانات الكفالة</h3>
+                <div className="flex flex-col gap-2">
+                  <InfoRow label="اسم الكافل"    value={selected.sponsor_name || '—'} />
+                  <InfoRow label="المبلغ الشهري" value={selected.monthly_amount ? `${selected.monthly_amount.toLocaleString('ar-YE')} ر.ي` : '—'} />
+                  <InfoRow label="تاريخ البداية" value={formatDate(selected.sponsorship_start)} />
+                </div>
+              </div>
+            )}
+
+            {/* Rejection notes */}
+            {selected.status === 'rejected' && selected.notes && (
+              <div className="flex gap-3 bg-red-50 border border-red-200 rounded-[0.75rem] p-4">
+                <span className="text-[1.1rem] flex-shrink-0 text-red-600"><AlertTriangle size={18} /></span>
+                <div>
+                  <strong className="block text-[0.85rem] font-bold text-red-700 mb-1">سبب الرفض</strong>
+                  <p className="text-[0.82rem] text-red-600 m-0 leading-relaxed">{selected.notes}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Documents */}
+            <div className="info-section">
+              <h3 className="text-[0.78rem] font-bold text-slate-400 uppercase tracking-[0.06em] mb-3">المستندات المرفوعة</h3>
+              {docsLoading ? (
+                <p className="text-[0.83rem] text-slate-400 m-0">جارٍ التحميل…</p>
+              ) : docs.length === 0 ? (
+                <p className="text-[0.83rem] text-slate-400 m-0">لا توجد مستندات مرفوعة</p>
+              ) : (
+                <div className="flex flex-col gap-1.5">
+                  {docs.map((d) => (
+                    <div key={d.id} className="flex items-center gap-2 px-2.5 py-2 bg-slate-50 border border-[#e5eaf0] rounded-[0.5rem] text-[0.78rem]">
+                      <span><FileText size={16} /></span>
+                      <span className="flex-1 text-gray-700 font-medium overflow-hidden text-ellipsis whitespace-nowrap [direction:ltr] text-left">{d.original_name || d.doc_type}</span>
+                      <span className="text-slate-400 flex-shrink-0">{formatDate(d.uploaded_at)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Footer actions */}
+          <div className="px-6 py-4 border-t border-[#f0f4f8] flex gap-3 justify-end">
+            {selected.status === 'rejected' && (
+              <a href={`/orphans/${selected.id}/edit`} className="inline-flex items-center px-4 py-2 bg-gradient-to-br from-[#1B5E8C] to-[#134569] text-white text-[.82rem] font-bold rounded-lg no-underline hover:from-[#2E7EB8] hover:to-[#1B5E8C] transition-all">
+                تعديل وإعادة الإرسال
+              </a>
+            )}
+            <Button variant="outline" className="rounded-[0.625rem] text-[0.82rem]" onClick={() => setSelected(null)}>إغلاق</Button>
+          </div>
+        </DetailDrawer>
+      )}
     </AppShell>
   );
 }

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { X, CheckCircle2, AlertTriangle, User, Users, DollarSign, Zap, Search } from 'lucide-react';
 
 import api from '@/lib/api';
+import DetailDrawer from '@/components/ui/DetailDrawer';
 import StatusBadge from '@/components/ui/StatusBadge';
 import RejectModal from '@/components/RejectModal';
 import Spinner from '@/components/ui/Spinner';
@@ -76,18 +77,7 @@ export default function ItemsDrawer({ listId, listInfo, role, onClose, onAction 
   };
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/35 z-40 animate-[fadeIn_0.2s_ease]"
-        onClick={onClose}
-      />
-
-      {/* Drawer */}
-      <aside
-        className="fixed top-0 left-0 w-[540px] max-w-[96vw] h-screen bg-white z-50 flex flex-col shadow-[−4px_0_24px_rgba(0,0,0,0.12)] animate-[slideIn_0.25s_ease]"
-        dir="rtl"
-      >
+    <DetailDrawer open onClose={onClose} className="w-[540px] max-w-[96vw]">
         {/* Header */}
         <div className="flex items-start justify-between px-6 py-5 border-b border-gray-100 gap-4">
           <div>
@@ -280,7 +270,6 @@ export default function ItemsDrawer({ listId, listInfo, role, onClose, onAction 
             </>
           )}
         </div>
-      </aside>
 
       {/* Footer */}
       <div className="px-6 py-4 border-t border-gray-100 flex justify-end">
@@ -292,12 +281,6 @@ export default function ItemsDrawer({ listId, listInfo, role, onClose, onAction 
         </button>
       </div>
 
-      <style jsx global>{`
-        @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
-        @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes shimmer { to { background-position: -200% 0; } }
-      `}</style>
-
       {showReject && (
         <RejectModal
           title="رفض كشف الصرف"
@@ -306,6 +289,6 @@ export default function ItemsDrawer({ listId, listInfo, role, onClose, onAction 
           loading={acting}
         />
       )}
-    </>
+    </DetailDrawer>
   );
 }
