@@ -15,6 +15,7 @@ import { AlertTriangle, X, User, CheckCircle2, FileText } from 'lucide-react';
 import SearchField from '@/components/ui/SearchField';
 import EmptyState from '@/components/ui/EmptyState';
 import DetailDrawer from '@/components/ui/DetailDrawer';
+import DataTable from '@/components/ui/DataTable';
 
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
@@ -202,20 +203,19 @@ export default function MyOrphansPage() {
 
         {/* Table */}
         {!loading && filtered.length > 0 && (
-          <div className="bg-white border border-[#e5eaf0] rounded-[1rem] overflow-hidden shadow-[0_1px_4px_rgba(27,94,140,0.05)]">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-slate-50">
-                  <th className="px-5 py-3.5 text-right text-[0.75rem] font-bold text-slate-500 whitespace-nowrap border-b border-[#e5eaf0]">الاسم الكامل</th>
-                  <th className="px-5 py-3.5 text-right text-[0.75rem] font-bold text-slate-500 whitespace-nowrap border-b border-[#e5eaf0]">المحافظة</th>
-                  <th className="hidden md:table-cell px-5 py-3.5 text-right text-[0.75rem] font-bold text-slate-500 whitespace-nowrap border-b border-[#e5eaf0]">العمر</th>
-                  <th className="hidden md:table-cell px-5 py-3.5 text-right text-[0.75rem] font-bold text-slate-500 whitespace-nowrap border-b border-[#e5eaf0]">الجنس</th>
-                  <th className="px-5 py-3.5 text-right text-[0.75rem] font-bold text-slate-500 whitespace-nowrap border-b border-[#e5eaf0]">الحالة</th>
-                  <th className="hidden md:table-cell px-5 py-3.5 text-right text-[0.75rem] font-bold text-slate-500 whitespace-nowrap border-b border-[#e5eaf0]">تاريخ التسجيل</th>
-                  <th className="px-5 py-3.5 text-right text-[0.75rem] font-bold text-slate-500 whitespace-nowrap border-b border-[#e5eaf0]"></th>
-                </tr>
-              </thead>
-              <tbody>
+          <DataTable
+            columns={[
+              { label: 'الاسم الكامل' },
+              { label: 'المحافظة' },
+              { label: 'العمر', className: 'hidden md:table-cell' },
+              { label: 'الجنس', className: 'hidden md:table-cell' },
+              { label: 'الحالة' },
+              { label: 'تاريخ التسجيل', className: 'hidden md:table-cell' },
+              { label: '' },
+            ]}
+            className="rounded-[1rem]"
+            footer={`عرض ${filtered.length} من ${orphans.length} يتيم`}
+          >
                 {filtered.map((o) => (
                   <tr
                     key={o.id}
@@ -250,14 +250,7 @@ export default function MyOrphansPage() {
                     </td>
                   </tr>
                 ))}
-              </tbody>
-            </table>
-
-            {/* Result count */}
-            <div className="px-5 py-3 text-[0.78rem] text-gray-400 border-t border-[#f0f4f8] text-left">
-              عرض {filtered.length} من {orphans.length} يتيم
-            </div>
-          </div>
+          </DataTable>
         )}
       </div>
 
