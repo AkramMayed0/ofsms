@@ -24,6 +24,7 @@ import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
 import useAuthStore from '../../store/useAuthStore';
 import StatusBadge from '@/components/ui/StatusBadge';
+import Select from '@/components/ui/Select';
 
 const GENDER_LABELS = { male: 'ذكر', female: 'أنثى' };
 
@@ -278,52 +279,43 @@ export default function OrphansListPage() {
             <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 flex pointer-events-none z-10">
               <IconFilter />
             </span>
-            <select
+            <Select
+              className="py-2.5 pl-7 pr-8 border-gray-200 text-[0.82rem] text-gray-700 focus:ring-0"
               value={statusFilter}
               onChange={(e) => setStatus(e.target.value)}
-              className="py-2.5 pl-7 pr-8 border-[1.5px] border-gray-200 rounded-[0.625rem] text-[0.82rem] text-gray-700 bg-gray-50 outline-none cursor-pointer transition-colors duration-150 focus:border-primary focus:bg-white [appearance:none] bg-no-repeat bg-[left_0.6rem_center] bg-[length:12px_12px]"
-              style={{
-                backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")",
-              }}
             >
               {ALL_STATUSES.map((s) => (
                 <option key={s.value} value={s.value}>{s.label}</option>
               ))}
-            </select>
+            </Select>
           </div>
 
           {/* Governorate filter */}
           <div className="relative">
-            <select
+            <Select
+              className="py-2.5 pl-7 pr-8 border-gray-200 text-[0.82rem] text-gray-700 focus:ring-0"
               value={govFilter}
               onChange={(e) => setGov(e.target.value)}
-              className="py-2.5 pl-7 pr-8 border-[1.5px] border-gray-200 rounded-[0.625rem] text-[0.82rem] text-gray-700 bg-gray-50 outline-none cursor-pointer transition-colors duration-150 focus:border-primary focus:bg-white [appearance:none] bg-no-repeat bg-[left_0.6rem_center] bg-[length:12px_12px]"
-              style={{
-                backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")",
-              }}
             >
               <option value="">جميع المحافظات</option>
               {governorates.map((g) => (
                 <option key={g.id} value={g.id}>{g.name_ar}</option>
               ))}
-            </select>
+            </Select>
           </div>
 
           {/* Gifted filter — GM/supervisor only */}
           {(isGM || isSupervisor) && (
             <div className="relative">
-              <select
+              <Select
+                className="py-2.5 pl-7 pr-8 border-gray-200 text-[0.82rem] text-gray-700 focus:ring-0"
                 value={giftedFilter}
                 onChange={(e) => setGifted(e.target.value)}
-                className="py-2.5 pl-7 pr-8 border-[1.5px] border-gray-200 rounded-[0.625rem] text-[0.82rem] text-gray-700 bg-gray-50 outline-none cursor-pointer transition-colors duration-150 focus:border-primary focus:bg-white [appearance:none] bg-no-repeat bg-[left_0.6rem_center] bg-[length:12px_12px]"
-                style={{
-                  backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")",
-                }}
               >
                 <option value="">الكل (موهوب + عادي)</option>
                 <option value="true">الموهوبون فقط ⭐</option>
                 <option value="false">غير الموهوبين</option>
-              </select>
+              </Select>
             </div>
           )}
 

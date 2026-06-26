@@ -10,6 +10,7 @@ import AppShell from '@/components/AppShell';
 import useAuthStore from '@/store/useAuthStore';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import Select from '@/components/ui/Select';
 import Spinner from '@/components/ui/Spinner';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -425,9 +426,10 @@ export default function OrphanEditPage() {
                   <label className="text-[13px] font-semibold text-gray-700" htmlFor="governorateId">
                     المحافظة <span className="text-red-600 mr-0.5">*</span>
                   </label>
-                  <select
+                  <Select
                     id="governorateId"
-                    className={`w-full border-[1.5px] rounded-xl px-3.5 py-2.5 text-sm font-cairo text-gray-800 bg-gray-50 outline-none transition-all duration-150 focus:border-[#1B5E8C] focus:bg-white focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)] ${errors.governorateId ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
+                    className="rounded-xl font-cairo text-sm focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)] focus:ring-0"
+                    error={errors.governorateId?.message}
                     disabled={govLoading}
                     {...register('governorateId', { required: 'المحافظة مطلوبة' })}
                   >
@@ -435,7 +437,7 @@ export default function OrphanEditPage() {
                     {governorates.map((g) => (
                       <option key={g.id} value={g.id}>{g.name_ar}</option>
                     ))}
-                  </select>
+                  </Select>
                   {errors.governorateId && <p className="text-xs text-red-600 m-0 before:content-['•'] before:ml-1">{errors.governorateId.message}</p>}
                 </div>
 
@@ -457,14 +459,16 @@ export default function OrphanEditPage() {
 
                 <div className="flex flex-col gap-1">
                   <label className="text-[13px] font-semibold text-gray-700" htmlFor="motherGovernorate">المحافظة الأم <span className="text-red-600 mr-0.5">*</span></label>
-                  <select id="motherGovernorate" className={`w-full border-[1.5px] rounded-xl px-3.5 py-2.5 text-sm font-cairo text-gray-800 bg-gray-50 outline-none transition-all duration-150 focus:border-[#1B5E8C] focus:bg-white focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)] ${errors.motherGovernorate ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
+                  <Select id="motherGovernorate"
+                    className="rounded-xl font-cairo text-sm focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)] focus:ring-0"
+                    error={errors.motherGovernorate?.message}
                     disabled={govLoading}
                     {...register('motherGovernorate', { required: 'المحافظة الأم مطلوبة' })}>
                     <option value="">{govLoading ? 'جارٍ التحميل…' : 'اختر المحافظة'}</option>
                     {governorates.map((g) => (
                       <option key={g.id} value={g.id}>{g.name_ar}</option>
                     ))}
-                  </select>
+                  </Select>
                   {errors.motherGovernorate && <p className="text-xs text-red-600 m-0 before:content-['•'] before:ml-1">{errors.motherGovernorate.message}</p>}
                 </div>
 

@@ -20,6 +20,7 @@ import AppShell from '@/components/AppShell';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
+import Select from '@/components/ui/Select';
 import Spinner from '@/components/ui/Spinner';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -646,9 +647,10 @@ export default function OrphanRegistrationPage() {
                 <label className={CLS_LBL} htmlFor="governorateId">
                   المحافظة <span className={CLS_REQ}>*</span>
                 </label>
-                <select
+                <Select
                   id="governorateId"
-                  className="rounded-xl appearance-none cursor-pointer" error={errors.governorateId?.message}
+                  className="rounded-xl"
+                  error={errors.governorateId?.message}
                   disabled={govLoading}
                   {...register('governorateId', { required: 'المحافظة مطلوبة' })}
                 >
@@ -656,7 +658,7 @@ export default function OrphanRegistrationPage() {
                   {governorates.map((g) => (
                     <option key={g.id} value={g.id}>{g.name_ar}</option>
                   ))}
-                </select>
+                </Select>
                 {errors.governorateId && <p className={CLS_FERR}>{errors.governorateId.message}</p>}
               </div>
 
@@ -693,9 +695,10 @@ export default function OrphanRegistrationPage() {
                 <label className={CLS_LBL} htmlFor="motherGovernorate">
                   المحافظة الأم <span className={CLS_REQ}>*</span>
                 </label>
-                <select
+                <Select
                   id="motherGovernorate"
-                  className="rounded-xl appearance-none cursor-pointer" error={errors.motherGovernorate?.message}
+                  className="rounded-xl"
+                  error={errors.motherGovernorate?.message}
                   disabled={govLoading}
                   {...register('motherGovernorate', { required: 'المحافظة الأم مطلوبة' })}
                 >
@@ -703,7 +706,7 @@ export default function OrphanRegistrationPage() {
                   {governorates.map((g) => (
                     <option key={g.id} value={g.id}>{g.name_ar}</option>
                   ))}
-                </select>
+                </Select>
                 {errors.motherGovernorate && <p className={CLS_FERR}>{errors.motherGovernorate.message}</p>}
               </div>
 

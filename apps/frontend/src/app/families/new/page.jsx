@@ -21,6 +21,7 @@ import AppShell from '@/components/AppShell';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
+import Select from '@/components/ui/Select';
 import Spinner from '@/components/ui/Spinner';
 
 // ── Section header ─────────────────────────────────────────────────────────────
@@ -234,9 +235,9 @@ export default function FamilyRegistrationPage() {
                     <label className="text-[0.82rem] font-semibold text-gray-700" htmlFor="governorateId">
                       المحافظة <span className="text-red-600 mr-[2px]">*</span>
                     </label>
-                    <select
+                    <Select
                       id="governorateId"
-                      className={`w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-all focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10 appearance-none cursor-pointer ${errors.governorateId ? '!border-red-600 !bg-red-50 focus:!ring-red-600/10' : ''}`}
+                      error={errors.governorateId?.message}
                       disabled={govLoading}
                       {...register('governorateId', { required: 'المحافظة مطلوبة' })}
                     >
@@ -244,7 +245,7 @@ export default function FamilyRegistrationPage() {
                       {governorates.map((g) => (
                         <option key={g.id} value={g.id}>{g.name_ar}</option>
                       ))}
-                    </select>
+                    </Select>
                     {errors.governorateId && <p className="text-red-600 text-xs mt-1">{errors.governorateId.message}</p>}
                   </div>
                 </div>

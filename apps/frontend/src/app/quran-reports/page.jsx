@@ -14,6 +14,7 @@ import AppShell from '@/components/AppShell';
 import useAuthStore from '@/store/useAuthStore';
 import Button from '@/components/ui/Button';
 import Textarea from '@/components/ui/Textarea';
+import Select from '@/components/ui/Select';
 import StatusBadge from '@/components/ui/StatusBadge';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -201,16 +202,16 @@ function SubmitReportModal({ orphans, onClose, onSubmitted }) {
           {/* Orphan select */}
           <div className="flex flex-col gap-1.5">
             <label className="text-[0.82rem] font-semibold text-gray-700">اليتيم <span className="text-red-600">*</span></label>
-            <select
-              className={`w-full p-2.5 bg-gray-50 border-[1.5px] rounded-xl text-[0.88rem] text-gray-800 font-sans outline-none transition-colors appearance-none cursor-pointer ${errors.orphanId ? 'border-red-600 focus:ring-[3px] focus:ring-red-600/10' : 'border-gray-300 focus:border-[#1B5E8C] focus:ring-[3px] focus:ring-[#1B5E8C]/10'}`}
-              style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")", backgroundRepeat: 'no-repeat', backgroundPosition: 'left 0.6rem center' }}
+            <Select
+              className="rounded-xl p-2.5 pl-7"
+              error={errors.orphanId?.message}
               {...register('orphanId', { required: 'يرجى اختيار اليتيم' })}
             >
               <option value="">اختر اليتيم…</option>
               {orphans.map(o => (
                 <option key={o.id} value={o.id}>{o.full_name}</option>
               ))}
-            </select>
+            </Select>
             {errors.orphanId && <p className="text-[0.77rem] text-red-600 m-0">{errors.orphanId.message}</p>}
             {selectedOrphan && (
               <p className="text-[0.72rem] text-gray-400 m-0 mt-1">
@@ -224,25 +225,19 @@ function SubmitReportModal({ orphans, onClose, onSubmitted }) {
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <label className="text-[0.82rem] font-semibold text-gray-700">الشهر <span className="text-red-600">*</span></label>
-              <select className="w-full p-2.5 bg-gray-50 border-[1.5px] border-gray-300 rounded-xl text-[0.88rem] text-gray-800 font-sans outline-none transition-colors appearance-none cursor-pointer focus:border-[#1B5E8C] focus:ring-[3px] focus:ring-[#1B5E8C]/10"
-                style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")", backgroundRepeat: 'no-repeat', backgroundPosition: 'left 0.6rem center' }}
-                {...register('month')}
-              >
+              <Select className="rounded-xl p-2.5 pl-7" {...register('month')}>
                 {MONTHS_AR.slice(1).map((m, i) => (
                   <option key={i + 1} value={i + 1}>{m}</option>
                 ))}
-              </select>
+              </Select>
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-[0.82rem] font-semibold text-gray-700">السنة <span className="text-red-600">*</span></label>
-              <select className="w-full p-2.5 bg-gray-50 border-[1.5px] border-gray-300 rounded-xl text-[0.88rem] text-gray-800 font-sans outline-none transition-colors appearance-none cursor-pointer focus:border-[#1B5E8C] focus:ring-[3px] focus:ring-[#1B5E8C]/10"
-                style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")", backgroundRepeat: 'no-repeat', backgroundPosition: 'left 0.6rem center' }}
-                {...register('year')}
-              >
+              <Select className="rounded-xl p-2.5 pl-7" {...register('year')}>
                 {[2024, 2025, 2026].map(y => (
                   <option key={y} value={y}>{y}</option>
                 ))}
-              </select>
+              </Select>
             </div>
           </div>
 

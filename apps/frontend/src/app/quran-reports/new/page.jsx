@@ -16,6 +16,7 @@ import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import Button from '@/components/ui/Button';
+import Select from '@/components/ui/Select';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -349,23 +350,19 @@ export default function QuranReportSubmissionPage() {
               <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-4 items-end">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[0.82rem] font-semibold text-gray-700">الشهر <span className="text-red-600">*</span></label>
-                  <select className="w-full p-2.5 bg-gray-50 border-[1.5px] border-gray-300 rounded-xl text-[0.88rem] text-gray-800 font-sans outline-none transition-colors appearance-none cursor-pointer focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10"
-                    style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")", backgroundRepeat: 'no-repeat', backgroundPosition: 'left 0.6rem center' }}
-                    {...register('month', { required: true })}>
+                  <Select className="rounded-xl p-2.5 pl-7" {...register('month', { required: true })}>
                     {MONTHS_AR.slice(1).map((name, i) => (
                       <option key={i + 1} value={i + 1}>{name}</option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[0.82rem] font-semibold text-gray-700">السنة <span className="text-red-600">*</span></label>
-                  <select className="w-full p-2.5 bg-gray-50 border-[1.5px] border-gray-300 rounded-xl text-[0.88rem] text-gray-800 font-sans outline-none transition-colors appearance-none cursor-pointer focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10"
-                    style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")", backgroundRepeat: 'no-repeat', backgroundPosition: 'left 0.6rem center' }}
-                    {...register('year', { required: true })}>
+                  <Select className="rounded-xl p-2.5 pl-7" {...register('year', { required: true })}>
                     {yearOptions.map((y) => (
                       <option key={y} value={y}>{y}</option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
                 <div className="flex flex-col gap-1.5 py-2.5 px-4 bg-blue-50 border-[1.5px] border-blue-200 rounded-[0.625rem] whitespace-nowrap col-span-1 sm:col-span-full md:col-auto">
                   <span className="text-[0.7rem] font-bold text-gray-400 uppercase tracking-wider">الفترة</span>
