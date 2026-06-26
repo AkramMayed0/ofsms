@@ -26,6 +26,7 @@ import {
   Handshake
 } from 'lucide-react';
 import SearchField from '@/components/ui/SearchField';
+import EmptyState from '@/components/ui/EmptyState';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const MIN_NAME_LENGTH = 3;
@@ -230,20 +231,18 @@ export default function SponsorManagementPage() {
 
         {/* Empty */}
         {!loading && filtered.length === 0 && (
-          <div className="flex flex-col items-center justify-center min-h-[320px] gap-3 text-center bg-white border border-[#e5eaf0] rounded-2xl p-8">
-            <Handshake size={64} className="mb-2 text-[#cbd5e1]" />
-            <h3 className="text-[1.05rem] font-bold text-gray-700 m-0">
-              {search ? 'لا توجد نتائج مطابقة' : 'لا يوجد كفلاء مسجّلون بعد'}
-            </h3>
-            <p className="text-[0.85rem] text-gray-400 m-0">
-              {search ? 'جرّب تغيير معايير البحث' : 'ابدأ بإضافة كافل جديد'}
-            </p>
-            {!search && (
+          <EmptyState
+            icon={<Handshake size={64} className="mb-2 text-[#cbd5e1]" />}
+            heading={search ? 'لا توجد نتائج مطابقة' : 'لا يوجد كفلاء مسجّلون بعد'}
+            description={search ? 'جرّب تغيير معايير البحث' : 'ابدأ بإضافة كافل جديد'}
+            action={!search && (
               <Button variant="primary" className="mt-2" onClick={() => setShowCreate(true)}>
                 <Plus size={18} /> إضافة كافل جديد
               </Button>
             )}
-          </div>
+            card
+            className="min-h-[320px]"
+          />
         )}
 
         {/* Table */}

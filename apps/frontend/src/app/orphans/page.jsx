@@ -18,6 +18,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { AlertTriangle, X, User } from 'lucide-react';
 import SearchField from '@/components/ui/SearchField';
+import EmptyState from '@/components/ui/EmptyState';
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -66,15 +67,6 @@ const IconStar = () => (
   </svg>
 );
 
-const IconEmpty = () => (
-  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-    strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity=".3">
-    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-    <circle cx="9" cy="7" r="4"/>
-    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-  </svg>
-);
 
 const IconRefresh = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -347,29 +339,21 @@ export default function OrphansListPage() {
                 ) : filtered.length === 0 ? (
                   <tr>
                     <td colSpan="9">
-                      <div className="flex flex-col items-center gap-2 py-14 px-4 text-gray-400">
-                        <IconEmpty />
-                        <p className="text-[0.95rem] font-bold text-gray-700 mt-1 mb-0">
-                          {hasActiveFilters ? 'لا توجد نتائج مطابقة' : 'لا يوجد أيتام مسجَّلون بعد'}
-                        </p>
-                        <p className="text-[0.82rem] m-0">
-                          {hasActiveFilters
-                            ? 'جرّب تغيير الفلاتر أو مسحها'
-                            : isAgent
-                              ? 'ابدأ بتسجيل أول يتيم'
-                              : 'لم يُضَف أي يتيم إلى النظام'}
-                        </p>
-                        {hasActiveFilters && (
-                          <button className="mt-2 px-5 py-2 bg-transparent border-[1.5px] border-gray-300 rounded-[0.625rem] text-gray-700 text-[0.82rem] font-semibold cursor-pointer transition-colors duration-120 hover:border-primary hover:text-primary" onClick={clearFilters}>
-                            مسح الفلاتر
-                          </button>
-                        )}
-                        {!hasActiveFilters && isAgent && (
-                          <Link href="/orphans/new" className="mt-2 px-5 py-2.5 bg-gradient-to-br from-primary to-primary-dark text-white rounded-[0.625rem] text-[0.82rem] font-bold shadow-[0_4px_12px_rgba(27,94,140,0.35)] hover:-translate-y-0.5 transition-all">
-                            + تسجيل يتيم جديد
-                          </Link>
-                        )}
-                      </div>
+                      <EmptyState
+                        icon={
+                          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity=".3">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                          </svg>
+                        }
+                        heading={hasActiveFilters ? 'لا توجد نتائج مطابقة' : 'لا يوجد أيتام مسجَّلون بعد'}
+                        description={hasActiveFilters ? 'جرّب تغيير الفلاتر أو مسحها' : isAgent ? 'ابدأ بتسجيل أول يتيم' : 'لم يُضَف أي يتيم إلى النظام'}
+                        action={
+                          hasActiveFilters
+                            ? <button className="mt-2 px-5 py-2 bg-transparent border-[1.5px] border-gray-300 rounded-[0.625rem] text-gray-700 text-[0.82rem] font-semibold cursor-pointer transition-colors duration-120 hover:border-primary hover:text-primary" onClick={clearFilters}>مسح الفلاتر</button>
+                            : (!hasActiveFilters && isAgent && <Link href="/orphans/new" className="mt-2 px-5 py-2.5 bg-gradient-to-br from-primary to-primary-dark text-white rounded-[0.625rem] text-[0.82rem] font-bold shadow-[0_4px_12px_rgba(27,94,140,0.35)] hover:-translate-y-0.5 transition-all">+ تسجيل يتيم جديد</Link>)
+                        }
+                        className="py-14 px-4 gap-2"
+                      />
                     </td>
                   </tr>
                 ) : (

@@ -7,6 +7,7 @@ import api from '@/lib/api';
 import StatusBadge from '@/components/ui/StatusBadge';
 import RejectModal from '@/components/RejectModal';
 import Spinner from '@/components/ui/Spinner';
+import EmptyState from '@/components/ui/EmptyState';
 import { MONTHS_AR, formatAmount } from './_constants';
 
 export default function ItemsDrawer({ listId, listInfo, role, onClose, onAction }) {
@@ -224,10 +225,11 @@ export default function ItemsDrawer({ listId, listInfo, role, onClose, onAction 
               ))}
             </div>
           ) : items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 gap-2 text-center">
-              <span className="text-3xl">📋</span>
-              <p className="text-[0.83rem] text-slate-400 m-0">لا توجد بنود في هذا الكشف</p>
-            </div>
+            <EmptyState
+              icon={<span className="text-3xl">📋</span>}
+              description="لا توجد بنود في هذا الكشف"
+              className="py-12 gap-2"
+            />
           ) : (
             <>
               <p className="text-[0.75rem] font-bold text-slate-500 uppercase tracking-wide mt-2 mb-2.5">

@@ -6,6 +6,7 @@ import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import { MONTHS_AR, formatDate, formatAmount } from '@/components/disbursements/_constants';
 import StatusBadge from '@/components/ui/StatusBadge';
+import EmptyState from '@/components/ui/EmptyState';
 
 export default function DisbursementsHistoryPage() {
   const router = useRouter();
@@ -81,11 +82,13 @@ export default function DisbursementsHistoryPage() {
         )}
 
         {!loading && lists.length === 0 && !error && (
-          <div className="flex flex-col items-center justify-center min-h-[260px] gap-3 text-center bg-white border border-[#e5eaf0] rounded-2xl p-8">
-            <span className="text-4xl">📋</span>
-            <h3 className="text-base font-bold text-gray-700 m-0">لا توجد كشوف صرف بعد</h3>
-            <p className="text-sm text-gray-400 m-0">لم يتم إنشاء أي كشف صرف حتى الآن</p>
-          </div>
+          <EmptyState
+            icon={<span className="text-4xl">📋</span>}
+            heading="لا توجد كشوف صرف بعد"
+            description="لم يتم إنشاء أي كشف صرف حتى الآن"
+            card
+            className="min-h-[260px]"
+          />
         )}
 
         {loading && (

@@ -10,6 +10,7 @@ import { MONTHS_AR, formatDate, formatAmount } from '@/components/disbursements/
 import StatusBadge from '@/components/ui/StatusBadge';
 import ItemsDrawer from '@/components/disbursements/ItemsDrawer';
 import Spinner from '@/components/ui/Spinner';
+import EmptyState from '@/components/ui/EmptyState';
 
 export default function DisbursementsPage() {
   const user = useAuthStore((s) => s.user);
@@ -129,17 +130,19 @@ export default function DisbursementsPage() {
 
         {/* Empty */}
         {!loading && lists.length === 0 && (
-          <div className="flex flex-col items-center justify-center min-h-[300px] gap-3 text-center bg-white border border-slate-200 rounded-2xl p-8">
-            <div className="w-16 h-16 rounded-full bg-blue-50 border-[1.5px] border-blue-100 flex items-center justify-center">
-              <DollarSign size={32} className="text-primary" />
-            </div>
-            <h3 className="text-[1.05rem] font-bold text-gray-700 m-0">لا توجد كشوف صرف بعد</h3>
-            <p className="text-[0.85rem] text-gray-400 m-0">
-              {role === 'supervisor' || role === 'gm'
-                ? 'اضغط على "إنشاء كشف هذا الشهر" للبدء'
-                : 'لم يتم إنشاء كشف لهذا الشهر بعد'}
-            </p>
-          </div>
+          <EmptyState
+            icon={
+              <div className="w-16 h-16 rounded-full bg-blue-50 border-[1.5px] border-blue-100 flex items-center justify-center">
+                <DollarSign size={32} className="text-primary" />
+              </div>
+            }
+            heading="لا توجد كشوف صرف بعد"
+            description={role === 'supervisor' || role === 'gm'
+              ? 'اضغط على "إنشاء كشف هذا الشهر" للبدء'
+              : 'لم يتم إنشاء كشف لهذا الشهر بعد'}
+            card
+            className="min-h-[300px] border-slate-200"
+          />
         )}
 
         {/* Table */}

@@ -19,6 +19,7 @@ import { AlertTriangle, CheckCircle2, Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
+import EmptyState from '@/components/ui/EmptyState';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -142,15 +143,19 @@ export default function SupervisorBiometricLogPage() {
             className="h-[300px] mt-8 rounded-2xl bg-gradient-to-r from-[#f0f4f8] via-[#e5eaf0] to-[#f0f4f8] bg-[length:200%_100%] animate-[shimmer_1.4s_infinite]"
           />
         ) : !logData ? (
-          <div className="text-center py-16 px-8 bg-white border border-[#e5eaf0] rounded-2xl text-[#6b7a8d]">
-            <h2 className="m-0 mb-2 font-bold text-[#374151]">لا توجد بيانات</h2>
-            <p className="m-0 text-sm">لم يتم العثور على سجل بصمات لهذا الكشف.</p>
-          </div>
+          <EmptyState
+            heading="لا توجد بيانات"
+            description="لم يتم العثور على سجل بصمات لهذا الكشف."
+            card
+            className="py-16 px-8"
+          />
         ) : logData.agents.length === 0 ? (
-          <div className="text-center py-16 px-8 bg-white border border-[#e5eaf0] rounded-2xl text-[#6b7a8d]">
-            <h2 className="m-0 mb-2 font-bold text-[#374151]">لا يوجد مندوبين</h2>
-            <p className="m-0 text-sm">لا يوجد مستفيدين معتمدين في هذا الكشف.</p>
-          </div>
+          <EmptyState
+            heading="لا يوجد مندوبين"
+            description="لا يوجد مستفيدين معتمدين في هذا الكشف."
+            card
+            className="py-16 px-8"
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-6 items-start">
 

@@ -15,6 +15,7 @@ import {
   Filter, Star, RefreshCw, Users,
 } from 'lucide-react';
 import SearchField from '@/components/ui/SearchField';
+import EmptyState from '@/components/ui/EmptyState';
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
 
@@ -415,17 +416,11 @@ export default function MarketingPoolPage() {
                 ) : !error && filtered.length === 0 ? (
                   <tr>
                     <td colSpan="7">
-                      <div className="py-16 px-8 text-center text-gray-400 flex flex-col items-center gap-3">
-                        <Users size={48} strokeWidth={1.2} className="opacity-30" />
-                        <p className="text-[1rem] font-bold text-gray-700 m-0 mt-3">
-                          {items.length === 0 ? 'لا يوجد مستفيدون بانتظار كافل' : 'لا توجد نتائج مطابقة'}
-                        </p>
-                        <p className="text-[0.85rem] m-0">
-                          {items.length === 0
-                            ? 'جميع الحالات المعتمدة تم تعيين كفلاء لها'
-                            : 'جرّب تغيير الفلاتر أو مسحها'}
-                        </p>
-                        {hasActiveFilters && (
+                      <EmptyState
+                        icon={<Users size={48} strokeWidth={1.2} className="opacity-30" />}
+                        heading={items.length === 0 ? 'لا يوجد مستفيدون بانتظار كافل' : 'لا توجد نتائج مطابقة'}
+                        description={items.length === 0 ? 'جميع الحالات المعتمدة تم تعيين كفلاء لها' : 'جرّب تغيير الفلاتر أو مسحها'}
+                        action={hasActiveFilters && (
                           <button
                             className="mt-4 py-1.5 px-3 bg-white border border-gray-200 rounded-lg text-gray-700 font-sans text-[0.78rem] font-semibold cursor-pointer transition-colors hover:bg-gray-50 hover:border-gray-300"
                             onClick={clearFilters}
@@ -433,7 +428,8 @@ export default function MarketingPoolPage() {
                             مسح الفلاتر
                           </button>
                         )}
-                      </div>
+                        className="py-16 px-8"
+                      />
                     </td>
                   </tr>
                 ) : (

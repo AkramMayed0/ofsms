@@ -9,6 +9,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import Spinner from '@/components/ui/Spinner';
+import EmptyState from '@/components/ui/EmptyState';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const TOAST_DURATION   = 3000; // ms
@@ -353,13 +354,12 @@ export default function AnnouncementsPage() {
 
         {/* ── Empty state ── */}
         {!loading && !error && announcements.length === 0 && ads.length === 0 && (
-          <div className="flex flex-col items-center gap-1.5 py-16 px-4 text-center text-gray-400">
-            <Megaphone size={40} strokeWidth={1.5} />
-            <p className="text-[0.95rem] text-gray-700 font-bold mt-2 mb-0">لا توجد إعلانات</p>
-            <p className="text-[0.82rem] text-gray-400 m-0">
-              {isGM ? 'اضغط «إعلان جديد» لنشر أول إعلان.' : 'لا توجد إعلانات نشطة حالياً.'}
-            </p>
-          </div>
+          <EmptyState
+            icon={<Megaphone size={40} strokeWidth={1.5} />}
+            heading="لا توجد إعلانات"
+            description={isGM ? 'اضغط «إعلان جديد» لنشر أول إعلان.' : 'لا توجد إعلانات نشطة حالياً.'}
+            className="py-16 px-4 gap-1.5"
+          />
         )}
 
         {/* ── Sponsor ads list ── */}

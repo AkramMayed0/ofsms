@@ -13,6 +13,7 @@
 import { useState, useEffect } from 'react';
 import { AlertTriangle, X, User, CheckCircle2, FileText } from 'lucide-react';
 import SearchField from '@/components/ui/SearchField';
+import EmptyState from '@/components/ui/EmptyState';
 
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
@@ -290,22 +291,17 @@ export default function MyOrphansPage() {
 
         {/* Empty state */}
         {!loading && !error && filtered.length === 0 && (
-          <div className="flex flex-col items-center justify-center min-h-[320px] text-center gap-3">
-            <div className="text-[3.5rem] text-gray-300"><User size={18} /></div>
-            <h3 className="text-[1.1rem] font-bold text-gray-700 m-0">
-              {search || filterStatus !== 'all' ? 'لا توجد نتائج مطابقة' : 'لا يوجد أيتام مسجّلون بعد'}
-            </h3>
-            <p className="text-[0.85rem] text-gray-400 m-0">
-              {search || filterStatus !== 'all'
-                ? 'جرّب تغيير معايير البحث أو الفلتر'
-                : 'ابدأ بتسجيل يتيم جديد'}
-            </p>
-            {!search && filterStatus === 'all' && (
+          <EmptyState
+            icon={<div className="text-[3.5rem] text-gray-300"><User size={18} /></div>}
+            heading={search || filterStatus !== 'all' ? 'لا توجد نتائج مطابقة' : 'لا يوجد أيتام مسجّلون بعد'}
+            description={search || filterStatus !== 'all' ? 'جرّب تغيير معايير البحث أو الفلتر' : 'ابدأ بتسجيل يتيم جديد'}
+            action={!search && filterStatus === 'all' && (
               <Button variant="primary" onClick={() => router.push('/orphans/new')}>
                 + تسجيل يتيم جديد
               </Button>
             )}
-          </div>
+            className="min-h-[320px]"
+          />
         )}
 
         {/* Table */}
