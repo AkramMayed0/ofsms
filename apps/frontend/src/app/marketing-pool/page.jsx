@@ -18,6 +18,7 @@ import SearchField from '@/components/ui/SearchField';
 import EmptyState from '@/components/ui/EmptyState';
 import { SkeletonTableRow } from '@/components/ui/Skeleton';
 import StatPill from '@/components/ui/StatPill';
+import DataTable from '@/components/ui/DataTable';
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
 
@@ -364,27 +365,35 @@ export default function MarketingPoolPage() {
         )}
 
         {/* ── Table card ──────────────────────────────────────────── */}
-        <div className="bg-white border border-[#e5eaf0] rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-[0.82rem] min-w-[760px]">
-              <thead>
-                <tr className="bg-[#f8fafc] border-b-[1.5px] border-[#e5eaf0]">
-                  <th className="w-[46px] text-center py-3 px-4">
-                    <input
-                      type="checkbox"
-                      className="w-4 h-4 cursor-pointer accent-teal-700"
-                      checked={allFilteredSelected}
-                      disabled={filtered.length === 0}
-                      onChange={toggleFilteredItems}
-                      aria-label="تحديد كل المستفيدين الظاهرين"
-                    />
-                  </th>
-                  {['الاسم', 'النوع', 'المحافظة', 'العمر / الأفراد', 'المندوب', 'تاريخ الاعتماد'].map((h) => (
-                    <th key={h} className="py-3 px-4 text-right text-[0.72rem] font-bold text-gray-400 whitespace-nowrap uppercase tracking-wider">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
+        <DataTable
+          columns={[
+            {
+              label: (
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 cursor-pointer accent-teal-700"
+                  checked={allFilteredSelected}
+                  disabled={filtered.length === 0}
+                  onChange={toggleFilteredItems}
+                  aria-label="تحديد كل المستفيدين الظاهرين"
+                />
+              ),
+              className: 'w-[46px] text-center',
+            },
+            { label: 'الاسم' },
+            { label: 'النوع' },
+            { label: 'المحافظة' },
+            { label: 'العمر / الأفراد' },
+            { label: 'المندوب' },
+            { label: 'تاريخ الاعتماد' },
+          ]}
+          minWidth="760px"
+          footer={!loading && filtered.length > 0 && (
+            filtered.length === items.length
+              ? `${items.length} مستفيد`
+              : `${filtered.length} من أصل ${items.length} مستفيد`
+          )}
+        >
                 {loading ? (
                   Array.from({ length: 6 }).map((_, i) => <SkeletonTableRow key={i} widths={[80, 50, 70, 90, 60]} cellClassName="py-4 px-4 border-b border-gray-50" barClassName="h-4" />)
                 ) : !error && filtered.length === 0 ? (
@@ -472,21 +481,7 @@ export default function MarketingPoolPage() {
                     </tr>
                   ))
                 )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Footer count */}
-          {!loading && filtered.length > 0 && (
-            <div className="py-3.5 px-5 bg-white border-t border-[#f0f4f8] flex items-center">
-              <span className="text-[0.78rem] font-semibold text-gray-400">
-                {filtered.length === items.length
-                  ? `${items.length} مستفيد`
-                  : `${filtered.length} من أصل ${items.length} مستفيد`}
-              </span>
-            </div>
-          )}
-        </div>
+        </DataTable>
       </div>
     </AppShell>
   );

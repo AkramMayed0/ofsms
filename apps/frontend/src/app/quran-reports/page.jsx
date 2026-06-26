@@ -17,6 +17,7 @@ import Textarea from '@/components/ui/Textarea';
 import Select from '@/components/ui/Select';
 import StatusBadge from '@/components/ui/StatusBadge';
 import EmptyState from '@/components/ui/EmptyState';
+import DataTable from '@/components/ui/DataTable';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -482,22 +483,18 @@ export default function QuranReportsPage() {
 
         {/* Table */}
         {!loading && filtered.length > 0 && (
-          <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-[0_1px_4px_rgba(27,94,140,0.05)]">
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-gray-50 border-b-[1.5px] border-gray-200">
-                    <th className="py-3 px-4 text-right text-[0.72rem] font-bold text-gray-500 whitespace-nowrap tracking-wide">اسم اليتيم</th>
-                    <th className="py-3 px-4 text-right text-[0.72rem] font-bold text-gray-500 whitespace-nowrap tracking-wide hidden md:table-cell">المحافظة</th>
-                    <th className="py-3 px-4 text-right text-[0.72rem] font-bold text-gray-500 whitespace-nowrap tracking-wide">الشهر / السنة</th>
-                    <th className="py-3 px-4 text-right text-[0.72rem] font-bold text-gray-500 whitespace-nowrap tracking-wide">الأجزاء المحفوظة</th>
-                    <th className="py-3 px-4 text-right text-[0.72rem] font-bold text-gray-500 whitespace-nowrap tracking-wide">الحالة</th>
-                    <th className="py-3 px-4 text-right text-[0.72rem] font-bold text-gray-500 whitespace-nowrap tracking-wide hidden md:table-cell">تاريخ الرفع</th>
-                    {(role === 'supervisor' || role === 'gm') && <th className="py-3 px-4 text-right text-[0.72rem] font-bold text-gray-500 whitespace-nowrap tracking-wide">المندوب</th>}
-                    {(role === 'supervisor' || role === 'gm') && <th className="py-3 px-4 text-right text-[0.72rem] font-bold text-gray-500 whitespace-nowrap tracking-wide">إجراء</th>}
-                  </tr>
-                </thead>
-                <tbody>
+          <DataTable
+            columns={[
+              { label: 'اسم اليتيم' },
+              { label: 'المحافظة', className: 'hidden md:table-cell' },
+              { label: 'الشهر / السنة' },
+              { label: 'الأجزاء المحفوظة' },
+              { label: 'الحالة' },
+              { label: 'تاريخ الرفع', className: 'hidden md:table-cell' },
+              ...(role === 'supervisor' || role === 'gm' ? [{ label: 'المندوب' }, { label: 'إجراء' }] : []),
+            ]}
+            className="border-gray-200"
+          >
                   {filtered.map((r) => (
                     <tr key={r.id} className="border-b border-gray-50 transition-colors hover:bg-blue-50/50 last:border-b-0">
                       <td className="py-3.5 px-4 align-middle">
@@ -553,10 +550,7 @@ export default function QuranReportsPage() {
                       )}
                     </tr>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          </DataTable>
         )}
       </div>
 

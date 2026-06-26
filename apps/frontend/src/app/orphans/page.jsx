@@ -21,6 +21,7 @@ import SearchField from '@/components/ui/SearchField';
 import EmptyState from '@/components/ui/EmptyState';
 import { SkeletonTableRow } from '@/components/ui/Skeleton';
 import StatPill from '@/components/ui/StatPill';
+import DataTable from '@/components/ui/DataTable';
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -294,23 +295,26 @@ export default function OrphansListPage() {
         )}
 
         {/* ── Table ───────────────────────────────────────────────── */}
-        <div className="bg-white border border-[#e5eaf0] rounded-[1rem] overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-[0.82rem] min-w-[700px]">
-              <thead>
-                <tr className="bg-slate-50 border-b-[1.5px] border-[#e5eaf0]">
-                  <th className="px-4 py-3 text-right text-[0.72rem] font-bold text-gray-400 whitespace-nowrap tracking-wider uppercase">الاسم</th>
-                  <th className="px-4 py-3 text-right text-[0.72rem] font-bold text-gray-400 whitespace-nowrap tracking-wider uppercase">العمر</th>
-                  <th className="px-4 py-3 text-right text-[0.72rem] font-bold text-gray-400 whitespace-nowrap tracking-wider uppercase">الجنس</th>
-                  <th className="px-4 py-3 text-right text-[0.72rem] font-bold text-gray-400 whitespace-nowrap tracking-wider uppercase">المحافظة</th>
-                  <th className="px-4 py-3 text-right text-[0.72rem] font-bold text-gray-400 whitespace-nowrap tracking-wider uppercase">الوصي</th>
-                  <th className="px-4 py-3 text-right text-[0.72rem] font-bold text-gray-400 whitespace-nowrap tracking-wider uppercase">الحالة</th>
-                  <th className="px-4 py-3 text-right text-[0.72rem] font-bold text-gray-400 whitespace-nowrap tracking-wider uppercase">تاريخ التسجيل</th>
-                  {(isGM || isSupervisor) && <th className="px-4 py-3 text-right text-[0.72rem] font-bold text-gray-400 whitespace-nowrap tracking-wider uppercase">المندوب</th>}
-                  <th className="px-4 py-3 text-right text-[0.72rem] font-bold text-gray-400 whitespace-nowrap tracking-wider uppercase"></th>
-                </tr>
-              </thead>
-              <tbody>
+        <DataTable
+          columns={[
+            { label: 'الاسم' },
+            { label: 'العمر' },
+            { label: 'الجنس' },
+            { label: 'المحافظة' },
+            { label: 'الوصي' },
+            { label: 'الحالة' },
+            { label: 'تاريخ التسجيل' },
+            ...(isGM || isSupervisor ? [{ label: 'المندوب' }] : []),
+            { label: '' },
+          ]}
+          className="rounded-[1rem] shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
+          minWidth="700px"
+          footer={!loading && filtered.length > 0 && (
+            filtered.length === orphans.length
+              ? `${orphans.length} يتيم`
+              : `${filtered.length} من أصل ${orphans.length} يتيم`
+          )}
+        >
                 {loading ? (
                   Array.from({ length: 6 }).map((_, i) => <SkeletonTableRow key={i} className="border-b border-slate-100" widths={[40, 80, 50, 70, 90, 60, 50]} cellClassName="p-3.5" />)
                 ) : filtered.length === 0 ? (
@@ -413,21 +417,7 @@ export default function OrphansListPage() {
                     </tr>
                   ))
                 )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Footer count */}
-          {!loading && filtered.length > 0 && (
-            <div className="px-4 py-3 border-t border-slate-100 flex justify-end">
-              <span className="text-[0.75rem] text-gray-400 font-medium">
-                {filtered.length === orphans.length
-                  ? `${orphans.length} يتيم`
-                  : `${filtered.length} من أصل ${orphans.length} يتيم`}
-              </span>
-            </div>
-          )}
-        </div>
+        </DataTable>
       </div>
     </AppShell>
   );
