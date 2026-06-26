@@ -21,6 +21,7 @@ import {
 
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
+import Textarea from '@/components/ui/Textarea';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -110,8 +111,8 @@ function RejectModal({ record, onConfirm, onCancel, loading }) {
           <label className="block text-[0.8rem] font-bold text-gray-700 mb-2">
             سبب الرفض <span className="text-red-600">*</span>
           </label>
-          <textarea
-            className="w-full border-[1.5px] border-gray-200 rounded-xl py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 resize-y outline-none bg-gray-50 transition-colors focus:border-red-500 focus:ring-[3px] focus:ring-red-500/8 focus:bg-white box-border"
+          <Textarea
+            className="rounded-xl border-gray-200 focus:border-red-500 focus:ring-red-500/8"
             rows={4}
             placeholder="اكتب سبب الرفض ليُرسَل للمندوب عبر الإشعارات…"
             value={notes}

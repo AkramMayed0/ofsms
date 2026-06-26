@@ -13,6 +13,7 @@ import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import useAuthStore from '@/store/useAuthStore';
 import Button from '@/components/ui/Button';
+import Textarea from '@/components/ui/Textarea';
 import StatusBadge from '@/components/ui/StatusBadge';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -115,8 +116,8 @@ function RejectModal({ report, onConfirm, onClose }) {
             <label className="text-[0.82rem] font-semibold text-gray-700">
               سبب الرفض <span className="text-gray-400 font-normal text-[0.78rem]">(اختياري)</span>
             </label>
-            <textarea
-              className="w-full min-h-[80px] p-2.5 bg-gray-50 border-[1.5px] border-gray-300 rounded-xl text-[0.85rem] text-gray-800 font-sans resize-y outline-none transition-colors focus:border-red-500 focus:ring-[3px] focus:ring-red-500/10"
+            <Textarea
+              className="rounded-xl min-h-[80px] py-2.5 px-2.5 text-[0.85rem] focus:border-red-500 focus:ring-red-500/10"
               rows={3}
               placeholder="اكتب سبب الرفض ليتمكن المندوب من الاطلاع عليه…"
               value={notes}
