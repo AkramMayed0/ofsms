@@ -12,6 +12,7 @@ import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import Select from '@/components/ui/Select';
 import Spinner from '@/components/ui/Spinner';
+import CounterInput from '@/components/ui/CounterInput';
 
 function SectionHeader({ number, title, subtitle }) {
   return (
@@ -21,20 +22,6 @@ function SectionHeader({ number, title, subtitle }) {
         <h2 className="text-[1.05rem] font-bold text-[#0d3d5c] m-0 mb-0.5">{title}</h2>
         {subtitle && <p className="text-[0.78rem] text-slate-400 m-0">{subtitle}</p>}
       </div>
-    </div>
-  );
-}
-
-function CounterInput({ value, onChange, min = 1, max = 30, error }) {
-  const dec = () => onChange(Math.max(min, value - 1));
-  const inc = () => onChange(Math.min(max, value + 1));
-
-  return (
-    <div className={`inline-flex items-center gap-3 bg-slate-50 border-[1.5px] ${error ? 'border-red-600' : 'border-[#e5eaf0]'} rounded-xl py-2 px-4`}>
-      <button type="button" className="w-8 h-8 rounded-full border-[1.5px] border-gray-300 bg-white text-[1.1rem] font-bold text-gray-700 cursor-pointer flex items-center justify-center transition-all leading-none hover:not(:disabled):border-[#1B5E8C] hover:not(:disabled):text-[#1B5E8C] hover:not(:disabled):bg-blue-50 disabled:opacity-35 disabled:cursor-not-allowed" onClick={dec} disabled={value <= min}>−</button>
-      <span className="min-w-[2.5rem] text-center text-[1.75rem] font-extrabold text-[#0d3d5c] font-sans">{value}</span>
-      <button type="button" className="w-8 h-8 rounded-full border-[1.5px] border-gray-300 bg-white text-[1.1rem] font-bold text-gray-700 cursor-pointer flex items-center justify-center transition-all leading-none hover:not(:disabled):border-[#1B5E8C] hover:not(:disabled):text-[#1B5E8C] hover:not(:disabled):bg-blue-50 disabled:opacity-35 disabled:cursor-not-allowed" onClick={inc} disabled={value >= max}>+</button>
-      <span className="text-[0.82rem] text-slate-500 font-semibold">فرد</span>
     </div>
   );
 }
