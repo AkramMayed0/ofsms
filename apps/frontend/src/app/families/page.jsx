@@ -13,6 +13,7 @@ import Button from '@/components/ui/Button';
 import Select from '@/components/ui/Select';
 import EmptyState from '@/components/ui/EmptyState';
 import { SkeletonListRow } from '@/components/ui/Skeleton';
+import DataTable from '@/components/ui/DataTable';
 
 export default function FamiliesManagementPage() {
   const router = useRouter();
@@ -179,54 +180,43 @@ export default function FamiliesManagementPage() {
 
         {/* Table */}
         {!loading && filtered.length > 0 && (
-          <div className="bg-white border border-[#e5eaf0] rounded-2xl overflow-hidden shadow-[0_1px_4px_rgba(27,94,140,.05)]">
-            <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-[#f8fafc]">
-                  <th className="px-4 py-3 text-right text-[.72rem] font-bold text-[#6b7a8d] border-b border-[#e5eaf0] whitespace-nowrap">اسم الأسرة</th>
-                  <th className="px-4 py-3 text-right text-[.72rem] font-bold text-[#6b7a8d] border-b border-[#e5eaf0] whitespace-nowrap">المعيل / رب الأسرة</th>
-                  <th className="px-4 py-3 text-right text-[.72rem] font-bold text-[#6b7a8d] border-b border-[#e5eaf0] whitespace-nowrap">عدد الأفراد</th>
-                  <th className="px-4 py-3 text-right text-[.72rem] font-bold text-[#6b7a8d] border-b border-[#e5eaf0] whitespace-nowrap">المحافظة</th>
-                  <th className="px-4 py-3 text-right text-[.72rem] font-bold text-[#6b7a8d] border-b border-[#e5eaf0] whitespace-nowrap">الحالة</th>
-                  <th className="px-4 py-3 text-right text-[.72rem] font-bold text-[#6b7a8d] border-b border-[#e5eaf0] whitespace-nowrap max-sm:hidden">المندوب</th>
-                  <th className="px-4 py-3 text-right text-[.72rem] font-bold text-[#6b7a8d] border-b border-[#e5eaf0] whitespace-nowrap max-sm:hidden">الكافل</th>
-                  <th className="px-4 py-3 text-right text-[.72rem] font-bold text-[#6b7a8d] border-b border-[#e5eaf0] whitespace-nowrap max-sm:hidden">تاريخ التسجيل</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((f) => (
-                  <tr
-                    key={f.id}
-                    className="cursor-pointer transition-colors duration-100 hover:bg-[#f8fbff] [&:last-child_td]:border-b-0"
-                    onClick={() => router.push(`/families/${f.id}`)}
-                  >
-                    <td className="px-4 py-3.5 text-sm border-b border-gray-50 align-middle">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-[34px] h-[34px] rounded-full bg-gradient-to-br from-emerald-600 to-emerald-700 text-white flex items-center justify-center shrink-0"><Users size={16} /></div>
-                        <span className="font-bold text-gray-800">{f.family_name}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3.5 text-sm border-b border-gray-50 align-middle text-[#6b7a8d]">{f.head_of_family || '—'}</td>
-                    <td className="px-4 py-3.5 text-sm border-b border-gray-50 align-middle">
-                      <span className="inline-flex items-center px-2.5 py-0.5 bg-green-50 border border-green-200 rounded-full text-[.72rem] font-bold text-green-700">{f.member_count || '—'} فرد</span>
-                    </td>
-                    <td className="px-4 py-3.5 text-sm border-b border-gray-50 align-middle text-[#6b7a8d]">{f.governorate_ar || '—'}</td>
-                    <td className="px-4 py-3.5 text-sm border-b border-gray-50 align-middle"><StatusBadge status={f.status} /></td>
-                    <td className="px-4 py-3.5 text-sm border-b border-gray-50 align-middle text-[#6b7a8d] max-sm:hidden">{f.agent_name || '—'}</td>
-                    <td className="px-4 py-3.5 text-sm border-b border-gray-50 align-middle text-[#6b7a8d] max-sm:hidden">{f.sponsor_name || '—'}</td>
-                    <td className="px-4 py-3.5 text-sm border-b border-gray-50 align-middle text-[#6b7a8d] max-sm:hidden">{formatDate(f.created_at)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            </div>
-            <div className="px-4 py-3 text-xs text-gray-400 border-t border-[#f0f4f8]">
-              عرض {filtered.length} من {families.length} أسرة ·
-              إجمالي الأفراد في الكشف:{' '}
-              {filtered.reduce((s, f) => s + (parseInt(f.member_count) || 0), 0)} فرد
-            </div>
-          </div>
+          <DataTable
+            columns={[
+              { label: 'اسم الأسرة' },
+              { label: 'المعيل / رب الأسرة' },
+              { label: 'عدد الأفراد' },
+              { label: 'المحافظة' },
+              { label: 'الحالة' },
+              { label: 'المندوب', className: 'max-sm:hidden' },
+              { label: 'الكافل', className: 'max-sm:hidden' },
+              { label: 'تاريخ التسجيل', className: 'max-sm:hidden' },
+            ]}
+            footer={`عرض ${filtered.length} من ${families.length} أسرة · إجمالي الأفراد في الكشف: ${filtered.reduce((s, f) => s + (parseInt(f.member_count) || 0), 0)} فرد`}
+          >
+            {filtered.map((f) => (
+              <tr
+                key={f.id}
+                className="cursor-pointer transition-colors duration-100 hover:bg-[#f8fbff] [&:last-child_td]:border-b-0"
+                onClick={() => router.push(`/families/${f.id}`)}
+              >
+                <td className="px-4 py-3.5 text-sm border-b border-gray-50 align-middle">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-[34px] h-[34px] rounded-full bg-gradient-to-br from-emerald-600 to-emerald-700 text-white flex items-center justify-center shrink-0"><Users size={16} /></div>
+                    <span className="font-bold text-gray-800">{f.family_name}</span>
+                  </div>
+                </td>
+                <td className="px-4 py-3.5 text-sm border-b border-gray-50 align-middle text-[#6b7a8d]">{f.head_of_family || '—'}</td>
+                <td className="px-4 py-3.5 text-sm border-b border-gray-50 align-middle">
+                  <span className="inline-flex items-center px-2.5 py-0.5 bg-green-50 border border-green-200 rounded-full text-[.72rem] font-bold text-green-700">{f.member_count || '—'} فرد</span>
+                </td>
+                <td className="px-4 py-3.5 text-sm border-b border-gray-50 align-middle text-[#6b7a8d]">{f.governorate_ar || '—'}</td>
+                <td className="px-4 py-3.5 text-sm border-b border-gray-50 align-middle"><StatusBadge status={f.status} /></td>
+                <td className="px-4 py-3.5 text-sm border-b border-gray-50 align-middle text-[#6b7a8d] max-sm:hidden">{f.agent_name || '—'}</td>
+                <td className="px-4 py-3.5 text-sm border-b border-gray-50 align-middle text-[#6b7a8d] max-sm:hidden">{f.sponsor_name || '—'}</td>
+                <td className="px-4 py-3.5 text-sm border-b border-gray-50 align-middle text-[#6b7a8d] max-sm:hidden">{formatDate(f.created_at)}</td>
+              </tr>
+            ))}
+          </DataTable>
         )}
       </div>
     </AppShell>

@@ -28,6 +28,7 @@ import {
 import SearchField from '@/components/ui/SearchField';
 import EmptyState from '@/components/ui/EmptyState';
 import { SkeletonListRow } from '@/components/ui/Skeleton';
+import DataTable from '@/components/ui/DataTable';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const MIN_NAME_LENGTH = 3;
@@ -238,54 +239,45 @@ export default function SponsorManagementPage() {
 
         {/* Table */}
         {!loading && filtered.length > 0 && (
-          <div className="bg-white border border-[#e5eaf0] rounded-2xl overflow-hidden shadow-[0_1px_4px_rgba(27,94,140,0.05)]">
-            <div className="overflow-x-auto [webkit-overflow-scrolling:touch]">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-slate-50">
-                    <th className="px-5 py-3.5 text-right text-[0.72rem] font-bold text-[#6b7a8d] border-b border-[#e5eaf0] whitespace-nowrap">اسم الكافل</th>
-                    <th className="px-5 py-3.5 text-right text-[0.72rem] font-bold text-[#6b7a8d] border-b border-[#e5eaf0] whitespace-nowrap">رقم الهاتف</th>
-                    <th className="px-5 py-3.5 text-right text-[0.72rem] font-bold text-[#6b7a8d] border-b border-[#e5eaf0] whitespace-nowrap hidden sm:table-cell">البريد الإلكتروني</th>
-                    <th className="px-5 py-3.5 text-right text-[0.72rem] font-bold text-[#6b7a8d] border-b border-[#e5eaf0] whitespace-nowrap">الكفالات النشطة</th>
-                    <th className="px-5 py-3.5 text-right text-[0.72rem] font-bold text-[#6b7a8d] border-b border-[#e5eaf0] whitespace-nowrap hidden sm:table-cell">أنشأه</th>
-                    <th className="px-5 py-3.5 text-right text-[0.72rem] font-bold text-[#6b7a8d] border-b border-[#e5eaf0] whitespace-nowrap hidden sm:table-cell">تاريخ التسجيل</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((s) => (
-                    <tr
-                      key={s.id}
-                      className="cursor-pointer transition-colors duration-120 hover:bg-[#f8fbff]"
-                      onClick={() => router.push(`/sponsors/${s.id}`)}
-                      tabIndex={0}
-                      onKeyDown={(e) => e.key === 'Enter' && router.push(`/sponsors/${s.id}`)}
-                    >
-                      <td className="px-5 py-3 text-[0.83rem] border-b border-slate-50 align-middle last:border-b-0">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-[#0d3d5c] text-white flex items-center justify-center text-[0.9rem] font-bold shrink-0">
-                            {s.full_name ? s.full_name.charAt(0) : <User size={16} />}
-                          </div>
-                          <span className="font-bold text-gray-800">{s.full_name}</span>
-                        </div>
-                      </td>
-                      <td className="px-5 py-3 text-[0.83rem] border-b border-slate-50 align-middle text-[#6b7a8d] [direction:ltr] text-left last:border-b-0">{s.phone || '—'}</td>
-                      <td className="px-5 py-3 text-[0.83rem] border-b border-slate-50 align-middle text-[#6b7a8d] [direction:ltr] text-left hidden sm:table-cell last:border-b-0">{s.email || '—'}</td>
-                      <td className="px-5 py-3 text-[0.83rem] border-b border-slate-50 align-middle last:border-b-0">
-                        <span className="inline-flex items-center px-3 py-1 bg-[#f0f7ff] border border-blue-200 rounded-full text-[0.75rem] font-bold text-blue-700">
-                          {s.active_sponsorships || 0} كفالة
-                        </span>
-                      </td>
-                      <td className="px-5 py-3 text-[0.83rem] border-b border-slate-50 align-middle text-[#6b7a8d] hidden sm:table-cell last:border-b-0">{s.created_by_name || '—'}</td>
-                      <td className="px-5 py-3 text-[0.83rem] border-b border-slate-50 align-middle text-[#6b7a8d] hidden sm:table-cell last:border-b-0">{formatDate(s.created_at)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="px-5 py-3 text-[0.78rem] text-gray-400 border-t border-[#f0f4f8]">
-              عرض {filtered.length} من {sponsors.length} كافل
-            </div>
-          </div>
+          <DataTable
+            columns={[
+              { label: 'اسم الكافل' },
+              { label: 'رقم الهاتف' },
+              { label: 'البريد الإلكتروني', className: 'hidden sm:table-cell' },
+              { label: 'الكفالات النشطة' },
+              { label: 'أنشأه', className: 'hidden sm:table-cell' },
+              { label: 'تاريخ التسجيل', className: 'hidden sm:table-cell' },
+            ]}
+            footer={`عرض ${filtered.length} من ${sponsors.length} كافل`}
+          >
+            {filtered.map((s) => (
+              <tr
+                key={s.id}
+                className="cursor-pointer transition-colors duration-120 hover:bg-[#f8fbff]"
+                onClick={() => router.push(`/sponsors/${s.id}`)}
+                tabIndex={0}
+                onKeyDown={(e) => e.key === 'Enter' && router.push(`/sponsors/${s.id}`)}
+              >
+                <td className="px-5 py-3 text-[0.83rem] border-b border-slate-50 align-middle last:border-b-0">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-[#0d3d5c] text-white flex items-center justify-center text-[0.9rem] font-bold shrink-0">
+                      {s.full_name ? s.full_name.charAt(0) : <User size={16} />}
+                    </div>
+                    <span className="font-bold text-gray-800">{s.full_name}</span>
+                  </div>
+                </td>
+                <td className="px-5 py-3 text-[0.83rem] border-b border-slate-50 align-middle text-[#6b7a8d] [direction:ltr] text-left last:border-b-0">{s.phone || '—'}</td>
+                <td className="px-5 py-3 text-[0.83rem] border-b border-slate-50 align-middle text-[#6b7a8d] [direction:ltr] text-left hidden sm:table-cell last:border-b-0">{s.email || '—'}</td>
+                <td className="px-5 py-3 text-[0.83rem] border-b border-slate-50 align-middle last:border-b-0">
+                  <span className="inline-flex items-center px-3 py-1 bg-[#f0f7ff] border border-blue-200 rounded-full text-[0.75rem] font-bold text-blue-700">
+                    {s.active_sponsorships || 0} كفالة
+                  </span>
+                </td>
+                <td className="px-5 py-3 text-[0.83rem] border-b border-slate-50 align-middle text-[#6b7a8d] hidden sm:table-cell last:border-b-0">{s.created_by_name || '—'}</td>
+                <td className="px-5 py-3 text-[0.83rem] border-b border-slate-50 align-middle text-[#6b7a8d] hidden sm:table-cell last:border-b-0">{formatDate(s.created_at)}</td>
+              </tr>
+            ))}
+          </DataTable>
         )}
       </div>
     </AppShell>
