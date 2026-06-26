@@ -121,8 +121,8 @@ function ThresholdRow({ threshold, index }) {
         {/* Label */}
         <div className="flex flex-col gap-1.5">
           <label className="text-[0.72rem] font-bold text-gray-500 tracking-wide">التسمية</label>
-          <input
-            className="w-full border-[1.5px] border-gray-200 rounded-xl py-2 px-3 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-colors focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10"
+          <Input
+            className="rounded-xl border-gray-200 py-2 px-3"
             value={form.label}
             onChange={(e) => handleChange('label', e.target.value)}
             placeholder="مثال: أطفال صغار (5-9)"
@@ -133,8 +133,8 @@ function ThresholdRow({ threshold, index }) {
         <div className="flex flex-col gap-1.5">
           <label className="text-[0.72rem] font-bold text-gray-500 tracking-wide">الفئة العمرية (سنة)</label>
           <div className="flex items-center gap-2">
-            <input
-              className="flex-1 text-center border-[1.5px] border-gray-200 rounded-xl py-2 px-2 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-colors focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10"
+            <Input
+              className="flex-1 text-center rounded-xl border-gray-200 py-2 px-2"
               type="number"
               min={0}
               max={98}
@@ -143,8 +143,8 @@ function ThresholdRow({ threshold, index }) {
               placeholder="من"
             />
             <span className="text-gray-400 text-[0.85rem] shrink-0">—</span>
-            <input
-              className="flex-1 text-center border-[1.5px] border-gray-200 rounded-xl py-2 px-2 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-colors focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10"
+            <Input
+              className="flex-1 text-center rounded-xl border-gray-200 py-2 px-2"
               type="number"
               min={1}
               max={99}
@@ -159,8 +159,8 @@ function ThresholdRow({ threshold, index }) {
         <div className="flex flex-col gap-1.5">
           <label className="text-[0.72rem] font-bold text-gray-500 tracking-wide">الحد الأدنى (جزء/شهر)</label>
           <div className="flex items-center gap-2">
-            <input
-              className="flex-1 text-center border-[1.5px] border-gray-200 rounded-xl py-2 px-2 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-colors focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10"
+            <Input
+              className="flex-1 text-center rounded-xl border-gray-200 py-2 px-2"
               type="number"
               min={0}
               step={0.25}

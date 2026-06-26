@@ -19,6 +19,7 @@ import useAuthStore from '../../../store/useAuthStore';
 import TransferSponsorModal from '../../../components/TransferSponsorModal';
 import ShareAdModal from '../../../components/ShareAdModal';
 import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
 import Spinner from '@/components/ui/Spinner';
 
 // ── Status config ─────────────────────────────────────────────────────────────
@@ -230,7 +231,7 @@ function AssignSponsorModal({ isOpen, onClose, onSuccess, familyName, familyId, 
           {tab === 'existing' && (
             <div>
               <label className="block text-[0.8rem] font-semibold text-gray-700 mb-1">اختر الكافل <span className="text-red-600">*</span></label>
-              <input className="w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none box-border transition-colors focus:border-emerald-600 focus:bg-white" placeholder="ابحث بالاسم أو البريد أو الهاتف…" value={sponsorSearch} onChange={e => setSponsorSearch(e.target.value)} />
+              <Input className="focus:border-emerald-600 focus:ring-emerald-600/10" placeholder="ابحث بالاسم أو البريد أو الهاتف…" value={sponsorSearch} onChange={e => setSponsorSearch(e.target.value)} />
               <div className="border-[1.5px] border-[#e5eaf0] rounded-[0.625rem] max-h-[170px] overflow-y-auto bg-gray-50 mt-1.5">
                 {fetching ? (
                   [1,2,3].map(i => <div key={i} className="h-[52px] m-1.5 rounded-lg bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] animate-[shimmer_1.4s_infinite]" />)
@@ -254,19 +255,19 @@ function AssignSponsorModal({ isOpen, onClose, onSuccess, familyName, familyId, 
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2">
                 <label className="block text-[0.8rem] font-semibold text-gray-700 mb-1">اسم الكافل <span className="text-red-600">*</span></label>
-                <input className="w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none box-border transition-colors focus:border-emerald-600 focus:bg-white" placeholder="الاسم الكامل" value={newSponsor.fullName} onChange={e => setNewSponsor(p => ({ ...p, fullName: e.target.value }))} />
+                <Input className="focus:border-emerald-600 focus:ring-emerald-600/10" placeholder="الاسم الكامل" value={newSponsor.fullName} onChange={e => setNewSponsor(p => ({ ...p, fullName: e.target.value }))} />
               </div>
               <div>
                 <label className="block text-[0.8rem] font-semibold text-gray-700 mb-1">رقم الهاتف</label>
-                <input className="w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none box-border transition-colors focus:border-emerald-600 focus:bg-white text-left direction-ltr" placeholder="+967700000000" value={newSponsor.phone} onChange={e => setNewSponsor(p => ({ ...p, phone: e.target.value }))} />
+                <Input className="direction-ltr text-left focus:border-emerald-600 focus:ring-emerald-600/10" placeholder="+967700000000" value={newSponsor.phone} onChange={e => setNewSponsor(p => ({ ...p, phone: e.target.value }))} />
               </div>
               <div>
                 <label className="block text-[0.8rem] font-semibold text-gray-700 mb-1">البريد الإلكتروني</label>
-                <input className="w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none box-border transition-colors focus:border-emerald-600 focus:bg-white text-left direction-ltr" placeholder="email@example.com" value={newSponsor.email} onChange={e => setNewSponsor(p => ({ ...p, email: e.target.value }))} />
+                <Input className="direction-ltr text-left focus:border-emerald-600 focus:ring-emerald-600/10" placeholder="email@example.com" value={newSponsor.email} onChange={e => setNewSponsor(p => ({ ...p, email: e.target.value }))} />
               </div>
               <div className="col-span-2">
                 <label className="block text-[0.8rem] font-semibold text-gray-700 mb-1">كلمة مرور البوابة <span className="text-red-600">*</span></label>
-                <input className="w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none box-border transition-colors focus:border-emerald-600 focus:bg-white text-left direction-ltr" type="password" placeholder="8 أحرف على الأقل" value={newSponsor.portalPassword} onChange={e => setNewSponsor(p => ({ ...p, portalPassword: e.target.value }))} />
+                <Input type="password" className="direction-ltr text-left focus:border-emerald-600 focus:ring-emerald-600/10" placeholder="8 أحرف على الأقل" value={newSponsor.portalPassword} onChange={e => setNewSponsor(p => ({ ...p, portalPassword: e.target.value }))} />
                 <p className="text-[0.72rem] text-gray-400 m-0 mt-1">ستُرسَل للكافل للدخول عبر البوابة</p>
               </div>
             </div>
@@ -279,15 +280,15 @@ function AssignSponsorModal({ isOpen, onClose, onSuccess, familyName, familyId, 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[0.8rem] font-semibold text-gray-700 mb-1">تاريخ البداية <span className="text-red-600">*</span></label>
-              <input className="w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none box-border transition-colors focus:border-emerald-600 focus:bg-white text-left direction-ltr" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+              <Input type="date" className="direction-ltr text-left focus:border-emerald-600 focus:ring-emerald-600/10" value={startDate} onChange={e => setStartDate(e.target.value)} />
             </div>
             <div>
               <label className="block text-[0.8rem] font-semibold text-gray-700 mb-1">المبلغ الشهري (ر.ي) <span className="text-red-600">*</span></label>
-              <input className="w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none box-border transition-colors focus:border-emerald-600 focus:bg-white text-left direction-ltr" type="number" min="1" placeholder="30000" value={monthlyAmount} onChange={e => setMonthlyAmount(e.target.value)} />
+              <Input type="number" min="1" className="direction-ltr text-left focus:border-emerald-600 focus:ring-emerald-600/10" placeholder="30000" value={monthlyAmount} onChange={e => setMonthlyAmount(e.target.value)} />
             </div>
             <div className="col-span-2">
               <label className="block text-[0.8rem] font-semibold text-gray-700 mb-1">الوسيط <span className="text-[0.72rem] text-gray-400 font-normal">(اختياري)</span></label>
-              <input className="w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none box-border transition-colors focus:border-emerald-600 focus:bg-white" placeholder="اسم الوسيط أو الجهة المسهِّلة" value={intermediary} onChange={e => setIntermediary(e.target.value)} />
+              <Input className="focus:border-emerald-600 focus:ring-emerald-600/10" placeholder="اسم الوسيط أو الجهة المسهِّلة" value={intermediary} onChange={e => setIntermediary(e.target.value)} />
             </div>
           </div>
 
