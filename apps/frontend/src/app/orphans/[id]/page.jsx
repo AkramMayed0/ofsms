@@ -17,7 +17,7 @@ import api from '../../../lib/api';
 import AppShell from '../../../components/AppShell';
 import useAuthStore from '../../../store/useAuthStore';
 import TransferSponsorModal from '../../../components/TransferSponsorModal';
-import PrimaryButton from '@/components/ui/PrimaryButton';
+import Button from '@/components/ui/Button';
 import ShareAdModal from '../../../components/ShareAdModal';
 
 // Constants
@@ -280,7 +280,7 @@ export default function OrphanDetailPage() {
               )}
 
               {isGM && orphan && (
-                <button className="inline-flex items-center gap-1.5 p-2 px-[1.1rem] bg-white text-red-600 border-[1.5px] border-red-300 rounded-xl font-cairo text-sm font-bold cursor-pointer transition-all duration-150 hover:bg-red-50 hover:border-red-600 hover:-translate-y-0.5" onClick={() => setDeleteConfirm(true)}>
+                <Button variant="danger-outline" onClick={() => setDeleteConfirm(true)}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="3 6 5 6 21 6"/>
                     <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
@@ -288,7 +288,7 @@ export default function OrphanDetailPage() {
                     <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
                   </svg>
                   حذف
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -471,9 +471,9 @@ export default function OrphanDetailPage() {
                       <Handshake size={40} strokeWidth={1.5} />
                       <p className="text-[13px] m-0">لا يوجد كافل مُعيَّن بعد</p>
                       {orphan.status === 'under_marketing' && isGM && (
-                        <PrimaryButton onClick={() => router.push('/sponsors')}>
+                        <Button variant="primary" onClick={() => router.push('/sponsors')}>
                           تعيين كافل
-                        </PrimaryButton>
+                        </Button>
                       )}
                     </div>
                   )}
@@ -528,9 +528,9 @@ export default function OrphanDetailPage() {
               <button className="p-2.5 px-6 bg-transparent border-[1.5px] border-gray-300 rounded-xl text-gray-700 font-cairo text-sm font-semibold cursor-pointer transition-all duration-150 hover:border-gray-400 hover:bg-gray-50" onClick={() => setDeleteConfirm(false)} disabled={deleting}>
                 إلغاء
               </button>
-              <button className="p-2.5 px-6 bg-gradient-to-br from-red-600 to-red-700 text-white border-none rounded-xl font-cairo text-sm font-bold cursor-pointer shadow-md shadow-red-600/30 transition-all duration-150 disabled:opacity-65 disabled:cursor-not-allowed hover:not-disabled:-translate-y-0.5 hover:not-disabled:shadow-lg hover:not-disabled:shadow-red-600/40" onClick={handleDelete} disabled={deleting}>
+              <Button variant="danger" onClick={handleDelete} disabled={deleting}>
                 {deleting ? 'جارٍ الحذف…' : 'نعم، احذف'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

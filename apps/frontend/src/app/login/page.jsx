@@ -12,7 +12,7 @@ import { AlertTriangle, Eye, EyeOff, Lock, Mail, ShieldCheck } from 'lucide-reac
 
 import useAuthStore from '../../store/useAuthStore';
 import api from '../../lib/api';
-import PrimaryButton from '../../components/ui/PrimaryButton';
+import Button from '@/components/ui/Button';
 
 const REDIRECT_AFTER_LOGIN = '/dashboard';
 const LOGIN_ENDPOINT = '/auth/login';
@@ -157,14 +157,15 @@ export default function LoginPage() {
               }
             />
 
-            <PrimaryButton
+            <Button
+              variant="primary"
               type="submit"
               loading={loading}
               loadingText="جارٍ تسجيل الدخول…"
               className="mt-1 w-full justify-center gap-2 px-6 py-3"
             >
               تسجيل الدخول
-            </PrimaryButton>
+            </Button>
           </form>
 
           <p className="m-0 mt-6 text-center text-xs tracking-wide text-gray-400">

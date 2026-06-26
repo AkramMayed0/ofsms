@@ -18,7 +18,8 @@ import AppShell from '../../../components/AppShell';
 import useAuthStore from '../../../store/useAuthStore';
 import TransferSponsorModal from '../../../components/TransferSponsorModal';
 import ShareAdModal from '../../../components/ShareAdModal';
-import PrimaryButton from '@/components/ui/PrimaryButton';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
 import Spinner from '@/components/ui/Spinner';
 
 // ── Status config ─────────────────────────────────────────────────────────────
@@ -230,7 +231,7 @@ function AssignSponsorModal({ isOpen, onClose, onSuccess, familyName, familyId, 
           {tab === 'existing' && (
             <div>
               <label className="block text-[0.8rem] font-semibold text-gray-700 mb-1">اختر الكافل <span className="text-red-600">*</span></label>
-              <input className="w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none box-border transition-colors focus:border-emerald-600 focus:bg-white" placeholder="ابحث بالاسم أو البريد أو الهاتف…" value={sponsorSearch} onChange={e => setSponsorSearch(e.target.value)} />
+              <Input className="focus:border-emerald-600 focus:ring-emerald-600/10" placeholder="ابحث بالاسم أو البريد أو الهاتف…" value={sponsorSearch} onChange={e => setSponsorSearch(e.target.value)} />
               <div className="border-[1.5px] border-[#e5eaf0] rounded-[0.625rem] max-h-[170px] overflow-y-auto bg-gray-50 mt-1.5">
                 {fetching ? (
                   [1,2,3].map(i => <div key={i} className="h-[52px] m-1.5 rounded-lg bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] animate-[shimmer_1.4s_infinite]" />)
@@ -254,19 +255,19 @@ function AssignSponsorModal({ isOpen, onClose, onSuccess, familyName, familyId, 
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2">
                 <label className="block text-[0.8rem] font-semibold text-gray-700 mb-1">اسم الكافل <span className="text-red-600">*</span></label>
-                <input className="w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none box-border transition-colors focus:border-emerald-600 focus:bg-white" placeholder="الاسم الكامل" value={newSponsor.fullName} onChange={e => setNewSponsor(p => ({ ...p, fullName: e.target.value }))} />
+                <Input className="focus:border-emerald-600 focus:ring-emerald-600/10" placeholder="الاسم الكامل" value={newSponsor.fullName} onChange={e => setNewSponsor(p => ({ ...p, fullName: e.target.value }))} />
               </div>
               <div>
                 <label className="block text-[0.8rem] font-semibold text-gray-700 mb-1">رقم الهاتف</label>
-                <input className="w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none box-border transition-colors focus:border-emerald-600 focus:bg-white text-left direction-ltr" placeholder="+967700000000" value={newSponsor.phone} onChange={e => setNewSponsor(p => ({ ...p, phone: e.target.value }))} />
+                <Input className="direction-ltr text-left focus:border-emerald-600 focus:ring-emerald-600/10" placeholder="+967700000000" value={newSponsor.phone} onChange={e => setNewSponsor(p => ({ ...p, phone: e.target.value }))} />
               </div>
               <div>
                 <label className="block text-[0.8rem] font-semibold text-gray-700 mb-1">البريد الإلكتروني</label>
-                <input className="w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none box-border transition-colors focus:border-emerald-600 focus:bg-white text-left direction-ltr" placeholder="email@example.com" value={newSponsor.email} onChange={e => setNewSponsor(p => ({ ...p, email: e.target.value }))} />
+                <Input className="direction-ltr text-left focus:border-emerald-600 focus:ring-emerald-600/10" placeholder="email@example.com" value={newSponsor.email} onChange={e => setNewSponsor(p => ({ ...p, email: e.target.value }))} />
               </div>
               <div className="col-span-2">
                 <label className="block text-[0.8rem] font-semibold text-gray-700 mb-1">كلمة مرور البوابة <span className="text-red-600">*</span></label>
-                <input className="w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none box-border transition-colors focus:border-emerald-600 focus:bg-white text-left direction-ltr" type="password" placeholder="8 أحرف على الأقل" value={newSponsor.portalPassword} onChange={e => setNewSponsor(p => ({ ...p, portalPassword: e.target.value }))} />
+                <Input type="password" className="direction-ltr text-left focus:border-emerald-600 focus:ring-emerald-600/10" placeholder="8 أحرف على الأقل" value={newSponsor.portalPassword} onChange={e => setNewSponsor(p => ({ ...p, portalPassword: e.target.value }))} />
                 <p className="text-[0.72rem] text-gray-400 m-0 mt-1">ستُرسَل للكافل للدخول عبر البوابة</p>
               </div>
             </div>
@@ -279,15 +280,15 @@ function AssignSponsorModal({ isOpen, onClose, onSuccess, familyName, familyId, 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[0.8rem] font-semibold text-gray-700 mb-1">تاريخ البداية <span className="text-red-600">*</span></label>
-              <input className="w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none box-border transition-colors focus:border-emerald-600 focus:bg-white text-left direction-ltr" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+              <Input type="date" className="direction-ltr text-left focus:border-emerald-600 focus:ring-emerald-600/10" value={startDate} onChange={e => setStartDate(e.target.value)} />
             </div>
             <div>
               <label className="block text-[0.8rem] font-semibold text-gray-700 mb-1">المبلغ الشهري (ر.ي) <span className="text-red-600">*</span></label>
-              <input className="w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none box-border transition-colors focus:border-emerald-600 focus:bg-white text-left direction-ltr" type="number" min="1" placeholder="30000" value={monthlyAmount} onChange={e => setMonthlyAmount(e.target.value)} />
+              <Input type="number" min="1" className="direction-ltr text-left focus:border-emerald-600 focus:ring-emerald-600/10" placeholder="30000" value={monthlyAmount} onChange={e => setMonthlyAmount(e.target.value)} />
             </div>
             <div className="col-span-2">
               <label className="block text-[0.8rem] font-semibold text-gray-700 mb-1">الوسيط <span className="text-[0.72rem] text-gray-400 font-normal">(اختياري)</span></label>
-              <input className="w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none box-border transition-colors focus:border-emerald-600 focus:bg-white" placeholder="اسم الوسيط أو الجهة المسهِّلة" value={intermediary} onChange={e => setIntermediary(e.target.value)} />
+              <Input className="focus:border-emerald-600 focus:ring-emerald-600/10" placeholder="اسم الوسيط أو الجهة المسهِّلة" value={intermediary} onChange={e => setIntermediary(e.target.value)} />
             </div>
           </div>
 
@@ -296,7 +297,7 @@ function AssignSponsorModal({ isOpen, onClose, onSuccess, familyName, familyId, 
 
         {/* Footer */}
         <div className="flex justify-end gap-3 py-4 px-6 border-t border-t-[#f0f4f8]">
-          <button className="inline-flex items-center gap-1.5 py-2.5 px-5 bg-transparent text-gray-500 font-sans text-[0.88rem] font-semibold border-[1.5px] border-[#e5eaf0] rounded-xl cursor-pointer hover:bg-gray-50" onClick={onClose} disabled={loading}>إلغاء</button>
+          <Button variant="secondary" onClick={onClose} disabled={loading}>إلغاء</Button>
           <button className={`inline-flex items-center gap-1.5 py-2.5 px-6 font-sans text-[0.9rem] font-bold border-none rounded-xl transition-all ${loading ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-gradient-to-br from-emerald-600 to-emerald-700 text-white cursor-pointer shadow-[0_2px_8px_rgba(5,150,105,0.3)] hover:-translate-y-[1px] hover:shadow-[0_4px_14px_rgba(5,150,105,0.4)]'}`} onClick={handleSubmit} disabled={loading}>
             {loading ? (
               <><Spinner size="sm" />جارٍ التعيين…</>
@@ -418,7 +419,7 @@ export default function FamilyDetailPage() {
               )}
 
               {isGM && family && (
-                <button className="inline-flex items-center gap-1.5 py-2.5 px-4 bg-white text-red-600 border-[1.5px] border-red-300 rounded-xl font-sans text-[0.875rem] font-bold cursor-pointer transition-all hover:bg-red-50 hover:border-red-600 hover:-translate-y-[1px]" onClick={() => setDeleteConfirm(true)}>
+                <Button variant="danger-outline" onClick={() => setDeleteConfirm(true)}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="3 6 5 6 21 6"/>
                     <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
@@ -426,7 +427,7 @@ export default function FamilyDetailPage() {
                     <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
                   </svg>
                   حذف
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -584,9 +585,9 @@ export default function FamilyDetailPage() {
                       <Handshake size={40} strokeWidth={1.5} />
                       <p className="text-[0.82rem] m-0">لا يوجد كافل مُعيَّن بعد</p>
                       {family.status === 'under_marketing' && isGM && (
-                        <PrimaryButton onClick={() => setAssignOpen(true)}>
+                        <Button variant="primary" onClick={() => setAssignOpen(true)}>
                           تعيين كافل
-                        </PrimaryButton>
+                        </Button>
                       )}
                     </div>
                   )}
@@ -625,9 +626,9 @@ export default function FamilyDetailPage() {
               <button className="py-2.5 px-6 bg-transparent border-[1.5px] border-gray-300 rounded-xl text-gray-700 font-sans text-[0.875rem] font-semibold cursor-pointer transition-all hover:border-gray-400 hover:bg-gray-50" onClick={() => setDeleteConfirm(false)} disabled={deleting}>
                 إلغاء
               </button>
-              <button className="py-2.5 px-6 bg-gradient-to-br from-red-600 to-red-700 text-white border-none rounded-xl font-sans text-[0.875rem] font-bold cursor-pointer shadow-[0_2px_8px_rgba(220,38,38,0.3)] transition-all disabled:opacity-65 disabled:cursor-not-allowed hover:not(:disabled):-translate-y-[1px] hover:not(:disabled):shadow-[0_4px_14px_rgba(220,38,38,0.4)]" onClick={handleDelete} disabled={deleting}>
+              <Button variant="danger" onClick={handleDelete} disabled={deleting}>
                 {deleting ? 'جارٍ الحذف…' : 'نعم، احذف'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

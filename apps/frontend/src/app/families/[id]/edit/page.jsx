@@ -7,7 +7,8 @@ import { useRouter, useParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
-import PrimaryButton from '@/components/ui/PrimaryButton';
+import Button from '@/components/ui/Button';
+import Input, { Textarea } from '@/components/ui/Input';
 import Spinner from '@/components/ui/Spinner';
 
 function SectionHeader({ number, title, subtitle }) {
@@ -119,9 +120,9 @@ export default function FamilyEditPage() {
               تم تحديث بيانات الأسرة وإرسالها إلى قائمة انتظار المراجعة.
             </p>
             <div className="flex gap-3 justify-center flex-wrap">
-              <PrimaryButton onClick={() => router.push('/dashboard')}>
+              <Button variant="primary" onClick={() => router.push('/dashboard')}>
                 العودة للوحة القيادة
-              </PrimaryButton>
+              </Button>
             </div>
           </div>
         </div>
@@ -138,9 +139,9 @@ export default function FamilyEditPage() {
             <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] m-0 mb-1">تعديل بيانات الأسرة</h1>
             <p className="text-[0.85rem] text-slate-500 m-0">قم بتعديل البيانات وإعادة الإرسال للمراجعة</p>
           </div>
-          <button type="button" className="inline-flex items-center gap-1.5 py-2.5 px-5 bg-transparent text-[#1B5E8C] font-sans text-[0.88rem] font-semibold border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-all hover:bg-blue-50 hover:border-[#1B5E8C]" onClick={() => router.back()}>
+          <Button variant="outline" type="button" onClick={() => router.back()}>
             ← رجوع
-          </button>
+          </Button>
         </div>
 
         {loading ? (
@@ -156,10 +157,10 @@ export default function FamilyEditPage() {
                   <label className="text-[0.82rem] font-semibold text-gray-700" htmlFor="familyName">
                     اسم الأسرة <span className="text-red-600 mr-[2px]">*</span>
                   </label>
-                  <input
+                  <Input
                     id="familyName"
-                    className={`w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-all focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10 ${errors.familyName ? '!border-red-600 !bg-red-50 focus:!ring-red-600/10' : ''}`}
                     placeholder="مثال: أسرة محمد أحمد"
+                    error={errors.familyName?.message}
                     {...register('familyName', {
                       required: 'اسم الأسرة مطلوب',
                       minLength: { value: 3, message: 'الاسم يجب أن يكون 3 أحرف على الأقل' },
@@ -197,10 +198,10 @@ export default function FamilyEditPage() {
                   <label className="text-[0.82rem] font-semibold text-gray-700" htmlFor="headOfFamily">
                     اسم المعيل <span className="text-red-600 mr-[2px]">*</span>
                   </label>
-                  <input
+                  <Input
                     id="headOfFamily"
-                    className={`w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-all focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10 ${errors.headOfFamily ? '!border-red-600 !bg-red-50 focus:!ring-red-600/10' : ''}`}
                     placeholder="الاسم الكامل لرب الأسرة أو المسؤول"
+                    error={errors.headOfFamily?.message}
                     {...register('headOfFamily', {
                       required: 'اسم المعيل مطلوب',
                       minLength: { value: 3, message: 'الاسم يجب أن يكون 3 أحرف على الأقل' },
@@ -260,9 +261,9 @@ export default function FamilyEditPage() {
                   <label className="text-[0.82rem] font-semibold text-gray-700" htmlFor="notes">
                     ملاحظات إضافية <span className="text-slate-400 font-normal text-[0.75rem]">(اختياري)</span>
                   </label>
-                  <textarea
+                  <Textarea
                     id="notes"
-                    className="w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-all focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10 resize-y min-h-[100px]"
+                    className="min-h-[100px]"
                     rows={4}
                     placeholder="أي معلومات إضافية عن الأسرة — وضعها الاجتماعي، ظروفها الخاصة، احتياجاتها…"
                     {...register('notes')}
@@ -283,17 +284,18 @@ export default function FamilyEditPage() {
             )}
 
             <div className="flex justify-end items-center gap-4 py-4 px-5 bg-white border border-[#e5eaf0] rounded-2xl">
-              <button type="button" className="inline-flex items-center gap-1.5 py-2.5 px-5 bg-transparent text-[#1B5E8C] font-sans text-[0.88rem] font-semibold border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-all hover:bg-blue-50 hover:border-[#1B5E8C]" onClick={() => router.back()}>
+              <Button variant="outline" type="button" onClick={() => router.back()}>
                 إلغاء
-              </button>
-              <PrimaryButton
+              </Button>
+              <Button
+                variant="primary"
                 type="submit"
                 disabled={submitState === 'loading'}
               >
                 {submitState === 'loading'
                   ? <><Spinner size="sm" />جارٍ الحفظ…</>
                   : 'حفظ وإعادة إرسال ←'}
-              </PrimaryButton>
+              </Button>
             </div>
 
           </form>

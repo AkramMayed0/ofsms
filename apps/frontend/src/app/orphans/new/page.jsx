@@ -17,7 +17,8 @@ import { useForm } from 'react-hook-form';
 import { Upload, FileText, Image, X, Plus, AlertCircle, CheckCircle2, File, AlertTriangle, Check } from 'lucide-react';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
-import PrimaryButton from '@/components/ui/PrimaryButton';
+import Button from '@/components/ui/Button';
+import Input, { Textarea } from '@/components/ui/Input';
 import Spinner from '@/components/ui/Spinner';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -53,13 +54,10 @@ const CLS_FG2   = 'flex flex-col gap-1 col-span-1 sm:col-span-full';
 const CLS_LBL   = 'text-[0.82rem] font-semibold text-[#374151]';
 const CLS_REQ   = 'text-[#dc2626] mr-0.5';
 const CLS_OPT   = 'text-[#94a3b8] font-normal text-[0.75rem]';
-const CLS_INP   = 'w-full border-[1.5px] border-gray-300 rounded-xl px-3.5 py-2.5 text-sm font-cairo text-gray-800 bg-gray-50 outline-none transition-all duration-150 focus:border-[#1B5E8C] focus:bg-white focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)]';
-const CLS_INP_E = 'w-full border-[1.5px] border-red-500 rounded-xl px-3.5 py-2.5 text-sm font-cairo text-gray-800 bg-red-50 outline-none transition-all duration-150 focus:border-red-600 focus:shadow-[0_0_0_3px_rgba(220,38,38,0.08)]';
 const CLS_FERR  = "text-[0.77rem] text-[#dc2626] m-0 flex items-center gap-1 before:content-['•'] before:ml-1";
 const CLS_CHIP  = (sel) => `flex items-center px-4 py-2.5 border-[1.5px] rounded-[2rem] text-[0.83rem] font-semibold cursor-pointer transition-all duration-150 select-none ${sel ? 'border-[#1B5E8C] bg-[#1B5E8C] text-white' : 'border-gray-300 bg-gray-50 text-[#6b7280] hover:border-[#1B5E8C] hover:text-[#1B5E8C]'}`;
 const CLS_RADIO = (err) => `flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border-[1.5px] rounded-xl text-sm font-semibold cursor-pointer transition-all duration-150 bg-gray-50 select-none hover:border-[#1B5E8C] has-[:checked]:border-[#1B5E8C] has-[:checked]:bg-[#f0f7ff] has-[:checked]:text-[#1B5E8C] has-[:checked]:shadow-[0_0_0_2px_rgba(27,94,140,0.12)] ${err ? 'border-red-500' : 'border-gray-300 text-gray-500'}`;
 const CLS_RADIO_STATE = (sel) => `flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border-[1.5px] rounded-xl text-sm font-semibold cursor-pointer transition-all duration-150 select-none ${sel ? 'border-[#1B5E8C] bg-[#f0f7ff] text-[#1B5E8C] shadow-[0_0_0_2px_rgba(27,94,140,0.12)]' : 'border-gray-300 bg-gray-50 text-gray-500 hover:border-[#1B5E8C]'}`;
-const CLS_GHOST = 'inline-flex items-center gap-1.5 px-5 py-3 bg-transparent text-[#1B5E8C] font-cairo text-sm font-semibold border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-all duration-150 hover:bg-[#f0f7ff] hover:border-[#1B5E8C]';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -523,15 +521,16 @@ export default function OrphanRegistrationPage() {
               تم إرسال بيانات اليتيم إلى قائمة انتظار مراجعة المشرف.
             </p>
             <div className="flex gap-3 justify-center flex-wrap">
-              <PrimaryButton onClick={handleRegisterAnother}>
+              <Button variant="primary" onClick={handleRegisterAnother}>
                 تسجيل يتيم آخر
-              </PrimaryButton>
-              <button
-                className="px-6 py-3 bg-transparent text-[#1B5E8C] border-[1.5px] border-[#dde5f0] rounded-xl font-cairo text-[0.9rem] font-semibold cursor-pointer transition-all duration-150 hover:bg-[#f0f7ff] hover:border-[#1B5E8C]"
+              </Button>
+              <Button
+                variant="outline"
+                className="py-3"
                 onClick={() => router.push('/my-orphans')}
               >
                 عرض أيتامي
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -545,9 +544,9 @@ export default function OrphanRegistrationPage() {
             <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] m-0 mb-1">تسجيل يتيم جديد</h1>
             <p className="text-[0.85rem] text-[#6b7a8d] m-0">أدخل بيانات اليتيم والمستندات المطلوبة لإرسالها للمراجعة</p>
           </div>
-          <button type="button" className={CLS_GHOST} onClick={() => router.back()}>
+          <Button variant="outline" type="button" className="py-3" onClick={() => router.back()}>
             ← رجوع
-          </button>
+          </Button>
         </div>
 
         {/* Progress bar — 5 steps */}
@@ -589,9 +588,9 @@ export default function OrphanRegistrationPage() {
                 <label className={CLS_LBL} htmlFor="fullName">
                   الاسم الكامل <span className={CLS_REQ}>*</span>
                 </label>
-                <input
+                <Input
                   id="fullName"
-                  className={errors.fullName ? CLS_INP_E : CLS_INP}
+                  className="rounded-xl" error={errors.fullName?.message}
                   placeholder="مثال: محمد أحمد علي"
                   {...register('fullName', {
                     required: 'الاسم الكامل مطلوب',
@@ -609,10 +608,10 @@ export default function OrphanRegistrationPage() {
                 <label className={CLS_LBL} htmlFor="dateOfBirth">
                   تاريخ الميلاد <span className={CLS_REQ}>*</span>
                 </label>
-                <input
+                <Input
                   id="dateOfBirth"
                   type="date"
-                  className={`${errors.dateOfBirth ? CLS_INP_E : CLS_INP} direction-ltr text-left`}
+                  className="rounded-xl direction-ltr text-left" error={errors.dateOfBirth?.message}
                   max={new Date().toISOString().split('T')[0]}
                   {...register('dateOfBirth', {
                     required: 'تاريخ الميلاد مطلوب',
@@ -628,7 +627,7 @@ export default function OrphanRegistrationPage() {
                 <div className="flex gap-3">
                   {[['male', 'ذكر'], ['female', 'أنثى']].map(([val, lbl]) => (
                     <label key={val} className={CLS_RADIO(errors.gender)}>
-                      <input
+                      <Input
                         type="radio"
                         value={val}
                         className="hidden"
@@ -648,7 +647,7 @@ export default function OrphanRegistrationPage() {
                 </label>
                 <select
                   id="governorateId"
-                  className={`${errors.governorateId ? CLS_INP_E : CLS_INP} appearance-none cursor-pointer`}
+                  className="rounded-xl appearance-none cursor-pointer" error={errors.governorateId?.message}
                   disabled={govLoading}
                   {...register('governorateId', { required: 'المحافظة مطلوبة' })}
                 >
@@ -665,9 +664,9 @@ export default function OrphanRegistrationPage() {
                 <label className={CLS_LBL} htmlFor="birthPlace">
                   محل الميلاد <span className={CLS_REQ}>*</span>
                 </label>
-                <input
+                <Input
                   id="birthPlace"
-                  className={errors.birthPlace ? CLS_INP_E : CLS_INP}
+                  className="rounded-xl" error={errors.birthPlace?.message}
                   placeholder="المدينة أو المنطقة"
                   {...register('birthPlace', { required: 'محل الميلاد مطلوب' })}
                 />
@@ -679,9 +678,9 @@ export default function OrphanRegistrationPage() {
                 <label className={CLS_LBL} htmlFor="residence">
                   مكان السكن <span className={CLS_REQ}>*</span>
                 </label>
-                <input
+                <Input
                   id="residence"
-                  className={errors.residence ? CLS_INP_E : CLS_INP}
+                  className="rounded-xl" error={errors.residence?.message}
                   placeholder="العنوان الحالي"
                   {...register('residence', { required: 'مكان السكن مطلوب' })}
                 />
@@ -695,7 +694,7 @@ export default function OrphanRegistrationPage() {
                 </label>
                 <select
                   id="motherGovernorate"
-                  className={`${errors.motherGovernorate ? CLS_INP_E : CLS_INP} appearance-none cursor-pointer`}
+                  className="rounded-xl appearance-none cursor-pointer" error={errors.motherGovernorate?.message}
                   disabled={govLoading}
                   {...register('motherGovernorate', { required: 'المحافظة الأم مطلوبة' })}
                 >
@@ -712,9 +711,8 @@ export default function OrphanRegistrationPage() {
                 <label className={CLS_LBL} htmlFor="notes">
                   ملاحظات <span className={CLS_OPT}>(اختياري)</span>
                 </label>
-                <textarea
-                  id="notes"
-                  className={`${CLS_INP} resize-y min-h-[80px]`}
+                <Textarea id="notes"
+                  className="rounded-xl resize-y min-h-[80px]"
                   rows={3}
                   placeholder="أي معلومات إضافية مفيدة عن اليتيم…"
                   {...register('notes')}
@@ -733,9 +731,9 @@ export default function OrphanRegistrationPage() {
                 <label className={CLS_LBL} htmlFor="phone1">
                   الرقم الأول <span className={CLS_REQ}>*</span>
                 </label>
-                <input
+                <Input
                   id="phone1"
-                  className={`${errors.phone1 ? CLS_INP_E : CLS_INP} direction-ltr text-left`}
+                  className="rounded-xl direction-ltr text-left" error={errors.phone1?.message}
                   placeholder="07XXXXXXXX"
                   {...register('phone1', { required: 'الرقم الأول مطلوب' })}
                 />
@@ -747,9 +745,9 @@ export default function OrphanRegistrationPage() {
                 <label className={CLS_LBL} htmlFor="phone1Relation">
                   صلة القرابة <span className={CLS_REQ}>*</span>
                 </label>
-                <input
+                <Input
                   id="phone1Relation"
-                  className={errors.phone1Relation ? CLS_INP_E : CLS_INP}
+                  className="rounded-xl" error={errors.phone1Relation?.message}
                   placeholder="مثال: عم، خال، جد"
                   {...register('phone1Relation', {
                     required: 'صلة القرابة مطلوبة',
@@ -762,9 +760,9 @@ export default function OrphanRegistrationPage() {
               {/* Phone 2 */}
               <div className={CLS_FG}>
                 <label className={CLS_LBL} htmlFor="phone2">الرقم الثاني</label>
-                <input
+                <Input
                   id="phone2"
-                  className={`${errors.phone2 ? CLS_INP_E : CLS_INP} direction-ltr text-left`}
+                  className="rounded-xl direction-ltr text-left" error={errors.phone2?.message}
                   placeholder="07XXXXXXXX"
                   {...register('phone2')}
                 />
@@ -776,9 +774,9 @@ export default function OrphanRegistrationPage() {
                 <label className={CLS_LBL} htmlFor="phone2Relation">
                   صلة القرابة <span className={CLS_REQ}>*</span>
                 </label>
-                <input
+                <Input
                   id="phone2Relation"
-                  className={errors.phone2Relation ? CLS_INP_E : CLS_INP}
+                  className="rounded-xl" error={errors.phone2Relation?.message}
                   placeholder="مثال: عم، خال، جد"
                   {...register('phone2Relation', {
                     validate: (val) => !watch('phone2') || !!val || 'صلة القرابة مطلوبة',
@@ -793,9 +791,9 @@ export default function OrphanRegistrationPage() {
                 <label className={CLS_LBL} htmlFor="address">
                   العنوان <span className={CLS_REQ}>*</span>
                 </label>
-                <input
+                <Input
                   id="address"
-                  className={errors.address ? CLS_INP_E : CLS_INP}
+                  className="rounded-xl" error={errors.address?.message}
                   placeholder="الحي، الشارع، رقم المنزل…"
                   {...register('address', { required: 'العنوان مطلوب' })}
                 />
@@ -818,9 +816,9 @@ export default function OrphanRegistrationPage() {
                 <label className={CLS_LBL} htmlFor="guardianName">
                   اسم ولي الأمر <span className={CLS_REQ}>*</span>
                 </label>
-                <input
+                <Input
                   id="guardianName"
-                  className={errors.guardianName ? CLS_INP_E : CLS_INP}
+                  className="rounded-xl" error={errors.guardianName?.message}
                   placeholder="الأم / الجد / العم / غيره"
                   {...register('guardianName', { required: 'اسم الوصي مطلوب' })}
                 />
@@ -845,48 +843,48 @@ export default function OrphanRegistrationPage() {
               {/* Guardian age */}
               <div className={CLS_FG}>
                 <label className={CLS_LBL} htmlFor="guardianAge">عمر ولي الأمر <span className={CLS_REQ}>*</span></label>
-                <input id="guardianAge" className={`${errors.guardianAge ? CLS_INP_E : CLS_INP} direction-ltr text-left`} placeholder="مثال: 45" {...register('guardianAge', { required: 'عمر ولي الأمر مطلوب' })} />
+                <Input id="guardianAge" className="rounded-xl direction-ltr text-left" error={errors.guardianAge?.message} placeholder="مثال: 45" {...register('guardianAge', { required: 'عمر ولي الأمر مطلوب' })} />
                 {errors.guardianAge && <p className={CLS_FERR}>{errors.guardianAge.message}</p>}
               </div>
 
               {/* Guardian education level */}
               <div className={CLS_FG}>
                 <label className={CLS_LBL} htmlFor="guardianEduLevel">المستوى التعليمي <span className={CLS_REQ}>*</span></label>
-                <input id="guardianEduLevel" className={errors.guardianEduLevel ? CLS_INP_E : CLS_INP} placeholder="مثال: ثانوية، جامعي" {...register('guardianEduLevel', { required: 'المستوى التعليمي مطلوب' })} />
+                <Input id="guardianEduLevel" className="rounded-xl" error={errors.guardianEduLevel?.message} placeholder="مثال: ثانوية، جامعي" {...register('guardianEduLevel', { required: 'المستوى التعليمي مطلوب' })} />
                 {errors.guardianEduLevel && <p className={CLS_FERR}>{errors.guardianEduLevel.message}</p>}
               </div>
 
               {/* Guardian job */}
               <div className={CLS_FG}>
                 <label className={CLS_LBL} htmlFor="guardianJob">المهنة <span className={CLS_REQ}>*</span></label>
-                <input id="guardianJob" className={errors.guardianJob ? CLS_INP_E : CLS_INP} placeholder="مثال: موظف، تاجر" {...register('guardianJob', { required: 'المهنة مطلوبة' })} />
+                <Input id="guardianJob" className="rounded-xl" error={errors.guardianJob?.message} placeholder="مثال: موظف، تاجر" {...register('guardianJob', { required: 'المهنة مطلوبة' })} />
                 {errors.guardianJob && <p className={CLS_FERR}>{errors.guardianJob.message}</p>}
               </div>
 
               {/* Guardian health */}
               <div className={CLS_FG}>
                 <label className={CLS_LBL} htmlFor="guardianHealth">الحالة الصحية <span className={CLS_REQ}>*</span></label>
-                <input id="guardianHealth" className={errors.guardianHealth ? CLS_INP_E : CLS_INP} placeholder="مثال: جيدة، مريض" {...register('guardianHealth', { required: 'الحالة الصحية مطلوبة' })} />
+                <Input id="guardianHealth" className="rounded-xl" error={errors.guardianHealth?.message} placeholder="مثال: جيدة، مريض" {...register('guardianHealth', { required: 'الحالة الصحية مطلوبة' })} />
                 {errors.guardianHealth && <p className={CLS_FERR}>{errors.guardianHealth.message}</p>}
               </div>
 
               {/* Family members count */}
               <div className={CLS_FG}>
                 <label className={CLS_LBL} htmlFor="familyMaleCount">عدد الذكور في الأسرة <span className={CLS_REQ}>*</span></label>
-                <input id="familyMaleCount" className={`${errors.familyMaleCount ? CLS_INP_E : CLS_INP} direction-ltr text-left`} type="number" min="0" placeholder="0" {...register('familyMaleCount', { required: 'عدد الذكور مطلوب' })} />
+                <Input id="familyMaleCount" className="rounded-xl direction-ltr text-left" error={errors.familyMaleCount?.message} type="number" min="0" placeholder="0" {...register('familyMaleCount', { required: 'عدد الذكور مطلوب' })} />
                 {errors.familyMaleCount && <p className={CLS_FERR}>{errors.familyMaleCount.message}</p>}
               </div>
 
               <div className={CLS_FG}>
                 <label className={CLS_LBL} htmlFor="familyFemaleCount">عدد الإناث في الأسرة <span className={CLS_REQ}>*</span></label>
-                <input id="familyFemaleCount" className={`${errors.familyFemaleCount ? CLS_INP_E : CLS_INP} direction-ltr text-left`} type="number" min="0" placeholder="0" {...register('familyFemaleCount', { required: 'عدد الإناث مطلوب' })} />
+                <Input id="familyFemaleCount" className="rounded-xl direction-ltr text-left" error={errors.familyFemaleCount?.message} type="number" min="0" placeholder="0" {...register('familyFemaleCount', { required: 'عدد الإناث مطلوب' })} />
                 {errors.familyFemaleCount && <p className={CLS_FERR}>{errors.familyFemaleCount.message}</p>}
               </div>
 
               {/* Family problems */}
               <div className={CLS_FG2}>
                 <label className={CLS_LBL} htmlFor="familyProblems">أهم المشاكل التي تواجهها الأسرة <span className={CLS_REQ}>*</span></label>
-                <textarea id="familyProblems" className={`${errors.familyProblems ? CLS_INP_E : CLS_INP} resize-y min-h-[80px]`} rows={3}
+                <Textarea id="familyProblems" className="rounded-xl resize-y min-h-[80px]" error={errors.familyProblems?.message} rows={3}
                   placeholder="اذكر أبرز المشاكل والتحديات…" {...register('familyProblems', { required: 'هذا الحقل مطلوب' })} />
                 {errors.familyProblems && <p className={CLS_FERR}>{errors.familyProblems.message}</p>}
               </div>
@@ -902,7 +900,7 @@ export default function OrphanRegistrationPage() {
               {/* Grade */}
               <div className={CLS_FG}>
                 <label className={CLS_LBL} htmlFor="schoolGrade">الصف <span className={CLS_REQ}>*</span></label>
-                <input id="schoolGrade" className={errors.schoolGrade ? CLS_INP_E : CLS_INP} placeholder="مثال: السادس الابتدائي" {...register('schoolGrade', { required: 'الصف مطلوب' })} />
+                <Input id="schoolGrade" className="rounded-xl" error={errors.schoolGrade?.message} placeholder="مثال: السادس الابتدائي" {...register('schoolGrade', { required: 'الصف مطلوب' })} />
                 {errors.schoolGrade && <p className={CLS_FERR}>{errors.schoolGrade.message}</p>}
               </div>
 
@@ -923,42 +921,42 @@ export default function OrphanRegistrationPage() {
               {/* Directorate */}
               <div className={CLS_FG}>
                 <label className={CLS_LBL} htmlFor="directorate">المديرية <span className={CLS_REQ}>*</span></label>
-                <input id="directorate" className={errors.directorate ? CLS_INP_E : CLS_INP} placeholder="اسم المديرية" {...register('directorate', { required: 'المديرية مطلوبة' })} />
+                <Input id="directorate" className="rounded-xl" error={errors.directorate?.message} placeholder="اسم المديرية" {...register('directorate', { required: 'المديرية مطلوبة' })} />
                 {errors.directorate && <p className={CLS_FERR}>{errors.directorate.message}</p>}
               </div>
 
               {/* Organization */}
               <div className={CLS_FG}>
                 <label className={CLS_LBL} htmlFor="schoolOrg">الجهة <span className={CLS_REQ}>*</span></label>
-                <input id="schoolOrg" className={errors.schoolOrg ? CLS_INP_E : CLS_INP} placeholder="اسم المدرسة أو الجهة" {...register('schoolOrg', { required: 'الجهة مطلوبة' })} />
+                <Input id="schoolOrg" className="rounded-xl" error={errors.schoolOrg?.message} placeholder="اسم المدرسة أو الجهة" {...register('schoolOrg', { required: 'الجهة مطلوبة' })} />
                 {errors.schoolOrg && <p className={CLS_FERR}>{errors.schoolOrg.message}</p>}
               </div>
 
               {/* Favorite subject */}
               <div className={CLS_FG}>
                 <label className={CLS_LBL} htmlFor="favoriteSubject">المادة المفضلة <span className={CLS_REQ}>*</span></label>
-                <input id="favoriteSubject" className={errors.favoriteSubject ? CLS_INP_E : CLS_INP} placeholder="مثال: الرياضيات" {...register('favoriteSubject', { required: 'المادة المفضلة مطلوبة' })} />
+                <Input id="favoriteSubject" className="rounded-xl" error={errors.favoriteSubject?.message} placeholder="مثال: الرياضيات" {...register('favoriteSubject', { required: 'المادة المفضلة مطلوبة' })} />
                 {errors.favoriteSubject && <p className={CLS_FERR}>{errors.favoriteSubject.message}</p>}
               </div>
 
               {/* Difficulty subject */}
               <div className={CLS_FG}>
                 <label className={CLS_LBL} htmlFor="difficultySubject">يواجه صعوبة في <span className={CLS_REQ}>*</span></label>
-                <input id="difficultySubject" className={errors.difficultySubject ? CLS_INP_E : CLS_INP} placeholder="مثال: اللغة الإنجليزية" {...register('difficultySubject', { required: 'هذا الحقل مطلوب' })} />
+                <Input id="difficultySubject" className="rounded-xl" error={errors.difficultySubject?.message} placeholder="مثال: اللغة الإنجليزية" {...register('difficultySubject', { required: 'هذا الحقل مطلوب' })} />
                 {errors.difficultySubject && <p className={CLS_FERR}>{errors.difficultySubject.message}</p>}
               </div>
 
               {/* General level */}
               <div className={CLS_FG}>
                 <label className={CLS_LBL} htmlFor="generalLevel">المستوى العام <span className={CLS_REQ}>*</span></label>
-                <input id="generalLevel" className={errors.generalLevel ? CLS_INP_E : CLS_INP} placeholder="مثال: جيد، متوسط، ضعيف" {...register('generalLevel', { required: 'المستوى العام مطلوب' })} />
+                <Input id="generalLevel" className="rounded-xl" error={errors.generalLevel?.message} placeholder="مثال: جيد، متوسط، ضعيف" {...register('generalLevel', { required: 'المستوى العام مطلوب' })} />
                 {errors.generalLevel && <p className={CLS_FERR}>{errors.generalLevel.message}</p>}
               </div>
 
               {/* General grade */}
               <div className={CLS_FG}>
                 <label className={CLS_LBL} htmlFor="generalGrade">التقدير العام <span className={CLS_REQ}>*</span></label>
-                <input id="generalGrade" className={errors.generalGrade ? CLS_INP_E : CLS_INP} placeholder="مثال: جيد جداً" {...register('generalGrade', { required: 'التقدير العام مطلوب' })} />
+                <Input id="generalGrade" className="rounded-xl" error={errors.generalGrade?.message} placeholder="مثال: جيد جداً" {...register('generalGrade', { required: 'التقدير العام مطلوب' })} />
                 {errors.generalGrade && <p className={CLS_FERR}>{errors.generalGrade.message}</p>}
               </div>
 
@@ -981,56 +979,56 @@ export default function OrphanRegistrationPage() {
               {repeatedYear === 'yes' && (
                 <div className={CLS_FG2}>
                   <label className={CLS_LBL} htmlFor="repeatedYearReason">السبب</label>
-                  <input id="repeatedYearReason" className={CLS_INP} placeholder="سبب الإعادة" {...register('repeatedYearReason')} />
+                  <Input id="repeatedYearReason" className="rounded-xl" placeholder="سبب الإعادة" {...register('repeatedYearReason')} />
                 </div>
               )}
 
               {/* Last result average */}
               <div className={CLS_FG}>
                 <label className={CLS_LBL} htmlFor="lastResultAvg">معدل آخر نتيجة <span className={CLS_REQ}>*</span></label>
-                <input id="lastResultAvg" className={`${errors.lastResultAvg ? CLS_INP_E : CLS_INP} direction-ltr text-left`} placeholder="مثال: 85%" {...register('lastResultAvg', { required: 'معدل آخر نتيجة مطلوب' })} />
+                <Input id="lastResultAvg" className="rounded-xl direction-ltr text-left" error={errors.lastResultAvg?.message} placeholder="مثال: 85%" {...register('lastResultAvg', { required: 'معدل آخر نتيجة مطلوب' })} />
                 {errors.lastResultAvg && <p className={CLS_FERR}>{errors.lastResultAvg.message}</p>}
               </div>
 
               {/* Grade detail */}
               <div className={CLS_FG}>
                 <label className={CLS_LBL} htmlFor="gradeDetail">التفصيل <span className={CLS_REQ}>*</span></label>
-                <input id="gradeDetail" className={errors.gradeDetail ? CLS_INP_E : CLS_INP} placeholder="تفاصيل النتيجة" {...register('gradeDetail', { required: 'التفصيل مطلوب' })} />
+                <Input id="gradeDetail" className="rounded-xl" error={errors.gradeDetail?.message} placeholder="تفاصيل النتيجة" {...register('gradeDetail', { required: 'التفصيل مطلوب' })} />
                 {errors.gradeDetail && <p className={CLS_FERR}>{errors.gradeDetail.message}</p>}
               </div>
 
               {/* Highest grade */}
               <div className={CLS_FG}>
                 <label className={CLS_LBL} htmlFor="highestGrade">أعلى درجة في مادة <span className={CLS_REQ}>*</span></label>
-                <input id="highestGrade" className={errors.highestGrade ? CLS_INP_E : CLS_INP} placeholder="المادة والدرجة" {...register('highestGrade', { required: 'هذا الحقل مطلوب' })} />
+                <Input id="highestGrade" className="rounded-xl" error={errors.highestGrade?.message} placeholder="المادة والدرجة" {...register('highestGrade', { required: 'هذا الحقل مطلوب' })} />
                 {errors.highestGrade && <p className={CLS_FERR}>{errors.highestGrade.message}</p>}
               </div>
 
               {/* Lowest grade */}
               <div className={CLS_FG}>
                 <label className={CLS_LBL} htmlFor="lowestGrade">أدنى درجة في مادة <span className={CLS_REQ}>*</span></label>
-                <input id="lowestGrade" className={errors.lowestGrade ? CLS_INP_E : CLS_INP} placeholder="المادة والدرجة" {...register('lowestGrade', { required: 'هذا الحقل مطلوب' })} />
+                <Input id="lowestGrade" className="rounded-xl" error={errors.lowestGrade?.message} placeholder="المادة والدرجة" {...register('lowestGrade', { required: 'هذا الحقل مطلوب' })} />
                 {errors.lowestGrade && <p className={CLS_FERR}>{errors.lowestGrade.message}</p>}
               </div>
 
               {/* Edu responsible */}
               <div className={CLS_FG}>
                 <label className={CLS_LBL} htmlFor="eduResponsible">المسؤول تعليمياً <span className={CLS_REQ}>*</span></label>
-                <input id="eduResponsible" className={errors.eduResponsible ? CLS_INP_E : CLS_INP} placeholder="الاسم" {...register('eduResponsible', { required: 'المسؤول التعليمي مطلوب' })} />
+                <Input id="eduResponsible" className="rounded-xl" error={errors.eduResponsible?.message} placeholder="الاسم" {...register('eduResponsible', { required: 'المسؤول التعليمي مطلوب' })} />
                 {errors.eduResponsible && <p className={CLS_FERR}>{errors.eduResponsible.message}</p>}
               </div>
 
               {/* Edu responsible phone */}
               <div className={CLS_FG}>
                 <label className={CLS_LBL} htmlFor="eduResponsiblePhone">رقم هاتفه <span className={CLS_REQ}>*</span></label>
-                <input id="eduResponsiblePhone" className={`${errors.eduResponsiblePhone ? CLS_INP_E : CLS_INP} direction-ltr text-left`} placeholder="07XXXXXXXX" {...register('eduResponsiblePhone', { required: 'رقم الهاتف مطلوب' })} />
+                <Input id="eduResponsiblePhone" className="rounded-xl direction-ltr text-left" error={errors.eduResponsiblePhone?.message} placeholder="07XXXXXXXX" {...register('eduResponsiblePhone', { required: 'رقم الهاتف مطلوب' })} />
                 {errors.eduResponsiblePhone && <p className={CLS_FERR}>{errors.eduResponsiblePhone.message}</p>}
               </div>
 
               {/* Edu level */}
               <div className={CLS_FG2}>
                 <label className={CLS_LBL} htmlFor="eduLevel">المستوى التعليمي للمسؤول <span className={CLS_REQ}>*</span></label>
-                <input id="eduLevel" className={errors.eduLevel ? CLS_INP_E : CLS_INP} placeholder="مثال: ثانوية، جامعي" {...register('eduLevel', { required: 'المستوى التعليمي مطلوب' })} />
+                <Input id="eduLevel" className="rounded-xl" error={errors.eduLevel?.message} placeholder="مثال: ثانوية، جامعي" {...register('eduLevel', { required: 'المستوى التعليمي مطلوب' })} />
                 {errors.eduLevel && <p className={CLS_FERR}>{errors.eduLevel.message}</p>}
               </div>
 
@@ -1078,28 +1076,28 @@ export default function OrphanRegistrationPage() {
               {/* Floors */}
               <div className={CLS_FG}>
                 <label className={CLS_LBL} htmlFor="floorsCount">عدد الطوابق <span className={CLS_REQ}>*</span></label>
-                <input id="floorsCount" className={`${errors.floorsCount ? CLS_INP_E : CLS_INP} direction-ltr text-left`} type="number" min="1" placeholder="1" {...register('floorsCount', { required: 'عدد الطوابق مطلوب' })} />
+                <Input id="floorsCount" className="rounded-xl direction-ltr text-left" error={errors.floorsCount?.message} type="number" min="1" placeholder="1" {...register('floorsCount', { required: 'عدد الطوابق مطلوب' })} />
                 {errors.floorsCount && <p className={CLS_FERR}>{errors.floorsCount.message}</p>}
               </div>
 
               {/* Rooms */}
               <div className={CLS_FG}>
                 <label className={CLS_LBL} htmlFor="roomsCount">عدد الغرف <span className={CLS_REQ}>*</span></label>
-                <input id="roomsCount" className={`${errors.roomsCount ? CLS_INP_E : CLS_INP} direction-ltr text-left`} type="number" min="1" placeholder="1" {...register('roomsCount', { required: 'عدد الغرف مطلوب' })} />
+                <Input id="roomsCount" className="rounded-xl direction-ltr text-left" error={errors.roomsCount?.message} type="number" min="1" placeholder="1" {...register('roomsCount', { required: 'عدد الغرف مطلوب' })} />
                 {errors.roomsCount && <p className={CLS_FERR}>{errors.roomsCount.message}</p>}
               </div>
 
               {/* Water */}
               <div className={CLS_FG}>
                 <label className={CLS_LBL} htmlFor="water">الماء <span className={CLS_REQ}>*</span></label>
-                <input id="water" className={errors.water ? CLS_INP_E : CLS_INP} placeholder="مثال: شبكة عامة، خزان" {...register('water', { required: 'مصدر الماء مطلوب' })} />
+                <Input id="water" className="rounded-xl" error={errors.water?.message} placeholder="مثال: شبكة عامة، خزان" {...register('water', { required: 'مصدر الماء مطلوب' })} />
                 {errors.water && <p className={CLS_FERR}>{errors.water.message}</p>}
               </div>
 
               {/* Electricity */}
               <div className={CLS_FG}>
                 <label className={CLS_LBL} htmlFor="electricity">الكهرباء <span className={CLS_REQ}>*</span></label>
-                <input id="electricity" className={errors.electricity ? CLS_INP_E : CLS_INP} placeholder="مثال: متصل، مولد" {...register('electricity', { required: 'مصدر الكهرباء مطلوب' })} />
+                <Input id="electricity" className="rounded-xl" error={errors.electricity?.message} placeholder="مثال: متصل، مولد" {...register('electricity', { required: 'مصدر الكهرباء مطلوب' })} />
                 {errors.electricity && <p className={CLS_FERR}>{errors.electricity.message}</p>}
               </div>
 
@@ -1107,14 +1105,14 @@ export default function OrphanRegistrationPage() {
               {ownershipType === 'rented' && (
                 <div className={CLS_FG}>
                   <label className={CLS_LBL} htmlFor="rentAmount">مقدار الإيجار <span className={CLS_OPT}>(اختياري)</span></label>
-                  <input id="rentAmount" className={`${CLS_INP} direction-ltr text-left`} placeholder="بالريال" {...register('rentAmount')} />
+                  <Input id="rentAmount" className="rounded-xl direction-ltr text-left" placeholder="بالريال" {...register('rentAmount')} />
                 </div>
               )}
 
               {/* Other details */}
               <div className={ownershipType === 'rented' ? CLS_FG : CLS_FG2}>
                 <label className={CLS_LBL} htmlFor="housingDetails">تفاصيل أخرى <span className={CLS_OPT}>(اختياري)</span></label>
-                <input id="housingDetails" className={CLS_INP} placeholder="أي تفاصيل إضافية" {...register('housingDetails')} />
+                <Input id="housingDetails" className="rounded-xl" placeholder="أي تفاصيل إضافية" {...register('housingDetails')} />
               </div>
 
             </div>
@@ -1144,7 +1142,7 @@ export default function OrphanRegistrationPage() {
               {hasChronicDisease === 'yes' && (
                 <div className={CLS_FG2}>
                   <label className={CLS_LBL} htmlFor="chronicDiseaseDetails">التفاصيل</label>
-                  <input id="chronicDiseaseDetails" className={CLS_INP}
+                  <Input id="chronicDiseaseDetails" className="rounded-xl"
                     placeholder="اذكر الأمراض المزمنة…" {...register('chronicDiseaseDetails')} />
                 </div>
               )}
@@ -1213,7 +1211,7 @@ export default function OrphanRegistrationPage() {
                   متوسط الدخل الشهري <span className={CLS_REQ}>*</span>
                 </label>
                 <div className="relative">
-                  <input id="monthlyIncome" className={`${errors.monthlyIncome ? CLS_INP_E : CLS_INP} direction-ltr text-left pl-12`}
+                  <Input id="monthlyIncome" className="rounded-xl direction-ltr text-left pl-12" error={errors.monthlyIncome?.message}
                     placeholder="0" {...register('monthlyIncome', { required: 'متوسط الدخل الشهري مطلوب' })} />
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[0.8rem] text-gray-400 pointer-events-none">ريال</span>
                 </div>
@@ -1241,7 +1239,7 @@ export default function OrphanRegistrationPage() {
               {hasCharitySupport === 'yes' && (
                 <div className={CLS_FG2}>
                   <label className={CLS_LBL} htmlFor="charitySupportDetails">تفصيل الدعم</label>
-                  <textarea id="charitySupportDetails" className={`${CLS_INP} resize-y min-h-[80px]`} rows={2}
+                  <Textarea id="charitySupportDetails" className="rounded-xl resize-y min-h-[80px]" rows={2}
                     placeholder="اذكر الجهة ومقدار الدعم…"
                     {...register('charitySupportDetails')} />
                 </div>
@@ -1284,7 +1282,7 @@ export default function OrphanRegistrationPage() {
                       const checked = selectedTalents.has(id);
                       return (
                         <label key={id} className={`flex items-center px-3.5 py-1.5 border-[1.5px] rounded-[2rem] text-[0.82rem] font-semibold cursor-pointer transition-all duration-150 select-none ${checked ? 'border-[#1B5E8C] bg-[#1B5E8C] text-white' : 'border-gray-300 bg-gray-50 text-gray-500 hover:border-[#1B5E8C] hover:text-[#1B5E8C]'}`}>
-                          <input
+                          <Input
                             type="checkbox"
                             className="hidden"
                             checked={checked}
@@ -1309,7 +1307,7 @@ export default function OrphanRegistrationPage() {
                 <label className={CLS_LBL} htmlFor="talentsOther">
                   أخرى يود تعلمها أو تطويرها <span className={CLS_OPT}>(اختياري)</span>
                 </label>
-                <input id="talentsOther" className={CLS_INP}
+                <Input id="talentsOther" className="rounded-xl"
                   placeholder="مثال: العزف، الطيران…"
                   {...register('talentsOther')} />
               </div>
@@ -1556,9 +1554,8 @@ export default function OrphanRegistrationPage() {
               <label className={CLS_LBL} htmlFor="recommendations">
                 التوصيات <span className={CLS_REQ}>*</span>
               </label>
-              <textarea
-                id="recommendations"
-                className={`${errors.recommendations ? CLS_INP_E : CLS_INP} resize-y min-h-[80px]`}
+              <Textarea id="recommendations"
+                className="rounded-xl resize-y min-h-[80px]" error={errors.recommendations?.message}
                 rows={5}
                 placeholder="اكتب توصياتك وملاحظاتك هنا…"
                 {...register('recommendations', { required: 'التوصيات مطلوبة' })}
@@ -1676,28 +1673,29 @@ export default function OrphanRegistrationPage() {
           {/* Navigation row */}
           <div className="flex justify-end items-center gap-4 p-4 px-5 bg-white border border-[#e5eaf0] rounded-2xl">
             {currentPage === 1 ? (
-              <button type="button" className={CLS_GHOST} onClick={() => router.back()}>
+              <Button variant="outline" type="button" className="py-3" onClick={() => router.back()}>
                 إلغاء
-              </button>
+              </Button>
             ) : (
-              <button type="button" className={CLS_GHOST} onClick={() => setCurrentPage(p => p - 1)}>
+              <Button variant="outline" type="button" className="py-3" onClick={() => setCurrentPage(p => p - 1)}>
                 ← رجوع
-              </button>
+              </Button>
             )}
 
             {currentPage < 5 ? (
-              <PrimaryButton type="button" onClick={handleNext}>
+              <Button variant="primary" type="button" onClick={handleNext}>
                 التالي ←
-              </PrimaryButton>
+              </Button>
             ) : (
-              <PrimaryButton
+              <Button
+                variant="primary"
                 type="submit"
                 disabled={submitState === 'loading'}
               >
                 {submitState === 'loading'
                   ? <><Spinner size="sm" /> جارٍ الإرسال…</>
                   : 'إرسال للمراجعة ←'}
-              </PrimaryButton>
+              </Button>
             )}
           </div>
 
@@ -1707,3 +1705,4 @@ export default function OrphanRegistrationPage() {
     </AppShell>
   );
 }
+

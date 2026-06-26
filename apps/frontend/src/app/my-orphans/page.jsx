@@ -16,7 +16,7 @@ import { Search, AlertTriangle, X, User, CheckCircle2, FileText } from 'lucide-r
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
-import PrimaryButton from '@/components/ui/PrimaryButton';
+import Button from '@/components/ui/Button';
 import StatusBadge, { STATUS_MAP } from '@/components/ui/StatusBadge';
 
 const GENDER_MAP = { male: 'ذكر', female: 'أنثى' };
@@ -157,7 +157,7 @@ function DetailDrawer({ orphan, onClose }) {
               تعديل وإعادة الإرسال
             </a>
           )}
-          <button className="inline-flex items-center px-4.5 py-2.5 bg-transparent text-primary font-semibold border-[1.5px] border-[#dde5f0] rounded-[0.625rem] cursor-pointer transition-all duration-150 hover:bg-[#f0f7ff] hover:border-primary text-[0.82rem]" onClick={onClose}>إغلاق</button>
+          <Button variant="outline" className="rounded-[0.625rem] text-[0.82rem]" onClick={onClose}>إغلاق</Button>
         </div>
       </aside>
     </>
@@ -230,9 +230,9 @@ export default function MyOrphansPage() {
               {loading ? 'جارٍ التحميل…' : `${orphans.length} يتيم مسجّل`}
             </p>
           </div>
-          <PrimaryButton onClick={() => router.push('/orphans/new')}>
+          <Button variant="primary" onClick={() => router.push('/orphans/new')}>
             + تسجيل يتيم جديد
-          </PrimaryButton>
+          </Button>
         </div>
 
         {/* Search + filter bar */}
@@ -305,9 +305,9 @@ export default function MyOrphansPage() {
                 : 'ابدأ بتسجيل يتيم جديد'}
             </p>
             {!search && filterStatus === 'all' && (
-              <PrimaryButton onClick={() => router.push('/orphans/new')}>
+              <Button variant="primary" onClick={() => router.push('/orphans/new')}>
                 + تسجيل يتيم جديد
-              </PrimaryButton>
+              </Button>
             )}
           </div>
         )}

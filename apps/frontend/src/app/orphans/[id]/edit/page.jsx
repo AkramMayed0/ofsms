@@ -8,7 +8,8 @@ import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import useAuthStore from '@/store/useAuthStore';
-import PrimaryButton from '@/components/ui/PrimaryButton';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
 import Spinner from '@/components/ui/Spinner';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -353,9 +354,9 @@ export default function OrphanEditPage() {
               {isGM ? 'قم بتعديل البيانات — الحالة لن تتغير' : 'قم بتعديل البيانات وإعادة الإرسال للمراجعة'}
             </p>
           </div>
-          <button type="button" className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-transparent text-[#1B5E8C] font-cairo font-semibold text-sm border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-all duration-150 hover:bg-[#f0f7ff] hover:border-[#1B5E8C]" onClick={() => router.back()}>
+          <Button variant="outline" type="button" onClick={() => router.back()}>
             ← رجوع
-          </button>
+          </Button>
         </div>
 
         {loading ? (
@@ -372,10 +373,11 @@ export default function OrphanEditPage() {
                   <label className="text-[13px] font-semibold text-gray-700" htmlFor="fullName">
                     الاسم الكامل <span className="text-red-600 mr-0.5">*</span>
                   </label>
-                  <input
+                  <Input
                     id="fullName"
-                    className={`w-full border-[1.5px] rounded-xl px-3.5 py-2.5 text-sm font-cairo text-gray-800 bg-gray-50 outline-none transition-all duration-150 focus:border-[#1B5E8C] focus:bg-white focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)] ${errors.fullName ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
+                    className="rounded-xl"
                     placeholder="مثال: محمد أحمد علي"
+                    error={errors.fullName?.message}
                     {...register('fullName', {
                       required: 'الاسم الكامل مطلوب',
                       minLength: { value: 3, message: 'الاسم يجب أن يكون 3 أحرف على الأقل' },
@@ -388,11 +390,12 @@ export default function OrphanEditPage() {
                   <label className="text-[13px] font-semibold text-gray-700" htmlFor="dateOfBirth">
                     تاريخ الميلاد <span className="text-red-600 mr-0.5">*</span>
                   </label>
-                  <input
+                  <Input
                     id="dateOfBirth"
                     type="date"
-                    className={`w-full border-[1.5px] rounded-xl px-3.5 py-2.5 text-sm font-cairo text-gray-800 bg-gray-50 outline-none transition-all duration-150 focus:border-[#1B5E8C] focus:bg-white focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)] direction-ltr text-left ${errors.dateOfBirth ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
+                    className="rounded-xl direction-ltr text-left"
                     max={new Date().toISOString().split('T')[0]}
+                    error={errors.dateOfBirth?.message}
                     {...register('dateOfBirth', {
                       required: 'تاريخ الميلاد مطلوب',
                       validate: (v) => new Date(v) < new Date() || 'يجب أن يكون في الماضي',
@@ -438,16 +441,16 @@ export default function OrphanEditPage() {
 
                 <div className="flex flex-col gap-1">
                   <label className="text-[13px] font-semibold text-gray-700" htmlFor="birthPlace">محل الميلاد <span className="text-red-600 mr-0.5">*</span></label>
-                  <input id="birthPlace" className={`w-full border-[1.5px] rounded-xl px-3.5 py-2.5 text-sm font-cairo text-gray-800 bg-gray-50 outline-none transition-all duration-150 focus:border-[#1B5E8C] focus:bg-white focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)] ${errors.birthPlace ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
-                    placeholder="المدينة أو المنطقة"
+                  <Input id="birthPlace" className="rounded-xl" placeholder="المدينة أو المنطقة"
+                    error={errors.birthPlace?.message}
                     {...register('birthPlace', { required: 'محل الميلاد مطلوب' })} />
                   {errors.birthPlace && <p className="text-xs text-red-600 m-0 before:content-['•'] before:ml-1">{errors.birthPlace.message}</p>}
                 </div>
 
                 <div className="flex flex-col gap-1">
                   <label className="text-[13px] font-semibold text-gray-700" htmlFor="residence">مكان السكن <span className="text-red-600 mr-0.5">*</span></label>
-                  <input id="residence" className={`w-full border-[1.5px] rounded-xl px-3.5 py-2.5 text-sm font-cairo text-gray-800 bg-gray-50 outline-none transition-all duration-150 focus:border-[#1B5E8C] focus:bg-white focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)] ${errors.residence ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
-                    placeholder="العنوان الحالي"
+                  <Input id="residence" className="rounded-xl" placeholder="العنوان الحالي"
+                    error={errors.residence?.message}
                     {...register('residence', { required: 'مكان السكن مطلوب' })} />
                   {errors.residence && <p className="text-xs text-red-600 m-0 before:content-['•'] before:ml-1">{errors.residence.message}</p>}
                 </div>
@@ -487,36 +490,36 @@ export default function OrphanEditPage() {
 
                 <div className="flex flex-col gap-1">
                   <label className="text-[13px] font-semibold text-gray-700" htmlFor="phone1">الرقم الأول <span className="text-red-600 mr-0.5">*</span></label>
-                  <input id="phone1" className={`w-full border-[1.5px] rounded-xl px-3.5 py-2.5 text-sm font-cairo text-gray-800 bg-gray-50 outline-none transition-all duration-150 focus:border-[#1B5E8C] focus:bg-white focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)] direction-ltr text-left ${errors.phone1 ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
-                    placeholder="07XXXXXXXX"
+                  <Input id="phone1" className="rounded-xl direction-ltr text-left" placeholder="07XXXXXXXX"
+                    error={errors.phone1?.message}
                     {...register('phone1', { required: 'الرقم الأول مطلوب' })} />
                   {errors.phone1 && <p className="text-xs text-red-600 m-0 before:content-['•'] before:ml-1">{errors.phone1.message}</p>}
                 </div>
 
                 <div className="flex flex-col gap-1">
                   <label className="text-[13px] font-semibold text-gray-700" htmlFor="phone1Relation">صلة القرابة <span className="text-red-600 mr-0.5">*</span></label>
-                  <input id="phone1Relation" className={`w-full border-[1.5px] rounded-xl px-3.5 py-2.5 text-sm font-cairo text-gray-800 bg-gray-50 outline-none transition-all duration-150 focus:border-[#1B5E8C] focus:bg-white focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)] ${errors.phone1Relation ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
-                    placeholder="مثال: عم، خال، جد"
+                  <Input id="phone1Relation" className="rounded-xl" placeholder="مثال: عم، خال، جد"
+                    error={errors.phone1Relation?.message}
                     {...register('phone1Relation', { required: 'صلة القرابة مطلوبة' })} />
                   {errors.phone1Relation && <p className="text-xs text-red-600 m-0 before:content-['•'] before:ml-1">{errors.phone1Relation.message}</p>}
                 </div>
 
                 <div className="flex flex-col gap-1">
                   <label className="text-[13px] font-semibold text-gray-700" htmlFor="phone2">الرقم الثاني <span className="text-slate-400 font-normal text-xs">(اختياري)</span></label>
-                  <input id="phone2" className="w-full border-[1.5px] border-gray-300 rounded-xl px-3.5 py-2.5 text-sm font-cairo text-gray-800 bg-gray-50 outline-none transition-all duration-150 focus:border-[#1B5E8C] focus:bg-white focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)] direction-ltr text-left" placeholder="07XXXXXXXX"
+                  <Input id="phone2" className="rounded-xl direction-ltr text-left" placeholder="07XXXXXXXX"
                     {...register('phone2')} />
                 </div>
 
                 <div className="flex flex-col gap-1">
                   <label className="text-[13px] font-semibold text-gray-700" htmlFor="phone2Relation">صلة القرابة</label>
-                  <input id="phone2Relation" className="w-full border-[1.5px] border-gray-300 rounded-xl px-3.5 py-2.5 text-sm font-cairo text-gray-800 bg-gray-50 outline-none transition-all duration-150 focus:border-[#1B5E8C] focus:bg-white focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)]" placeholder="مثال: عم، خال، جد"
+                  <Input id="phone2Relation" className="rounded-xl" placeholder="مثال: عم، خال، جد"
                     {...register('phone2Relation')} />
                 </div>
 
                 <div className="flex flex-col gap-1 col-span-full">
                   <label className="text-[13px] font-semibold text-gray-700" htmlFor="address">العنوان <span className="text-red-600 mr-0.5">*</span></label>
-                  <input id="address" className={`w-full border-[1.5px] rounded-xl px-3.5 py-2.5 text-sm font-cairo text-gray-800 bg-gray-50 outline-none transition-all duration-150 focus:border-[#1B5E8C] focus:bg-white focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)] ${errors.address ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
-                    placeholder="الحي، الشارع، رقم المنزل…"
+                  <Input id="address" className="rounded-xl" placeholder="الحي، الشارع، رقم المنزل…"
+                    error={errors.address?.message}
                     {...register('address', { required: 'العنوان مطلوب' })} />
                   {errors.address && <p className="text-xs text-red-600 m-0 before:content-['•'] before:ml-1">{errors.address.message}</p>}
                 </div>
@@ -1248,17 +1251,18 @@ export default function OrphanEditPage() {
 
             {/* Submit row */}
             <div className="flex justify-end items-center gap-4 p-4 px-5 bg-white border border-[#e5eaf0] rounded-2xl">
-              <button type="button" className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-transparent text-[#1B5E8C] font-cairo font-semibold text-sm border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-all duration-150 hover:bg-[#f0f7ff] hover:border-[#1B5E8C]" onClick={() => router.back()}>
+              <Button variant="outline" type="button" onClick={() => router.back()}>
                 إلغاء
-              </button>
-              <PrimaryButton
+              </Button>
+              <Button
+                variant="primary"
                 type="submit"
                 disabled={submitState === 'loading'}
               >
                 {submitState === 'loading'
                   ? <><Spinner size="sm" />جارٍ الحفظ…</>
                   : isGM ? 'حفظ التعديلات ←' : 'حفظ وإعادة إرسال ←'}
-              </PrimaryButton>
+              </Button>
             </div>
 
           </form>

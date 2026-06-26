@@ -12,7 +12,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-import PrimaryButton from '@/components/ui/PrimaryButton';
+import Button from '@/components/ui/Button';
 import { Clock, Banknote, CheckCircle, Calendar, Bell, CheckSquare, Folder, Archive, FileText, BarChart3, AlertTriangle } from 'lucide-react';
 import StatusBadge from '@/components/ui/StatusBadge';
 
@@ -105,9 +105,9 @@ export default function FinanceDashboard() {
           <h1 className="greeting-title">لوحة القسم المالي</h1>
           <p className="greeting-sub">{today}</p>
         </div>
-        <PrimaryButton onClick={() => router.push('/disbursements')}>
+        <Button variant="primary" onClick={() => router.push('/disbursements')}>
           إدارة الكشوف ←
-        </PrimaryButton>
+        </Button>
       </div>
 
       {error && <div className="err-banner"><AlertTriangle size={15}/> {error}</div>}

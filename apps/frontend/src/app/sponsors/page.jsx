@@ -15,7 +15,8 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
-import PrimaryButton from '@/components/ui/PrimaryButton';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
 import Spinner from '@/components/ui/Spinner';
 import { 
   Search, 
@@ -84,10 +85,11 @@ function CreateSponsorModal({ onClose, onCreated }) {
 
           <div className="flex flex-col gap-1.5">
             <label className="text-[0.82rem] font-semibold text-gray-700">الاسم الكامل <span className="text-red-600">*</span></label>
-            <input className={`border-[1.5px] border-gray-300 rounded-[0.625rem] px-3.5 py-2.5 text-[0.88rem] font-sans text-gray-800 bg-[#fafafa] outline-none transition-all duration-150 w-full box-border focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)] ${errors.fullName ? '!border-red-600' : ''}`}
+            <Input
               placeholder="اسم الكافل كاملاً"
-              {...register('fullName', { 
-                required: 'الاسم مطلوب', 
+              error={errors.fullName?.message}
+              {...register('fullName', {
+                required: 'الاسم مطلوب',
                 minLength: { value: MIN_NAME_LENGTH, message: `الاسم يجب أن يكون ${MIN_NAME_LENGTH} أحرف على الأقل` },
                 pattern: { value: /^[\p{L}\s'-]+$/u, message: 'الاسم يجب أن يحتوي على أحرف فقط' }
               })}
@@ -97,12 +99,13 @@ function CreateSponsorModal({ onClose, onCreated }) {
 
           <div className="flex flex-col gap-1.5">
             <label className="text-[0.82rem] font-semibold text-gray-700">رقم الهاتف <span className="text-slate-400 font-normal text-[0.75rem]">(اختياري)</span></label>
-            <input className="border-[1.5px] border-gray-300 rounded-[0.625rem] px-3.5 py-2.5 text-[0.88rem] font-sans text-gray-800 bg-[#fafafa] outline-none transition-all duration-150 w-full box-border focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)] [direction:ltr] text-left" placeholder="+967 7XX XXX XXX" {...register('phone')} />
+            <Input className="[direction:ltr] text-left" placeholder="+967 7XX XXX XXX" {...register('phone')} />
           </div>
 
           <div className="flex flex-col gap-1.5">
             <label className="text-[0.82rem] font-semibold text-gray-700">البريد الإلكتروني <span className="text-slate-400 font-normal text-[0.75rem]">(اختياري)</span></label>
-            <input className="border-[1.5px] border-gray-300 rounded-[0.625rem] px-3.5 py-2.5 text-[0.88rem] font-sans text-gray-800 bg-[#fafafa] outline-none transition-all duration-150 w-full box-border focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)] [direction:ltr] text-left" type="email" placeholder="sponsor@example.com"
+            <Input type="email" className="[direction:ltr] text-left" placeholder="sponsor@example.com"
+              error={errors.email?.message}
               {...register('email', {
                 pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'بريد إلكتروني غير صحيح' }
               })}
@@ -112,8 +115,9 @@ function CreateSponsorModal({ onClose, onCreated }) {
 
           <div className="flex flex-col gap-1.5">
             <label className="text-[0.82rem] font-semibold text-gray-700">كلمة مرور البوابة <span className="text-red-600">*</span></label>
-            <input className={`border-[1.5px] border-gray-300 rounded-[0.625rem] px-3.5 py-2.5 text-[0.88rem] font-sans text-gray-800 bg-[#fafafa] outline-none transition-all duration-150 w-full box-border focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)] [direction:ltr] text-left ${errors.portalPassword ? '!border-red-600' : ''}`}
-              type="password" placeholder="8 أحرف على الأقل"
+            <Input type="password" className="[direction:ltr] text-left"
+              placeholder="8 أحرف على الأقل"
+              error={errors.portalPassword?.message}
               {...register('portalPassword', {
                 required: 'كلمة المرور مطلوبة',
                 minLength: { value: MIN_PASSWORD_LENGTH, message: `كلمة المرور يجب أن تكون ${MIN_PASSWORD_LENGTH} أحرف على الأقل` }
@@ -125,9 +129,9 @@ function CreateSponsorModal({ onClose, onCreated }) {
 
           <div className="flex gap-3 justify-end pt-2 border-t border-[#f0f4f8] mt-2">
             <button type="button" className="inline-flex items-center px-5 py-2.5 bg-transparent text-primary font-sans text-[0.88rem] font-semibold border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-all duration-150 hover:bg-[#f0f7ff]" onClick={onClose}>إلغاء</button>
-            <PrimaryButton type="submit" disabled={saving}>
+            <Button variant="primary" type="submit" disabled={saving}>
               {saving ? <><Spinner size="sm" />جارٍ الحفظ…</> : 'إضافة الكافل'}
-            </PrimaryButton>
+            </Button>
           </div>
         </form>
       </div>
@@ -185,10 +189,10 @@ export default function SponsorManagementPage() {
               {loading ? 'جارٍ التحميل…' : `${sponsors.length} كافل · ${totalActive} كفالة نشطة`}
             </p>
           </div>
-          <PrimaryButton onClick={() => setShowCreate(true)}>
+          <Button variant="primary" onClick={() => setShowCreate(true)}>
             <Plus size={18} />
             <span>إضافة كافل جديد</span>
-          </PrimaryButton>
+          </Button>
         </div>
 
         {/* Search */}
@@ -242,9 +246,9 @@ export default function SponsorManagementPage() {
               {search ? 'جرّب تغيير معايير البحث' : 'ابدأ بإضافة كافل جديد'}
             </p>
             {!search && (
-              <PrimaryButton className="mt-2" onClick={() => setShowCreate(true)}>
+              <Button variant="primary" className="mt-2" onClick={() => setShowCreate(true)}>
                 <Plus size={18} /> إضافة كافل جديد
-              </PrimaryButton>
+              </Button>
             )}
           </div>
         )}

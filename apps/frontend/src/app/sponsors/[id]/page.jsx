@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import Spinner from '@/components/ui/Spinner';
+import Button from '@/components/ui/Button';
 import { 
   ArrowRight, 
   Copy, 
@@ -203,7 +204,7 @@ function AssignBeneficiaryModal({ sponsor, onClose, onSuccess }) {
         </div>
 
         <div className="flex justify-end gap-3 px-6 py-4 border-t border-[#f0f4f8]">
-          <button className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-transparent text-gray-500 font-sans text-[0.88rem] font-semibold border border-[#e5eaf0] rounded-xl cursor-pointer hover:bg-slate-50 hover:text-gray-700 transition-colors" onClick={onClose} disabled={loading}>إلغاء</button>
+          <Button variant="secondary" onClick={onClose} disabled={loading}>إلغاء</Button>
           <button className="inline-flex items-center gap-1.5 px-6 py-2.5 text-white font-sans text-[0.9rem] font-bold border-none rounded-xl cursor-pointer shadow-[0_2px_8px_rgba(27,94,140,0.3)] bg-gradient-to-br from-primary to-[#134569] hover:from-primary-light hover:to-primary hover:-translate-y-0.5 transition-all duration-200 disabled:bg-[#94a3b8] disabled:from-[#94a3b8] disabled:to-[#94a3b8] disabled:cursor-not-allowed disabled:shadow-none" onClick={handleSubmit} disabled={loading}>
             {loading ? (
               <><Spinner size="sm" />جارٍ التعيين…</>
@@ -312,7 +313,7 @@ function EditSponsorModal({ sponsor, onClose, onSuccess }) {
         </div>
 
         <div className="flex justify-end gap-3 px-6 py-4 border-t border-[#f0f4f8]">
-          <button className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-transparent text-gray-500 font-sans text-[0.88rem] font-semibold border border-[#e5eaf0] rounded-xl cursor-pointer hover:bg-slate-50 hover:text-gray-700 transition-colors" onClick={onClose} disabled={saving}>إلغاء</button>
+          <Button variant="secondary" onClick={onClose} disabled={saving}>إلغاء</Button>
           <button className="inline-flex items-center gap-1.5 px-6 py-2.5 text-white font-sans text-[0.9rem] font-bold border-none rounded-xl cursor-pointer shadow-[0_2px_8px_rgba(27,94,140,0.3)] bg-gradient-to-br from-primary to-[#134569] hover:from-primary-light hover:to-primary hover:-translate-y-0.5 transition-all duration-200 disabled:bg-[#94a3b8] disabled:from-[#94a3b8] disabled:to-[#94a3b8] disabled:cursor-not-allowed disabled:shadow-none" onClick={handleSubmit} disabled={saving}>
             {saving ? (
               <><Spinner size="sm" />جارٍ الحفظ…</>
@@ -367,7 +368,7 @@ function DeleteConfirmModal({ sponsor, onClose, onSuccess }) {
           {error && <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3.5 py-2.5 text-[0.82rem] text-red-700 font-medium w-full text-right"><AlertTriangle size={16} /> {error}</div>}
         </div>
         <div className="flex justify-center gap-3 px-6 py-4 border-t border-[#f0f4f8]">
-          <button className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-transparent text-gray-500 font-sans text-[0.88rem] font-semibold border border-[#e5eaf0] rounded-xl cursor-pointer hover:bg-slate-50 hover:text-gray-700 transition-colors" onClick={onClose} disabled={deleting}>إلغاء</button>
+          <Button variant="secondary" onClick={onClose} disabled={deleting}>إلغاء</Button>
           <button className="inline-flex items-center gap-1.5 px-6 py-2.5 text-white font-sans text-[0.9rem] font-bold border-none rounded-xl cursor-pointer shadow-[0_2px_8px_rgba(220,38,38,0.25)] bg-red-600 hover:bg-red-700 hover:-translate-y-0.5 transition-all duration-150 disabled:bg-red-400 disabled:cursor-not-allowed disabled:shadow-none" onClick={handleDelete} disabled={deleting}>
             {deleting ? (
               <><Spinner size="sm" />جارٍ الحذف…</>

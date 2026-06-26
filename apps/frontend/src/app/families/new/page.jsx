@@ -18,7 +18,8 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
-import PrimaryButton from '@/components/ui/PrimaryButton';
+import Button from '@/components/ui/Button';
+import Input, { Textarea } from '@/components/ui/Input';
 import Spinner from '@/components/ui/Spinner';
 
 // ── Section header ─────────────────────────────────────────────────────────────
@@ -158,12 +159,12 @@ export default function FamilyRegistrationPage() {
               ستتلقى إشعاراً عند اتخاذ قرار بشأن الطلب.
             </p>
             <div className="flex gap-3 justify-center flex-wrap">
-              <PrimaryButton onClick={() => setSubmitState('idle')}>
+              <Button variant="primary" onClick={() => setSubmitState('idle')}>
                 تسجيل أسرة أخرى
-              </PrimaryButton>
-              <button className="inline-flex items-center gap-1.5 py-2.5 px-5 bg-transparent text-[#1B5E8C] font-sans text-[0.88rem] font-semibold border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-all hover:bg-blue-50 hover:border-[#1B5E8C]" onClick={() => router.push('/dashboard')}>
+              </Button>
+              <Button variant="outline" onClick={() => router.push('/dashboard')}>
                 العودة للوحة التحكم
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -183,9 +184,9 @@ export default function FamilyRegistrationPage() {
             <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] m-0 mb-1">تسجيل أسرة محتاجة</h1>
             <p className="text-[0.85rem] text-slate-500 m-0">أدخل بيانات الأسرة لإرسالها للمراجعة</p>
           </div>
-          <button type="button" className="inline-flex items-center gap-1.5 py-2.5 px-5 bg-transparent text-[#1B5E8C] font-sans text-[0.88rem] font-semibold border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-all hover:bg-blue-50 hover:border-[#1B5E8C]" onClick={() => router.back()}>
+          <Button variant="outline" onClick={() => router.back()}>
             ← رجوع
-          </button>
+          </Button>
         </div>
 
         {/* Progress bar */}
@@ -217,10 +218,10 @@ export default function FamilyRegistrationPage() {
                     <label className="text-[0.82rem] font-semibold text-gray-700" htmlFor="familyName">
                       اسم الأسرة <span className="text-red-600 mr-[2px]">*</span>
                     </label>
-                    <input
+                    <Input
                       id="familyName"
-                      className={`w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-all focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10 ${errors.familyName ? '!border-red-600 !bg-red-50 focus:!ring-red-600/10' : ''}`}
                       placeholder="مثال: أسرة محمد أحمد"
+                      error={errors.familyName?.message}
                       {...register('familyName', {
                         required: 'اسم الأسرة مطلوب',
                         minLength: { value: 3, message: 'الاسم يجب أن يكون 3 أحرف على الأقل' },
@@ -260,10 +261,10 @@ export default function FamilyRegistrationPage() {
                     <label className="text-[0.82rem] font-semibold text-gray-700" htmlFor="headOfFamily">
                       اسم المعيل <span className="text-red-600 mr-[2px]">*</span>
                     </label>
-                    <input
+                    <Input
                       id="headOfFamily"
-                      className={`w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-all focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10 ${errors.headOfFamily ? '!border-red-600 !bg-red-50 focus:!ring-red-600/10' : ''}`}
                       placeholder="الاسم الكامل لرب الأسرة أو المسؤول"
+                      error={errors.headOfFamily?.message}
                       {...register('headOfFamily', {
                         required: 'اسم المعيل مطلوب',
                         minLength: { value: 3, message: 'الاسم يجب أن يكون 3 أحرف على الأقل' },
@@ -325,9 +326,9 @@ export default function FamilyRegistrationPage() {
                     <label className="text-[0.82rem] font-semibold text-gray-700" htmlFor="notes">
                       ملاحظات إضافية <span className="text-slate-400 font-normal text-[0.75rem]">(اختياري)</span>
                     </label>
-                    <textarea
+                    <Textarea
                       id="notes"
-                      className="w-full border-[1.5px] border-gray-300 rounded-[0.625rem] py-2.5 px-3.5 text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-all focus:border-[#1B5E8C] focus:bg-white focus:ring-[3px] focus:ring-[#1B5E8C]/10 resize-y min-h-[100px]"
+                      className="min-h-[100px]"
                       rows={4}
                       placeholder="أي معلومات إضافية عن الأسرة — وضعها الاجتماعي، ظروفها الخاصة، احتياجاتها…"
                       {...register('notes')}
@@ -371,28 +372,29 @@ export default function FamilyRegistrationPage() {
           {/* Wizard Navigation / Submit row */}
           <div className="flex justify-end items-center gap-4 py-4 px-5 bg-white border border-[#e5eaf0] rounded-2xl">
             {step > 1 ? (
-              <button type="button" className="inline-flex items-center gap-1.5 py-2.5 px-5 bg-transparent text-[#1B5E8C] font-sans text-[0.88rem] font-semibold border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-all hover:bg-blue-50 hover:border-[#1B5E8C]" onClick={handlePrev}>
+              <Button variant="outline" type="button" onClick={handlePrev}>
                 السابق
-              </button>
+              </Button>
             ) : (
-              <button type="button" className="inline-flex items-center gap-1.5 py-2.5 px-5 bg-transparent text-[#1B5E8C] font-sans text-[0.88rem] font-semibold border-[1.5px] border-[#dde5f0] rounded-xl cursor-pointer transition-all hover:bg-blue-50 hover:border-[#1B5E8C]" onClick={() => router.back()}>
+              <Button variant="outline" type="button" onClick={() => router.back()}>
                 إلغاء
-              </button>
+              </Button>
             )}
             
             {step < 3 ? (
-              <PrimaryButton type="button" onClick={handleNext}>
+              <Button variant="primary" type="button" onClick={handleNext}>
                 التالي ←
-              </PrimaryButton>
+              </Button>
             ) : (
-              <PrimaryButton
+              <Button
+                variant="primary"
                 type="submit"
                 disabled={submitState === 'loading'}
               >
                 {submitState === 'loading'
                   ? <><Spinner size="sm" />جارٍ الإرسال…</>
                   : <span className="flex items-center gap-1.5">إرسال للمراجعة <Check size={16} /></span>}
-              </PrimaryButton>
+              </Button>
             )}
           </div>
 

@@ -5,7 +5,8 @@ import { Megaphone, Plus, Pencil, Trash2, RefreshCw, AlertTriangle, X, Eye, EyeO
 import api from '../../lib/api';
 import AppShell from '../../components/AppShell';
 import useAuthStore from '../../store/useAuthStore';
-import PrimaryButton from '@/components/ui/PrimaryButton';
+import Button from '@/components/ui/Button';
+import Input, { Textarea } from '@/components/ui/Input';
 import Spinner from '@/components/ui/Spinner';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -321,9 +322,9 @@ export default function AnnouncementsPage() {
           </div>
           <div className="flex items-center gap-2">
             {isGM && (
-              <PrimaryButton onClick={openCreate}>
+              <Button variant="primary" onClick={openCreate}>
                 <Plus size={16} /> إعلان جديد
-              </PrimaryButton>
+              </Button>
             )}
             <button
               className="flex items-center justify-center w-9 h-9 border-[1.5px] border-gray-200 rounded-[0.625rem] bg-white text-gray-500 cursor-pointer transition-all duration-150 hover:border-primary hover:text-primary hover:bg-blue-50"
@@ -426,8 +427,8 @@ export default function AnnouncementsPage() {
                 <label className="block text-[0.8rem] font-bold text-gray-700">
                   العنوان <span className="text-red-600">*</span>
                 </label>
-                <input
-                  className="w-full box-border border-[1.5px] border-[#e5eaf0] rounded-xl px-3.5 py-[0.65rem] text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-[border-color,box-shadow] duration-150 focus:border-primary focus:shadow-[0_0_0_3px_rgba(27,94,140,.1)] focus:bg-white"
+                <Input
+                  className="rounded-xl border-[#e5eaf0] py-[0.65rem]"
                   placeholder="عنوان الإعلان…"
                   value={form.title}
                   onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
@@ -438,8 +439,8 @@ export default function AnnouncementsPage() {
                 <label className="block text-[0.8rem] font-bold text-gray-700 mt-4">
                   النص <span className="text-red-600">*</span>
                 </label>
-                <textarea
-                  className="w-full box-border border-[1.5px] border-[#e5eaf0] rounded-xl px-3.5 py-[0.65rem] text-[0.88rem] font-sans text-gray-800 bg-gray-50 outline-none transition-[border-color,box-shadow] duration-150 focus:border-primary focus:shadow-[0_0_0_3px_rgba(27,94,140,.1)] focus:bg-white resize-y min-h-[110px]"
+                <Textarea
+                  className="rounded-xl border-[#e5eaf0] py-[0.65rem] min-h-[110px]"
                   placeholder="اكتب نص الإعلان هنا…"
                   rows={5}
                   value={form.body}
