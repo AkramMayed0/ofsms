@@ -3,14 +3,26 @@ module.exports = {
   extends: ["eslint:recommended"],
   parserOptions: { ecmaVersion: 2022, sourceType: "module" },
   rules: {
-    "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
-    "no-console": "warn",
+    "no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+    "no-console": ["warn", { allow: ["error", "warn"] }],
   },
   overrides: [
     {
       files: ["apps/frontend/**/*.{js,jsx}"],
-      extends: ["eslint:recommended"],
-      env: { browser: true },
+      parser: "@babel/eslint-parser",
+      parserOptions: {
+        requireConfigFile: false,
+        babelOptions: {
+          presets: ["@babel/preset-react"],
+        },
+      },
+      plugins: ["react"],
+      rules: {
+        "react/jsx-uses-react": "error",
+        "react/jsx-uses-vars": "error",
+        "no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+        "no-console": ["warn", { allow: ["error", "warn"] }],
+      },
     },
   ],
 };

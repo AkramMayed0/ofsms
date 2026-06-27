@@ -15,7 +15,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import Button from '@/components/ui/Button';
-import { Users, CheckCircle, Clock, BookOpen, ClipboardList, AlertTriangle, Star, Home, Plus, Fingerprint } from 'lucide-react';
+import { Users, CheckCircle, Clock, BookOpen, ClipboardList, AlertTriangle, Star, Home, Fingerprint } from 'lucide-react';
 import StatusBadge, { STATUS_MAP } from '@/components/ui/StatusBadge';
 import StatCard from '@/components/ui/StatCard';
 

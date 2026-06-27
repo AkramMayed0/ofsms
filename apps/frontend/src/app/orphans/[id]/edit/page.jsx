@@ -154,7 +154,6 @@ export default function OrphanEditPage() {
           monthlyIncome: p.monthlyIncome || '',
           hasCharitySupport: p.hasCharitySupport || '',
           charitySupportDetails: p.charitySupportDetails || '',
-          talentsOther: p.talentsOther || '',
           ownershipType: p.ownershipType || '',
           buildingType: p.buildingType || '',
           floorsCount: p.floorsCount || '',

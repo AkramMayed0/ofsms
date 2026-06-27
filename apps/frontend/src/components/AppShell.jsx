@@ -225,7 +225,7 @@ export default function AppShell({ children }) {
   }, [pathname, router, user]);
 
   const handleLogout = async () => {
-    try { await api.post('/auth/logout'); } catch {}
+    try { await api.post('/auth/logout'); } catch (_e) { /* best-effort — clear auth regardless */ }
     clearAuth();
     router.push('/login');
   };

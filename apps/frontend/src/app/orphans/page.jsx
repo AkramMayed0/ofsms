@@ -15,8 +15,8 @@
  *      GET /api/governorates
  */
 
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { AlertTriangle, X, User } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { AlertTriangle, X } from 'lucide-react';
 import SearchField from '@/components/ui/SearchField';
 import EmptyState from '@/components/ui/EmptyState';
 import { SkeletonTableRow } from '@/components/ui/Skeleton';

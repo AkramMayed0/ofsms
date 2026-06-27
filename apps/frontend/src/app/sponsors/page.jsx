@@ -280,6 +280,13 @@ export default function SponsorManagementPage() {
           </DataTable>
         )}
       </div>
+
+      {showCreate && (
+        <CreateSponsorModal
+          onClose={() => setShowCreate(false)}
+          onCreated={() => { setShowCreate(false); fetchSponsors(); }}
+        />
+      )}
     </AppShell>
   );
 }

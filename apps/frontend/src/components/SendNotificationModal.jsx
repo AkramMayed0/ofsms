@@ -15,7 +15,7 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import Button from '@/components/ui/Button';
-import { UserRound, Eye, Banknote, Building2, Megaphone, Users, Search, CheckCircle, AlertTriangle, X, User, Check } from 'lucide-react';
+import { UserRound, Eye, Banknote, Building2, Megaphone, Users, Search, CheckCircle, AlertTriangle, X, Check } from 'lucide-react';
 
 // ── Role target options ────────────────────────────────────────────────────────
 const ROLE_TARGETS = [

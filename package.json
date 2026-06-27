@@ -12,8 +12,11 @@
     "format": "prettier --write \"apps/*/src/**/*.{js,jsx,ts,tsx,json}\""
   },
   "devDependencies": {
+    "@babel/eslint-parser": "^8.0.1",
+    "@babel/preset-react": "^8.0.1",
     "concurrently": "^8.2.2",
     "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.37.5",
     "prettier": "^3.2.5"
   },
   "dependencies": {

@@ -9,7 +9,7 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import { AlertTriangle, User, CheckCircle2, Info, Check, ClipboardList, Send } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Info, Check, ClipboardList, Send } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 
@@ -81,7 +81,7 @@ function JuzQuickPick({ value, onChange }) {
   );
 }
 
-function ThresholdHint({ threshold, juzValue, age }) {
+function ThresholdHint({ threshold, juzValue }) {
   if (!threshold) return null;
   const juz = parseFloat(juzValue) || 0;
   const meets = juz >= threshold.min_juz_per_month;

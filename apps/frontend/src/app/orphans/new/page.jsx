@@ -14,7 +14,7 @@
 import { useState, useEffect, useRef, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import { Upload, FileText, Image, X, Plus, AlertCircle, CheckCircle2, File, AlertTriangle, Check } from 'lucide-react';
+import { Upload, FileText, Image, X, Plus, AlertCircle, CheckCircle2, File, AlertTriangle } from 'lucide-react';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import Button from '@/components/ui/Button';

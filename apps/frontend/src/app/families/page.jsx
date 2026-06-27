@@ -25,13 +25,6 @@ export default function FamiliesManagementPage() {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterGov, setFilterGov] = useState('all');
-  const [toast, setToast] = useState(null);
-
-  const showToast = (msg, type = 'success') => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
-  };
-
   const fetchFamilies = useCallback(() => {
     setLoading(true);
     api.get('/families')
@@ -66,13 +59,6 @@ export default function FamiliesManagementPage() {
   return (
     <AppShell>
       <div className="max-w-[1200px] mx-auto pb-16 flex flex-col gap-5 relative" dir="rtl">
-
-        {/* Toast */}
-        {toast && (
-          <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 rounded-full text-sm font-semibold shadow-lg whitespace-nowrap animate-[toastIn_.25s_ease] ${toast.type === 'error' ? 'bg-red-600 text-white' : 'bg-[#0d3d5c] text-white'}`}>
-            {toast.msg}
-          </div>
-        )}
 
         {/* Page Header */}
         <PageHeader
