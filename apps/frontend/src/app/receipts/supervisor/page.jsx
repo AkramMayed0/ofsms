@@ -20,6 +20,7 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import EmptyState from '@/components/ui/EmptyState';
+import PageHeader from '@/components/ui/PageHeader';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -114,12 +115,12 @@ export default function SupervisorBiometricLogPage() {
         </button>
 
         {/* Header row */}
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] m-0 mb-1">متابعة بصمات الصرف</h1>
-            <p className="text-[0.9rem] text-[#6b7a8d] m-0">عرض تقرير إنجاز المندوبين لتسليم مبالغ الصرف</p>
-          </div>
-          {lists.length > 0 && (
+        <PageHeader
+          title="متابعة بصمات الصرف"
+          subtitle="عرض تقرير إنجاز المندوبين لتسليم مبالغ الصرف"
+          subtitleClassName="text-[0.9rem]"
+          className="items-center"
+          action={lists.length > 0 && (
             <select
               className="px-4 py-2.5 border border-gray-300 rounded-lg font-cairo text-[0.9rem] font-bold text-[#1f2937] bg-white outline-none cursor-pointer transition-all duration-150 focus:border-[#1B5E8C] focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)]"
               value={selectedListId}
@@ -132,7 +133,7 @@ export default function SupervisorBiometricLogPage() {
               ))}
             </select>
           )}
-        </div>
+        />
 
         {/* Error */}
         {error && <div className={CLS_ERR_BANNER}><AlertTriangle size={18} /> {error}</div>}

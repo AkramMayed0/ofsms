@@ -24,6 +24,7 @@ import AppShell from '@/components/AppShell';
 import Textarea from '@/components/ui/Textarea';
 import EmptyState from '@/components/ui/EmptyState';
 import StatPill from '@/components/ui/StatPill';
+import PageHeader from '@/components/ui/PageHeader';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -406,21 +407,20 @@ export default function RegistrationsPage() {
         )}
 
         {/* ── Page header ── */}
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] m-0 mb-0.5">طلبات التسجيل</h1>
-            <p className="text-[0.82rem] text-gray-400 m-0">
-              {loading ? '…' : `${queue.length} طلب بانتظار المراجعة`}
-            </p>
-          </div>
-          <button
-            className="flex items-center justify-center w-9 h-9 border-[1.5px] border-gray-200 rounded-xl bg-white text-gray-500 cursor-pointer shrink-0 transition-colors hover:border-[#1B5E8C] hover:text-[#1B5E8C] hover:bg-blue-50"
-            onClick={fetchQueue}
-            title="تحديث"
-          >
-            <RefreshCw size={14} />
-          </button>
-        </div>
+        <PageHeader
+          title="طلبات التسجيل"
+          subtitle={loading ? '…' : `${queue.length} طلب بانتظار المراجعة`}
+          subtitleClassName="text-[0.82rem] text-gray-400"
+          action={
+            <button
+              className="flex items-center justify-center w-9 h-9 border-[1.5px] border-gray-200 rounded-xl bg-white text-gray-500 cursor-pointer shrink-0 transition-colors hover:border-[#1B5E8C] hover:text-[#1B5E8C] hover:bg-blue-50"
+              onClick={fetchQueue}
+              title="تحديث"
+            >
+              <RefreshCw size={14} />
+            </button>
+          }
+        />
 
         {/* ── Stat pills ── */}
         <div className="flex gap-2.5 flex-wrap">

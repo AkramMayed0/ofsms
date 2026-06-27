@@ -24,6 +24,8 @@ import Textarea from '@/components/ui/Textarea';
 import Select from '@/components/ui/Select';
 import Spinner from '@/components/ui/Spinner';
 import CounterInput from '@/components/ui/CounterInput';
+import PageHeader from '@/components/ui/PageHeader';
+import WizardProgressBar from '@/components/ui/WizardProgressBar';
 
 // ── Section header ─────────────────────────────────────────────────────────────
 
@@ -149,32 +151,21 @@ export default function FamilyRegistrationPage() {
       <div className="max-w-[760px] mx-auto pb-16 font-sans" dir="rtl">
 
         {/* Page header */}
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] m-0 mb-1">تسجيل أسرة محتاجة</h1>
-            <p className="text-[0.85rem] text-slate-500 m-0">أدخل بيانات الأسرة لإرسالها للمراجعة</p>
-          </div>
-          <Button variant="outline" onClick={() => router.back()}>
-            ← رجوع
-          </Button>
-        </div>
+        <PageHeader
+          title="تسجيل أسرة محتاجة"
+          subtitle="أدخل بيانات الأسرة لإرسالها للمراجعة"
+          className="flex-col sm:flex-row sm:items-start mb-6"
+          action={
+            <Button variant="outline" onClick={() => router.back()}>
+              ← رجوع
+            </Button>
+          }
+        />
 
-        {/* Progress bar */}
-        <div className="flex items-center gap-2 py-3.5 px-5 bg-white border border-[#e5eaf0] rounded-2xl mb-7 text-[0.8rem] font-semibold">
-          {[['١', 'بيانات الأسرة', 1], ['٢', 'المعيل', 2], ['٣', 'التفاصيل', 3]].map(([n, lbl, idx], i) => {
-            const isActive = step === idx;
-            const isCompleted = step > idx;
-            return (
-              <Fragment key={n}>
-                <div className={`flex items-center gap-1.5 transition-all ${isActive ? 'text-[#1B5E8C]' : isCompleted ? 'text-emerald-500' : 'text-gray-400'}`}>
-                  <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold transition-all ${isActive ? 'bg-[#1B5E8C] text-white shadow-[0_0_0_3px_rgba(27,94,140,0.15)]' : isCompleted ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-400'}`}>{isCompleted ? <CheckCircle2 size={14} /> : n}</span>
-                  <span className="whitespace-nowrap">{lbl}</span>
-                </div>
-                {i < 2 && <div className={`flex-1 border-t-[1.5px] mx-1 transition-all ${isCompleted ? 'border-emerald-500 border-solid' : 'border-dashed border-[#dde2e8]'}`} />}
-              </Fragment>
-            );
-          })}
-        </div>
+        <WizardProgressBar
+          steps={['بيانات الأسرة', 'المعيل', 'التفاصيل']}
+          currentStep={step}
+        />
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-5">
 

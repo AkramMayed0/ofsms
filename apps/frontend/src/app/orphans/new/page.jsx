@@ -23,6 +23,8 @@ import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import Select from '@/components/ui/Select';
 import Spinner from '@/components/ui/Spinner';
+import PageHeader from '@/components/ui/PageHeader';
+import WizardProgressBar from '@/components/ui/WizardProgressBar';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -537,41 +539,21 @@ export default function OrphanRegistrationPage() {
       <div className="max-w-[860px] mx-auto pb-16 font-cairo" dir="rtl">
 
         {/* Page header */}
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] m-0 mb-1">تسجيل يتيم جديد</h1>
-            <p className="text-[0.85rem] text-[#6b7a8d] m-0">أدخل بيانات اليتيم والمستندات المطلوبة لإرسالها للمراجعة</p>
-          </div>
-          <Button variant="outline" type="button" className="py-3" onClick={() => router.back()}>
-            ← رجوع
-          </Button>
-        </div>
+        <PageHeader
+          title="تسجيل يتيم جديد"
+          subtitle="أدخل بيانات اليتيم والمستندات المطلوبة لإرسالها للمراجعة"
+          className="flex-col sm:flex-row sm:items-start mb-6"
+          action={
+            <Button variant="outline" type="button" className="py-3" onClick={() => router.back()}>
+              ← رجوع
+            </Button>
+          }
+        />
 
-        {/* Progress bar — 5 steps */}
-        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 p-3.5 px-5 bg-white border border-[#e5eaf0] rounded-[0.875rem] mb-7 text-xs font-semibold">
-          {[
-            ['١', 'البيانات الأساسية'],
-            ['٢', 'الأسرة والتعليم'],
-            ['٣', 'السكن والصحة'],
-            ['٤', 'المواهب والجوانب'],
-            ['٥', 'المستندات'],
-          ].map(([n, lbl], i) => {
-            const stepNum = i + 1;
-            const done    = stepNum < currentPage;
-            const active  = stepNum === currentPage;
-            return (
-              <Fragment key={n}>
-                <div className={`flex items-center gap-1.5 ${active ? 'text-[#1B5E8C]' : done ? 'text-[#16a34a]' : 'text-gray-400'}`}>
-                  <span className={`inline-flex items-center justify-center w-[22px] h-[22px] rounded-full text-[0.72rem] font-bold text-white ${active ? 'bg-[#1B5E8C]' : done ? 'bg-[#16a34a]' : 'bg-gray-300'}`}>
-                    {done ? <Check size={14} strokeWidth={2.5} /> : n}
-                  </span>
-                  <span className="whitespace-nowrap">{lbl}</span>
-                </div>
-                {i < 4 && <div className="flex-1 border-t-[1.5px] border-dashed border-[#dde2e8] mx-1 hidden sm:block" />}
-              </Fragment>
-            );
-          })}
-        </div>
+        <WizardProgressBar
+          steps={['البيانات الأساسية', 'الأسرة والتعليم', 'السكن والصحة', 'المواهب والجوانب', 'المستندات']}
+          currentStep={currentPage}
+        />
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-5">
 

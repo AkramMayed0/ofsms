@@ -16,6 +16,7 @@ import SearchField from '@/components/ui/SearchField';
 import EmptyState from '@/components/ui/EmptyState';
 import DetailDrawer from '@/components/ui/DetailDrawer';
 import DataTable from '@/components/ui/DataTable';
+import PageHeader from '@/components/ui/PageHeader';
 
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
@@ -122,17 +123,16 @@ export default function MyOrphansPage() {
       <div className="max-w-[1100px] mx-auto pb-16 font-sans px-4 md:px-0" dir="rtl">
 
         {/* Page header */}
-        <div className="flex justify-between gap-4 mb-6 md:flex-row flex-col items-start">
-          <div>
-            <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] mb-1">أيتامي</h1>
-            <p className="text-[0.85rem] text-[#6b7a8d] m-0">
-              {loading ? 'جارٍ التحميل…' : `${orphans.length} يتيم مسجّل`}
-            </p>
-          </div>
-          <Button variant="primary" onClick={() => router.push('/orphans/new')}>
-            + تسجيل يتيم جديد
-          </Button>
-        </div>
+        <PageHeader
+          title="أيتامي"
+          subtitle={loading ? 'جارٍ التحميل…' : `${orphans.length} يتيم مسجّل`}
+          className="flex-col md:flex-row mb-6"
+          action={
+            <Button variant="primary" onClick={() => router.push('/orphans/new')}>
+              + تسجيل يتيم جديد
+            </Button>
+          }
+        />
 
         {/* Search + filter bar */}
         <div className="flex flex-col gap-3 mb-5">

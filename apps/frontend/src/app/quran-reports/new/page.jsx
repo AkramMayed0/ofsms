@@ -17,6 +17,7 @@ import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import Button from '@/components/ui/Button';
 import Select from '@/components/ui/Select';
+import PageHeader from '@/components/ui/PageHeader';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -258,17 +259,16 @@ export default function QuranReportSubmissionPage() {
       <div className="max-w-[780px] mx-auto pb-16 font-sans flex flex-col gap-5" dir="rtl">
 
         {/* Page header */}
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-          <div>
-            <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] m-0 mb-1">رفع تقرير حفظ القرآن</h1>
-            <p className="text-[0.85rem] text-gray-500 m-0 max-w-[520px] leading-relaxed">
-              أدخل مقدار ما حفظه اليتيم هذا الشهر. سيراجع المشرف التقرير ويقرر الاستحقاق المالي.
-            </p>
-          </div>
-          <Button variant="outline" type="button" onClick={() => router.back()}>
-            ← رجوع
-          </Button>
-        </div>
+        <PageHeader
+          title="رفع تقرير حفظ القرآن"
+          subtitle="أدخل مقدار ما حفظه اليتيم هذا الشهر. سيراجع المشرف التقرير ويقرر الاستحقاق المالي."
+          className="flex-col sm:flex-row sm:items-start"
+          action={
+            <Button variant="outline" type="button" onClick={() => router.back()}>
+              ← رجوع
+            </Button>
+          }
+        />
 
         {/* Info banner */}
         <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-[0.875rem] py-3.5 px-4 text-[0.82rem] text-blue-700 leading-relaxed">
