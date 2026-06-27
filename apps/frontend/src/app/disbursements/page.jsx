@@ -12,6 +12,7 @@ import ItemsDrawer from '@/components/disbursements/ItemsDrawer';
 import Spinner from '@/components/ui/Spinner';
 import EmptyState from '@/components/ui/EmptyState';
 import DataTable from '@/components/ui/DataTable';
+import PageHeader from '@/components/ui/PageHeader';
 
 export default function DisbursementsPage() {
   const user = useAuthStore((s) => s.user);
@@ -70,14 +71,10 @@ export default function DisbursementsPage() {
       <div className="max-w-[1100px] mx-auto pb-16 flex flex-col gap-5" dir="rtl">
 
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] m-0 mb-1">كشوف الصرف الشهري</h1>
-            <p className="text-[0.85rem] text-slate-500 m-0">
-              {loading ? 'جارٍ التحميل…' : `${lists.length} كشف · دورك: ${role}`}
-            </p>
-          </div>
-          {(role === 'supervisor' || role === 'gm') && (
+        <PageHeader
+          title="كشوف الصرف الشهري"
+          subtitle={loading ? 'جارٍ التحميل…' : `${lists.length} كشف · دورك: ${role}`}
+          action={(role === 'supervisor' || role === 'gm') && (
             <button
               className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-br from-primary to-primary-dark text-white text-[0.9rem] font-bold rounded-xl border-none cursor-pointer shadow-[0_2px_8px_rgba(27,94,140,0.25)] hover:from-primary-light hover:to-primary hover:-translate-y-px disabled:opacity-65 disabled:cursor-not-allowed transition-all"
               onClick={handleGenerate}
@@ -88,7 +85,7 @@ export default function DisbursementsPage() {
                 : '+ إنشاء كشف هذا الشهر'}
             </button>
           )}
-        </div>
+        />
 
         {error && (
           <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3.5 text-[0.85rem] text-red-700 font-medium">

@@ -29,6 +29,7 @@ import SearchField from '@/components/ui/SearchField';
 import EmptyState from '@/components/ui/EmptyState';
 import { SkeletonListRow } from '@/components/ui/Skeleton';
 import DataTable from '@/components/ui/DataTable';
+import PageHeader from '@/components/ui/PageHeader';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const MIN_NAME_LENGTH = 3;
@@ -185,18 +186,17 @@ export default function SponsorManagementPage() {
       <div className="max-w-[1100px] mx-auto pb-16 font-sans flex flex-col gap-5" dir="rtl">
 
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-          <div>
-            <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] mb-1">إدارة الكفلاء</h1>
-            <p className="text-[0.85rem] text-[#6b7a8d] m-0">
-              {loading ? 'جارٍ التحميل…' : `${sponsors.length} كافل · ${totalActive} كفالة نشطة`}
-            </p>
-          </div>
-          <Button variant="primary" onClick={() => setShowCreate(true)}>
-            <Plus size={18} />
-            <span>إضافة كافل جديد</span>
-          </Button>
-        </div>
+        <PageHeader
+          title="إدارة الكفلاء"
+          subtitle={loading ? 'جارٍ التحميل…' : `${sponsors.length} كافل · ${totalActive} كفالة نشطة`}
+          className="flex-col md:flex-row md:items-start"
+          action={
+            <Button variant="primary" onClick={() => setShowCreate(true)}>
+              <Plus size={18} />
+              <span>إضافة كافل جديد</span>
+            </Button>
+          }
+        />
 
         {/* Search */}
         <SearchField

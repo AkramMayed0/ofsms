@@ -19,6 +19,7 @@ import AppShell from '@/components/AppShell';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
+import PageHeader from '@/components/ui/PageHeader';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -382,20 +383,19 @@ export default function QuranThresholdsPage() {
       <div className="max-w-[860px] mx-auto flex flex-col gap-5 font-sans pb-12" dir="rtl">
 
         {/* ── Page header ── */}
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] m-0 mb-1">إعدادات حفظ القرآن</h1>
-            <p className="text-[0.82rem] text-gray-400 m-0">
-              حدّد الحد الأدنى لعدد الأجزاء المطلوبة شهرياً لكل فئة عمرية
-            </p>
-          </div>
-          <button
-            className="inline-flex items-center gap-1.5 py-2.5 px-4 bg-gradient-to-br from-[#1B5E8C] to-[#134569] text-white font-sans text-[0.85rem] font-bold border-none rounded-xl cursor-pointer shadow-[0_2px_8px_rgba(27,94,140,0.25)] transition-all shrink-0 self-center hover:from-[#2E7EB8] hover:to-[#1B5E8C] hover:-translate-y-px"
-            onClick={() => setShowAdd(true)}
-          >
-            <Plus size={16} /> إضافة فئة جديدة
-          </button>
-        </div>
+        <PageHeader
+          title="إعدادات حفظ القرآن"
+          subtitle="حدّد الحد الأدنى لعدد الأجزاء المطلوبة شهرياً لكل فئة عمرية"
+          subtitleClassName="text-[0.82rem] text-gray-400"
+          action={
+            <button
+              className="inline-flex items-center gap-1.5 py-2.5 px-4 bg-gradient-to-br from-[#1B5E8C] to-[#134569] text-white font-sans text-[0.85rem] font-bold border-none rounded-xl cursor-pointer shadow-[0_2px_8px_rgba(27,94,140,0.25)] transition-all shrink-0 self-center hover:from-[#2E7EB8] hover:to-[#1B5E8C] hover:-translate-y-px"
+              onClick={() => setShowAdd(true)}
+            >
+              <Plus size={16} /> إضافة فئة جديدة
+            </button>
+          }
+        />
 
         {/* ── Info banner ── */}
         <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-[0.875rem] py-3.5 px-4 shadow-[0_1px_3px_rgba(37,99,235,0.06)]">

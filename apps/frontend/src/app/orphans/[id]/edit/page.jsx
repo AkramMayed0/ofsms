@@ -13,6 +13,7 @@ import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Spinner from '@/components/ui/Spinner';
+import PageHeader from '@/components/ui/PageHeader';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -345,17 +346,16 @@ export default function OrphanEditPage() {
       <div className="max-w-[860px] mx-auto pb-16 font-cairo" dir="rtl">
 
         {/* Page header */}
-        <div className="flex items-start justify-between gap-4 mb-6 flex-col sm:flex-row">
-          <div>
-            <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] m-0 mb-1">تعديل بيانات اليتيم</h1>
-            <p className="text-sm text-slate-500 m-0">
-              {isGM ? 'قم بتعديل البيانات — الحالة لن تتغير' : 'قم بتعديل البيانات وإعادة الإرسال للمراجعة'}
-            </p>
-          </div>
-          <Button variant="outline" type="button" onClick={() => router.back()}>
-            ← رجوع
-          </Button>
-        </div>
+        <PageHeader
+          title="تعديل بيانات اليتيم"
+          subtitle={isGM ? 'قم بتعديل البيانات — الحالة لن تتغير' : 'قم بتعديل البيانات وإعادة الإرسال للمراجعة'}
+          className="flex-col sm:flex-row mb-6"
+          action={
+            <Button variant="outline" type="button" onClick={() => router.back()}>
+              ← رجوع
+            </Button>
+          }
+        />
 
         {loading ? (
           <div className="text-center py-12 text-gray-500">جارٍ التحميل…</div>

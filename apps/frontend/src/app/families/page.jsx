@@ -14,6 +14,7 @@ import Select from '@/components/ui/Select';
 import EmptyState from '@/components/ui/EmptyState';
 import { SkeletonListRow } from '@/components/ui/Skeleton';
 import DataTable from '@/components/ui/DataTable';
+import PageHeader from '@/components/ui/PageHeader';
 
 export default function FamiliesManagementPage() {
   const router = useRouter();
@@ -74,19 +75,16 @@ export default function FamiliesManagementPage() {
         )}
 
         {/* Page Header */}
-        <div className="flex items-start justify-between gap-4 max-sm:flex-col">
-          <div>
-            <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] mb-1">إدارة الأسر المحتاجة</h1>
-            <p className="text-sm text-[#6b7a8d] m-0">
-              {loading
-                ? 'جارٍ التحميل…'
-                : `${families.length} أسرة · ${counts.under_review || 0} قيد المراجعة · ${totalMembers} فرد مكفول`}
-            </p>
-          </div>
-          <Button variant="primary" onClick={() => router.push('/families/new')}>
-            + تسجيل أسرة جديدة
-          </Button>
-        </div>
+        <PageHeader
+          title="إدارة الأسر المحتاجة"
+          subtitle={loading ? 'جارٍ التحميل…' : `${families.length} أسرة · ${counts.under_review || 0} قيد المراجعة · ${totalMembers} فرد مكفول`}
+          className="max-sm:flex-col"
+          action={
+            <Button variant="primary" onClick={() => router.push('/families/new')}>
+              + تسجيل أسرة جديدة
+            </Button>
+          }
+        />
 
         {!loading && (
           <div className="flex gap-2.5 flex-wrap">

@@ -19,6 +19,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import { SkeletonTableRow } from '@/components/ui/Skeleton';
 import StatPill from '@/components/ui/StatPill';
 import DataTable from '@/components/ui/DataTable';
+import PageHeader from '@/components/ui/PageHeader';
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
 
@@ -239,22 +240,21 @@ export default function MarketingPoolPage() {
       <div className="max-w-[1100px] mx-auto pb-12 flex flex-col gap-5 font-sans" dir="rtl">
 
         {/* ── Page header ─────────────────────────────────────────── */}
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] m-0 mb-1">مجمع التسويق</h1>
-            <p className="text-[0.82rem] text-gray-400 m-0">
-              {loading ? 'جارٍ التحميل…' : 'جميع الحالات بانتظار كافل'}
-            </p>
-          </div>
-          <button
-            className="flex items-center justify-center w-9 h-9 border-[1.5px] border-gray-200 rounded-[0.625rem] bg-white text-gray-500 cursor-pointer transition-all hover:border-[#1B5E8C] hover:text-[#1B5E8C] hover:bg-blue-50"
-            onClick={load}
-            title="تحديث"
-            aria-label="تحديث القائمة"
-          >
-            <RefreshCw size={14} />
-          </button>
-        </div>
+        <PageHeader
+          title="مجمع التسويق"
+          subtitle={loading ? 'جارٍ التحميل…' : 'جميع الحالات بانتظار كافل'}
+          subtitleClassName="text-[0.82rem] text-gray-400"
+          action={
+            <button
+              className="flex items-center justify-center w-9 h-9 border-[1.5px] border-gray-200 rounded-[0.625rem] bg-white text-gray-500 cursor-pointer transition-all hover:border-[#1B5E8C] hover:text-[#1B5E8C] hover:bg-blue-50"
+              onClick={load}
+              title="تحديث"
+              aria-label="تحديث القائمة"
+            >
+              <RefreshCw size={14} />
+            </button>
+          }
+        />
 
         {/* ── Stat pills ──────────────────────────────────────────── */}
         {!loading && items.length > 0 && (

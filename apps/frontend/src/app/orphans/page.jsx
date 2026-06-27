@@ -22,6 +22,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import { SkeletonTableRow } from '@/components/ui/Skeleton';
 import StatPill from '@/components/ui/StatPill';
 import DataTable from '@/components/ui/DataTable';
+import PageHeader from '@/components/ui/PageHeader';
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -182,31 +183,26 @@ export default function OrphansListPage() {
       <div className="max-w-[1100px] mx-auto pb-12 font-sans flex flex-col gap-5 px-4 md:px-0" dir="rtl">
 
         {/* ── Page header ─────────────────────────────────────────── */}
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] mb-1">
-              {isAgent ? 'أيتامي' : 'الأيتام'}
-            </h1>
-            <p className="text-[0.82rem] text-gray-400 m-0">
-              {isAgent
-                ? 'الأيتام المسجَّلون من قِبَلك'
-                : 'جميع الأيتام المسجَّلين في النظام'}
-            </p>
-          </div>
-          <div className="flex items-center gap-3 flex-shrink-0">
-            <button className="flex items-center justify-center w-9 h-9 border-[1.5px] border-gray-200 rounded-[0.625rem] bg-white text-gray-500 cursor-pointer transition-all duration-150 hover:border-primary hover:text-primary hover:bg-[#f0f7ff]" onClick={fetchData} title="تحديث">
-              <IconRefresh />
-            </button>
-            {(isAgent || isGM) && (
-              <Link
-                href="/orphans/new"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white no-underline transition-all duration-180 hover:-translate-y-0.5 active:translate-y-0 bg-gradient-to-br from-primary to-primary-dark border-[1.5px] border-white/15 shadow-[0_4px_12px_rgba(27,94,140,0.35),0_1px_3px_rgba(0,0,0,0.15)] whitespace-nowrap"
-              >
-                <IconPlus /> تسجيل يتيم جديد
-              </Link>
-            )}
-          </div>
-        </div>
+        <PageHeader
+          title={isAgent ? 'أيتامي' : 'الأيتام'}
+          subtitle={isAgent ? 'الأيتام المسجَّلون من قِبَلك' : 'جميع الأيتام المسجَّلين في النظام'}
+          subtitleClassName="text-[0.82rem] text-gray-400"
+          action={
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <button className="flex items-center justify-center w-9 h-9 border-[1.5px] border-gray-200 rounded-[0.625rem] bg-white text-gray-500 cursor-pointer transition-all duration-150 hover:border-primary hover:text-primary hover:bg-[#f0f7ff]" onClick={fetchData} title="تحديث">
+                <IconRefresh />
+              </button>
+              {(isAgent || isGM) && (
+                <Link
+                  href="/orphans/new"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white no-underline transition-all duration-180 hover:-translate-y-0.5 active:translate-y-0 bg-gradient-to-br from-primary to-primary-dark border-[1.5px] border-white/15 shadow-[0_4px_12px_rgba(27,94,140,0.35),0_1px_3px_rgba(0,0,0,0.15)] whitespace-nowrap"
+                >
+                  <IconPlus /> تسجيل يتيم جديد
+                </Link>
+              )}
+            </div>
+          }
+        />
 
         {/* ── Stat pills ──────────────────────────────────────────── */}
         <div className="flex gap-2.5 flex-wrap">

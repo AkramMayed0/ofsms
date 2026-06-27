@@ -13,6 +13,7 @@ import Textarea from '@/components/ui/Textarea';
 import Select from '@/components/ui/Select';
 import Spinner from '@/components/ui/Spinner';
 import CounterInput from '@/components/ui/CounterInput';
+import PageHeader from '@/components/ui/PageHeader';
 
 function SectionHeader({ number, title, subtitle }) {
   return (
@@ -123,15 +124,16 @@ export default function FamilyEditPage() {
     <AppShell>
       <div className="max-w-[760px] mx-auto pb-16 font-sans" dir="rtl">
 
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] m-0 mb-1">تعديل بيانات الأسرة</h1>
-            <p className="text-[0.85rem] text-slate-500 m-0">قم بتعديل البيانات وإعادة الإرسال للمراجعة</p>
-          </div>
-          <Button variant="outline" type="button" onClick={() => router.back()}>
-            ← رجوع
-          </Button>
-        </div>
+        <PageHeader
+          title="تعديل بيانات الأسرة"
+          subtitle="قم بتعديل البيانات وإعادة الإرسال للمراجعة"
+          className="flex-col sm:flex-row sm:items-start mb-6"
+          action={
+            <Button variant="outline" type="button" onClick={() => router.back()}>
+              ← رجوع
+            </Button>
+          }
+        />
 
         {loading ? (
           <div className="text-center py-12 text-slate-500">جارٍ التحميل…</div>

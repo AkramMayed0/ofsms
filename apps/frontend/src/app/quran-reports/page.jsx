@@ -18,6 +18,7 @@ import Select from '@/components/ui/Select';
 import StatusBadge from '@/components/ui/StatusBadge';
 import EmptyState from '@/components/ui/EmptyState';
 import DataTable from '@/components/ui/DataTable';
+import PageHeader from '@/components/ui/PageHeader';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -365,19 +366,16 @@ export default function QuranReportsPage() {
       <div className="max-w-[1100px] mx-auto pb-16 font-sans flex flex-col gap-5" dir="rtl">
 
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-          <div>
-            <h1 className="text-[1.6rem] font-extrabold text-[#0d3d5c] m-0 mb-1">تقارير حفظ القرآن</h1>
-            <p className="text-[0.85rem] text-gray-500 m-0">
-              {loading ? 'جارٍ التحميل…' : `${reports.length} تقرير · ${counts.pending || 0} قيد المراجعة`}
-            </p>
-          </div>
-          {role === 'agent' && (
+        <PageHeader
+          title="تقارير حفظ القرآن"
+          subtitle={loading ? 'جارٍ التحميل…' : `${reports.length} تقرير · ${counts.pending || 0} قيد المراجعة`}
+          className="flex-col md:flex-row md:items-start"
+          action={role === 'agent' && (
             <Button variant="primary" onClick={() => setShowSubmit(true)}>
               + رفع تقرير جديد
             </Button>
           )}
-        </div>
+        />
 
         {error && <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-[0.85rem] text-red-700 flex items-center gap-2"><AlertTriangle size={18} /> {error}</div>}
 
