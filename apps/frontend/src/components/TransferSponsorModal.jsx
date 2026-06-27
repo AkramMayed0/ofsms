@@ -18,7 +18,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { Search, AlertTriangle, User, Check } from 'lucide-react';
+import { Search, AlertTriangle, Check } from 'lucide-react';
 
 import api from '../lib/api';
 

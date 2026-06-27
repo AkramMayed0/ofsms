@@ -71,7 +71,7 @@ export default function FamilyEditPage() {
           notes: f.notes || '',
         });
       })
-      .catch((err) => setApiError('تعذّر تحميل بيانات الأسرة'))
+      .catch(() => setApiError('تعذّر تحميل بيانات الأسرة'))
       .finally(() => setLoading(false));
   }, [id, reset]);
 

@@ -12,7 +12,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Handshake, Search, AlertTriangle, Users, CheckCircle2, Check, X, Plus, User, Share2 } from 'lucide-react';
+import { Handshake, Search, AlertTriangle, CheckCircle2, Check, X, Plus, Share2 } from 'lucide-react';
 import api from '../../../lib/api';
 import AppShell from '../../../components/AppShell';
 import EmptyState from '@/components/ui/EmptyState';

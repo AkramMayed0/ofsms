@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import { Search, AlertTriangle, X, User, MapPin, Map, Users, Star, ArrowRight } from 'lucide-react';
+import { Search, AlertTriangle, User, MapPin, Map, Users, Star, ArrowRight } from 'lucide-react';
 import SearchField from '@/components/ui/SearchField';
 import EmptyState from '@/components/ui/EmptyState';
 

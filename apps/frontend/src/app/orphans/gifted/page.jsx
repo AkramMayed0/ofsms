@@ -9,7 +9,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
-import { Star, Search, X, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Star, Search, AlertCircle, CheckCircle2 } from 'lucide-react';
 import SearchField from '@/components/ui/SearchField';
 
 // Components
