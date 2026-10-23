@@ -17,8 +17,8 @@ import Button from '@/components/ui/Button';
 const REDIRECT_AFTER_LOGIN = '/dashboard';
 const LOGIN_ENDPOINT = '/auth/login';
 const APP_NAME = 'نظام إدارة الأيتام والأسر';
-const ORG_NAME = 'مؤسسة إكرام النعمة الخيرية';
-const LOGO_PATH = '/ikram-logo.png';
+const ORG_NAME = 'مؤسسة نماء التنموية الخيرية';
+const LOGO_PATH = '/namaa-logo.png';
 const MIN_PASSWORD_LENGTH = 8;
 
 const INITIAL_FORM = Object.freeze({ email: '', password: '' });

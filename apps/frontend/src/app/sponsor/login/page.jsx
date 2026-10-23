@@ -77,7 +77,7 @@ export default function SponsorLoginPage() {
             <div className="w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent my-6" />
             
             <div className="flex items-center gap-2 text-white/90 text-xs font-semibold tracking-wider">
-              <span>مؤسسة إكرام النعمة الخيرية</span>
+              <span>مؤسسة نماء التنموية الخيرية</span>
             </div>
           </div>
         </div>

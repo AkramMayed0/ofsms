@@ -2,8 +2,8 @@ import '../styles/globals.css';
 import AuthBootstrap from '../components/AuthBootstrap';
 
 export const metadata = {
-  title: 'نظام إدارة الأيتام والأسر',
-  description: 'منصة متكاملة لإدارة كفالة الأيتام والأسر المحتاجة — تتبع الكفالات، الصرفيات، والتقارير',
+  title: 'مؤسسة نماء التنموية الخيرية — نظام إدارة الأيتام والأسر',
+  description: 'مؤسسة نماء التنموية الخيرية — منصة متكاملة لرعاية وتمكين الأيتام والأسر المحتاجة',
 };
 
 export const viewport = {

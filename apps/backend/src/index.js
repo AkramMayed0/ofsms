@@ -58,6 +58,7 @@ app.use('/api/users',          require('./modules/users/users.routes'));
 app.use('/api/quran-thresholds', require('./modules/quran/thresholds.routes'));
 app.use('/api/reports',          require('./modules/reports/reports.routes'));
 app.use('/api/supervisor',       require('./modules/supervisor/supervisor.routes'));
+app.use('/api/landing',          require('./modules/landing/landing.routes'));
 
 // ── Global error handler ──────────────────────────────────────────────────────
 // eslint-disable-next-line no-unused-vars

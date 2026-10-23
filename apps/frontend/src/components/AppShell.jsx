@@ -21,6 +21,7 @@ import {
   LayoutDashboard, Users, Home, Tag, Handshake, Star,
   Map, UserCog, BookOpen, FileText, ClipboardList,
   Plus, DollarSign, Archive, LogOut, ChevronRight, ChevronLeft, Menu, X, Megaphone,
+  Globe, ExternalLink,
 } from 'lucide-react';
 
 // ── Nav items per role ────────────────────────────────────────────────────────
@@ -72,6 +73,13 @@ const NAV_ITEMS = {
         { label: 'تحليلات المحافظات', href: '/governorates',  icon: Map },
         { label: 'التقارير',           href: '/reports',       icon: FileText },
         { label: 'الإعلانات',          href: '/announcements', icon: Megaphone },
+      ],
+    },
+    {
+      group: 'الموقع التعريفي',
+      items: [
+        { label: 'إدارة الموقع التعريفي', href: '/landing-settings', icon: Globe },
+        { label: 'معاينة الموقع', href: '/landing', icon: ExternalLink },
       ],
     },
     {
@@ -176,10 +184,10 @@ const ROLE_LABELS = {
 
 const flatItems = (groups) => groups.flatMap((g) => g.items);
 
-const PUBLIC_PREFIXES = ['/login', '/sponsor/login', '/sponsor/portal'];
+const PUBLIC_PREFIXES = ['/login', '/sponsor/login', '/sponsor/portal', '/landing'];
 const ROLE_EXTRA_PATHS = {
-  gm: ['/ads', '/receipts/supervisor'],
-  supervisor: ['/receipts/supervisor'],
+  gm: ['/ads', '/receipts/supervisor', '/landing-settings', '/landing'],
+  supervisor: ['/receipts/supervisor', '/landing-settings', '/landing'],
   agent: ['/receipts/batch'],
 };
 
@@ -262,9 +270,14 @@ export default function AppShell({ children }) {
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-5 border-b border-gray-100">
-          <span className="text-primary font-bold text-base leading-tight">
-            نظام إدارة<br />الأيتام والأسر
-          </span>
+          <div className="flex flex-col">
+            <span className="text-emerald-700 font-black text-base leading-tight">
+              مؤسسة نماء
+            </span>
+            <span className="text-[11px] text-gray-500 font-semibold tracking-wide">
+              التنموية الخيرية
+            </span>
+          </div>
           <button
             onClick={() => setDrawerOpen(false)}
             className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition"
@@ -326,9 +339,14 @@ export default function AppShell({ children }) {
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-5 border-b border-gray-100">
           {!collapsed && (
-            <span className="text-primary font-bold text-base leading-tight">
-              نظام إدارة<br />الأيتام والأسر
-            </span>
+            <div className="flex flex-col">
+              <span className="text-emerald-700 font-black text-base leading-tight">
+                مؤسسة نماء
+              </span>
+              <span className="text-[11px] text-gray-500 font-semibold tracking-wide">
+                التنموية الخيرية
+              </span>
+            </div>
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
@@ -408,7 +426,7 @@ export default function AppShell({ children }) {
               <Menu size={22} />
             </button>
             <h1 className="text-base font-bold text-gray-800">
-              {navItems.find((i) => i.href === pathname)?.label || 'نظام إدارة الأيتام والأسر'}
+              {navItems.find((i) => i.href === pathname)?.label || 'مؤسسة نماء التنموية الخيرية'}
             </h1>
           </div>
           <div className="flex items-center gap-3">

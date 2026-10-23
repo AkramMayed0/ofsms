@@ -81,7 +81,7 @@ function LoginView({ token, onLogin }) {
               نافذتك المباشرة لمتابعة أيتامك، والاطلاع على تقاريرهم من أي مكان.
             </p>
             <div className="w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent my-6" />
-            <span className="text-white/90 text-xs font-semibold tracking-wider">مؤسسة إكرام النعمة الخيرية</span>
+            <span className="text-white/90 text-xs font-semibold tracking-wider">مؤسسة نماء التنموية الخيرية</span>
           </div>
         </div>
       </aside>

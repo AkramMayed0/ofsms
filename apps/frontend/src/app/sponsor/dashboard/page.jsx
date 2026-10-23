@@ -79,7 +79,7 @@ export default function SponsorDashboard() {
             </div>
             <div>
               <h1 className="text-lg font-black text-slate-800 tracking-tight leading-none">بوابة الكافل</h1>
-              <span className="text-xs font-semibold text-slate-500">إكرام النعمة الخيرية</span>
+              <span className="text-xs font-semibold text-slate-500">مؤسسة نماء التنموية الخيرية</span>
             </div>
           </div>
           <div className="flex items-center gap-5">

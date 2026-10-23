@@ -38,8 +38,8 @@ export default function HomePage() {
       const dest = ROLE_DASHBOARD[user.role] || '/dashboard';
       router.replace(dest);
     } else if (!accessToken && !user) {
-      // No session at all → login
-      router.replace('/login');
+      // No session at all → public landing page
+      router.replace('/landing');
     }
     // If user exists but no token → AuthBootstrap is mid-refresh, wait
   }, [accessToken, user, router]);
