@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
-  "test": "jest"
+    "seed": "node scripts/seed.js",
+    "migrate": "node src/db/migrate.js",
+    "test": "jest"
   },
   "dependencies": {
     "aws-sdk": "^2.1693.0",

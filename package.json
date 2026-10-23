@@ -8,6 +8,8 @@
   ],
   "scripts": {
     "dev": "concurrently \"npm run dev --workspace=apps/backend\" \"npm run dev --workspace=apps/frontend\"",
+    "migrate": "npm run migrate --workspace=apps/backend",
+    "seed": "npm run seed --workspace=apps/backend",
     "lint": "eslint apps/*/src --ext .js,.jsx,.ts,.tsx",
     "format": "prettier --write \"apps/*/src/**/*.{js,jsx,ts,tsx,json}\""
   },
