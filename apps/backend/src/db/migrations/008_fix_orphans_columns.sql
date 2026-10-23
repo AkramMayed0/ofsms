@@ -4,5 +4,14 @@
 -- Adds missing notes column
 -- ============================================================
 
-ALTER TABLE orphans RENAME COLUMN dob TO date_of_birth;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'orphans' AND column_name = 'dob'
+  ) THEN
+    ALTER TABLE orphans RENAME COLUMN dob TO date_of_birth;
+  END IF;
+END $$;
+
 ALTER TABLE orphans ADD COLUMN IF NOT EXISTS notes TEXT;

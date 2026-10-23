@@ -25,14 +25,12 @@ CREATE INDEX IF NOT EXISTS users_role_idx ON users (role);
 CREATE INDEX IF NOT EXISTS users_is_active_idx ON users (is_active);
 
 -- Auto-update updated_at trigger
-CREATE
-OR REPLACE FUNCTION set_updated_at() RETURNS TRIGGER AS $ $ BEGIN NEW.updated_at = NOW();
-
-RETURN NEW;
-
+CREATE OR REPLACE FUNCTION set_updated_at() RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
 END;
-
-$ $ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 CREATE
 OR REPLACE TRIGGER users_updated_at BEFORE

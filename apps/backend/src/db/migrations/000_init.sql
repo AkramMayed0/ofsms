@@ -106,14 +106,12 @@ CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_logs(entity_type, entity_id
 CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_logs(created_at DESC);
 
 -- ── updated_at auto-trigger ───────────────────────────────────
-CREATE
-OR REPLACE FUNCTION set_updated_at() RETURNS TRIGGER AS $ $ BEGIN NEW.updated_at = NOW();
-
-RETURN NEW;
-
+CREATE OR REPLACE FUNCTION set_updated_at() RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
 END;
-
-$ $ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trg_users_updated_at BEFORE
 UPDATE
