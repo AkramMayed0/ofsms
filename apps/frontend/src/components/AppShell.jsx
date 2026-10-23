@@ -21,7 +21,7 @@ import {
   LayoutDashboard, Users, Home, Tag, Handshake, Star,
   Map, UserCog, BookOpen, FileText, ClipboardList,
   Plus, DollarSign, Archive, LogOut, ChevronRight, ChevronLeft, Menu, X, Megaphone,
-  Globe, ExternalLink,
+  Globe, ExternalLink, Package,
 } from 'lucide-react';
 
 // ── Nav items per role ────────────────────────────────────────────────────────
@@ -39,6 +39,7 @@ const NAV_ITEMS = {
         { label: 'الأيتام',            href: '/orphans',         icon: Users },
         { label: 'الأسر',              href: '/families',        icon: Home },
         { label: 'أيتامي',             href: '/my-orphans',      icon: Users },
+        { label: 'برامج الدعم العيني', href: '/in-kind',         icon: Package },
         { label: 'الأيتام الموهوبون',  href: '/orphans/gifted',  icon: Star },
         { label: 'مجمع التسويق',      href: '/marketing-pool',  icon: Tag },
         { label: 'تسجيل يتيم',        href: '/orphans/new',     icon: Plus },
@@ -99,7 +100,8 @@ const NAV_ITEMS = {
     {
       group: 'الإدارة',
       items: [
-        { label: 'طلبات التسجيل', href: '/registrations', icon: ClipboardList },
+        { label: 'طلبات التسجيل',      href: '/registrations', icon: ClipboardList },
+        { label: 'برامج الدعم العيني', href: '/in-kind',       icon: Package },
       ],
     },
     {
@@ -186,9 +188,10 @@ const flatItems = (groups) => groups.flatMap((g) => g.items);
 
 const PUBLIC_PREFIXES = ['/login', '/sponsor/login', '/sponsor/portal', '/landing'];
 const ROLE_EXTRA_PATHS = {
-  gm: ['/ads', '/receipts/supervisor', '/landing-settings', '/landing'],
-  supervisor: ['/receipts/supervisor', '/landing-settings', '/landing'],
-  agent: ['/receipts/batch'],
+  gm: ['/ads', '/receipts/supervisor', '/landing-settings', '/landing', '/in-kind'],
+  supervisor: ['/receipts/supervisor', '/landing-settings', '/landing', '/in-kind'],
+  agent: ['/receipts/batch', '/in-kind'],
+  finance: ['/in-kind'],
 };
 
 const roleCanAccessPath = (role, pathname) => {

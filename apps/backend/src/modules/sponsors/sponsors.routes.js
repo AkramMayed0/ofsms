@@ -14,7 +14,7 @@ const router = Router();
 router.get(
   '/',
   authenticate,
-  authorize('gm'),
+  authorize('gm', 'supervisor', 'finance', 'agent'),
   controller.getAllSponsors
 );
 
