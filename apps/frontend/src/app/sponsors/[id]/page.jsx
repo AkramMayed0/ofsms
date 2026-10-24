@@ -21,7 +21,8 @@ import {
   Pencil,
   Trash2,
   Eye,
-  EyeOff
+  EyeOff,
+  Key
 } from 'lucide-react';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -226,9 +227,20 @@ function EditSponsorModal({ sponsor, onClose, onSuccess }) {
     email: sponsor.email || '',
     portalPassword: '',
   });
+  const [showCurrentPass, setShowCurrentPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [copiedCurrent, setCopiedCurrent] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const overlayRef = useRef(null);
+
+  const currentPasswordVal = sponsor.portal_password_plain || 'Sponsor@1234';
+
+  const handleCopyCurrent = () => {
+    navigator.clipboard.writeText(currentPasswordVal);
+    setCopiedCurrent(true);
+    setTimeout(() => setCopiedCurrent(false), 2000);
+  };
 
   const handleChange = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -248,12 +260,17 @@ function EditSponsorModal({ sponsor, onClose, onSuccess }) {
 
     setSaving(true);
     try {
-      await api.put(`/sponsors/${sponsor.id}`, {
+      const { data } = await api.put(`/sponsors/${sponsor.id}`, {
         fullName: form.fullName.trim(),
         phone: form.phone.trim() || undefined,
         email: form.email.trim() || undefined,
         portalPassword: form.portalPassword || undefined,
       });
+      if (data?.sponsor?.portal_password_plain) {
+        sponsor.portal_password_plain = data.sponsor.portal_password_plain;
+      } else if (form.portalPassword) {
+        sponsor.portal_password_plain = form.portalPassword;
+      }
       onSuccess?.();
       onClose();
     } catch (err) {
@@ -276,7 +293,7 @@ function EditSponsorModal({ sponsor, onClose, onSuccess }) {
       aria-modal="true"
     >
       <div 
-        className="bg-white rounded-2xl w-full max-w-[480px] shadow-[0_20px_60px_rgba(13,61,92,0.25)] overflow-hidden animate-slideUp font-sans" 
+        className="bg-white rounded-2xl w-full max-w-[560px] shadow-[0_20px_60px_rgba(13,61,92,0.25)] overflow-hidden animate-slideUp font-sans" 
         dir="rtl" 
         onClick={e => e.stopPropagation()}
       >
@@ -295,18 +312,93 @@ function EditSponsorModal({ sponsor, onClose, onSuccess }) {
             <label className="block text-[0.82rem] font-semibold text-gray-700 mb-1.5">الاسم الكامل <span className="text-red-600">*</span></label>
             <input className="w-full border border-gray-300 rounded-[0.625rem] px-3.5 py-2.5 text-[0.88rem] font-sans text-gray-800 bg-[#fafafa] outline-none transition-all duration-150 focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)]" placeholder="اسم الكافل كاملاً" value={form.fullName} onChange={e => handleChange('fullName', e.target.value)} />
           </div>
-          <div>
-            <label className="block text-[0.82rem] font-semibold text-gray-700 mb-1.5">رقم الهاتف</label>
-            <input className="w-full border border-gray-300 rounded-[0.625rem] px-3.5 py-2.5 text-[0.88rem] font-sans text-gray-800 bg-[#fafafa] outline-none transition-all duration-150 focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)] [direction:ltr] text-left" placeholder="+967 7XX XXX XXX" value={form.phone} onChange={e => handleChange('phone', e.target.value)} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[0.82rem] font-semibold text-gray-700 mb-1.5">رقم الهاتف</label>
+              <input className="w-full border border-gray-300 rounded-[0.625rem] px-3.5 py-2.5 text-[0.88rem] font-sans text-gray-800 bg-[#fafafa] outline-none transition-all duration-150 focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)] [direction:ltr] text-left" placeholder="+967 7XX XXX XXX" value={form.phone} onChange={e => handleChange('phone', e.target.value)} />
+            </div>
+            <div>
+              <label className="block text-[0.82rem] font-semibold text-gray-700 mb-1.5">البريد الإلكتروني</label>
+              <input className="w-full border border-gray-300 rounded-[0.625rem] px-3.5 py-2.5 text-[0.88rem] font-sans text-gray-800 bg-[#fafafa] outline-none transition-all duration-150 focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)] [direction:ltr] text-left" type="email" placeholder="sponsor@example.com" value={form.email} onChange={e => handleChange('email', e.target.value)} />
+            </div>
           </div>
-          <div>
-            <label className="block text-[0.82rem] font-semibold text-gray-700 mb-1.5">البريد الإلكتروني</label>
-            <input className="w-full border border-gray-300 rounded-[0.625rem] px-3.5 py-2.5 text-[0.88rem] font-sans text-gray-800 bg-[#fafafa] outline-none transition-all duration-150 focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)] [direction:ltr] text-left" type="email" placeholder="sponsor@example.com" value={form.email} onChange={e => handleChange('email', e.target.value)} />
-          </div>
-          <div>
-            <label className="block text-[0.82rem] font-semibold text-gray-700 mb-1.5">كلمة مرور البوابة</label>
-            <input className="w-full border border-gray-300 rounded-[0.625rem] px-3.5 py-2.5 text-[0.88rem] font-sans text-gray-800 bg-[#fafafa] outline-none transition-all duration-150 focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(27,94,140,0.1)] [direction:ltr] text-left" type="password" placeholder="أحرف على الأقل 8" value={form.portalPassword} onChange={e => handleChange('portalPassword', e.target.value)} />
-            <p className="text-[0.72rem] text-slate-400 mt-1 m-0">سيستخدمها الكافل للدخول إلى بوابته الخاصة · اتركه فارغاً للحفاظ على الحالية</p>
+
+          {/* Dual Password Box: View Old Password next to Edit New Password */}
+          <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50/50 to-slate-50 border border-blue-100 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <Key size={14} className="text-primary" />
+                <span>إدارة كلمة مرور البوابة (خاص بإدارة النظام)</span>
+              </span>
+              <span className="text-[10px] font-bold text-primary bg-blue-100/80 px-2 py-0.5 rounded-full border border-blue-200">
+                صلاحية المدير العام
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Box 1 (Right): Old / Current Password */}
+              <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-bold text-slate-700">كلمة المرور الحالية (القديمة):</label>
+                  <span className="text-[10px] text-slate-400">قراءة فقط</span>
+                </div>
+                <div className="flex items-center gap-1 bg-slate-50 px-2 py-1.5 rounded-lg border border-slate-200">
+                  <input
+                    type={showCurrentPass ? 'text' : 'password'}
+                    readOnly
+                    value={currentPasswordVal}
+                    className="w-full text-xs font-mono font-bold text-slate-800 bg-transparent focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPass(!showCurrentPass)}
+                    title={showCurrentPass ? 'إخفاء كلمة المرور' : 'عرض كلمة المرور'}
+                    className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded transition"
+                  >
+                    {showCurrentPass ? <EyeOff size={13} /> : <Eye size={13} />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCopyCurrent}
+                    title="نسخ كلمة المرور الحالية"
+                    className="p-1 text-primary hover:bg-blue-50 rounded transition"
+                  >
+                    {copiedCurrent ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
+                  </button>
+                </div>
+                <p className="text-[10px] text-slate-400 m-0">
+                  يمكن للمدير العام نسخها أو إعطاؤها للكافل
+                </p>
+              </div>
+
+              {/* Box 2 (Left): Edit New Password */}
+              <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-bold text-slate-700">تعديل كلمة المرور (الجديدة):</label>
+                  <span className="text-[10px] text-blue-600 font-medium">اختياري</span>
+                </div>
+                <div className="flex items-center gap-1 bg-white px-2 py-1.5 rounded-lg border border-slate-200 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15 transition">
+                  <input
+                    type={showNewPass ? 'text' : 'password'}
+                    value={form.portalPassword}
+                    onChange={e => handleChange('portalPassword', e.target.value)}
+                    placeholder="اتركه فارغاً للإبقاء على الحالية"
+                    className="w-full text-xs font-medium text-slate-800 bg-transparent focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPass(!showNewPass)}
+                    title={showNewPass ? 'إخفاء' : 'عرض'}
+                    className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded transition"
+                  >
+                    {showNewPass ? <EyeOff size={13} /> : <Eye size={13} />}
+                  </button>
+                </div>
+                <p className="text-[10px] text-slate-400 m-0">
+                  اتركها فارغة إذا لم ترد التغيير (8 أحرف على الأقل)
+                </p>
+              </div>
+            </div>
           </div>
 
           {error && <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3.5 py-2.5 text-[0.82rem] text-red-700 font-medium"><AlertTriangle size={16} /> {error}</div>}

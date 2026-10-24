@@ -23,9 +23,7 @@ const createSponsorRules = [
     .notEmpty()
     .withMessage('اسم الكافل مطلوب')
     .isLength({ min: 3 })
-    .withMessage('الاسم يجب أن يكون 3 أحرف على الأقل')
-    .matches(/^[\p{L}\s'-]+$/u)
-    .withMessage('الاسم يجب أن يحتوي على أحرف فقط ولا يمكن أن يحتوي على أرقام'),
+    .withMessage('الاسم يجب أن يكون 3 أحرف على الأقل'),
   body('email')
     .optional({ checkFalsy: true })
     .trim()
@@ -35,8 +33,13 @@ const createSponsorRules = [
   body('phone')
     .optional({ checkFalsy: true })
     .trim()
-    .isMobilePhone()
-    .withMessage('رقم الهاتف غير صحيح'),
+    .custom((val) => {
+      if (!val) return true;
+      // Allow plus, digits, spaces, hyphens (at least 7 chars)
+      const cleaned = val.replace(/[\s\-\(\)]/g, '');
+      if (/^\+?\d{7,16}$/.test(cleaned)) return true;
+      throw new Error('رقم الهاتف غير صحيح');
+    }),
   body('portalPassword')
     .notEmpty()
     .withMessage('كلمة مرور البوابة مطلوبة')
@@ -51,9 +54,7 @@ const updateSponsorRules = [
     .notEmpty()
     .withMessage('اسم الكافل مطلوب')
     .isLength({ min: 3 })
-    .withMessage('الاسم يجب أن يكون 3 أحرف على الأقل')
-    .matches(/^[\p{L}\s'-]+$/u)
-    .withMessage('الاسم يجب أن يحتوي على أحرف فقط ولا يمكن أن يحتوي على أرقام'),
+    .withMessage('الاسم يجب أن يكون 3 أحرف على الأقل'),
   body('email')
     .optional({ checkFalsy: true })
     .trim()
@@ -63,8 +64,12 @@ const updateSponsorRules = [
   body('phone')
     .optional({ checkFalsy: true })
     .trim()
-    .isMobilePhone()
-    .withMessage('رقم الهاتف غير صحيح'),
+    .custom((val) => {
+      if (!val) return true;
+      const cleaned = val.replace(/[\s\-\(\)]/g, '');
+      if (/^\+?\d{7,16}$/.test(cleaned)) return true;
+      throw new Error('رقم الهاتف غير صحيح');
+    }),
   body('portalPassword')
     .optional({ checkFalsy: true })
     .isLength({ min: 8 })

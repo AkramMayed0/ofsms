@@ -42,6 +42,7 @@ import {
   AlertTriangle,
   Heart,
   Eye,
+  EyeOff,
   Key,
   RefreshCw,
   ArrowRight,
@@ -588,6 +589,7 @@ function CreateSponsorModal({ onClose, onSuccess }) {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [portalPassword, setPortalPassword] = useState('');
+  const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -688,19 +690,32 @@ function CreateSponsorModal({ onClose, onSuccess }) {
           </div>
 
           <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-100 space-y-2">
-            <div className="flex items-center gap-2 text-xs font-bold text-[#1B5E8C]">
-              <Key size={15} />
-              <span>كلمة مرور بوابة الكافل <span className="text-rose-500">*</span></span>
+            <div className="flex items-center justify-between text-xs font-bold text-[#1B5E8C]">
+              <div className="flex items-center gap-1.5">
+                <Key size={15} />
+                <span>كلمة مرور بوابة الكافل <span className="text-rose-500">*</span></span>
+              </div>
+              <span className="text-[10px] text-slate-400 font-normal">8 أحرف على الأقل</span>
             </div>
-            <input
-              type="password"
-              required
-              minLength={8}
-              value={portalPassword}
-              onChange={(e) => setPortalPassword(e.target.value)}
-              placeholder="8 أحرف أو أرقام على الأقل"
-              className="w-full px-4 py-2 bg-white border border-blue-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#1B5E8C] transition"
-            />
+            <div className="flex items-center gap-2 bg-white px-3 py-1.5 border border-blue-200 rounded-xl focus-within:border-[#1B5E8C] focus-within:ring-2 focus-within:ring-[#1B5E8C]/15 transition">
+              <input
+                type={showPass ? 'text' : 'password'}
+                required
+                minLength={8}
+                value={portalPassword}
+                onChange={(e) => setPortalPassword(e.target.value)}
+                placeholder="8 أحرف أو أرقام على الأقل"
+                className="w-full text-xs font-medium focus:outline-none bg-transparent"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPass(!showPass)}
+                title={showPass ? 'إخفاء' : 'عرض'}
+                className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition"
+              >
+                {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
+              </button>
+            </div>
             <p className="text-[11px] text-slate-500">
               سيستخدمها الكافل لتسجيل الدخول إلى بوابته ومتابعة تقارير أيتامه مباشرة.
             </p>
@@ -1003,6 +1018,10 @@ function LinkBeneficiaryModal({ sponsor, onClose, onSuccess }) {
 // ─────────────────────────────────────────────────────────────────────────────
 function PortalAccountModal({ sponsor, onClose, showToast, onUpdated }) {
   const [copied, setCopied] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState(sponsor.portal_password_plain || 'Sponsor@1234');
+  const [showCurrentPass, setShowCurrentPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [copiedPass, setCopiedPass] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [savingPassword, setSavingPassword] = useState(false);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
@@ -1018,6 +1037,13 @@ function PortalAccountModal({ sponsor, onClose, showToast, onUpdated }) {
     setTimeout(() => setCopied(false), 2500);
   };
 
+  const handleCopyPass = () => {
+    navigator.clipboard.writeText(currentPassword);
+    setCopiedPass(true);
+    showToast('تم نسخ كلمة المرور الحالية إلى الحافظة');
+    setTimeout(() => setCopiedPass(false), 2500);
+  };
+
   const handleUpdatePassword = async (e) => {
     e.preventDefault();
     if (!newPassword || newPassword.length < 8) {
@@ -1027,19 +1053,23 @@ function PortalAccountModal({ sponsor, onClose, showToast, onUpdated }) {
 
     setSavingPassword(true);
     setError('');
+    setPasswordSuccess(false);
     try {
-      await api.put(`/sponsors/${sponsor.id}`, {
+      const { data } = await api.put(`/sponsors/${sponsor.id}`, {
         fullName: sponsor.full_name,
         phone: sponsor.phone,
         email: sponsor.email,
         portalPassword: newPassword,
       });
+      const updatedPlain = data?.sponsor?.portal_password_plain || newPassword;
+      setCurrentPassword(updatedPlain);
+      sponsor.portal_password_plain = updatedPlain;
       setPasswordSuccess(true);
       showToast('تم تغيير كلمة مرور البوابة بنجاح');
       setNewPassword('');
       if (onUpdated) onUpdated();
     } catch (err) {
-      setError(err.response?.data?.error || 'تعذر تحديث كلمة المرور');
+      setError(err.response?.data?.error || err.response?.data?.errors?.[0]?.msg || 'تعذر تحديث كلمة المرور');
     } finally {
       setSavingPassword(false);
     }
@@ -1120,34 +1150,104 @@ function PortalAccountModal({ sponsor, onClose, showToast, onUpdated }) {
             </div>
           </div>
 
-          {/* Reset / Change Password Form */}
-          <form onSubmit={handleUpdatePassword} className="pt-2 border-t border-slate-100 space-y-3">
-            <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-              <Key size={14} className="text-[#1B5E8C]" />
-              <span>تغيير كلمة مرور البوابة للكافل</span>
-            </h4>
+          {/* Dual Password Section: View Old Next To Edit New for System Head */}
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <Key size={14} className="text-[#1B5E8C]" />
+                <span>بيانات كلمة المرور (خاص بإدارة النظام)</span>
+              </span>
+              <span className="text-[10px] font-bold text-[#1B5E8C] bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                صلاحية المدير العام
+              </span>
+            </div>
 
             {error && (
-              <p className="text-xs text-rose-600 bg-rose-50 p-2 rounded-lg">{error}</p>
+              <p className="text-xs text-rose-600 bg-rose-50 border border-rose-200 p-2.5 rounded-xl">{error}</p>
             )}
 
-            <div className="flex gap-2">
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="كلمة مرور جديدة (8 أحرف على الأقل)"
-                className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#1B5E8C] focus:bg-white"
-              />
-              <button
-                type="submit"
-                disabled={savingPassword || !newPassword}
-                className="px-4 py-2 bg-[#1B5E8C] hover:bg-[#134569] text-white text-xs font-bold rounded-xl transition disabled:opacity-50"
-              >
-                {savingPassword ? 'جارٍ الحفظ…' : 'حفظ'}
-              </button>
+            {passwordSuccess && (
+              <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 p-2.5 rounded-xl flex items-center gap-1.5 font-bold">
+                <CheckCircle2 size={15} />
+                <span>تم تحديث كلمة المرور بنجاح! تم حفظ التعديل وتحديث كلمة المرور الحالية.</span>
+              </p>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Box 1 (Right): Current / Old Password */}
+              <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-1.5 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <label className="block text-[11px] font-bold text-slate-700">كلمة المرور الحالية (القديمة):</label>
+                    <span className="text-[10px] text-slate-400">قراءة فقط</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 mt-1 rounded-lg border border-slate-200/90">
+                    <input
+                      type={showCurrentPass ? 'text' : 'password'}
+                      readOnly
+                      value={currentPassword}
+                      className="w-full text-xs font-mono font-bold text-slate-800 bg-transparent focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPass(!showCurrentPass)}
+                      title={showCurrentPass ? 'إخفاء كلمة المرور' : 'عرض كلمة المرور'}
+                      className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-md transition"
+                    >
+                      {showCurrentPass ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCopyPass}
+                      title="نسخ كلمة المرور الحالية"
+                      className="p-1 text-[#1B5E8C] hover:bg-blue-50 rounded-md transition"
+                    >
+                      {copiedPass ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
+                    </button>
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-400">
+                  كلمة المرور المعتمدة حالياً لدخول الكافل إلى بوابته.
+                </p>
+              </div>
+
+              {/* Box 2 (Left): Edit to New Password */}
+              <form onSubmit={handleUpdatePassword} className="bg-white p-3 rounded-xl border border-slate-200 space-y-1.5 flex flex-col justify-between">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700">تعديل كلمة المرور (الجديدة):</label>
+                  <div className="flex items-center gap-1.5 bg-white px-2.5 py-1.5 mt-1 rounded-lg border border-slate-200 focus-within:border-[#1B5E8C] focus-within:ring-2 focus-within:ring-[#1B5E8C]/15 transition">
+                    <input
+                      type={showNewPass ? 'text' : 'password'}
+                      value={newPassword}
+                      onChange={(e) => {
+                        setNewPassword(e.target.value);
+                        setPasswordSuccess(false);
+                      }}
+                      placeholder="8 أحرف على الأقل"
+                      className="w-full text-xs font-medium text-slate-800 bg-transparent focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPass(!showNewPass)}
+                      title={showNewPass ? 'إخفاء' : 'عرض'}
+                      className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition"
+                    >
+                      {showNewPass ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={savingPassword || !newPassword}
+                  className="w-full mt-2 py-1.5 px-3 bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold rounded-lg transition disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-2xs"
+                >
+                  {savingPassword ? <Spinner size="xs" /> : <Key size={13} />}
+                  <span>{savingPassword ? 'جارٍ الحفظ…' : 'حفظ كلمة المرور الجديدة'}</span>
+                </button>
+              </form>
             </div>
-          </form>
+          </div>
 
           <div className="pt-2 flex justify-end">
             <button
@@ -1172,13 +1272,28 @@ function EditSponsorModal({ sponsor, onClose, onSuccess }) {
   const [phone, setPhone] = useState(sponsor.phone || '');
   const [email, setEmail] = useState(sponsor.email || '');
   const [portalPassword, setPortalPassword] = useState('');
+  const [showCurrentPass, setShowCurrentPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [copiedCurrent, setCopiedCurrent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const currentPasswordVal = sponsor.portal_password_plain || 'Sponsor@1234';
+
+  const handleCopyCurrent = () => {
+    navigator.clipboard.writeText(currentPasswordVal);
+    setCopiedCurrent(true);
+    setTimeout(() => setCopiedCurrent(false), 2000);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!fullName.trim() || fullName.trim().length < 3) {
       setError('الاسم الكامل مطلوب (3 أحرف على الأقل)');
+      return;
+    }
+    if (portalPassword && portalPassword.length < 8) {
+      setError('كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل');
       return;
     }
 
@@ -1193,7 +1308,12 @@ function EditSponsorModal({ sponsor, onClose, onSuccess }) {
       if (portalPassword) {
         payload.portalPassword = portalPassword;
       }
-      await api.put(`/sponsors/${sponsor.id}`, payload);
+      const { data } = await api.put(`/sponsors/${sponsor.id}`, payload);
+      if (data?.sponsor?.portal_password_plain) {
+        sponsor.portal_password_plain = data.sponsor.portal_password_plain;
+      } else if (portalPassword) {
+        sponsor.portal_password_plain = portalPassword;
+      }
       onSuccess();
     } catch (err) {
       setError(
@@ -1265,17 +1385,82 @@ function EditSponsorModal({ sponsor, onClose, onSuccess }) {
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              تغيير كلمة مرور البوابة (اتركه فارغاً إذا كنت لا تريد التغيير)
-            </label>
-            <input
-              type="password"
-              value={portalPassword}
-              onChange={(e) => setPortalPassword(e.target.value)}
-              placeholder="اتركه فارغاً للاحتفاظ بكلمة المرور السابقة"
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#1B5E8C] focus:bg-white transition"
-            />
+          {/* Dual Password Box: View Old Password next to Edit New Password */}
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-50/50 to-slate-50 border border-blue-100 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <Key size={14} className="text-[#1B5E8C]" />
+                <span>إدارة كلمة مرور البوابة (خاص بإدارة النظام)</span>
+              </span>
+              <span className="text-[10px] font-bold text-[#1B5E8C] bg-blue-100/80 px-2 py-0.5 rounded-full border border-blue-200">
+                صلاحية المدير العام
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Box 1 (Right): Old / Current Password */}
+              <div className="bg-white p-3 rounded-xl border border-slate-200/90 space-y-1.5 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-bold text-slate-700">كلمة المرور الحالية (القديمة):</label>
+                  <span className="text-[10px] text-slate-400">قراءة فقط</span>
+                </div>
+                <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-200/80">
+                  <input
+                    type={showCurrentPass ? 'text' : 'password'}
+                    readOnly
+                    value={currentPasswordVal}
+                    className="w-full text-xs font-mono font-bold text-slate-800 bg-transparent focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPass(!showCurrentPass)}
+                    title={showCurrentPass ? 'إخفاء كلمة المرور' : 'عرض كلمة المرور'}
+                    className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-md transition"
+                  >
+                    {showCurrentPass ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCopyCurrent}
+                    title="نسخ كلمة المرور الحالية"
+                    className="p-1 text-[#1B5E8C] hover:bg-blue-50 rounded-md transition"
+                  >
+                    {copiedCurrent ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
+                  </button>
+                </div>
+                <p className="text-[10px] text-slate-400">
+                  يمكن للمدير العام نسخها أو إعطاؤها للكافل
+                </p>
+              </div>
+
+              {/* Box 2 (Left): Edit New Password */}
+              <div className="bg-white p-3 rounded-xl border border-slate-200/90 space-y-1.5 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-bold text-slate-700">تعديل كلمة المرور (الجديدة):</label>
+                  <span className="text-[10px] text-blue-600 font-medium">اختياري</span>
+                </div>
+                <div className="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-lg border border-slate-200 focus-within:border-[#1B5E8C] focus-within:ring-2 focus-within:ring-[#1B5E8C]/15 transition">
+                  <input
+                    type={showNewPass ? 'text' : 'password'}
+                    value={portalPassword}
+                    onChange={(e) => setPortalPassword(e.target.value)}
+                    placeholder="اتركها فارغة إذا لم ترد التغيير"
+                    className="w-full text-xs font-medium text-slate-800 bg-transparent focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPass(!showNewPass)}
+                    title={showNewPass ? 'إخفاء' : 'عرض'}
+                    className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition"
+                  >
+                    {showNewPass ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
+                <p className="text-[10px] text-slate-400">
+                  اتركها فارغة للإبقاء على القديمة (8 أحرف على الأقل عند التعديل)
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
@@ -1309,6 +1494,8 @@ function SponsorDetailsModal({ sponsor, onClose, onOpenLinkOrphan, onOpenPortal 
   const [details, setDetails] = useState(null);
   const [sponsorships, setSponsorships] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showDetailsPass, setShowDetailsPass] = useState(false);
+  const [copiedDetailsPass, setCopiedDetailsPass] = useState(false);
 
   useEffect(() => {
     const fetchFullDetails = async () => {
@@ -1374,6 +1561,55 @@ function SponsorDetailsModal({ sponsor, onClose, onOpenLinkOrphan, onOpenPortal 
             <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 col-span-2 sm:col-span-1">
               <span className="text-[11px] font-bold text-slate-400 block">تاريخ التسجيل</span>
               <span className="text-xs font-bold text-slate-700 mt-1 block">{formatDate(sponsor.created_at)}</span>
+            </div>
+          </div>
+
+          {/* Portal Credentials for System Head */}
+          <div className="p-3.5 bg-slate-50/90 rounded-2xl border border-slate-200/80 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <Key size={14} className="text-[#1B5E8C]" />
+                <span>بيانات دخول البوابة (خاص بإدارة النظام):</span>
+              </span>
+              <span className="text-[10px] font-bold text-[#1B5E8C] bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+                صلاحية المدير العام
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              <div className="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-slate-200">
+                <span className="text-slate-500 text-[11px] font-bold">رمز الدخول:</span>
+                <span className="font-mono font-bold text-slate-800">{sponsor.portal_token || '—'}</span>
+              </div>
+
+              <div className="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-slate-200">
+                <span className="text-slate-500 text-[11px] font-bold">كلمة المرور الحالية:</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-mono font-bold text-slate-800">
+                    {showDetailsPass ? (details?.portal_password_plain || sponsor.portal_password_plain || 'Sponsor@1234') : '••••••••'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowDetailsPass(!showDetailsPass)}
+                    className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded transition"
+                    title={showDetailsPass ? 'إخفاء كلمة المرور' : 'عرض كلمة المرور'}
+                  >
+                    {showDetailsPass ? <EyeOff size={13} /> : <Eye size={13} />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(details?.portal_password_plain || sponsor.portal_password_plain || 'Sponsor@1234');
+                      setCopiedDetailsPass(true);
+                      setTimeout(() => setCopiedDetailsPass(false), 2000);
+                    }}
+                    className="p-1 text-[#1B5E8C] hover:bg-blue-50 rounded transition"
+                    title="نسخ كلمة المرور"
+                  >
+                    {copiedDetailsPass ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 

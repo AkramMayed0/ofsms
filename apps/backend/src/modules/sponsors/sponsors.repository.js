@@ -70,6 +70,7 @@ const findAllSponsors = async () => {
   const { rows } = await query(
     `SELECT
        s.id, s.full_name, s.phone, s.email, s.portal_token,
+       s.portal_password_plain,
        s.created_at,
        u.full_name AS created_by_name,
        COUNT(sp.id) FILTER (WHERE sp.is_active) AS active_sponsorships
