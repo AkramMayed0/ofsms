@@ -1,6 +1,6 @@
 import { twMerge } from 'tailwind-merge';
 
-const SHIMMER = 'bg-gradient-to-r from-[#f0f4f8] via-[#e5eaf0] to-[#f0f4f8] bg-[length:200%_100%] animate-[shimmer_1.4s_infinite]';
+const SHIMMER = 'bg-gradient-to-r from-[#f0f4f8] via-[#e5eaf0] to-[#f0f4f8] dark:from-[#17283C] dark:via-[#1E344B] dark:to-[#17283C] bg-[length:200%_100%] animate-[shimmer_1.4s_infinite]';
 
 export function Skeleton({ className, style }) {
   return <div className={twMerge(SHIMMER, 'rounded', className)} style={style} />;
@@ -8,7 +8,7 @@ export function Skeleton({ className, style }) {
 
 export function SkeletonListRow({ className }) {
   return (
-    <div className={twMerge('flex items-center gap-4 px-4 py-3.5 border-b border-gray-50 last:border-b-0', className)}>
+    <div className={twMerge('flex items-center gap-4 px-4 py-3.5 border-b border-gray-50 dark:border-[#1E344B] last:border-b-0', className)}>
       <Skeleton className="w-9 h-9 rounded-full shrink-0" />
       <div className="flex-1 flex flex-col gap-1.5">
         <Skeleton className="h-3 w-[45%]" />

@@ -177,10 +177,8 @@ export default function PublicLandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           {/* Logo & Brand */}
           <Link href="/landing" className="flex items-center gap-3 group">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#1B5E8C] via-[#2E7EB8] to-sky-400 p-0.5 shadow-md shadow-[#1B5E8C]/20 group-hover:scale-105 transition">
-              <div className="w-full h-full bg-white rounded-[14px] flex items-center justify-center">
-                <span className="text-[#1B5E8C] font-black text-xl tracking-tighter">نماء</span>
-              </div>
+            <div className="w-12 h-12 rounded-2xl bg-white p-1.5 shadow-md shadow-[#1B5E8C]/20 border border-slate-200/80 group-hover:scale-105 transition flex items-center justify-center">
+              <img src="/logo.png" alt="نماء" className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col">
               <span className="text-base font-black text-slate-900 group-hover:text-[#1B5E8C] transition">

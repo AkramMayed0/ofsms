@@ -19,7 +19,7 @@ export default function Modal({ open, onClose, children, className }) {
     >
       <div
         className={twMerge(
-          'bg-white rounded-2xl w-full max-w-[420px] shadow-2xl animate-[scaleIn_0.15s_ease]',
+          'bg-white dark:bg-[#111E2E] dark:border dark:border-[#1E344B] text-gray-800 dark:text-slate-100 rounded-2xl w-full max-w-[420px] shadow-2xl animate-[scaleIn_0.15s_ease]',
           className
         )}
         onClick={(e) => e.stopPropagation()}

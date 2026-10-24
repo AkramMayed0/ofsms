@@ -8,37 +8,37 @@ export const STATUS_MAP = {
     label: 'قيد المراجعة',
     color: '#f59e0b',
     bg: '#fffbeb',
-    textClass: 'text-amber-700',
-    bgClass: 'bg-amber-50',
-    borderClass: 'border-amber-200',
+    textClass: 'text-amber-700 dark:text-amber-300',
+    bgClass: 'bg-amber-50 dark:bg-amber-950/40',
+    borderClass: 'border-amber-200 dark:border-amber-800/60',
     dotClass: 'bg-amber-500'
   },
   under_marketing: {
     label: 'تحت التسويق',
     color: '#3b82f6',
     bg: '#eff6ff',
-    textClass: 'text-blue-700',
-    bgClass: 'bg-blue-50',
-    borderClass: 'border-blue-200',
+    textClass: 'text-blue-700 dark:text-blue-300',
+    bgClass: 'bg-blue-50 dark:bg-blue-950/40',
+    borderClass: 'border-blue-200 dark:border-blue-800/60',
     dotClass: 'bg-blue-500'
   },
   under_sponsorship: {
     label: 'تحت الكفالة',
     color: '#10b981',
     bg: '#ecfdf5',
-    textClass: 'text-emerald-700',
-    bgClass: 'bg-emerald-50',
-    borderClass: 'border-emerald-200',
+    textClass: 'text-emerald-700 dark:text-emerald-300',
+    bgClass: 'bg-emerald-50 dark:bg-emerald-950/40',
+    borderClass: 'border-emerald-200 dark:border-emerald-800/60',
     dotClass: 'bg-emerald-500'
   },
   inactive: {
     label: 'غير نشط',
     color: '#9ca3af',
     bg: '#f9fafb',
-    textClass: 'text-gray-500',
-    bgClass: 'bg-gray-50',
-    borderClass: 'border-gray-200',
-    dotClass: 'bg-gray-400'
+    textClass: 'text-gray-500 dark:text-slate-400',
+    bgClass: 'bg-gray-50 dark:bg-slate-800/60',
+    borderClass: 'border-gray-200 dark:border-slate-700',
+    dotClass: 'bg-gray-400 dark:bg-slate-500'
   },
 
   // Disbursements
@@ -46,36 +46,36 @@ export const STATUS_MAP = {
     label: 'مسودة',
     color: '#9ca3af',
     bg: '#f9fafb',
-    textClass: 'text-gray-500',
-    bgClass: 'bg-gray-50',
-    borderClass: 'border-gray-200',
-    dotClass: 'bg-gray-400'
+    textClass: 'text-gray-500 dark:text-slate-400',
+    bgClass: 'bg-gray-50 dark:bg-slate-800/60',
+    borderClass: 'border-gray-200 dark:border-slate-700',
+    dotClass: 'bg-gray-400 dark:bg-slate-500'
   },
   supervisor_approved: {
     label: 'اعتمد المشرف',
     color: '#f59e0b',
     bg: '#fffbeb',
-    textClass: 'text-amber-700',
-    bgClass: 'bg-amber-50',
-    borderClass: 'border-amber-200',
+    textClass: 'text-amber-700 dark:text-amber-300',
+    bgClass: 'bg-amber-50 dark:bg-amber-950/40',
+    borderClass: 'border-amber-200 dark:border-amber-800/60',
     dotClass: 'bg-amber-500'
   },
   finance_approved: {
     label: 'اعتمد المالي',
     color: '#3b82f6',
     bg: '#eff6ff',
-    textClass: 'text-blue-700',
-    bgClass: 'bg-blue-50',
-    borderClass: 'border-blue-200',
+    textClass: 'text-blue-700 dark:text-blue-300',
+    bgClass: 'bg-blue-50 dark:bg-blue-950/40',
+    borderClass: 'border-blue-200 dark:border-blue-800/60',
     dotClass: 'bg-blue-500'
   },
   released: {
     label: 'تم الصرف',
     color: '#10b981',
     bg: '#ecfdf5',
-    textClass: 'text-emerald-700',
-    bgClass: 'bg-emerald-50',
-    borderClass: 'border-emerald-200',
+    textClass: 'text-emerald-700 dark:text-emerald-300',
+    bgClass: 'bg-emerald-50 dark:bg-emerald-950/40',
+    borderClass: 'border-emerald-200 dark:border-emerald-800/60',
     dotClass: 'bg-emerald-500'
   },
 
@@ -84,18 +84,18 @@ export const STATUS_MAP = {
     label: 'قيد المراجعة',
     color: '#f59e0b',
     bg: '#fffbeb',
-    textClass: 'text-amber-700',
-    bgClass: 'bg-amber-50',
-    borderClass: 'border-amber-200',
+    textClass: 'text-amber-700 dark:text-amber-300',
+    bgClass: 'bg-amber-50 dark:bg-amber-950/40',
+    borderClass: 'border-amber-200 dark:border-amber-800/60',
     dotClass: 'bg-amber-500'
   },
   approved: {
     label: 'معتمد',
     color: '#10b981',
     bg: '#ecfdf5',
-    textClass: 'text-emerald-700',
-    bgClass: 'bg-emerald-50',
-    borderClass: 'border-emerald-200',
+    textClass: 'text-emerald-700 dark:text-emerald-300',
+    bgClass: 'bg-emerald-50 dark:bg-emerald-950/40',
+    borderClass: 'border-emerald-200 dark:border-emerald-800/60',
     dotClass: 'bg-emerald-500'
   },
 
@@ -104,9 +104,9 @@ export const STATUS_MAP = {
     label: 'مرفوض',
     color: '#ef4444',
     bg: '#fef2f2',
-    textClass: 'text-red-700',
-    bgClass: 'bg-red-50',
-    borderClass: 'border-red-200',
+    textClass: 'text-red-700 dark:text-red-300',
+    bgClass: 'bg-red-50 dark:bg-red-950/40',
+    borderClass: 'border-red-200 dark:border-red-800/60',
     dotClass: 'bg-red-500'
   }
 };

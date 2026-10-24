@@ -540,17 +540,24 @@ export default function NotificationBell() {
           font-family: 'Cairo', sans-serif;
         }
 
-        /* ── Footer ───────────────────────────────────────────────────── */
-        .notif-footer {
-          padding: 0.6rem 1.1rem;
-          border-top: 1px solid #f3f4f6;
-          background: #fafafa;
-        }
-        .notif-footer-text {
-          font-size: 0.72rem;
-          color: #9ca3af;
-          font-family: 'Cairo', sans-serif;
-        }
+        /* ── Dark Mode ────────────────────────────────────────────────── */
+        :global(.dark) .notif-btn { color: #94a3b8; }
+        :global(.dark) .notif-btn:hover { background: #17283C; color: #38bdf8; }
+        :global(.dark) .notif-btn-open  { background: #1E344B; color: #38bdf8; }
+        :global(.dark) .notif-dropdown  { background: #111E2E; border-color: #1E344B; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.6); }
+        :global(.dark) .notif-header    { border-bottom-color: #1E344B; }
+        :global(.dark) .notif-title     { color: #f1f5f9; }
+        :global(.dark) .mark-all-btn    { color: #38bdf8; }
+        :global(.dark) .mark-all-btn:hover { background: #17283C; }
+        :global(.dark) .notif-item      { border-bottom-color: #1E344B; }
+        :global(.dark) .notif-item:hover { background: #17283C; }
+        :global(.dark) .notif-item-unread { background: #132235; }
+        :global(.dark) .notif-item-unread:hover { background: #17283C; }
+        :global(.dark) .notif-msg       { color: #e2e8f0; }
+        :global(.dark) .notif-time      { color: #64748b; }
+        :global(.dark) .notif-footer    { border-top-color: #1E344B; background: #0D1825; }
+        :global(.dark) .notif-footer-text { color: #64748b; }
+        :global(.dark) .skel            { background: linear-gradient(90deg, #17283C 25%, #1E344B 50%, #17283C 75%); }
       `}</style>
     </div>
   );

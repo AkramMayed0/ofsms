@@ -18,23 +18,23 @@ const REDIRECT_AFTER_LOGIN = '/dashboard';
 const LOGIN_ENDPOINT = '/auth/login';
 const APP_NAME = 'نظام إدارة الأيتام والأسر';
 const ORG_NAME = 'مؤسسة نماء التنموية الخيرية';
-const LOGO_PATH = '/namaa-logo.png';
+const LOGO_PATH = '/logo.png';
 const MIN_PASSWORD_LENGTH = 8;
 
 const INITIAL_FORM = Object.freeze({ email: '', password: '' });
 
 const FIELD_ICON_CLASS =
-  'absolute right-3.5 z-10 flex items-center text-gray-400 pointer-events-none';
+  'absolute right-3.5 z-10 flex items-center text-gray-400 dark:text-slate-500 pointer-events-none';
 
 const getInputClassName = (hasError) =>
   [
-    'w-full rounded-xl border-[1.5px] bg-[#fafafa] py-2.5 pr-10 pl-11',
-    'font-sans text-sm text-gray-800 outline-none transition',
-    'ltr placeholder:text-[#c4cdd8]',
-    'focus:border-primary focus:bg-white focus:shadow-[0_0_0_3px_rgba(27,94,140,0.12)]',
+    'w-full rounded-xl border-[1.5px] bg-[#fafafa] dark:bg-[#17283C] py-2.5 pr-10 pl-11',
+    'font-sans text-sm text-gray-800 dark:text-slate-100 outline-none transition',
+    'ltr placeholder:text-[#c4cdd8] dark:placeholder:text-slate-500',
+    'focus:border-primary dark:focus:border-sky-500 focus:bg-white dark:focus:bg-[#1B2F46] focus:shadow-[0_0_0_3px_rgba(27,94,140,0.12)]',
     hasError
-      ? 'border-red-600 bg-red-50 focus:shadow-[0_0_0_3px_rgba(220,38,38,0.10)]'
-      : 'border-gray-300',
+      ? 'border-red-600 bg-red-50 dark:bg-red-950/30 focus:shadow-[0_0_0_3px_rgba(220,38,38,0.10)]'
+      : 'border-gray-300 dark:border-[#1E344B]',
   ].join(' ');
 
 const validate = ({ email, password }) => {
@@ -106,18 +106,18 @@ export default function LoginPage() {
 
   return (
     <div
-      className="flex min-h-screen flex-col bg-[#f0f4f8] font-sans md:flex-row-reverse"
+      className="flex min-h-screen flex-col bg-[#f0f4f8] dark:bg-[#0B131B] font-sans md:flex-row-reverse transition-colors duration-200"
       dir="rtl"
     >
       <BrandPanel />
 
       <main className="flex min-h-screen flex-1 items-start justify-center px-4 py-6 md:items-center md:px-6 md:py-8">
-        <section className="w-full max-w-[420px] border-primary/10 bg-transparent p-5 md:rounded-[1.25rem] md:border md:bg-white md:p-8 md:shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_24px_rgba(27,94,140,0.09),inset_0_1px_0_rgba(255,255,255,0.8)]">
+        <section className="w-full max-w-[420px] border-primary/10 bg-transparent p-5 md:rounded-[1.25rem] md:border md:border-gray-200 dark:md:border-[#1E344B] md:bg-white dark:md:bg-[#111E2E] md:p-8 md:shadow-xl transition-colors duration-200">
           <MobileLogo />
 
           <header className="mb-7 text-right">
-            <h1 className="m-0 mb-1 text-2xl font-bold text-[#0d3d5c]">تسجيل الدخول</h1>
-            <p className="m-0 text-sm text-[#6b7a8d]">أدخل بياناتك للوصول إلى النظام</p>
+            <h1 className="m-0 mb-1 text-2xl font-bold text-[#0d3d5c] dark:text-sky-300">تسجيل الدخول</h1>
+            <p className="m-0 text-sm text-[#6b7a8d] dark:text-slate-400">أدخل بياناتك للوصول إلى النظام</p>
           </header>
 
           <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
@@ -180,14 +180,18 @@ export default function LoginPage() {
 function BrandPanel() {
   return (
     <aside
-      className="relative flex min-h-[180px] w-full shrink-0 items-center justify-center overflow-hidden bg-gradient-to-br from-[#0d3d5c] via-primary to-[#1a7a6e] px-4 py-6 md:min-h-screen md:w-[42%]"
+      className="relative flex min-h-[220px] w-full shrink-0 items-center justify-center overflow-hidden bg-gradient-to-br from-[#0d3d5c] via-primary to-[#1a7a6e] px-4 py-8 md:min-h-screen md:w-[42%]"
     >
-      <div className="relative z-10 flex flex-col items-center justify-center p-8 text-center">
-        <img
-          src={LOGO_PATH}
-          alt={ORG_NAME}
-          className="h-auto w-full max-w-[200px] p-4 md:max-w-[500px] md:p-0"
-        />
+      <div className="relative z-10 flex flex-col items-center justify-center p-8 text-center max-w-sm">
+        <div className="w-28 h-28 md:w-36 md:h-36 rounded-3xl bg-white/10 backdrop-blur-md p-4 flex items-center justify-center shadow-2xl border border-white/20 mb-5">
+          <img
+            src={LOGO_PATH}
+            alt={ORG_NAME}
+            className="w-full h-full object-contain drop-shadow-md"
+          />
+        </div>
+        <h2 className="text-xl md:text-2xl font-black text-white mb-2 leading-tight">{ORG_NAME}</h2>
+        <p className="text-xs md:text-sm text-sky-100/80 leading-relaxed">{APP_NAME}</p>
       </div>
     </aside>
   );
@@ -195,9 +199,9 @@ function BrandPanel() {
 
 function MobileLogo() {
   return (
-    <div className="mb-6 flex items-center gap-2 text-sm font-semibold text-primary md:hidden">
-      <ShieldCheck size={28} aria-hidden="true" />
-      <span>{APP_NAME}</span>
+    <div className="mb-6 flex items-center gap-2.5 text-base font-black text-emerald-700 dark:text-emerald-400 md:hidden">
+      <img src={LOGO_PATH} alt="نماء" className="w-8 h-8 object-contain drop-shadow-sm" />
+      <span>{ORG_NAME}</span>
     </div>
   );
 }
