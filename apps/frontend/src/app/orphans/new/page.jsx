@@ -45,6 +45,23 @@ const GUARDIAN_RELATIONS = [
   { value: 'other',          label: 'أخرى' },
 ];
 
+const KINSHIP_OPTIONS = [
+  { value: 'أم', label: 'أم' },
+  { value: 'أب', label: 'أب' },
+  { value: 'أخ', label: 'أخ' },
+  { value: 'أخت', label: 'أخت' },
+  { value: 'عم', label: 'عم (أخ الأب)' },
+  { value: 'عمة', label: 'عمة (أخت الأب)' },
+  { value: 'خال', label: 'خال (أخ الأم)' },
+  { value: 'خالة', label: 'خالة (أخت الأم)' },
+  { value: 'جد', label: 'جد' },
+  { value: 'جدة', label: 'جدة' },
+  { value: 'ابن عم / قريب', label: 'ابن عم / قريب' },
+  { value: 'وصي شرعي', label: 'وصي شرعي / كافل قانوني' },
+  { value: 'زوج الأم / زوجة الأب', label: 'زوج الأم / زوجة الأب' },
+  { value: 'أخرى', label: 'صلة قرابة أخرى' },
+];
+
 const VALID_RELATIONS = ['uncle', 'maternal_uncle', 'grandfather', 'sibling', 'other'];
 const VALID_GENDERS   = ['male', 'female'];
 const ALLOWED_TYPES   = ['application/pdf', 'image/jpeg', 'image/png'];
@@ -727,15 +744,20 @@ export default function OrphanRegistrationPage() {
                 <label className={CLS_LBL} htmlFor="phone1Relation">
                   صلة القرابة <span className={CLS_REQ}>*</span>
                 </label>
-                <Input
+                <select
                   id="phone1Relation"
-                  className="rounded-xl" error={errors.phone1Relation?.message}
-                  placeholder="مثال: عم، خال، جد"
-                  {...register('phone1Relation', {
-                    required: 'صلة القرابة مطلوبة',
-                    pattern: { value: /^[\p{L}\s]+$/u, message: 'يجب أن تحتوي على أحرف فقط' }
-                  })}
-                />
+                  className={`w-full px-3.5 py-2.5 bg-gray-50 border rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:border-[#1B5E8C] focus:bg-white transition cursor-pointer ${
+                    errors.phone1Relation ? 'border-red-500 bg-red-50/50' : 'border-gray-300'
+                  }`}
+                  {...register('phone1Relation', { required: 'صلة القرابة مطلوبة' })}
+                >
+                  <option value="">-- اختر صلة القرابة --</option>
+                  {KINSHIP_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
                 {errors.phone1Relation && <p className={CLS_FERR}>{errors.phone1Relation.message}</p>}
               </div>
 
@@ -754,17 +776,24 @@ export default function OrphanRegistrationPage() {
               {/* Phone 2 relation */}
               <div className={CLS_FG}>
                 <label className={CLS_LBL} htmlFor="phone2Relation">
-                  صلة القرابة <span className={CLS_REQ}>*</span>
+                  صلة القرابة {watch('phone2') && <span className={CLS_REQ}>*</span>}
                 </label>
-                <Input
+                <select
                   id="phone2Relation"
-                  className="rounded-xl" error={errors.phone2Relation?.message}
-                  placeholder="مثال: عم، خال، جد"
+                  className={`w-full px-3.5 py-2.5 bg-gray-50 border rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:border-[#1B5E8C] focus:bg-white transition cursor-pointer ${
+                    errors.phone2Relation ? 'border-red-500 bg-red-50/50' : 'border-gray-300'
+                  }`}
                   {...register('phone2Relation', {
-                    validate: (val) => !watch('phone2') || !!val || 'صلة القرابة مطلوبة',
-                    pattern: { value: /^[\p{L}\s]*$/u, message: 'يجب أن تحتوي على أحرف فقط' }
+                    validate: (val) => !watch('phone2') || !!val || 'صلة القرابة مطلوبة عند إدخال الرقم الثاني',
                   })}
-                />
+                >
+                  <option value="">-- اختر صلة القرابة (اختياري) --</option>
+                  {KINSHIP_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
                 {errors.phone2Relation && <p className={CLS_FERR}>{errors.phone2Relation.message}</p>}
               </div>
 

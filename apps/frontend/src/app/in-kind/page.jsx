@@ -62,6 +62,46 @@ const STATUS_CONFIG = {
   },
 };
 
+const KINSHIP_OPTIONS = [
+  { value: 'أم', label: 'أم' },
+  { value: 'أب', label: 'أب' },
+  { value: 'أخ', label: 'أخ' },
+  { value: 'أخت', label: 'أخت' },
+  { value: 'عم', label: 'عم (أخ الأب)' },
+  { value: 'عمة', label: 'عمة (أخت الأب)' },
+  { value: 'خال', label: 'خال (أخ الأم)' },
+  { value: 'خالة', label: 'خالة (أخت الأم)' },
+  { value: 'جد', label: 'جد' },
+  { value: 'جدة', label: 'جدة' },
+  { value: 'ابن عم / قريب', label: 'ابن عم / قريب' },
+  { value: 'وصي شرعي', label: 'وصي شرعي / كافل قانوني' },
+  { value: 'زوج الأم / زوجة الأب', label: 'زوج الأم / زوجة الأب' },
+  { value: 'أخرى', label: 'صلة قرابة أخرى' },
+];
+
+const normalizeKinship = (val) => {
+  if (!val) return '';
+  const trimmed = String(val).trim().toLowerCase();
+  const map = {
+    maternal_uncle: 'خال',
+    maternal_aunt: 'خالة',
+    uncle: 'عم',
+    paternal_uncle: 'عم',
+    paternal_aunt: 'عمة',
+    mother: 'أم',
+    father: 'أب',
+    grandfather: 'جد',
+    grandmother: 'جدة',
+    sibling: 'أخ',
+    brother: 'أخ',
+    sister: 'أخت',
+    guardian: 'وصي شرعي',
+    legal_guardian: 'وصي شرعي',
+    other: 'أخرى',
+  };
+  return map[trimmed] || val;
+};
+
 export default function InKindPage() {
   const { user } = useAuthStore();
   const isGM = user?.role === 'gm';
@@ -814,6 +854,7 @@ function CreateProgramModal({ open, onClose, types, sponsors, onCreated, showToa
   const [endDate, setEndDate] = useState('');
   const [targetQuantity, setTargetQuantity] = useState(10);
   const [notes, setNotes] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -824,10 +865,26 @@ function CreateProgramModal({ open, onClose, types, sponsors, onCreated, showToa
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const errs = {};
     if (!title.trim()) {
-      showToast('يرجى إدخال عنوان برنامج الدعم', 'error');
+      errs.title = 'عنوان البرنامج مطلوب';
+    }
+    if (!typeId) {
+      errs.typeId = 'نوع الدعم مطلوب';
+    }
+    if (!startDate) {
+      errs.startDate = 'تاريخ بدء التوزيع مطلوب';
+    }
+    if (!targetQuantity || parseInt(targetQuantity, 10) <= 0) {
+      errs.targetQuantity = 'العدد المستهدف يجب أن يكون 1 على الأقل';
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      showToast('يرجى ملء جميع الحقول المطلوبة قبل الحفظ', 'error');
       return;
     }
+
     setSubmitting(true);
     try {
       await api.post('/in-kind/programs', {
@@ -874,26 +931,45 @@ function CreateProgramModal({ open, onClose, types, sponsors, onCreated, showToa
           {/* Program Title */}
           <div>
             <label className="block text-xs font-bold text-gray-700 mb-1.5">
-              عنوان البرنامج / المشروع <span className="text-rose-500">*</span>
+              عنوان البرنامج / المشروع <span className="text-rose-500 font-black">*</span>
             </label>
             <input
               type="text"
               required
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                setFieldErrors((prev) => ({ ...prev, title: '' }));
+              }}
               placeholder="مثال: مشروع توزيع السلال الغذائية لشهر رمضان"
-              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-600 focus:bg-white transition"
+              className={`w-full px-4 py-2.5 bg-gray-50 border rounded-xl text-sm focus:outline-none focus:border-emerald-600 focus:bg-white transition ${
+                fieldErrors.title ? 'border-rose-500 bg-rose-50/40 ring-1 ring-rose-500' : 'border-gray-200'
+              }`}
             />
+            {fieldErrors.title && (
+              <p className="text-[11px] text-rose-600 mt-1 flex items-center gap-1 font-semibold">
+                <AlertCircle size={12} />
+                <span>{fieldErrors.title}</span>
+              </p>
+            )}
           </div>
 
           {/* Type & Sponsor */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">نوع الدعم العيني</label>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                نوع الدعم العيني <span className="text-rose-500 font-black">*</span>
+              </label>
               <select
+                required
                 value={typeId}
-                onChange={(e) => setTypeId(e.target.value)}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-600 focus:bg-white transition cursor-pointer"
+                onChange={(e) => {
+                  setTypeId(e.target.value);
+                  setFieldErrors((prev) => ({ ...prev, typeId: '' }));
+                }}
+                className={`w-full px-4 py-2.5 bg-gray-50 border rounded-xl text-sm focus:outline-none focus:border-emerald-600 focus:bg-white transition cursor-pointer ${
+                  fieldErrors.typeId ? 'border-rose-500 bg-rose-50/40 ring-1 ring-rose-500' : 'border-gray-200'
+                }`}
               >
                 {types.map((t) => (
                   <option key={t.id} value={t.id}>
@@ -901,6 +977,12 @@ function CreateProgramModal({ open, onClose, types, sponsors, onCreated, showToa
                   </option>
                 ))}
               </select>
+              {fieldErrors.typeId && (
+                <p className="text-[11px] text-rose-600 mt-1 flex items-center gap-1 font-semibold">
+                  <AlertCircle size={12} />
+                  <span>{fieldErrors.typeId}</span>
+                </p>
+              )}
             </div>
 
             <div>
@@ -938,27 +1020,55 @@ function CreateProgramModal({ open, onClose, types, sponsors, onCreated, showToa
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">العدد المستهدف (الحصص)</label>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                العدد المستهدف (الحصص) <span className="text-rose-500 font-black">*</span>
+              </label>
               <input
                 type="number"
                 min="1"
+                required
                 value={targetQuantity}
-                onChange={(e) => setTargetQuantity(e.target.value)}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-600 focus:bg-white transition"
+                onChange={(e) => {
+                  setTargetQuantity(e.target.value);
+                  setFieldErrors((prev) => ({ ...prev, targetQuantity: '' }));
+                }}
+                className={`w-full px-4 py-2.5 bg-gray-50 border rounded-xl text-sm focus:outline-none focus:border-emerald-600 focus:bg-white transition ${
+                  fieldErrors.targetQuantity ? 'border-rose-500 bg-rose-50/40 ring-1 ring-rose-500' : 'border-gray-200'
+                }`}
               />
+              {fieldErrors.targetQuantity && (
+                <p className="text-[11px] text-rose-600 mt-1 flex items-center gap-1 font-semibold">
+                  <AlertCircle size={12} />
+                  <span>{fieldErrors.targetQuantity}</span>
+                </p>
+              )}
             </div>
           </div>
 
           {/* Dates */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">تاريخ بدء التوزيع</label>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                تاريخ بدء التوزيع <span className="text-rose-500 font-black">*</span>
+              </label>
               <input
                 type="date"
+                required
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-600 focus:bg-white transition cursor-pointer"
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  setFieldErrors((prev) => ({ ...prev, startDate: '' }));
+                }}
+                className={`w-full px-4 py-2.5 bg-gray-50 border rounded-xl text-sm focus:outline-none focus:border-emerald-600 focus:bg-white transition cursor-pointer ${
+                  fieldErrors.startDate ? 'border-rose-500 bg-rose-50/40 ring-1 ring-rose-500' : 'border-gray-200'
+                }`}
               />
+              {fieldErrors.startDate && (
+                <p className="text-[11px] text-rose-600 mt-1 flex items-center gap-1 font-semibold">
+                  <AlertCircle size={12} />
+                  <span>{fieldErrors.startDate}</span>
+                </p>
+              )}
             </div>
 
             <div>
@@ -1221,7 +1331,7 @@ function ProgramDetailsModal({
                         <div className="text-gray-900">
                           {b.receiver_name ? (
                             <span>
-                              {b.receiver_name} {b.receiver_relation ? `(${b.receiver_relation})` : ''}
+                              {b.receiver_name} {b.receiver_relation ? `(${normalizeKinship(b.receiver_relation)})` : ''}
                             </span>
                           ) : (
                             <span className="text-gray-400 italic">بانتظار التسليم</span>
@@ -1312,17 +1422,27 @@ function AssignBeneficiaryModal({ open, onClose, program, orphans, sponsors, onA
   const [deliveryMethod, setDeliveryMethod] = useState('من المقر');
   const [receiverName, setReceiverName] = useState('');
   const [receiverRelation, setReceiverRelation] = useState('');
+  const [customRelation, setCustomRelation] = useState('');
   const [notes, setNotes] = useState('');
   const [orphanSearch, setOrphanSearch] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
   // When orphan changes, pre-fill receiver with guardian if known
   const handleOrphanChange = (orphanId) => {
     setSelectedOrphanId(orphanId);
+    setFieldErrors((prev) => ({ ...prev, orphan: '' }));
     const orphan = orphans.find((o) => o.id === orphanId);
     if (orphan) {
-      if (orphan.guardian_name) setReceiverName(orphan.guardian_name);
-      if (orphan.guardian_relation) setReceiverRelation(orphan.guardian_relation);
+      if (orphan.guardian_name) {
+        setReceiverName(orphan.guardian_name);
+        setFieldErrors((prev) => ({ ...prev, receiverName: '' }));
+      }
+      if (orphan.guardian_relation) {
+        const norm = normalizeKinship(orphan.guardian_relation);
+        setReceiverRelation(norm);
+        setFieldErrors((prev) => ({ ...prev, receiverRelation: '' }));
+      }
     }
   };
 
@@ -1340,10 +1460,27 @@ function AssignBeneficiaryModal({ open, onClose, program, orphans, sponsors, onA
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const errs = {};
     if (!selectedOrphanId) {
-      showToast('يرجى اختيار يتيم لتعيينه', 'error');
+      errs.orphan = 'يرجى اختيار اليتيم المستفيد';
+    }
+    if (!receiverName.trim()) {
+      errs.receiverName = 'اسم المستلم مطلوب ولا يمكن تركه فارغاً';
+    }
+    const finalRelation = receiverRelation === 'أخرى' && customRelation.trim() ? customRelation.trim() : receiverRelation;
+    if (!finalRelation.trim()) {
+      errs.receiverRelation = 'يرجى اختيار صلة القرابة باليتيم';
+    }
+    if (!deliveryMethod.trim()) {
+      errs.deliveryMethod = 'طريقة التسليم مطلوبة';
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      showToast('يرجى استكمال جميع الحقول الإلزامية المطلوبة أولاً', 'error');
       return;
     }
+
     setSubmitting(true);
     try {
       await api.post(`/in-kind/programs/${program.id}/beneficiaries`, {
@@ -1352,8 +1489,8 @@ function AssignBeneficiaryModal({ open, onClose, program, orphans, sponsors, onA
             orphanId: selectedOrphanId,
             sponsorId: selectedSponsorId || null,
             deliveryMethod,
-            receiverName: receiverName.trim() || null,
-            receiverRelation: receiverRelation.trim() || null,
+            receiverName: receiverName.trim(),
+            receiverRelation: finalRelation.trim(),
             notes: notes.trim() || null,
           },
         ],
@@ -1394,7 +1531,7 @@ function AssignBeneficiaryModal({ open, onClose, program, orphans, sponsors, onA
           {/* 1. Search & Select Orphan */}
           <div>
             <label className="block text-xs font-bold text-gray-700 mb-1">
-              اختر اليتيم المستفيد <span className="text-rose-500">*</span>
+              اختر اليتيم المستفيد <span className="text-rose-500 font-black">*</span>
             </label>
             <div className="mb-2 relative">
               <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -1402,7 +1539,7 @@ function AssignBeneficiaryModal({ open, onClose, program, orphans, sponsors, onA
                 type="text"
                 value={orphanSearch}
                 onChange={(e) => setOrphanSearch(e.target.value)}
-                placeholder="تصفية قائمة الأيتام بالاسم..."
+                placeholder="تصفية قائمة الأيتام بالاسم أو الكود..."
                 className="w-full pl-3 pr-8 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-emerald-600 focus:bg-white"
               />
             </div>
@@ -1410,15 +1547,23 @@ function AssignBeneficiaryModal({ open, onClose, program, orphans, sponsors, onA
               required
               value={selectedOrphanId}
               onChange={(e) => handleOrphanChange(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium text-gray-800 focus:outline-none focus:border-emerald-600 focus:bg-white transition cursor-pointer"
+              className={`w-full px-3.5 py-2.5 bg-gray-50 border rounded-xl text-xs font-medium text-gray-800 focus:outline-none focus:border-emerald-600 focus:bg-white transition cursor-pointer ${
+                fieldErrors.orphan ? 'border-rose-500 bg-rose-50/40 ring-1 ring-rose-500' : 'border-gray-200'
+              }`}
             >
-              <option value="">-- اضغط لاختيار اليتيم من القائمة --</option>
+              <option value="">-- اضغط لاختيار اليتيم من القائمة (مطلوب) --</option>
               {filteredOrphans.map((o) => (
                 <option key={o.id} value={o.id}>
                   {o.full_name} {o.guardian_name ? `(ولي الأمر: ${o.guardian_name})` : ''}
                 </option>
               ))}
             </select>
+            {fieldErrors.orphan && (
+              <p className="text-[11px] text-rose-600 mt-1 flex items-center gap-1 font-semibold">
+                <AlertCircle size={12} />
+                <span>{fieldErrors.orphan}</span>
+              </p>
+            )}
           </div>
 
           {/* 2. Select Sponsor (Who funds this orphan's package) */}
@@ -1450,42 +1595,106 @@ function AssignBeneficiaryModal({ open, onClose, program, orphans, sponsors, onA
 
           {/* 3. Delivery Method */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">طريقة التسليم</label>
+            <label className="block text-xs font-bold text-gray-700 mb-1">
+              طريقة ومقر التسليم <span className="text-rose-500 font-black">*</span>
+            </label>
             <select
+              required
               value={deliveryMethod}
-              onChange={(e) => setDeliveryMethod(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium text-gray-800 focus:outline-none focus:border-emerald-600 focus:bg-white transition cursor-pointer"
+              onChange={(e) => {
+                setDeliveryMethod(e.target.value);
+                setFieldErrors((prev) => ({ ...prev, deliveryMethod: '' }));
+              }}
+              className={`w-full px-3.5 py-2.5 bg-gray-50 border rounded-xl text-xs font-medium text-gray-800 focus:outline-none focus:border-emerald-600 focus:bg-white transition cursor-pointer ${
+                fieldErrors.deliveryMethod ? 'border-rose-500 bg-rose-50/40 ring-1 ring-rose-500' : 'border-gray-200'
+              }`}
             >
               <option value="من المقر">استلام مباشر من مقر المؤسسة</option>
               <option value="توصيل للمنزل">توصيل إلى منزل الأسرة</option>
               <option value="نقطة توزيع">تسليم عبر نقطة توزيع معتمدة</option>
               <option value="مندوب ميداني">تسليم عبر مندوب المنطقة</option>
             </select>
+            {fieldErrors.deliveryMethod && (
+              <p className="text-[11px] text-rose-600 mt-1 flex items-center gap-1 font-semibold">
+                <AlertCircle size={12} />
+                <span>{fieldErrors.deliveryMethod}</span>
+              </p>
+            )}
           </div>
 
           {/* 4. Receiver Info */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">اسم المستلم المتوقع</label>
+              <label className="block text-xs font-bold text-gray-700 mb-1">
+                اسم المستلم المتوقع <span className="text-rose-500 font-black">*</span>
+              </label>
               <input
                 type="text"
+                required
                 value={receiverName}
-                onChange={(e) => setReceiverName(e.target.value)}
+                onChange={(e) => {
+                  setReceiverName(e.target.value);
+                  setFieldErrors((prev) => ({ ...prev, receiverName: '' }));
+                }}
                 placeholder="اسم ولي الأمر أو الوصي"
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-emerald-600 focus:bg-white"
+                className={`w-full px-3 py-2 bg-gray-50 border rounded-xl text-xs focus:outline-none focus:border-emerald-600 focus:bg-white transition ${
+                  fieldErrors.receiverName ? 'border-rose-500 bg-rose-50/40 ring-1 ring-rose-500' : 'border-gray-200'
+                }`}
               />
+              {fieldErrors.receiverName && (
+                <p className="text-[11px] text-rose-600 mt-1 flex items-center gap-1 font-semibold">
+                  <AlertCircle size={12} />
+                  <span>{fieldErrors.receiverName}</span>
+                </p>
+              )}
             </div>
+
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">صلة القرابة</label>
-              <input
-                type="text"
+              <label className="block text-xs font-bold text-gray-700 mb-1">
+                صلة القرابة باليتيم <span className="text-rose-500 font-black">*</span>
+              </label>
+              <select
+                required
                 value={receiverRelation}
-                onChange={(e) => setReceiverRelation(e.target.value)}
-                placeholder="مثال: أم، أخ، عم"
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-emerald-600 focus:bg-white"
-              />
+                onChange={(e) => {
+                  setReceiverRelation(e.target.value);
+                  setFieldErrors((prev) => ({ ...prev, receiverRelation: '' }));
+                }}
+                className={`w-full px-3 py-2 bg-gray-50 border rounded-xl text-xs font-semibold text-gray-800 focus:outline-none focus:border-emerald-600 focus:bg-white transition cursor-pointer ${
+                  fieldErrors.receiverRelation ? 'border-rose-500 bg-rose-50/40 ring-1 ring-rose-500' : 'border-gray-200'
+                }`}
+              >
+                <option value="">-- اختر صلة القرابة --</option>
+                {KINSHIP_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              {fieldErrors.receiverRelation && (
+                <p className="text-[11px] text-rose-600 mt-1 flex items-center gap-1 font-semibold">
+                  <AlertCircle size={12} />
+                  <span>{fieldErrors.receiverRelation}</span>
+                </p>
+              )}
             </div>
           </div>
+
+          {/* If "أخرى" is chosen, show a custom relation input */}
+          {receiverRelation === 'أخرى' && (
+            <div className="animate-in fade-in">
+              <label className="block text-xs font-bold text-gray-700 mb-1">
+                حدد صلة القرابة <span className="text-rose-500 font-black">*</span>
+              </label>
+              <input
+                type="text"
+                value={customRelation}
+                onChange={(e) => setCustomRelation(e.target.value)}
+                placeholder="مثال: زوج الأخت، الجارة المتبنية..."
+                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-emerald-600 focus:bg-white"
+              />
+            </div>
+          )}
 
           {/* 5. Notes */}
           <div>
@@ -1524,12 +1733,16 @@ function AssignBeneficiaryModal({ open, onClose, program, orphans, sponsors, onA
   );
 }
 
+
 // ─────────────────────────────────────────────────────────────────────────────
 // COMPONENT: Modal توثيق استلام المساعدة العينية (Mark Delivery)
 // ─────────────────────────────────────────────────────────────────────────────
 function MarkDeliveryModal({ open, onClose, beneficiary, program, onDelivered, showToast }) {
   const [receiverName, setReceiverName] = useState(beneficiary.receiver_name || beneficiary.guardian_name || '');
-  const [receiverRelation, setReceiverRelation] = useState(beneficiary.receiver_relation || beneficiary.guardian_relation || 'أم');
+  const [receiverRelation, setReceiverRelation] = useState(
+    normalizeKinship(beneficiary.receiver_relation || beneficiary.guardian_relation) || 'أم'
+  );
+  const [customRelation, setCustomRelation] = useState('');
   const [deliveryMethod, setDeliveryMethod] = useState(beneficiary.delivery_method || 'من المقر');
   const [deliveredAt, setDeliveredAt] = useState(
     beneficiary.delivered_at
@@ -1537,21 +1750,39 @@ function MarkDeliveryModal({ open, onClose, beneficiary, program, onDelivered, s
       : new Date().toISOString().split('T')[0]
   );
   const [notes, setNotes] = useState(beneficiary.notes || '');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const errs = {};
     if (!receiverName.trim()) {
-      showToast('يرجى إدخال اسم المستلم الفعلي', 'error');
+      errs.receiverName = 'اسم المستلم الفعلي مطلوب';
+    }
+    const finalRelation = receiverRelation === 'أخرى' && customRelation.trim() ? customRelation.trim() : receiverRelation;
+    if (!finalRelation.trim()) {
+      errs.receiverRelation = 'يرجى تحديد صلة القرابة';
+    }
+    if (!deliveredAt) {
+      errs.deliveredAt = 'تاريخ الاستلام مطلوب';
+    }
+    if (!deliveryMethod) {
+      errs.deliveryMethod = 'طريقة ومقر الاستلام مطلوبة';
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      showToast('يرجى ملء جميع الحقول المطلوبة قبل الحفظ', 'error');
       return;
     }
+
     setSubmitting(true);
     try {
       await api.patch(`/in-kind/beneficiaries/${beneficiary.beneficiary_id}/deliver`, {
         status: 'delivered',
         deliveredAt,
         receiverName: receiverName.trim(),
-        receiverRelation: receiverRelation.trim(),
+        receiverRelation: finalRelation.trim(),
         deliveryMethod,
         notes: notes.trim() || null,
       });
@@ -1588,53 +1819,126 @@ function MarkDeliveryModal({ open, onClose, beneficiary, program, onDelivered, s
         <form onSubmit={handleSubmit} className="space-y-3.5">
           <div>
             <label className="block text-xs font-bold text-gray-700 mb-1">
-              اسم المستلم الفعلي <span className="text-rose-500">*</span>
+              اسم المستلم الفعلي <span className="text-rose-500 font-black">*</span>
             </label>
             <input
               type="text"
               required
               value={receiverName}
-              onChange={(e) => setReceiverName(e.target.value)}
+              onChange={(e) => {
+                setReceiverName(e.target.value);
+                setFieldErrors((prev) => ({ ...prev, receiverName: '' }));
+              }}
               placeholder="الاسم الثلاثي أو الرباعي للمستلم"
-              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-emerald-600 focus:bg-white"
+              className={`w-full px-3 py-2 bg-gray-50 border rounded-xl text-xs focus:outline-none focus:border-emerald-600 focus:bg-white transition ${
+                fieldErrors.receiverName ? 'border-rose-500 bg-rose-50/40 ring-1 ring-rose-500' : 'border-gray-200'
+              }`}
             />
+            {fieldErrors.receiverName && (
+              <p className="text-[11px] text-rose-600 mt-1 flex items-center gap-1 font-semibold">
+                <AlertCircle size={12} />
+                <span>{fieldErrors.receiverName}</span>
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">صلة القرابة</label>
-              <input
-                type="text"
+              <label className="block text-xs font-bold text-gray-700 mb-1">
+                صلة القرابة <span className="text-rose-500 font-black">*</span>
+              </label>
+              <select
+                required
                 value={receiverRelation}
-                onChange={(e) => setReceiverRelation(e.target.value)}
-                placeholder="أم، عم، خال..."
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-emerald-600 focus:bg-white"
-              />
+                onChange={(e) => {
+                  setReceiverRelation(e.target.value);
+                  setFieldErrors((prev) => ({ ...prev, receiverRelation: '' }));
+                }}
+                className={`w-full px-3 py-2 bg-gray-50 border rounded-xl text-xs font-semibold text-gray-800 focus:outline-none focus:border-emerald-600 focus:bg-white transition cursor-pointer ${
+                  fieldErrors.receiverRelation ? 'border-rose-500 bg-rose-50/40 ring-1 ring-rose-500' : 'border-gray-200'
+                }`}
+              >
+                <option value="">-- اختر صلة القرابة --</option>
+                {KINSHIP_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              {fieldErrors.receiverRelation && (
+                <p className="text-[11px] text-rose-600 mt-1 flex items-center gap-1 font-semibold">
+                  <AlertCircle size={12} />
+                  <span>{fieldErrors.receiverRelation}</span>
+                </p>
+              )}
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">تاريخ الاستلام</label>
+              <label className="block text-xs font-bold text-gray-700 mb-1">
+                تاريخ الاستلام <span className="text-rose-500 font-black">*</span>
+              </label>
               <input
                 type="date"
+                required
                 value={deliveredAt}
-                onChange={(e) => setDeliveredAt(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-emerald-600 focus:bg-white cursor-pointer"
+                onChange={(e) => {
+                  setDeliveredAt(e.target.value);
+                  setFieldErrors((prev) => ({ ...prev, deliveredAt: '' }));
+                }}
+                className={`w-full px-3 py-2 bg-gray-50 border rounded-xl text-xs focus:outline-none focus:border-emerald-600 focus:bg-white cursor-pointer ${
+                  fieldErrors.deliveredAt ? 'border-rose-500 bg-rose-50/40 ring-1 ring-rose-500' : 'border-gray-200'
+                }`}
               />
+              {fieldErrors.deliveredAt && (
+                <p className="text-[11px] text-rose-600 mt-1 flex items-center gap-1 font-semibold">
+                  <AlertCircle size={12} />
+                  <span>{fieldErrors.deliveredAt}</span>
+                </p>
+              )}
             </div>
           </div>
 
+          {receiverRelation === 'أخرى' && (
+            <div className="animate-in fade-in">
+              <label className="block text-xs font-bold text-gray-700 mb-1">
+                حدد صلة القرابة <span className="text-rose-500 font-black">*</span>
+              </label>
+              <input
+                type="text"
+                value={customRelation}
+                onChange={(e) => setCustomRelation(e.target.value)}
+                placeholder="صلة القرابة الفردية..."
+                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-emerald-600 focus:bg-white"
+              />
+            </div>
+          )}
+
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">طريقة ومقر الاستلام</label>
+            <label className="block text-xs font-bold text-gray-700 mb-1">
+              طريقة ومقر الاستلام <span className="text-rose-500 font-black">*</span>
+            </label>
             <select
+              required
               value={deliveryMethod}
-              onChange={(e) => setDeliveryMethod(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium text-gray-800 focus:outline-none focus:border-emerald-600 focus:bg-white cursor-pointer"
+              onChange={(e) => {
+                setDeliveryMethod(e.target.value);
+                setFieldErrors((prev) => ({ ...prev, deliveryMethod: '' }));
+              }}
+              className={`w-full px-3 py-2 bg-gray-50 border rounded-xl text-xs font-medium text-gray-800 focus:outline-none focus:border-emerald-600 focus:bg-white cursor-pointer ${
+                fieldErrors.deliveryMethod ? 'border-rose-500 bg-rose-50/40 ring-1 ring-rose-500' : 'border-gray-200'
+              }`}
             >
               <option value="من المقر">استلام مباشر من مقر المؤسسة</option>
               <option value="توصيل للمنزل">توصيل لمنزل الأسرة</option>
               <option value="نقطة توزيع">تسليم عبر مركز التوزيع المعتمد</option>
               <option value="مندوب ميداني">تسليم عبر مندوب المنطقة</option>
             </select>
+            {fieldErrors.deliveryMethod && (
+              <p className="text-[11px] text-rose-600 mt-1 flex items-center gap-1 font-semibold">
+                <AlertCircle size={12} />
+                <span>{fieldErrors.deliveryMethod}</span>
+              </p>
+            )}
           </div>
 
           <div>

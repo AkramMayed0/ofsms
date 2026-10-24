@@ -70,8 +70,21 @@ function deriveStatusLevels(status) {
 
 const GENDER_LABELS = { male: 'ذكر', female: 'أنثى' };
 const RELATION_LABELS = {
-  uncle: 'عم', maternal_uncle: 'خال', grandfather: 'جد',
-  sibling: 'أخ / أخت', other: 'أخرى',
+  uncle: 'عم',
+  paternal_uncle: 'عم',
+  maternal_uncle: 'خال',
+  paternal_aunt: 'عمة',
+  maternal_aunt: 'خالة',
+  grandfather: 'جد',
+  grandmother: 'جدة',
+  sibling: 'أخ / أخت',
+  brother: 'أخ',
+  sister: 'أخت',
+  mother: 'أم',
+  father: 'أب',
+  guardian: 'وصي شرعي',
+  legal_guardian: 'وصي شرعي',
+  other: 'أخرى',
 };
 
 const DOC_TYPE_CONFIG = {
@@ -366,7 +379,7 @@ export default function OrphanDetailPage() {
                     <InfoRow label="المندوب" value={orphan.agent_name} />
                     <InfoRow label="تاريخ التسجيل" value={formatDate(orphan.created_at)} />
                     <InfoRow label="اسم الوصي" value={orphan.guardian_name} />
-                    <InfoRow label="صلة الوصي" value={RELATION_LABELS[orphan.guardian_relation]} />
+                    <InfoRow label="صلة الوصي" value={RELATION_LABELS[orphan.guardian_relation] || orphan.guardian_relation || '—'} />
                   </div>
 
                   {orphan.notes && (

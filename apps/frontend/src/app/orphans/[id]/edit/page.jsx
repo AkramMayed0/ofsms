@@ -25,6 +25,46 @@ const GUARDIAN_RELATIONS = [
   { value: 'other',          label: 'أخرى' },
 ];
 
+const KINSHIP_OPTIONS = [
+  { value: 'أم', label: 'أم' },
+  { value: 'أب', label: 'أب' },
+  { value: 'أخ', label: 'أخ' },
+  { value: 'أخت', label: 'أخت' },
+  { value: 'عم', label: 'عم (أخ الأب)' },
+  { value: 'عمة', label: 'عمة (أخت الأب)' },
+  { value: 'خال', label: 'خال (أخ الأم)' },
+  { value: 'خالة', label: 'خالة (أخت الأم)' },
+  { value: 'جد', label: 'جد' },
+  { value: 'جدة', label: 'جدة' },
+  { value: 'ابن عم / قريب', label: 'ابن عم / قريب' },
+  { value: 'وصي شرعي', label: 'وصي شرعي / كافل قانوني' },
+  { value: 'زوج الأم / زوجة الأب', label: 'زوج الأم / زوجة الأب' },
+  { value: 'أخرى', label: 'صلة قرابة أخرى' },
+];
+
+const normalizeKinship = (val) => {
+  if (!val) return '';
+  const trimmed = String(val).trim().toLowerCase();
+  const map = {
+    maternal_uncle: 'خال',
+    maternal_aunt: 'خالة',
+    uncle: 'عم',
+    paternal_uncle: 'عم',
+    paternal_aunt: 'عمة',
+    mother: 'أم',
+    father: 'أب',
+    grandfather: 'جد',
+    grandmother: 'جدة',
+    sibling: 'أخ',
+    brother: 'أخ',
+    sister: 'أخت',
+    guardian: 'وصي شرعي',
+    legal_guardian: 'وصي شرعي',
+    other: 'أخرى',
+  };
+  return map[trimmed] || val;
+};
+
 const VALID_RELATIONS = ['uncle', 'maternal_uncle', 'grandfather', 'sibling', 'other'];
 const VALID_GENDERS   = ['male', 'female'];
 
@@ -135,9 +175,9 @@ export default function OrphanEditPage() {
           residence: p.residence || '',
           motherGovernorate: p.motherGovernorate || '',
           phone1: p.phone1 || '',
-          phone1Relation: p.phone1Relation || '',
+          phone1Relation: normalizeKinship(p.phone1Relation) || '',
           phone2: p.phone2 || '',
-          phone2Relation: p.phone2Relation || '',
+          phone2Relation: normalizeKinship(p.phone2Relation) || '',
           address: p.address || '',
           guardianAge: p.guardianAge || '',
           guardianEduLevel: p.guardianEduLevel || '',
@@ -497,10 +537,23 @@ export default function OrphanEditPage() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-[13px] font-semibold text-gray-700" htmlFor="phone1Relation">صلة القرابة <span className="text-red-600 mr-0.5">*</span></label>
-                  <Input id="phone1Relation" className="rounded-xl" placeholder="مثال: عم، خال، جد"
-                    error={errors.phone1Relation?.message}
-                    {...register('phone1Relation', { required: 'صلة القرابة مطلوبة' })} />
+                  <label className="text-[13px] font-semibold text-gray-700" htmlFor="phone1Relation">
+                    صلة القرابة <span className="text-red-600 mr-0.5">*</span>
+                  </label>
+                  <select
+                    id="phone1Relation"
+                    className={`w-full px-3.5 py-2.5 bg-gray-50 border rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:border-[#1B5E8C] focus:bg-white transition cursor-pointer ${
+                      errors.phone1Relation ? 'border-red-500 bg-red-50/50' : 'border-gray-200'
+                    }`}
+                    {...register('phone1Relation', { required: 'صلة القرابة مطلوبة' })}
+                  >
+                    <option value="">-- اختر صلة القرابة --</option>
+                    {KINSHIP_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
                   {errors.phone1Relation && <p className="text-xs text-red-600 m-0 before:content-['•'] before:ml-1">{errors.phone1Relation.message}</p>}
                 </div>
 
@@ -511,9 +564,21 @@ export default function OrphanEditPage() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-[13px] font-semibold text-gray-700" htmlFor="phone2Relation">صلة القرابة</label>
-                  <Input id="phone2Relation" className="rounded-xl" placeholder="مثال: عم، خال، جد"
-                    {...register('phone2Relation')} />
+                  <label className="text-[13px] font-semibold text-gray-700" htmlFor="phone2Relation">
+                    صلة القرابة
+                  </label>
+                  <select
+                    id="phone2Relation"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:border-[#1B5E8C] focus:bg-white transition cursor-pointer"
+                    {...register('phone2Relation')}
+                  >
+                    <option value="">-- اختر صلة القرابة (اختياري) --</option>
+                    {KINSHIP_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="flex flex-col gap-1 col-span-full">
