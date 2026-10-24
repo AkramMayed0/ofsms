@@ -62,6 +62,7 @@ app.use('/api/landing',          require('./modules/landing/landing.routes'));
 app.use('/api/in-kind',          require('./modules/in-kind/inKind.routes'));
 app.use('/api/educational',      require('./modules/educational/educational.routes'));
 app.use('/api/evaluations',      require('./modules/evaluations/evaluations.routes'));
+app.use('/api/settings',         require('./modules/settings/settings.routes'));
 
 // ── Global error handler ──────────────────────────────────────────────────────
 // eslint-disable-next-line no-unused-vars

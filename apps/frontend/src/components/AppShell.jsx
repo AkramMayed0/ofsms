@@ -21,7 +21,7 @@ import {
   LayoutDashboard, Users, Home, Tag, Handshake, Star,
   Map, UserCog, BookOpen, FileText, ClipboardList, ClipboardCheck,
   Plus, DollarSign, Archive, LogOut, ChevronRight, ChevronLeft, Menu, X, Megaphone,
-  Globe, ExternalLink, Package, GraduationCap,
+  Globe, ExternalLink, Package, GraduationCap, Settings,
 } from 'lucide-react';
 
 // ── Nav items per role ────────────────────────────────────────────────────────
@@ -88,6 +88,7 @@ const NAV_ITEMS = {
     {
       group: 'النظام',
       items: [
+        { label: 'إعدادات النظام', href: '/settings', icon: Settings },
         { label: 'إدارة المستخدمين', href: '/users', icon: UserCog },
       ],
     },
@@ -102,6 +103,7 @@ const NAV_ITEMS = {
     {
       group: 'الإدارة',
       items: [
+        { label: 'إعدادات النظام', href: '/settings',         icon: Settings },
         { label: 'تقييم الباحث الدوري', href: '/evaluations',   icon: ClipboardCheck },
         { label: 'طلبات التسجيل',      href: '/registrations', icon: ClipboardList },
         { label: 'برامج الدعم العيني', href: '/in-kind',       icon: Package },
@@ -194,8 +196,8 @@ const flatItems = (groups) => groups.flatMap((g) => g.items);
 
 const PUBLIC_PREFIXES = ['/login', '/sponsor/login', '/sponsor/portal', '/landing'];
 const ROLE_EXTRA_PATHS = {
-  gm: ['/ads', '/receipts/supervisor', '/landing-settings', '/landing', '/in-kind', '/educational', '/evaluations'],
-  supervisor: ['/receipts/supervisor', '/landing-settings', '/landing', '/in-kind', '/educational', '/evaluations'],
+  gm: ['/ads', '/receipts/supervisor', '/landing-settings', '/landing', '/in-kind', '/educational', '/evaluations', '/settings'],
+  supervisor: ['/receipts/supervisor', '/landing-settings', '/landing', '/in-kind', '/educational', '/evaluations', '/settings'],
   agent: ['/receipts/batch', '/in-kind', '/educational', '/evaluations'],
   finance: ['/in-kind', '/educational', '/evaluations'],
 };
