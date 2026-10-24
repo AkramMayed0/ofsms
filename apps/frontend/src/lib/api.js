@@ -102,8 +102,11 @@ api.interceptors.response.use(
       !originalRequest._retry &&
       typeof window !== 'undefined'
     ) {
-      if (originalRequest.url?.includes('/auth/login')) {
-        // Don't retry login itself
+      if (
+        originalRequest.url?.includes('/auth/login') ||
+        originalRequest.url?.includes('/auth/refresh')
+      ) {
+        // Don't retry login or refresh itself!
         return Promise.reject(error);
       }
 

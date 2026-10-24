@@ -37,6 +37,11 @@ export default function AuthBootstrap({ children }) {
       return;
     }
 
+    // Safety timeout: never hang on bootstrapping screen for more than 2.5s
+    const timeout = setTimeout(() => {
+      setBootstrapping(false);
+    }, 2500);
+
     // We have a user in sessionStorage but no token in memory.
     // This means the page was refreshed. Try to silently restore
     // the session using the httpOnly refreshToken cookie.
@@ -54,12 +59,15 @@ export default function AuthBootstrap({ children }) {
           console.info('OFSMS: Offline session preserved for offline browsing.');
           return;
         }
-        // Refresh token expired or invalid → force re-login
+        // Refresh token expired or invalid (e.g. cookie missing on IP access) → force re-login
         clearAuth();
       })
       .finally(() => {
+        clearTimeout(timeout);
         setBootstrapping(false);
       });
+
+    return () => clearTimeout(timeout);
   }, []); // run once on mount
 
   if (bootstrapping) {

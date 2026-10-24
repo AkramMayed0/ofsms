@@ -37,11 +37,33 @@ export default function HomePage() {
       // Fully authenticated — go to role-specific dashboard
       const dest = ROLE_DASHBOARD[user.role] || '/dashboard';
       router.replace(dest);
-    } else if (!accessToken && !user) {
+      return;
+    }
+
+    if (!user) {
       // No session at all → public landing page
       router.replace('/landing');
+      return;
     }
-    // If user exists but no token → AuthBootstrap is mid-refresh, wait
+
+    // If offline and user exists, proceed to dashboard with cached data
+    if (typeof navigator !== 'undefined' && !navigator.onLine && user) {
+      const dest = ROLE_DASHBOARD[user.role] || '/dashboard';
+      router.replace(dest);
+      return;
+    }
+
+    // Safety fallback: if 1.5s pass and still no token, proceed based on user
+    const timer = setTimeout(() => {
+      if (user) {
+        const dest = ROLE_DASHBOARD[user.role] || '/dashboard';
+        router.replace(dest);
+      } else {
+        router.replace('/landing');
+      }
+    }, 1500);
+
+    return () => clearTimeout(timer);
   }, [accessToken, user, router]);
 
   return (
