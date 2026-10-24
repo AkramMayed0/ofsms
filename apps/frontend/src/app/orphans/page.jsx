@@ -346,20 +346,13 @@ export default function OrphansListPage() {
                     >
                       {/* Name */}
                       <td className="p-3.5 align-middle">
-                        <div className="name-cell">
-                          <div className="avatar-sm">
-                            {orphan.full_name?.[0] || '؟'}
-                          </div>
-                          <div className="name-info">
-                            <span className="name-text">
-                              {orphan.full_name}
-                              {orphan.is_gifted && (
-                                <span className="text-amber-500 flex-shrink-0" title="موهوب">
-                                  <IconStar />
-                                </span>
-                              )}
+                        <div className="flex items-center gap-1.5 font-bold text-gray-800 text-[0.88rem]">
+                          <span>{orphan.full_name}</span>
+                          {orphan.is_gifted && (
+                            <span className="text-amber-500 flex-shrink-0" title="موهوب">
+                              <IconStar />
                             </span>
-                          </div>
+                          )}
                         </div>
                       </td>
 

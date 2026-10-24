@@ -226,16 +226,11 @@ export default function MyOrphansPage() {
                     aria-label={`عرض تفاصيل ${o.full_name}`}
                   >
                     <td className="px-5 py-3.5 text-[0.85rem] border-b border-slate-50 align-middle">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-primary-dark text-white flex items-center justify-center text-[0.9rem] font-bold flex-shrink-0">
-                          {o.full_name?.charAt(0) || '؟'}
-                        </div>
-                        <div>
-                          <div className="font-bold text-gray-800">{o.full_name}</div>
-                          {o.is_gifted && (
-                            <span className="inline-block text-[0.68rem] font-semibold text-amber-500 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 mt-0.5">🌟 موهوب</span>
-                          )}
-                        </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-gray-800">{o.full_name}</span>
+                        {o.is_gifted && (
+                          <span className="inline-block text-[0.68rem] font-semibold text-amber-500 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">🌟 موهوب</span>
+                        )}
                       </div>
                     </td>
                     <td className="px-5 py-3.5 text-[0.85rem] border-b border-slate-50 align-middle text-slate-500">{o.governorate_ar || '—'}</td>
