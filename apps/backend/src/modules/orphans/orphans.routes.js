@@ -46,8 +46,19 @@ const uploadFields = upload.fields([
 // ── Validation rules ──────────────────────────────────────────────────────────
 const createOrphanRules = [
   body('fullName')
+    .trim()
     .notEmpty().withMessage('الاسم الكامل مطلوب')
-    .matches(/^[\p{L}]+(?:[\s'-][\p{L}]+)+$/u).withMessage('الاسم يجب أن يكون ثنائياً على الأقل، ويحتوي على أحرف فقط'),
+    .custom((val) => {
+      const parts = val.trim().split(/\s+/).filter(Boolean);
+      if (parts.length < 2) {
+        throw new Error('الاسم يجب أن يكون ثنائياً على الأقل، ويحتوي على أحرف فقط');
+      }
+      const nameRegex = /^[\p{L}\p{M}]+(?:[-'ـ][\p{L}\p{M}]+)*$/u;
+      if (!parts.every((p) => nameRegex.test(p))) {
+        throw new Error('الاسم يجب أن يحتوي على أحرف فقط');
+      }
+      return true;
+    }),
 
   body('dateOfBirth')
     .notEmpty().withMessage('تاريخ الميلاد مطلوب')

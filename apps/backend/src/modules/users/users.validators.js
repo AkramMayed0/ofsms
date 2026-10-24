@@ -17,7 +17,7 @@ const createUserRules = [
   body('fullName')
     .trim()
     .notEmpty().withMessage('الاسم الكامل مطلوب')
-    .matches(/^[\p{L}\s'-]+$/u).withMessage('الاسم يجب أن يحتوي على أحرف فقط ولا يمكن أن يحتوي على أرقام'),
+    .matches(/^[\p{L}\p{M}\s'-]+$/u).withMessage('الاسم يجب أن يحتوي على أحرف فقط ولا يمكن أن يحتوي على أرقام'),
 
   body('email')
     .trim()
@@ -41,7 +41,7 @@ const updateUserRules = [
     .optional()
     .trim()
     .notEmpty().withMessage('الاسم لا يمكن أن يكون فارغاً')
-    .matches(/^[\p{L}\s'-]+$/u).withMessage('الاسم يجب أن يحتوي على أحرف فقط ولا يمكن أن يحتوي على أرقام'),
+    .matches(/^[\p{L}\p{M}\s'-]+$/u).withMessage('الاسم يجب أن يحتوي على أحرف فقط ولا يمكن أن يحتوي على أرقام'),
 
   body('phone').optional({ nullable: true }).isString(),
 

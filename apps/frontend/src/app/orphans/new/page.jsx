@@ -591,10 +591,18 @@ export default function OrphanRegistrationPage() {
                   placeholder="مثال: محمد أحمد علي"
                   {...register('fullName', {
                     required: 'الاسم الكامل مطلوب',
-                    pattern: {
-                      value: /^[\p{L}]+(?:[\s'-][\p{L}]+)+$/u,
-                      message: 'الاسم يجب أن يكون ثنائياً على الأقل، ويحتوي على أحرف فقط'
-                    }
+                    validate: (v) => {
+                      if (!v || !v.trim()) return 'الاسم الكامل مطلوب';
+                      const parts = v.trim().split(/\s+/).filter(Boolean);
+                      if (parts.length < 2) {
+                        return 'الاسم يجب أن يكون ثنائياً على الأقل، ويحتوي على أحرف فقط';
+                      }
+                      const nameRegex = /^[\p{L}\p{M}]+(?:[-'ـ][\p{L}\p{M}]+)*$/u;
+                      if (!parts.every((p) => nameRegex.test(p))) {
+                        return 'الاسم يجب أن يحتوي على أحرف فقط';
+                      }
+                      return true;
+                    },
                   })}
                 />
                 {errors.fullName && <p className={CLS_FERR}>{errors.fullName.message}</p>}
