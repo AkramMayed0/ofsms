@@ -19,7 +19,7 @@ import api from '../lib/api';
 import NotificationBell from './NotificationBell';
 import {
   LayoutDashboard, Users, Home, Tag, Handshake, Star,
-  Map, UserCog, BookOpen, FileText, ClipboardList,
+  Map, UserCog, BookOpen, FileText, ClipboardList, ClipboardCheck,
   Plus, DollarSign, Archive, LogOut, ChevronRight, ChevronLeft, Menu, X, Megaphone,
   Globe, ExternalLink, Package, GraduationCap,
 } from 'lucide-react';
@@ -39,6 +39,7 @@ const NAV_ITEMS = {
         { label: 'الأيتام',            href: '/orphans',         icon: Users },
         { label: 'الأسر',              href: '/families',        icon: Home },
         { label: 'أيتامي',             href: '/my-orphans',      icon: Users },
+        { label: 'تقييم الباحث الدوري', href: '/evaluations',     icon: ClipboardCheck },
         { label: 'برامج الدعم العيني', href: '/in-kind',         icon: Package },
         { label: 'البرامج التربوية والتوعوية', href: '/educational', icon: GraduationCap },
         { label: 'الأيتام الموهوبون',  href: '/orphans/gifted',  icon: Star },
@@ -101,6 +102,7 @@ const NAV_ITEMS = {
     {
       group: 'الإدارة',
       items: [
+        { label: 'تقييم الباحث الدوري', href: '/evaluations',   icon: ClipboardCheck },
         { label: 'طلبات التسجيل',      href: '/registrations', icon: ClipboardList },
         { label: 'برامج الدعم العيني', href: '/in-kind',       icon: Package },
         { label: 'البرامج التربوية والتوعوية', href: '/educational', icon: GraduationCap },
@@ -132,6 +134,7 @@ const NAV_ITEMS = {
       items: [
         { label: 'لوحة التحكم', href: '/dashboard',  icon: LayoutDashboard },
         { label: 'أيتامي',      href: '/my-orphans', icon: Users },
+        { label: 'تقييم الباحث الدوري', href: '/evaluations', icon: ClipboardCheck },
         { label: 'البرامج التربوية والتوعوية', href: '/educational', icon: GraduationCap },
       ],
     },
@@ -191,10 +194,10 @@ const flatItems = (groups) => groups.flatMap((g) => g.items);
 
 const PUBLIC_PREFIXES = ['/login', '/sponsor/login', '/sponsor/portal', '/landing'];
 const ROLE_EXTRA_PATHS = {
-  gm: ['/ads', '/receipts/supervisor', '/landing-settings', '/landing', '/in-kind', '/educational'],
-  supervisor: ['/receipts/supervisor', '/landing-settings', '/landing', '/in-kind', '/educational'],
-  agent: ['/receipts/batch', '/in-kind', '/educational'],
-  finance: ['/in-kind', '/educational'],
+  gm: ['/ads', '/receipts/supervisor', '/landing-settings', '/landing', '/in-kind', '/educational', '/evaluations'],
+  supervisor: ['/receipts/supervisor', '/landing-settings', '/landing', '/in-kind', '/educational', '/evaluations'],
+  agent: ['/receipts/batch', '/in-kind', '/educational', '/evaluations'],
+  finance: ['/in-kind', '/educational', '/evaluations'],
 };
 
 const roleCanAccessPath = (role, pathname) => {
