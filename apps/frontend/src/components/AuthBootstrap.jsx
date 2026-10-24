@@ -46,7 +46,14 @@ export default function AuthBootstrap({ children }) {
         // Restore token — keep the user object we already have
         setAuth(data.accessToken, user);
       })
-      .catch(() => {
+      .catch((err) => {
+        // If offline or network unavailable, do NOT force logout! Keep user so they can view cached data
+        const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
+        const isNetworkErr = !err.response || err.code === 'ERR_NETWORK';
+        if (isOffline || isNetworkErr) {
+          console.info('OFSMS: Offline session preserved for offline browsing.');
+          return;
+        }
         // Refresh token expired or invalid → force re-login
         clearAuth();
       })

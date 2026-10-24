@@ -626,7 +626,7 @@ export default function ReportsPage() {
 
   return (
     <AppShell>
-      <div dir="rtl" className="font-sans h-[calc(100vh-80px)] flex flex-col gap-4">
+      <div dir="rtl" className="font-sans min-h-[calc(100vh-80px)] flex flex-col gap-4 pb-6">
 
         {/* Page header */}
         <div className="flex items-start justify-between flex-wrap gap-3">

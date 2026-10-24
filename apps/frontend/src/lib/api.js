@@ -8,6 +8,7 @@
  */
 
 import axios from 'axios';
+import { saveOfflineData, getOfflineData, isOnline } from './offlineStorage';
 
 // Lazy import to avoid circular deps / SSR issues
 let getStore;
@@ -22,8 +23,16 @@ const api = axios.create({
   withCredentials: true, // send httpOnly refreshToken cookie on every request
 });
 
-// ── Request interceptor: attach access token from Zustand ────────────────────
+// ── Request interceptor: attach token & check offline mutation ───────────────
 api.interceptors.request.use((config) => {
+  // If mutation (POST/PUT/DELETE) and client is offline, intercept immediately
+  const method = (config.method || 'get').toLowerCase();
+  if (method !== 'get' && typeof window !== 'undefined' && !isOnline()) {
+    const offlineErr = new Error('أنت في وضع عدم الاتصال بالإنترنت. يلزم توفر اتصال بالإنترنت لإرسال أو رفع البيانات إلى قاعدة البيانات.');
+    offlineErr.isOffline = true;
+    return Promise.reject(offlineErr);
+  }
+
   if (typeof window !== 'undefined' && getStore) {
     const token = getStore().accessToken;
     if (token) config.headers.Authorization = `Bearer ${token}`;
@@ -31,7 +40,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// ── Response interceptor: try silent token refresh on 401 ────────────────────
+// ── Response interceptor: cache GETs & fallback to cache on network error ───
 let isRefreshing = false;
 let failedQueue  = [];
 
@@ -44,10 +53,39 @@ const processQueue = (error, token = null) => {
 };
 
 api.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    // If successful GET request, cache the response data for offline access
+    const method = (res.config?.method || 'get').toLowerCase();
+    if (method === 'get' && res.data && typeof window !== 'undefined') {
+      saveOfflineData(res.config.url || '', res.config.params, res.data);
+    }
+    return res;
+  },
   async (error) => {
     const originalRequest = error.config;
+    if (!originalRequest) return Promise.reject(error);
 
+    const method = (originalRequest.method || 'get').toLowerCase();
+
+    // ── Offline Fallback for GET requests ───────────────────────────────────
+    const isNetworkError = !error.response || error.code === 'ERR_NETWORK';
+    if (method === 'get' && (isNetworkError || !isOnline()) && typeof window !== 'undefined') {
+      const cached = getOfflineData(originalRequest.url || '', originalRequest.params);
+      if (cached && cached.data) {
+        console.info(`📦 OFSMS [Offline Mode]: Serving cached data for ${originalRequest.url}`);
+        return Promise.resolve({
+          data: cached.data,
+          status: 200,
+          statusText: 'OK (Offline Cache)',
+          headers: {},
+          config: originalRequest,
+          fromOfflineCache: true,
+          cachedAt: cached.cachedAt,
+        });
+      }
+    }
+
+    // ── 401 Silent Refresh ──────────────────────────────────────────────────
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
@@ -87,9 +125,11 @@ api.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null);
 
-        // Refresh also failed → clear session and go to login
-        if (getStore) getStore().clearAuth();
-        window.location.href = '/login';
+        // If offline, do NOT clear session so user can continue offline
+        if (isOnline()) {
+          if (getStore) getStore().clearAuth();
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
