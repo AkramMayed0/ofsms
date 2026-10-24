@@ -17,14 +17,25 @@ if (typeof window !== 'undefined') {
   getStore = () => require('../store/useAuthStore').default.getState();
 }
 
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host && host !== 'localhost' && host !== '127.0.0.1') {
+      return `http://${host}:4000/api`;
+    }
+  }
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+};
+
 const api = axios.create({
-  baseURL:         process.env.NEXT_PUBLIC_API_URL,
+  baseURL:         getApiBaseUrl(),
   headers:         { 'Content-Type': 'application/json' },
   withCredentials: true, // send httpOnly refreshToken cookie on every request
 });
 
 // ── Request interceptor: attach token & check offline mutation ───────────────
 api.interceptors.request.use((config) => {
+  config.baseURL = getApiBaseUrl();
   // If mutation (POST/PUT/DELETE) and client is offline, intercept immediately
   const method = (config.method || 'get').toLowerCase();
   if (method !== 'get' && typeof window !== 'undefined' && !isOnline()) {

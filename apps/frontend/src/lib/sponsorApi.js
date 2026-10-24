@@ -12,13 +12,24 @@ if (typeof window !== 'undefined') {
   getStore = () => require('@/store/useSponsorStore').default.getState();
 }
 
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host && host !== 'localhost' && host !== '127.0.0.1') {
+      return `http://${host}:4000/api`;
+    }
+  }
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+};
+
 const sponsorApi = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: getApiBaseUrl(),
   headers: { 'Content-Type': 'application/json' },
 });
 
 // Attach sponsor Bearer token
 sponsorApi.interceptors.request.use((config) => {
+  config.baseURL = getApiBaseUrl();
   if (typeof window !== 'undefined' && getStore) {
     const token = getStore().accessToken;
     if (token) config.headers.Authorization = `Bearer ${token}`;
