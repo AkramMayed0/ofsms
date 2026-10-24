@@ -96,7 +96,7 @@ export default function LandingSettingsPage() {
       aria-checked={checked}
       onClick={() => onChange(!checked)}
       className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-        checked ? 'bg-emerald-600' : 'bg-gray-200'
+        checked ? 'bg-[#1B5E8C]' : 'bg-gray-200'
       }`}
     >
       <span
@@ -125,7 +125,7 @@ export default function LandingSettingsPage() {
         {/* Top Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-emerald-800">
+            <h1 className="text-xl sm:text-2xl font-bold text-[#1B5E8C]">
               إدارة الموقع التعريفي
             </h1>
             <p className="text-xs text-gray-500 mt-1">
@@ -181,7 +181,7 @@ export default function LandingSettingsPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-4 py-1.5 text-xs font-semibold rounded-full whitespace-nowrap transition-all duration-150 ${
                   isActive
-                    ? 'bg-white text-emerald-800 border border-emerald-600 shadow-xs'
+                    ? 'bg-[#1B5E8C] text-white shadow-xs'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
                 }`}
               >
@@ -235,7 +235,7 @@ export default function LandingSettingsPage() {
               <button
                 onClick={() => handleSave('sections')}
                 disabled={saving}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-xs transition active:scale-95 disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold shadow-[0_2px_8px_rgba(27,94,140,0.25)] transition active:scale-95 disabled:opacity-50"
               >
                 <Save size={15} />
                 <span>{saving ? 'جارٍ الحفظ…' : 'حفظ التغييرات'}</span>
@@ -262,7 +262,7 @@ export default function LandingSettingsPage() {
                         className="w-full h-full object-contain p-1"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white font-black text-sm shadow-inner">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#1B5E8C] to-[#2E7EB8] flex items-center justify-center text-white font-black text-sm shadow-inner">
                         نماء
                       </div>
                     )}
@@ -334,7 +334,7 @@ export default function LandingSettingsPage() {
                     hero: { ...content.hero, foundationName: e.target.value },
                   })
                 }
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C]"
               />
             </div>
 
@@ -352,7 +352,7 @@ export default function LandingSettingsPage() {
                   })
                 }
                 placeholder="شعار المؤسسة اللفظي"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C]"
               />
             </div>
 
@@ -369,7 +369,7 @@ export default function LandingSettingsPage() {
                     hero: { ...content.hero, shortBio: e.target.value },
                   })
                 }
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C]"
               />
             </div>
 
@@ -387,7 +387,7 @@ export default function LandingSettingsPage() {
                       hero: { ...content.hero, ctaText: e.target.value },
                     })
                   }
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C]"
                 />
               </div>
 
@@ -404,7 +404,7 @@ export default function LandingSettingsPage() {
                       hero: { ...content.hero, ctaLink: e.target.value },
                     })
                   }
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 ltr text-right"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C] ltr text-right"
                 />
               </div>
             </div>
@@ -422,7 +422,7 @@ export default function LandingSettingsPage() {
                     hero: { ...content.hero, loginText: e.target.value },
                   })
                 }
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C]"
               />
             </div>
 
@@ -443,7 +443,7 @@ export default function LandingSettingsPage() {
               <button
                 onClick={() => handleSave('hero')}
                 disabled={saving}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-xs transition active:scale-95 disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold shadow-[0_2px_8px_rgba(27,94,140,0.25)] transition active:scale-95 disabled:opacity-50"
               >
                 <Save size={15} />
                 <span>{saving ? 'جارٍ الحفظ…' : 'حفظ التغييرات'}</span>
@@ -513,7 +513,7 @@ export default function LandingSettingsPage() {
                     about: { ...content.about, aboutText: e.target.value },
                   })
                 }
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C]"
               />
             </div>
 
@@ -530,7 +530,7 @@ export default function LandingSettingsPage() {
                     about: { ...content.about, vision: e.target.value },
                   })
                 }
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C]"
               />
             </div>
 
@@ -547,7 +547,7 @@ export default function LandingSettingsPage() {
                     about: { ...content.about, mission: e.target.value },
                   })
                 }
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C]"
               />
             </div>
 
@@ -564,7 +564,7 @@ export default function LandingSettingsPage() {
                     about: { ...content.about, values: e.target.value },
                   })
                 }
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-mono text-xs leading-relaxed"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C] font-mono text-xs leading-relaxed"
               />
             </div>
 
@@ -572,7 +572,7 @@ export default function LandingSettingsPage() {
               <button
                 onClick={() => handleSave('about')}
                 disabled={saving}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-xs transition active:scale-95 disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold shadow-[0_2px_8px_rgba(27,94,140,0.25)] transition active:scale-95 disabled:opacity-50"
               >
                 <Save size={15} />
                 <span>{saving ? 'جارٍ الحفظ…' : 'حفظ التغييرات'}</span>
@@ -603,7 +603,7 @@ export default function LandingSettingsPage() {
                     stats: [...(content.stats || []), newStat],
                   });
                 }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition shadow-xs"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold transition shadow-[0_2px_8px_rgba(27,94,140,0.25)]"
               >
                 <Plus size={14} />
                 <span>إضافة</span>
@@ -628,7 +628,7 @@ export default function LandingSettingsPage() {
                         updated[idx].title = e.target.value;
                         setContent({ ...content, stats: updated });
                       }}
-                      className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs font-semibold focus:outline-none focus:border-emerald-500"
+                      className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs font-semibold focus:outline-none focus:border-[#1B5E8C]"
                     />
                   </div>
 
@@ -644,7 +644,7 @@ export default function LandingSettingsPage() {
                         updated[idx].value = e.target.value;
                         setContent({ ...content, stats: updated });
                       }}
-                      className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-emerald-800 focus:outline-none focus:border-emerald-500 text-center"
+                      className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-[#1B5E8C] focus:outline-none focus:border-[#1B5E8C] text-center"
                     />
                   </div>
 
@@ -660,7 +660,7 @@ export default function LandingSettingsPage() {
                         updated[idx].description = e.target.value;
                         setContent({ ...content, stats: updated });
                       }}
-                      className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-emerald-500"
+                      className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-[#1B5E8C]"
                     />
                   </div>
 
@@ -693,7 +693,7 @@ export default function LandingSettingsPage() {
               <button
                 onClick={() => handleSave('stats')}
                 disabled={saving}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-xs transition active:scale-95 disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold shadow-[0_2px_8px_rgba(27,94,140,0.25)] transition active:scale-95 disabled:opacity-50"
               >
                 <Save size={15} />
                 <span>{saving ? 'جارٍ الحفظ…' : 'حفظ التغييرات'}</span>
@@ -725,7 +725,7 @@ export default function LandingSettingsPage() {
                     programs: [...(content.programs || []), newProg],
                   });
                 }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition shadow-xs"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold transition shadow-[0_2px_8px_rgba(27,94,140,0.25)]"
               >
                 <Plus size={14} />
                 <span>إضافة برنامج</span>
@@ -747,7 +747,7 @@ export default function LandingSettingsPage() {
                         updated[idx].title = e.target.value;
                         setContent({ ...content, programs: updated });
                       }}
-                      className="font-bold text-sm text-gray-800 border-b border-dashed border-gray-300 pb-1 w-full focus:outline-none focus:border-emerald-600"
+                      className="font-bold text-sm text-gray-800 border-b border-dashed border-gray-300 pb-1 w-full focus:outline-none focus:border-[#1B5E8C]"
                     />
                     <div className="flex items-center gap-2">
                       <Switch
@@ -782,7 +782,7 @@ export default function LandingSettingsPage() {
                           updated[idx].category = e.target.value;
                           setContent({ ...content, programs: updated });
                         }}
-                        className="w-full text-xs px-2.5 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:border-emerald-500"
+                        className="w-full text-xs px-2.5 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:border-[#1B5E8C]"
                       />
                     </div>
                     <div>
@@ -795,7 +795,7 @@ export default function LandingSettingsPage() {
                           updated[idx].beneficiaries = e.target.value;
                           setContent({ ...content, programs: updated });
                         }}
-                        className="w-full text-xs px-2.5 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:border-emerald-500"
+                        className="w-full text-xs px-2.5 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:border-[#1B5E8C]"
                       />
                     </div>
                   </div>
@@ -810,7 +810,7 @@ export default function LandingSettingsPage() {
                         updated[idx].description = e.target.value;
                         setContent({ ...content, programs: updated });
                       }}
-                      className="w-full text-xs px-2.5 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:border-emerald-500"
+                      className="w-full text-xs px-2.5 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:border-[#1B5E8C]"
                     />
                   </div>
                 </div>
@@ -821,7 +821,7 @@ export default function LandingSettingsPage() {
               <button
                 onClick={() => handleSave('programs')}
                 disabled={saving}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-xs transition active:scale-95 disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold shadow-[0_2px_8px_rgba(27,94,140,0.25)] transition active:scale-95 disabled:opacity-50"
               >
                 <Save size={15} />
                 <span>{saving ? 'جارٍ الحفظ…' : 'حفظ التغييرات'}</span>
@@ -852,7 +852,7 @@ export default function LandingSettingsPage() {
                     news: [...(content.news || []), newArticle],
                   });
                 }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition shadow-xs"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold transition shadow-[0_2px_8px_rgba(27,94,140,0.25)]"
               >
                 <Plus size={14} />
                 <span>إضافة خبر</span>
@@ -874,7 +874,7 @@ export default function LandingSettingsPage() {
                         updated[idx].title = e.target.value;
                         setContent({ ...content, news: updated });
                       }}
-                      className="font-bold text-sm text-gray-800 border-b border-dashed border-gray-300 pb-1 w-full focus:outline-none focus:border-emerald-600"
+                      className="font-bold text-sm text-gray-800 border-b border-dashed border-gray-300 pb-1 w-full focus:outline-none focus:border-[#1B5E8C]"
                     />
                     <div className="flex items-center gap-2">
                       <Switch
@@ -920,7 +920,7 @@ export default function LandingSettingsPage() {
                       setContent({ ...content, news: updated });
                     }}
                     placeholder="ملخص الخبر…"
-                    className="w-full text-xs px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-emerald-500"
+                    className="w-full text-xs px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#1B5E8C]"
                   />
                 </div>
               ))}
@@ -930,7 +930,7 @@ export default function LandingSettingsPage() {
               <button
                 onClick={() => handleSave('news')}
                 disabled={saving}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-xs transition active:scale-95 disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold shadow-[0_2px_8px_rgba(27,94,140,0.25)] transition active:scale-95 disabled:opacity-50"
               >
                 <Save size={15} />
                 <span>{saving ? 'جارٍ الحفظ…' : 'حفظ التغييرات'}</span>
@@ -960,7 +960,7 @@ export default function LandingSettingsPage() {
                     gallery: [...(content.gallery || []), newImg],
                   });
                 }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition shadow-xs"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold transition shadow-[0_2px_8px_rgba(27,94,140,0.25)]"
               >
                 <Plus size={14} />
                 <span>إضافة صورة</span>
@@ -1022,7 +1022,7 @@ export default function LandingSettingsPage() {
               <button
                 onClick={() => handleSave('gallery')}
                 disabled={saving}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-xs transition active:scale-95 disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold shadow-[0_2px_8px_rgba(27,94,140,0.25)] transition active:scale-95 disabled:opacity-50"
               >
                 <Save size={15} />
                 <span>{saving ? 'جارٍ الحفظ…' : 'حفظ التغييرات'}</span>
@@ -1052,7 +1052,7 @@ export default function LandingSettingsPage() {
                     achievements: [...(content.achievements || []), newAch],
                   });
                 }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition shadow-xs"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold transition shadow-[0_2px_8px_rgba(27,94,140,0.25)]"
               >
                 <Plus size={14} />
                 <span>إضافة إنجاز</span>
@@ -1073,7 +1073,7 @@ export default function LandingSettingsPage() {
                       updated[idx].year = e.target.value;
                       setContent({ ...content, achievements: updated });
                     }}
-                    className="w-20 text-center font-bold text-sm text-emerald-800 bg-emerald-50 py-2 rounded-xl border border-emerald-200"
+                    className="w-20 text-center font-bold text-sm text-[#1B5E8C] bg-blue-50 py-2 rounded-xl border border-blue-200"
                   />
                   <div className="flex-1 space-y-1">
                     <input
@@ -1115,7 +1115,7 @@ export default function LandingSettingsPage() {
               <button
                 onClick={() => handleSave('achievements')}
                 disabled={saving}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-xs transition active:scale-95 disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold shadow-[0_2px_8px_rgba(27,94,140,0.25)] transition active:scale-95 disabled:opacity-50"
               >
                 <Save size={15} />
                 <span>{saving ? 'جارٍ الحفظ…' : 'حفظ التغييرات'}</span>
@@ -1144,7 +1144,7 @@ export default function LandingSettingsPage() {
                     partners: [...(content.partners || []), newPartner],
                   });
                 }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition shadow-xs"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold transition shadow-[0_2px_8px_rgba(27,94,140,0.25)]"
               >
                 <Plus size={14} />
                 <span>إضافة شريك</span>
@@ -1197,7 +1197,7 @@ export default function LandingSettingsPage() {
               <button
                 onClick={() => handleSave('partners')}
                 disabled={saving}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-xs transition active:scale-95 disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold shadow-[0_2px_8px_rgba(27,94,140,0.25)] transition active:scale-95 disabled:opacity-50"
               >
                 <Save size={15} />
                 <span>{saving ? 'جارٍ الحفظ…' : 'حفظ التغييرات'}</span>
@@ -1227,7 +1227,7 @@ export default function LandingSettingsPage() {
                       contact: { ...content.contact, phone: e.target.value },
                     })
                   }
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm ltr text-right focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm ltr text-right focus:outline-none focus:border-[#1B5E8C]"
                 />
               </div>
 
@@ -1244,7 +1244,7 @@ export default function LandingSettingsPage() {
                       contact: { ...content.contact, mobile: e.target.value },
                     })
                   }
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm ltr text-right focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm ltr text-right focus:outline-none focus:border-[#1B5E8C]"
                 />
               </div>
             </div>
@@ -1263,7 +1263,7 @@ export default function LandingSettingsPage() {
                       contact: { ...content.contact, email: e.target.value },
                     })
                   }
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm ltr text-right focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm ltr text-right focus:outline-none focus:border-[#1B5E8C]"
                 />
               </div>
 
@@ -1280,7 +1280,7 @@ export default function LandingSettingsPage() {
                       contact: { ...content.contact, workingHours: e.target.value },
                     })
                   }
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#1B5E8C]"
                 />
               </div>
             </div>
@@ -1298,7 +1298,7 @@ export default function LandingSettingsPage() {
                     contact: { ...content.contact, address: e.target.value },
                   })
                 }
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#1B5E8C]"
               />
             </div>
 
@@ -1327,7 +1327,7 @@ export default function LandingSettingsPage() {
                           },
                         })
                       }
-                      className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs ltr text-right focus:outline-none focus:border-emerald-500"
+                      className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs ltr text-right focus:outline-none focus:border-[#1B5E8C]"
                     />
                   </div>
                 ))}
@@ -1338,7 +1338,7 @@ export default function LandingSettingsPage() {
               <button
                 onClick={() => handleSave('contact')}
                 disabled={saving}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-xs transition active:scale-95 disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold shadow-[0_2px_8px_rgba(27,94,140,0.25)] transition active:scale-95 disabled:opacity-50"
               >
                 <Save size={15} />
                 <span>{saving ? 'جارٍ الحفظ…' : 'حفظ التغييرات'}</span>

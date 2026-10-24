@@ -171,22 +171,22 @@ export default function PublicLandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 selection:bg-emerald-100 selection:text-emerald-900" dir="rtl">
+    <div className="min-h-screen bg-slate-50 text-slate-800 selection:bg-blue-100 selection:text-[#134569]" dir="rtl">
       {/* ── 1. Top Navbar ── */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           {/* Logo & Brand */}
           <Link href="/landing" className="flex items-center gap-3 group">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-400 p-0.5 shadow-md shadow-emerald-600/20 group-hover:scale-105 transition">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#1B5E8C] via-[#2E7EB8] to-sky-400 p-0.5 shadow-md shadow-[#1B5E8C]/20 group-hover:scale-105 transition">
               <div className="w-full h-full bg-white rounded-[14px] flex items-center justify-center">
-                <span className="text-emerald-700 font-black text-xl tracking-tighter">نماء</span>
+                <span className="text-[#1B5E8C] font-black text-xl tracking-tighter">نماء</span>
               </div>
             </div>
             <div className="flex flex-col">
-              <span className="text-base font-black text-slate-900 group-hover:text-emerald-700 transition">
+              <span className="text-base font-black text-slate-900 group-hover:text-[#1B5E8C] transition">
                 {hero.foundationName || 'مؤسسة نماء التنموية الخيرية'}
               </span>
-              <span className="text-[11px] text-emerald-600 font-semibold tracking-wide">
+              <span className="text-[11px] text-[#1B5E8C] font-semibold tracking-wide">
                 ريادة في التمكين وبناء الإنسان
               </span>
             </div>
@@ -194,14 +194,14 @@ export default function PublicLandingPage() {
 
           {/* Desktop Nav Links */}
           <nav className="hidden lg:flex items-center gap-7 text-xs font-bold text-slate-600">
-            {sections.hero && <a href="#hero" className="hover:text-emerald-600 transition">الرئيسية</a>}
-            {sections.about && <a href="#about" className="hover:text-emerald-600 transition">من نحن</a>}
-            {sections.stats && <a href="#stats" className="hover:text-emerald-600 transition">أرقامنا</a>}
-            {sections.programs && <a href="#programs" className="hover:text-emerald-600 transition">برامجنا</a>}
-            {sections.news && <a href="#news" className="hover:text-emerald-600 transition">الأخبار</a>}
-            {sections.achievements && <a href="#achievements" className="hover:text-emerald-600 transition">الإنجازات</a>}
-            {sections.partners && <a href="#partners" className="hover:text-emerald-600 transition">شركاؤنا</a>}
-            {sections.contact && <a href="#contact" className="hover:text-emerald-600 transition">تواصل معنا</a>}
+            {sections.hero && <a href="#hero" className="hover:text-[#1B5E8C] transition">الرئيسية</a>}
+            {sections.about && <a href="#about" className="hover:text-[#1B5E8C] transition">من نحن</a>}
+            {sections.stats && <a href="#stats" className="hover:text-[#1B5E8C] transition">أرقامنا</a>}
+            {sections.programs && <a href="#programs" className="hover:text-[#1B5E8C] transition">برامجنا</a>}
+            {sections.news && <a href="#news" className="hover:text-[#1B5E8C] transition">الأخبار</a>}
+            {sections.achievements && <a href="#achievements" className="hover:text-[#1B5E8C] transition">الإنجازات</a>}
+            {sections.partners && <a href="#partners" className="hover:text-[#1B5E8C] transition">شركاؤنا</a>}
+            {sections.contact && <a href="#contact" className="hover:text-[#1B5E8C] transition">تواصل معنا</a>}
           </nav>
 
           {/* Action Button */}
@@ -209,7 +209,7 @@ export default function PublicLandingPage() {
             {user ? (
               <Link
                 href="/dashboard"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-md shadow-emerald-700/20 hover:-translate-y-0.5 active:scale-95 transition"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold shadow-md shadow-[#1B5E8C]/20 hover:-translate-y-0.5 active:scale-95 transition"
               >
                 <LayoutDashboard size={15} />
                 <span>لوحة التحكم ({user.name?.split(' ')[0]})</span>
@@ -217,7 +217,7 @@ export default function PublicLandingPage() {
             ) : (
               <Link
                 href="/login"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white text-xs font-bold shadow-md shadow-emerald-700/20 hover:-translate-y-0.5 active:scale-95 transition"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold shadow-md shadow-[#1B5E8C]/20 hover:-translate-y-0.5 active:scale-95 transition"
               >
                 <LogIn size={15} />
                 <span>{hero.loginText || 'دخول النظام'}</span>
@@ -246,7 +246,7 @@ export default function PublicLandingPage() {
             <div className="pt-3 border-t border-slate-100">
               <Link
                 href={user ? '/dashboard' : '/login'}
-                className="block text-center py-2.5 rounded-xl bg-emerald-700 text-white text-xs font-bold"
+                className="block text-center py-2.5 rounded-xl bg-gradient-to-r from-[#1B5E8C] to-[#134569] text-white text-xs font-bold"
               >
                 {user ? 'لوحة التحكم' : 'دخول النظام'}
               </Link>
@@ -257,15 +257,15 @@ export default function PublicLandingPage() {
 
       {/* ── 2. Hero Section ── */}
       {sections.hero && (
-        <section id="hero" className="relative overflow-hidden pt-12 pb-20 lg:pt-20 lg:pb-32 bg-gradient-to-b from-white via-emerald-50/20 to-slate-50">
-          <div className="absolute top-0 right-0 -mt-12 -mr-12 w-96 h-96 rounded-full bg-emerald-100/50 blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 -mb-12 -ml-12 w-96 h-96 rounded-full bg-teal-100/40 blur-3xl pointer-events-none" />
+        <section id="hero" className="relative overflow-hidden pt-12 pb-20 lg:pt-20 lg:pb-32 bg-gradient-to-b from-white via-blue-50/25 to-slate-50">
+          <div className="absolute top-0 right-0 -mt-12 -mr-12 w-96 h-96 rounded-full bg-blue-100/50 blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 -mb-12 -ml-12 w-96 h-96 rounded-full bg-sky-100/40 blur-3xl pointer-events-none" />
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
             <div className="text-center max-w-3xl mx-auto space-y-6">
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100/80 border border-emerald-200/60 text-emerald-800 text-xs font-bold shadow-xs">
-                <Sparkles size={14} className="text-emerald-600" />
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50/80 border border-blue-200/60 text-[#1B5E8C] text-xs font-bold shadow-xs">
+                <Sparkles size={14} className="text-[#1B5E8C]" />
                 <span>مؤسسة تنموية خيرية رائدة</span>
               </div>
 
@@ -275,7 +275,7 @@ export default function PublicLandingPage() {
               </h1>
 
               {/* Slogan */}
-              <p className="text-base sm:text-xl font-bold text-emerald-800 leading-relaxed">
+              <p className="text-base sm:text-xl font-bold text-[#1B5E8C] leading-relaxed">
                 {hero.slogan}
               </p>
 
@@ -289,7 +289,7 @@ export default function PublicLandingPage() {
                 {hero.showCta && (
                   <a
                     href={hero.ctaLink || '#about'}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-bold shadow-lg shadow-emerald-700/25 hover:-translate-y-0.5 transition active:scale-95"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-sm font-bold shadow-lg shadow-[#1B5E8C]/25 hover:-translate-y-0.5 transition active:scale-95"
                   >
                     <span>{hero.ctaText || 'تعرف علينا'}</span>
                     <ArrowUpLeft size={16} />
@@ -300,7 +300,7 @@ export default function PublicLandingPage() {
                   href={user ? '/dashboard' : '/login'}
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-sm font-bold shadow-sm hover:-translate-y-0.5 transition active:scale-95"
                 >
-                  <LogIn size={16} className="text-emerald-700" />
+                  <LogIn size={16} className="text-[#1B5E8C]" />
                   <span>{user ? 'لوحة التحكم' : hero.loginText || 'دخول النظام'}</span>
                 </Link>
               </div>
@@ -314,7 +314,7 @@ export default function PublicLandingPage() {
         <section id="stats" className="py-16 bg-white border-y border-slate-200/70">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <span className="text-xs font-black uppercase tracking-widest text-emerald-600">أثرنا في الميدان</span>
+              <span className="text-xs font-black uppercase tracking-widest text-[#1B5E8C]">أثرنا في الميدان</span>
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">أرقام وإحصائيات نعتز بها</h2>
             </div>
 
@@ -322,9 +322,9 @@ export default function PublicLandingPage() {
               {stats.map((item, idx) => (
                 <div
                   key={item.id || idx}
-                  className="p-5 rounded-3xl bg-slate-50 border border-slate-200/80 text-center hover:shadow-md hover:border-emerald-200 transition-all group"
+                  className="p-5 rounded-3xl bg-slate-50 border border-slate-200/80 text-center hover:shadow-md hover:border-blue-200 transition-all group"
                 >
-                  <div className="text-2xl sm:text-3xl font-black text-emerald-700 group-hover:scale-105 transition-transform duration-200">
+                  <div className="text-2xl sm:text-3xl font-black text-[#1B5E8C] group-hover:scale-105 transition-transform duration-200">
                     {item.value}
                   </div>
                   <h3 className="text-xs sm:text-sm font-bold text-slate-800 mt-2 mb-1">
@@ -345,7 +345,7 @@ export default function PublicLandingPage() {
         <section id="about" className="py-20 bg-slate-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
             <div className="max-w-3xl mx-auto text-center space-y-3">
-              <span className="text-xs font-black uppercase tracking-widest text-emerald-600">هويتنا ومبادئنا</span>
+              <span className="text-xs font-black uppercase tracking-widest text-[#1B5E8C]">هويتنا ومبادئنا</span>
               <h2 className="text-2xl sm:text-4xl font-black text-slate-900">نبذة عن المؤسسة</h2>
               <p className="text-sm sm:text-base text-slate-600 leading-relaxed pt-2">
                 {about.aboutText}
@@ -355,8 +355,8 @@ export default function PublicLandingPage() {
             {/* Vision, Mission, Values Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Vision */}
-              <div className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-xs hover:border-emerald-300 transition space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+              <div className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-xs hover:border-blue-200 transition space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#1B5E8C] flex items-center justify-center font-bold">
                   <Sparkles size={22} />
                 </div>
                 <h3 className="text-base font-black text-slate-900">الرؤية</h3>
@@ -366,8 +366,8 @@ export default function PublicLandingPage() {
               </div>
 
               {/* Mission */}
-              <div className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-xs hover:border-emerald-300 transition space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center font-bold">
+              <div className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-xs hover:border-blue-200 transition space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#1B5E8C] flex items-center justify-center font-bold">
                   <Heart size={22} />
                 </div>
                 <h3 className="text-base font-black text-slate-900">الرسالة</h3>
@@ -377,8 +377,8 @@ export default function PublicLandingPage() {
               </div>
 
               {/* Values */}
-              <div className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-xs hover:border-emerald-300 transition space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+              <div className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-xs hover:border-blue-200 transition space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#1B5E8C] flex items-center justify-center font-bold">
                   <ShieldCheck size={22} />
                 </div>
                 <h3 className="text-base font-black text-slate-900">القيم المؤسسية</h3>
@@ -396,7 +396,7 @@ export default function PublicLandingPage() {
         <section id="programs" className="py-20 bg-white border-t border-slate-200/70">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
             <div className="text-center max-w-2xl mx-auto">
-              <span className="text-xs font-black uppercase tracking-widest text-emerald-600">خدماتنا المجتمعية</span>
+              <span className="text-xs font-black uppercase tracking-widest text-[#1B5E8C]">خدماتنا المجتمعية</span>
               <h2 className="text-2xl sm:text-4xl font-black text-slate-900 mt-1">البرامج والمشاريع</h2>
               <p className="text-xs sm:text-sm text-slate-500 mt-2">
                 مبادرات مستدامة مصممة لسد الاحتياجات الأساسية وتحقيق التمكين الحقيقي للأسر
@@ -407,10 +407,10 @@ export default function PublicLandingPage() {
               {programs.map((prog, idx) => (
                 <div
                   key={prog.id || idx}
-                  className="p-6 rounded-3xl bg-slate-50 border border-slate-200/80 hover:bg-white hover:border-emerald-300 hover:shadow-lg transition-all duration-200 flex flex-col justify-between"
+                  className="p-6 rounded-3xl bg-slate-50 border border-slate-200/80 hover:bg-white hover:border-blue-200 hover:shadow-lg transition-all duration-200 flex flex-col justify-between"
                 >
                   <div className="space-y-3">
-                    <span className="inline-block px-3 py-1 rounded-full bg-emerald-100/70 text-emerald-800 text-[10px] font-bold">
+                    <span className="inline-block px-3 py-1 rounded-full bg-blue-100/70 text-[#1B5E8C] text-[10px] font-bold">
                       {prog.category}
                     </span>
                     <h3 className="text-base font-bold text-slate-900">
@@ -422,7 +422,7 @@ export default function PublicLandingPage() {
                   </div>
                   <div className="pt-4 border-t border-slate-200/60 mt-4 flex items-center justify-between text-xs">
                     <span className="text-slate-400 font-medium">المستهدفون:</span>
-                    <span className="font-bold text-emerald-700">{prog.beneficiaries}</span>
+                    <span className="font-bold text-[#1B5E8C]">{prog.beneficiaries}</span>
                   </div>
                 </div>
               ))}
@@ -436,7 +436,7 @@ export default function PublicLandingPage() {
         <section id="news" className="py-20 bg-slate-50 border-t border-slate-200/70">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
             <div className="text-center max-w-2xl mx-auto">
-              <span className="text-xs font-black uppercase tracking-widest text-emerald-600">التحديثات والأنشطة</span>
+              <span className="text-xs font-black uppercase tracking-widest text-[#1B5E8C]">التحديثات والأنشطة</span>
               <h2 className="text-2xl sm:text-4xl font-black text-slate-900 mt-1">أحدث الأخبار والفعاليات</h2>
             </div>
 
@@ -444,10 +444,10 @@ export default function PublicLandingPage() {
               {news.map((item, idx) => (
                 <div
                   key={item.id || idx}
-                  className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-xs hover:border-emerald-300 transition space-y-3 flex flex-col justify-between"
+                  className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-xs hover:border-blue-200 transition space-y-3 flex flex-col justify-between"
                 >
                   <div className="space-y-2">
-                    <span className="text-[11px] font-bold text-emerald-600">{item.date}</span>
+                    <span className="text-[11px] font-bold text-[#1B5E8C]">{item.date}</span>
                     <h3 className="text-sm sm:text-base font-bold text-slate-900 leading-snug">
                       {item.title}
                     </h3>
@@ -467,7 +467,7 @@ export default function PublicLandingPage() {
         <section id="achievements" className="py-16 bg-white border-t border-slate-200/70">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
             <div className="text-center">
-              <span className="text-xs font-black uppercase tracking-widest text-emerald-600">محطات النجاح</span>
+              <span className="text-xs font-black uppercase tracking-widest text-[#1B5E8C]">محطات النجاح</span>
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">إنجازاتنا البارزة</h2>
             </div>
 
@@ -475,9 +475,9 @@ export default function PublicLandingPage() {
               {achievements.map((ach, idx) => (
                 <div
                   key={ach.id || idx}
-                  className="p-6 rounded-3xl bg-emerald-50/50 border border-emerald-100 flex items-start gap-4"
+                  className="p-6 rounded-3xl bg-blue-50/40 border border-blue-100 flex items-start gap-4"
                 >
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-700 text-white font-black text-sm flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 rounded-2xl bg-[#1B5E8C] text-white font-black text-sm flex items-center justify-center flex-shrink-0">
                     {ach.year}
                   </div>
                   <div>
@@ -496,7 +496,7 @@ export default function PublicLandingPage() {
         <section id="partners" className="py-16 bg-slate-50 border-t border-slate-200/70">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
             <div>
-              <span className="text-xs font-black uppercase tracking-widest text-emerald-600">التكامل والتعاون</span>
+              <span className="text-xs font-black uppercase tracking-widest text-[#1B5E8C]">التكامل والتعاون</span>
               <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">شركاء النجاح</h2>
             </div>
 
@@ -507,7 +507,7 @@ export default function PublicLandingPage() {
                   className="px-6 py-4 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col items-center"
                 >
                   <span className="text-xs font-bold text-slate-800">{p.name}</span>
-                  <span className="text-[10px] text-emerald-600 font-semibold mt-0.5">{p.category}</span>
+                  <span className="text-[10px] text-[#1B5E8C] font-semibold mt-0.5">{p.category}</span>
                 </div>
               ))}
             </div>
@@ -520,7 +520,7 @@ export default function PublicLandingPage() {
         <section id="contact" className="py-20 bg-slate-900 text-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
             <div className="text-center max-w-2xl mx-auto space-y-2">
-              <span className="text-xs font-black uppercase tracking-widest text-emerald-400">يسعدنا تواصلكم</span>
+              <span className="text-xs font-black uppercase tracking-widest text-sky-400">يسعدنا تواصلكم</span>
               <h2 className="text-2xl sm:text-4xl font-black text-white">تواصل معنا</h2>
               <p className="text-xs sm:text-sm text-slate-400">
                 فريق مؤسسة نماء على أتم الاستعداد للإجابة على استفساراتكم واستقبال الداعمين والكفلاء
@@ -529,7 +529,7 @@ export default function PublicLandingPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 space-y-2">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-sky-400 flex items-center justify-center font-bold">
                   <Phone size={18} />
                 </div>
                 <h3 className="text-xs font-bold text-slate-400">الهاتف والجوال</h3>
@@ -538,7 +538,7 @@ export default function PublicLandingPage() {
               </div>
 
               <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 space-y-2">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-sky-400 flex items-center justify-center font-bold">
                   <Mail size={18} />
                 </div>
                 <h3 className="text-xs font-bold text-slate-400">البريد الإلكتروني</h3>
@@ -546,7 +546,7 @@ export default function PublicLandingPage() {
               </div>
 
               <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 space-y-2">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-sky-400 flex items-center justify-center font-bold">
                   <MapPin size={18} />
                 </div>
                 <h3 className="text-xs font-bold text-slate-400">العنوان والمقر</h3>
@@ -554,7 +554,7 @@ export default function PublicLandingPage() {
               </div>
 
               <div className="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/60 space-y-2">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-sky-400 flex items-center justify-center font-bold">
                   <Clock size={18} />
                 </div>
                 <h3 className="text-xs font-bold text-slate-400">ساعات الدوام</h3>
@@ -574,9 +574,9 @@ export default function PublicLandingPage() {
           </div>
 
           <div className="flex items-center gap-5">
-            <Link href="/login" className="hover:text-emerald-400 transition font-medium">دخول النظام</Link>
-            <Link href="/sponsor/portal?token=portal_demo_sponsor_token_04" className="hover:text-emerald-400 transition font-medium">بوابة الكافل</Link>
-            <Link href="/landing-settings" className="hover:text-emerald-400 transition font-medium">إدارة المحتوى</Link>
+            <Link href="/login" className="hover:text-sky-400 transition font-medium">دخول النظام</Link>
+            <Link href="/sponsor/portal?token=portal_demo_sponsor_token_04" className="hover:text-sky-400 transition font-medium">بوابة الكافل</Link>
+            <Link href="/landing-settings" className="hover:text-sky-400 transition font-medium">إدارة المحتوى</Link>
           </div>
         </div>
       </footer>

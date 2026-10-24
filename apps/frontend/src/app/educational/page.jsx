@@ -251,13 +251,13 @@ export default function EducationalPage() {
               ? 'bg-rose-50 text-rose-800 border-rose-200'
               : toast.type === 'info'
               ? 'bg-blue-50 text-blue-800 border-blue-200'
-              : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+              : 'bg-blue-50 text-[#1B5E8C] border-blue-200'
           }`}
         >
           {toast.type === 'error' ? (
             <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />
           ) : (
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+            <CheckCircle2 className="w-5 h-5 text-[#1B5E8C] flex-shrink-0" />
           )}
           <span>{toast.message}</span>
           <button
@@ -273,12 +273,12 @@ export default function EducationalPage() {
         {/* ── Top Header with Brand & Navigation ─────────────────────────────── */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200/80">
           <div>
-            <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full w-fit mb-2 border border-emerald-200">
+            <div className="flex items-center gap-2 text-xs font-semibold text-[#1B5E8C] bg-blue-50 px-3 py-1 rounded-full w-fit mb-2 border border-blue-200">
               <Sparkles className="w-3.5 h-3.5" />
               <span>مؤسسة نماء التنموية الخيرية — رعاية وتأهيل الأيتام</span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-gradient-to-br from-emerald-600 to-teal-700 text-white rounded-2xl shadow-md shadow-emerald-500/20">
+              <div className="p-2.5 bg-gradient-to-br from-[#1B5E8C] to-[#134569] text-white rounded-2xl shadow-md shadow-[0_4px_12px_rgba(27,94,140,0.25)]">
                 <GraduationCap className="w-7 h-7" />
               </div>
               <div>
@@ -303,7 +303,7 @@ export default function EducationalPage() {
             <button
               onClick={fetchAll}
               disabled={loading}
-              className="p-2.5 text-slate-500 hover:text-emerald-700 bg-white hover:bg-emerald-50 border border-slate-200 rounded-xl transition shadow-sm"
+              className="p-2.5 text-slate-500 hover:text-[#1B5E8C] bg-white hover:bg-blue-50 border border-slate-200 rounded-xl transition shadow-sm"
               title="تحديث البيانات"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -314,34 +314,34 @@ export default function EducationalPage() {
         {/* ── KPI Metric Highlights ─────────────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden group hover:shadow-md transition">
-            <div className="absolute top-0 right-0 w-2 h-full bg-emerald-500" />
+            <div className="absolute top-0 right-0 w-2 h-full bg-[#1B5E8C]" />
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-semibold text-slate-500">إجمالي البرامج المنفذة</p>
                 <p className="text-2xl font-bold text-slate-900 mt-1">{stats.totalPrograms}</p>
               </div>
-              <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <div className="w-11 h-11 rounded-xl bg-blue-50 text-[#1B5E8C] flex items-center justify-center">
                 <GraduationCap className="w-6 h-6" />
               </div>
             </div>
             <div className="mt-3 flex items-center gap-2 text-xs text-slate-400">
-              <span className="text-emerald-600 font-semibold">{stats.completedPrograms}</span> مكتمل بنجاح
+              <span className="text-[#1B5E8C] font-semibold">{stats.completedPrograms}</span> مكتمل بنجاح
             </div>
           </div>
 
           <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden group hover:shadow-md transition">
-            <div className="absolute top-0 right-0 w-2 h-full bg-teal-500" />
+            <div className="absolute top-0 right-0 w-2 h-full bg-[#2E7EB8]" />
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-semibold text-slate-500">البرامج الجارية والنشطة</p>
                 <p className="text-2xl font-bold text-slate-900 mt-1">{stats.activePrograms}</p>
               </div>
-              <div className="w-11 h-11 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center">
+              <div className="w-11 h-11 rounded-xl bg-sky-50 text-sky-700 flex items-center justify-center">
                 <Clock className="w-6 h-6" />
               </div>
             </div>
-            <div className="mt-3 flex items-center gap-1.5 text-xs text-teal-700 font-medium">
-              <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
+            <div className="mt-3 flex items-center gap-1.5 text-xs text-sky-700 font-medium">
+              <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse" />
               قيد التنفيذ حالياً
             </div>
           </div>
@@ -392,7 +392,7 @@ export default function EducationalPage() {
             >
               <GraduationCap className="w-4 h-4" />
               <span>البرامج والأنشطة</span>
-              <span className={`px-2 py-0.5 text-xs rounded-full ${activeTab === 'programs' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}`}>
+              <span className={`px-2 py-0.5 text-xs rounded-full ${activeTab === 'programs' ? 'bg-blue-100 text-[#1B5E8C] font-bold' : 'bg-slate-200 text-slate-600'}`}>
                 {programs.length}
               </span>
             </button>
@@ -407,7 +407,7 @@ export default function EducationalPage() {
             >
               <BookMarked className="w-4 h-4" />
               <span>القوالب</span>
-              <span className={`px-2 py-0.5 text-xs rounded-full ${activeTab === 'templates' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}`}>
+              <span className={`px-2 py-0.5 text-xs rounded-full ${activeTab === 'templates' ? 'bg-blue-100 text-[#1B5E8C] font-bold' : 'bg-slate-200 text-slate-600'}`}>
                 {templates.length}
               </span>
             </button>
@@ -421,7 +421,7 @@ export default function EducationalPage() {
                   setEditingProgram(null);
                   setCreateProgramModalOpen(true);
                 }}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-md shadow-emerald-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white font-bold text-sm rounded-xl shadow-[0_4px_12px_rgba(27,94,140,0.35)] transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 <Plus className="w-4 h-4" />
                 <span>برنامج جديد +</span>
@@ -434,7 +434,7 @@ export default function EducationalPage() {
                   setEditingTemplate(null);
                   setCreateTemplateModalOpen(true);
                 }}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-md shadow-emerald-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white font-bold text-sm rounded-xl shadow-[0_4px_12px_rgba(27,94,140,0.35)] transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 <Plus className="w-4 h-4" />
                 <span>قالب جديد +</span>
@@ -463,7 +463,7 @@ export default function EducationalPage() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="...بحث بالاسم، المكان أو الوصف"
-                  className="w-full pr-10 pl-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
+                  className="w-full pr-10 pl-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C] transition"
                 />
                 {search && (
                   <button
@@ -480,7 +480,7 @@ export default function EducationalPage() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
+                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C] transition"
                 >
                   <option value="all">كل الحالات</option>
                   <option value="draft">مسودة</option>
@@ -495,7 +495,7 @@ export default function EducationalPage() {
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
+                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C] transition"
                 >
                   <option value="all">كل التصنيفات</option>
                   {categories.map((c) => (
@@ -510,7 +510,7 @@ export default function EducationalPage() {
             {/* Programs Cards Grid */}
             {loading ? (
               <div className="py-20 flex flex-col items-center justify-center gap-3">
-                <Spinner size="lg" className="text-emerald-600" />
+                <Spinner size="lg" className="text-[#1B5E8C]" />
                 <p className="text-sm font-medium text-slate-500">جاري تحميل البرامج التربوية...</p>
               </div>
             ) : filteredPrograms.length === 0 ? (
@@ -528,7 +528,7 @@ export default function EducationalPage() {
                       setEditingProgram(null);
                       setCreateProgramModalOpen(true);
                     }}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl transition shadow-sm"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white font-bold text-sm rounded-xl transition shadow-[0_2px_8px_rgba(27,94,140,0.25)]"
                   >
                     <Plus className="w-4 h-4" />
                     <span>إضافة برنامج جديد</span>
@@ -543,11 +543,11 @@ export default function EducationalPage() {
                     <div
                       key={prog.id}
                       onClick={() => openProgramDetails(prog.id)}
-                      className="group bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer flex flex-col justify-between relative overflow-hidden"
+                      className="group bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm hover:shadow-md hover:border-[#1B5E8C]/50 transition-all cursor-pointer flex flex-col justify-between relative overflow-hidden"
                     >
                       {/* Top Row: Category subtitle & Status Badge */}
                       <div className="flex items-center justify-between gap-2 mb-3">
-                        <span className="text-xs font-semibold text-emerald-700 bg-emerald-50/80 px-2.5 py-0.5 rounded-md border border-emerald-100">
+                        <span className="text-xs font-semibold text-[#1B5E8C] bg-blue-50 px-2.5 py-0.5 rounded-md border border-blue-100">
                           {prog.category_name || 'عام'}
                         </span>
                         <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${statusConf.badge}`}>
@@ -557,7 +557,7 @@ export default function EducationalPage() {
 
                       {/* Title */}
                       <div className="mb-4">
-                        <h3 className="text-base font-bold text-slate-900 group-hover:text-emerald-700 transition leading-snug">
+                        <h3 className="text-base font-bold text-slate-900 group-hover:text-[#1B5E8C] transition leading-snug">
                           {prog.title}
                         </h3>
                         {prog.notes && (
@@ -592,7 +592,7 @@ export default function EducationalPage() {
                           <span className="font-medium text-slate-600">
                             الجلسات: <span className="font-bold text-slate-900">{prog.total_sessions || 1}</span>
                           </span>
-                          <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100">
+                          <span className="inline-flex items-center gap-1 font-semibold text-[#1B5E8C] bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100">
                             <Users className="w-3.5 h-3.5" />
                             <span>{prog.participant_count || 0} مشارك</span>
                           </span>
@@ -622,7 +622,7 @@ export default function EducationalPage() {
 
             {loading ? (
               <div className="py-20 flex flex-col items-center justify-center gap-3">
-                <Spinner size="lg" className="text-emerald-600" />
+                <Spinner size="lg" className="text-[#1B5E8C]" />
                 <p className="text-sm font-medium text-slate-500">جاري تحميل القوالب...</p>
               </div>
             ) : templates.length === 0 ? (
@@ -640,7 +640,7 @@ export default function EducationalPage() {
                       setEditingTemplate(null);
                       setCreateTemplateModalOpen(true);
                     }}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl transition shadow-sm"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white font-bold text-sm rounded-xl transition shadow-[0_2px_8px_rgba(27,94,140,0.25)]"
                   >
                     <Plus className="w-4 h-4" />
                     <span>إنشاء قالب جديد</span>
@@ -657,7 +657,7 @@ export default function EducationalPage() {
                     <div>
                       {/* Top: Category Pill & Usage Count */}
                       <div className="flex items-center justify-between gap-2 mb-2.5">
-                        <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-100">
+                        <span className="text-xs font-semibold text-[#1B5E8C] bg-blue-50 px-2.5 py-0.5 rounded-md border border-blue-100">
                           {tmpl.category_name || 'عام'}
                         </span>
                         {tmpl.usage_count > 0 && (
@@ -668,7 +668,7 @@ export default function EducationalPage() {
                       </div>
 
                       {/* Title */}
-                      <h3 className="text-base font-bold text-slate-900 group-hover:text-emerald-700 transition">
+                      <h3 className="text-base font-bold text-slate-900 group-hover:text-[#1B5E8C] transition">
                         {tmpl.title}
                       </h3>
 
@@ -700,7 +700,7 @@ export default function EducationalPage() {
                     <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
                       <button
                         onClick={() => handleUseTemplate(tmpl)}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-sm hover:scale-[1.01]"
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold rounded-xl transition shadow-[0_2px_8px_rgba(27,94,140,0.25)] hover:scale-[1.01]"
                       >
                         <GraduationCap className="w-3.5 h-3.5" />
                         <span>استخدام القالب</span>
@@ -713,7 +713,7 @@ export default function EducationalPage() {
                               setEditingTemplate(tmpl);
                               setCreateTemplateModalOpen(true);
                             }}
-                            className="p-2 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition"
+                            className="p-2 text-slate-400 hover:text-[#1B5E8C] hover:bg-blue-50 rounded-lg transition"
                             title="تعديل القالب"
                           >
                             <Edit3 className="w-4 h-4" />
@@ -745,7 +745,7 @@ export default function EducationalPage() {
             {/* Modal Header */}
             <div className="p-6 bg-slate-50/80 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-emerald-100 text-emerald-700 rounded-2xl">
+                <div className="p-2.5 bg-blue-50 text-[#1B5E8C] rounded-2xl">
                   <GraduationCap className="w-6 h-6" />
                 </div>
                 <div>
@@ -756,7 +756,7 @@ export default function EducationalPage() {
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    التصنيف: <span className="font-semibold text-emerald-700">{selectedProgram.category_name || 'عام'}</span>
+                    التصنيف: <span className="font-semibold text-[#1B5E8C]">{selectedProgram.category_name || 'عام'}</span>
                     {selectedProgram.instructor_name && (
                       <span className="mr-3">المدرب: <span className="font-medium text-slate-700">{selectedProgram.instructor_name}</span></span>
                     )}
@@ -779,7 +779,7 @@ export default function EducationalPage() {
                         showToast('تعذر اعتماد البرنامج', 'error');
                       }
                     }}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold rounded-xl shadow-[0_2px_8px_rgba(27,94,140,0.25)] transition"
                   >
                     <CheckCircle2 className="w-4 h-4" />
                     <span>اعتماد البرنامج</span>
@@ -798,7 +798,7 @@ export default function EducationalPage() {
                         showToast('تعذر إكمال البرنامج', 'error');
                       }
                     }}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold rounded-xl shadow-[0_2px_8px_rgba(27,94,140,0.25)] transition"
                   >
                     <CheckCircle2 className="w-4 h-4" />
                     <span>إتمام البرنامج</span>
@@ -855,8 +855,8 @@ export default function EducationalPage() {
               </div>
 
               {selectedProgram.notes && (
-                <div className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100 text-xs text-slate-700 leading-relaxed">
-                  <span className="font-bold text-emerald-900 block mb-1">وصف البرنامج وملاحظات:</span>
+                <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100 text-xs text-slate-700 leading-relaxed">
+                  <span className="font-bold text-[#1B5E8C] block mb-1">وصف البرنامج وملاحظات:</span>
                   {selectedProgram.notes}
                 </div>
               )}
@@ -865,7 +865,7 @@ export default function EducationalPage() {
               <div className="space-y-4 pt-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="p-1.5 bg-emerald-50 text-emerald-700 rounded-lg">
+                    <div className="p-1.5 bg-blue-50 text-[#1B5E8C] rounded-lg">
                       <Users className="w-5 h-5" />
                     </div>
                     <h3 className="text-base font-bold text-slate-900">المشاركون</h3>
@@ -877,7 +877,7 @@ export default function EducationalPage() {
                   {canManage && (
                     <button
                       onClick={() => setAddParticipantsModalOpen(true)}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold rounded-xl shadow-[0_2px_8px_rgba(27,94,140,0.25)] transition"
                     >
                       <Plus className="w-4 h-4" />
                       <span>إضافة مشاركين +</span>
@@ -918,7 +918,7 @@ export default function EducationalPage() {
                               <td className="py-3 px-4 font-bold text-slate-900">
                                 <Link
                                   href={`/orphans/${part.orphan_id}`}
-                                  className="hover:text-emerald-700 hover:underline"
+                                  className="hover:text-[#1B5E8C] hover:underline"
                                 >
                                   {part.orphan_name}
                                 </Link>
@@ -947,7 +947,7 @@ export default function EducationalPage() {
                                           showToast('تعذر تحديث الحضور', 'error');
                                         }
                                       }}
-                                      className="p-1 text-emerald-600 hover:bg-emerald-50 rounded"
+                                      className="p-1 text-[#1B5E8C] hover:bg-blue-50 rounded font-bold"
                                       title="زيادة جلسة حضور"
                                     >
                                       +1
@@ -1320,7 +1320,7 @@ function ProgramFormModal({ program, categories, templates, onClose, onSuccess }
               className={`w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 ${
                 formErrors.title
                   ? 'border-rose-400 focus:ring-rose-200'
-                  : 'border-slate-200 focus:ring-emerald-500/20 focus:border-emerald-500'
+                  : 'border-slate-200 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C]'
               }`}
             />
             {formErrors.title && <p className="text-xs text-rose-500 mt-1">{formErrors.title}</p>}
@@ -1338,7 +1338,7 @@ function ProgramFormModal({ program, categories, templates, onClose, onSuccess }
                 className={`w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 ${
                   formErrors.categoryId
                     ? 'border-rose-400 focus:ring-rose-200'
-                    : 'border-slate-200 focus:ring-emerald-500/20 focus:border-emerald-500'
+                    : 'border-slate-200 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C]'
                 }`}
               >
                 <option value="">— اختر التصنيف —</option>
@@ -1358,7 +1358,7 @@ function ProgramFormModal({ program, categories, templates, onClose, onSuccess }
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C]"
               >
                 <option value="draft">مسودة</option>
                 <option value="active">نشط ومستمر</option>
@@ -1382,7 +1382,7 @@ function ProgramFormModal({ program, categories, templates, onClose, onSuccess }
                 className={`w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 ${
                   formErrors.location
                     ? 'border-rose-400 focus:ring-rose-200'
-                    : 'border-slate-200 focus:ring-emerald-500/20 focus:border-emerald-500'
+                    : 'border-slate-200 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C]'
                 }`}
               />
               {formErrors.location && <p className="text-xs text-rose-500 mt-1">{formErrors.location}</p>}
@@ -1397,7 +1397,7 @@ function ProgramFormModal({ program, categories, templates, onClose, onSuccess }
                 value={instructorName}
                 onChange={(e) => setInstructorName(e.target.value)}
                 placeholder="مثال: م. إبراهيم الصلوي"
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C]"
               />
             </div>
           </div>
@@ -1415,7 +1415,7 @@ function ProgramFormModal({ program, categories, templates, onClose, onSuccess }
                 className={`w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 ${
                   formErrors.startDate
                     ? 'border-rose-400 focus:ring-rose-200'
-                    : 'border-slate-200 focus:ring-emerald-500/20 focus:border-emerald-500'
+                    : 'border-slate-200 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C]'
                 }`}
               />
               {formErrors.startDate && <p className="text-xs text-rose-500 mt-1">{formErrors.startDate}</p>}
@@ -1432,7 +1432,7 @@ function ProgramFormModal({ program, categories, templates, onClose, onSuccess }
                 className={`w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 ${
                   formErrors.endDate
                     ? 'border-rose-400 focus:ring-rose-200'
-                    : 'border-slate-200 focus:ring-emerald-500/20 focus:border-emerald-500'
+                    : 'border-slate-200 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C]'
                 }`}
               />
               {formErrors.endDate && <p className="text-xs text-rose-500 mt-1">{formErrors.endDate}</p>}
@@ -1453,7 +1453,7 @@ function ProgramFormModal({ program, categories, templates, onClose, onSuccess }
                 className={`w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 ${
                   formErrors.totalSessions
                     ? 'border-rose-400 focus:ring-rose-200'
-                    : 'border-slate-200 focus:ring-emerald-500/20 focus:border-emerald-500'
+                    : 'border-slate-200 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C]'
                 }`}
               />
               {formErrors.totalSessions && <p className="text-xs text-rose-500 mt-1">{formErrors.totalSessions}</p>}
@@ -1471,7 +1471,7 @@ function ProgramFormModal({ program, categories, templates, onClose, onSuccess }
                 className={`w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 ${
                   formErrors.targetCount
                     ? 'border-rose-400 focus:ring-rose-200'
-                    : 'border-slate-200 focus:ring-emerald-500/20 focus:border-emerald-500'
+                    : 'border-slate-200 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C]'
                 }`}
               />
               {formErrors.targetCount && <p className="text-xs text-rose-500 mt-1">{formErrors.targetCount}</p>}
@@ -1488,7 +1488,7 @@ function ProgramFormModal({ program, categories, templates, onClose, onSuccess }
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="اكتب أهداف الدورة أو الخطة أو ملاحظات المتابعة..."
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C]"
             />
           </div>
 
@@ -1504,7 +1504,7 @@ function ProgramFormModal({ program, categories, templates, onClose, onSuccess }
             <button
               type="submit"
               disabled={saving}
-              className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition disabled:opacity-50"
+              className="px-6 py-2.5 bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold rounded-xl shadow-[0_2px_8px_rgba(27,94,140,0.25)] transition disabled:opacity-50"
             >
               {saving ? 'جاري الحفظ...' : isEdit ? 'حفظ التعديلات' : 'إنشاء البرنامج'}
             </button>
@@ -1614,7 +1614,7 @@ function TemplateFormModal({ template, categories, onClose, onSuccess }) {
               className={`w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 ${
                 formErrors.title
                   ? 'border-rose-400 focus:ring-rose-200'
-                  : 'border-slate-200 focus:ring-emerald-500/20 focus:border-emerald-500'
+                  : 'border-slate-200 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C]'
               }`}
             />
             {formErrors.title && <p className="text-xs text-rose-500 mt-1">{formErrors.title}</p>}
@@ -1631,7 +1631,7 @@ function TemplateFormModal({ template, categories, onClose, onSuccess }) {
               className={`w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 ${
                 formErrors.categoryId
                   ? 'border-rose-400 focus:ring-rose-200'
-                  : 'border-slate-200 focus:ring-emerald-500/20 focus:border-emerald-500'
+                  : 'border-slate-200 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C]'
               }`}
             >
               <option value="">— اختر التصنيف —</option>
@@ -1657,7 +1657,7 @@ function TemplateFormModal({ template, categories, onClose, onSuccess }) {
               className={`w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 ${
                 formErrors.description
                   ? 'border-rose-400 focus:ring-rose-200'
-                  : 'border-slate-200 focus:ring-emerald-500/20 focus:border-emerald-500'
+                  : 'border-slate-200 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C]'
               }`}
             />
             {formErrors.description && <p className="text-xs text-rose-500 mt-1">{formErrors.description}</p>}
@@ -1677,7 +1677,7 @@ function TemplateFormModal({ template, categories, onClose, onSuccess }) {
                 className={`w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 ${
                   formErrors.defaultDurationDays
                     ? 'border-rose-400 focus:ring-rose-200'
-                    : 'border-slate-200 focus:ring-emerald-500/20 focus:border-emerald-500'
+                    : 'border-slate-200 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C]'
                 }`}
               />
               {formErrors.defaultDurationDays && (
@@ -1697,7 +1697,7 @@ function TemplateFormModal({ template, categories, onClose, onSuccess }) {
                 className={`w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 ${
                   formErrors.defaultSessions
                     ? 'border-rose-400 focus:ring-rose-200'
-                    : 'border-slate-200 focus:ring-emerald-500/20 focus:border-emerald-500'
+                    : 'border-slate-200 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C]'
                 }`}
               />
               {formErrors.defaultSessions && (
@@ -1716,7 +1716,7 @@ function TemplateFormModal({ template, categories, onClose, onSuccess }) {
               value={targetAudience}
               onChange={(e) => setTargetAudience(e.target.value)}
               placeholder="مثال: الأيتام والطلاب المهتمون بالحفظ"
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1B5E8C]/20 focus:border-[#1B5E8C]"
             />
           </div>
 
@@ -1732,7 +1732,7 @@ function TemplateFormModal({ template, categories, onClose, onSuccess }) {
             <button
               type="submit"
               disabled={saving}
-              className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition disabled:opacity-50"
+              className="px-6 py-2.5 bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold rounded-xl shadow-[0_2px_8px_rgba(27,94,140,0.25)] transition disabled:opacity-50"
             >
               {saving ? 'جاري الحفظ...' : isEdit ? 'حفظ التعديلات' : 'إنشاء القالب'}
             </button>
@@ -1807,7 +1807,7 @@ function OrphanSelectorModal({ program, orphans, onClose, onSuccess }) {
         {/* Header */}
         <div className="p-6 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-emerald-100 text-emerald-700 rounded-2xl">
+            <div className="p-2.5 bg-blue-50 text-[#1B5E8C] rounded-2xl">
               <UserPlus className="w-6 h-6" />
             </div>
             <div>
@@ -1815,7 +1815,7 @@ function OrphanSelectorModal({ program, orphans, onClose, onSuccess }) {
                 إضافة أيتام مشاركين في البرنامج
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                البرنامج: <span className="font-semibold text-emerald-800">{program.title}</span>
+                البرنامج: <span className="font-semibold text-[#1B5E8C]">{program.title}</span>
               </p>
             </div>
           </div>
@@ -1836,7 +1836,7 @@ function OrphanSelectorModal({ program, orphans, onClose, onSuccess }) {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="بحث بالاسم أو الكود..."
-              className="w-full pr-9 pl-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              className="w-full pr-9 pl-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#1B5E8C]/20"
             />
           </div>
 
@@ -1866,7 +1866,7 @@ function OrphanSelectorModal({ program, orphans, onClose, onSuccess }) {
                   onClick={() => toggleSelect(orphan.id)}
                   className={`p-3 rounded-2xl border transition cursor-pointer flex items-center justify-between gap-3 ${
                     isSelected
-                      ? 'bg-emerald-50/80 border-emerald-300 shadow-sm'
+                      ? 'bg-blue-50/80 border-[#1B5E8C]/40 shadow-sm'
                       : 'bg-white border-slate-200 hover:bg-slate-50'
                   }`}
                 >
@@ -1874,7 +1874,7 @@ function OrphanSelectorModal({ program, orphans, onClose, onSuccess }) {
                     <div
                       className={`w-5 h-5 rounded-lg border flex items-center justify-center transition ${
                         isSelected
-                          ? 'bg-emerald-600 border-emerald-600 text-white'
+                          ? 'bg-[#1B5E8C] border-[#1B5E8C] text-white'
                           : 'border-slate-300 bg-white'
                       }`}
                     >
@@ -1905,7 +1905,7 @@ function OrphanSelectorModal({ program, orphans, onClose, onSuccess }) {
         {/* Footer */}
         <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
           <span className="text-xs font-semibold text-slate-600">
-            تم تحديد: <span className="font-bold text-emerald-700">{selectedOrphanIds.length}</span> يتيم
+            تم تحديد: <span className="font-bold text-[#1B5E8C]">{selectedOrphanIds.length}</span> يتيم
           </span>
 
           <div className="flex items-center gap-2">
@@ -1918,7 +1918,7 @@ function OrphanSelectorModal({ program, orphans, onClose, onSuccess }) {
             <button
               onClick={handleEnroll}
               disabled={selectedOrphanIds.length === 0 || submitting}
-              className="inline-flex items-center gap-1.5 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-5 py-2 bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold rounded-xl shadow-[0_2px_8px_rgba(27,94,140,0.25)] transition disabled:opacity-50"
             >
               <UserPlus className="w-4 h-4" />
               <span>{submitting ? 'جاري الإضافة...' : 'إضافة المحددين إلى البرنامج'}</span>

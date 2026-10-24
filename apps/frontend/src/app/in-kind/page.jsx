@@ -242,7 +242,7 @@ export default function InKindPage() {
             className={`fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 px-5 py-3 rounded-xl shadow-xl text-sm font-semibold transition-all duration-200 animate-in fade-in slide-in-from-top-3 ${
               toast.type === 'error'
                 ? 'bg-rose-600 text-white'
-                : 'bg-emerald-700 text-white'
+                : 'bg-[#1B5E8C] text-white'
             }`}
           >
             {toast.type === 'error' ? <AlertCircle size={18} /> : <CheckCircle2 size={18} />}
@@ -251,19 +251,19 @@ export default function InKindPage() {
         )}
 
         {/* ── Top Hero & Page Header ──────────────────────────────────────── */}
-        <div className="relative overflow-hidden bg-gradient-to-l from-emerald-900 via-teal-900 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg border border-emerald-800/40">
+        <div className="relative overflow-hidden bg-gradient-to-l from-[#134569] via-[#1B5E8C] to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg border border-[#1B5E8C]/40">
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 text-xs font-medium mb-3 backdrop-blur-sm">
-                <Box size={14} className="text-emerald-300" />
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-blue-100 border border-white/20 text-xs font-medium mb-3 backdrop-blur-sm">
+                <Box size={14} className="text-blue-200" />
                 <span>منظومة الرعاية الشاملة</span>
-                <span className="w-1 h-1 rounded-full bg-emerald-300" />
+                <span className="w-1 h-1 rounded-full bg-blue-300" />
                 <span>مؤسسة نماء التنموية الخيرية</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-3">
                 برامج ومشاريع الدعم العيني
               </h1>
-              <p className="text-emerald-100/80 text-sm sm:text-base mt-1.5 max-w-2xl leading-relaxed">
+              <p className="text-blue-100/80 text-sm sm:text-base mt-1.5 max-w-2xl leading-relaxed">
                 إدارة حملات ومشاريع المساعدات العينية (السلال الغذائية، كسوة العيد، الحقيبة المدرسية، والمواد الإغاثية)
                 مع توثيق ربط كل يتيم بالكافل أو الجهة المانحة ومتابعة التسليم الميداني بدقة.
               </p>
@@ -274,7 +274,7 @@ export default function InKindPage() {
               <Button
                 variant="primary"
                 onClick={() => setCreateModalOpen(true)}
-                className="!bg-emerald-500 hover:!bg-emerald-400 text-emerald-950 font-bold shadow-lg shadow-emerald-900/30 !rounded-xl !py-3 !px-5"
+                className="!bg-white hover:!bg-blue-50 !text-[#1B5E8C] font-bold shadow-lg shadow-black/20 !rounded-xl !py-3 !px-5"
               >
                 <Plus size={18} />
                 <span>برنامج دعم جديد</span>
@@ -283,14 +283,14 @@ export default function InKindPage() {
           </div>
 
           {/* Background Decorative Rings */}
-          <div className="absolute -top-12 -left-12 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-16 -right-16 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-12 -left-12 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-16 -right-16 w-80 h-80 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
         </div>
 
         {/* ── Summary Stat Pills ─────────────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200/80 shadow-sm flex items-center gap-4 transition hover:shadow-md">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#1B5E8C] flex items-center justify-center flex-shrink-0">
               <Package size={22} />
             </div>
             <div>
@@ -300,12 +300,12 @@ export default function InKindPage() {
           </div>
 
           <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200/80 shadow-sm flex items-center gap-4 transition hover:shadow-md">
-            <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#1B5E8C] flex items-center justify-center flex-shrink-0">
               <Sparkles size={22} />
             </div>
             <div>
               <p className="text-xs font-semibold text-gray-500">المشاريع النشطة</p>
-              <h3 className="text-xl sm:text-2xl font-black text-teal-700 mt-0.5">{stats.activeProg}</h3>
+              <h3 className="text-xl sm:text-2xl font-black text-[#1B5E8C] mt-0.5">{stats.activeProg}</h3>
             </div>
           </div>
 
@@ -340,7 +340,7 @@ export default function InKindPage() {
               onClick={() => setActiveTab('programs')}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-150 ${
                 activeTab === 'programs'
-                  ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20'
+                  ? 'bg-gradient-to-br from-[#1B5E8C] to-[#134569] text-white shadow-md shadow-[#1B5E8C]/20'
                   : 'bg-white text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-gray-200'
               }`}
             >
@@ -352,7 +352,7 @@ export default function InKindPage() {
               onClick={() => setActiveTab('types')}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-150 ${
                 activeTab === 'types'
-                  ? 'bg-emerald-700 text-white shadow-md shadow-emerald-700/20'
+                  ? 'bg-gradient-to-br from-[#1B5E8C] to-[#134569] text-white shadow-md shadow-[#1B5E8C]/20'
                   : 'bg-white text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-gray-200'
               }`}
             >
@@ -364,7 +364,7 @@ export default function InKindPage() {
           <button
             onClick={fetchAll}
             title="تحديث البيانات"
-            className="p-2 text-gray-500 hover:text-emerald-700 hover:bg-gray-100 rounded-xl transition"
+            className="p-2 text-gray-500 hover:text-[#1B5E8C] hover:bg-blue-50 rounded-xl transition"
           >
             <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
           </button>
@@ -386,7 +386,7 @@ export default function InKindPage() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="بحث باسم البرنامج، نوع الدعم، أو اسم الكافل..."
-                  className="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-600 focus:bg-white transition"
+                  className="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white transition"
                 />
               </div>
 
@@ -394,7 +394,7 @@ export default function InKindPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:outline-none focus:border-emerald-600 focus:bg-white transition cursor-pointer"
+                className="px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white transition cursor-pointer"
               >
                 <option value="all">جميع الحالات</option>
                 <option value="active">نشط ومستمر</option>
@@ -406,7 +406,7 @@ export default function InKindPage() {
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:outline-none focus:border-emerald-600 focus:bg-white transition cursor-pointer"
+                className="px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white transition cursor-pointer"
               >
                 <option value="all">جميع أنواع الدعم</option>
                 {types.map((t) => (
@@ -420,7 +420,7 @@ export default function InKindPage() {
               <select
                 value={sponsorFilter}
                 onChange={(e) => setSponsorFilter(e.target.value)}
-                className="px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:outline-none focus:border-emerald-600 focus:bg-white transition cursor-pointer max-w-[200px] truncate"
+                className="px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white transition cursor-pointer max-w-[200px] truncate"
               >
                 <option value="all">جميع الكفلاء والداعمين</option>
                 {sponsors.map((s) => (
@@ -439,7 +439,7 @@ export default function InKindPage() {
               </div>
             ) : filteredPrograms.length === 0 ? (
               <div className="bg-white rounded-3xl border border-dashed border-gray-300 p-12 text-center max-w-xl mx-auto space-y-4">
-                <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
+                <div className="w-16 h-16 rounded-2xl bg-blue-50 text-[#1B5E8C] flex items-center justify-center mx-auto">
                   <Package size={30} />
                 </div>
                 <h3 className="text-lg font-bold text-gray-800">لا توجد برامج تطابق خيارات البحث</h3>
@@ -482,7 +482,7 @@ export default function InKindPage() {
                         </div>
 
                         {/* Title */}
-                        <h3 className="text-base font-extrabold text-gray-900 group-hover:text-emerald-700 transition line-clamp-2">
+                        <h3 className="text-base font-extrabold text-gray-900 group-hover:text-[#1B5E8C] transition line-clamp-2">
                           {prog.title}
                         </h3>
 
@@ -516,7 +516,7 @@ export default function InKindPage() {
                             المستفيدون المعينون:
                             <strong className="text-gray-900 mr-1">{prog.beneficiary_count || 0}</strong>
                           </span>
-                          <span className="text-emerald-700 font-extrabold">
+                          <span className="text-[#1B5E8C] font-extrabold">
                             تم تسليم: {prog.delivered_count || 0} ({prog.coverage_percent || 0}%)
                           </span>
                         </div>
@@ -525,7 +525,7 @@ export default function InKindPage() {
                         <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
                           <div
                             className={`h-full rounded-full transition-all duration-300 ${
-                              isDeliveredFull ? 'bg-blue-600' : 'bg-emerald-600'
+                              isDeliveredFull ? 'bg-emerald-600' : 'bg-[#1B5E8C]'
                             }`}
                             style={{ width: `${Math.min(prog.coverage_percent || 0, 100)}%` }}
                           />
@@ -536,7 +536,7 @@ export default function InKindPage() {
                       <div className="p-3 px-5 border-t border-gray-100 bg-white flex items-center justify-between gap-2">
                         <button
                           onClick={() => openProgramDetails(prog.id)}
-                          className="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl transition"
+                          className="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold rounded-xl transition shadow-[0_2px_8px_rgba(27,94,140,0.25)]"
                         >
                           <Eye size={15} />
                           <span>عرض التفاصيل والمستفيدين</span>
@@ -755,7 +755,7 @@ function InKindTypesTab({ types, isStaff, onTypeCreated, onTypeDeleted, showToas
       {isStaff && (
         <div className="bg-white rounded-2xl p-6 border border-gray-200/90 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#1B5E8C] flex items-center justify-center">
               <Plus size={18} />
             </div>
             <div>
@@ -771,7 +771,7 @@ function InKindTypesTab({ types, isStaff, onTypeCreated, onTypeDeleted, showToas
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="اسم نوع الدعم (مثال: السلال الغذائية، كسوة العيد، الحقيبة المدرسية...)"
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-600 focus:bg-white transition"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white transition"
               />
             </div>
 
@@ -781,7 +781,7 @@ function InKindTypesTab({ types, isStaff, onTypeCreated, onTypeDeleted, showToas
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
                 placeholder="وحدة القياس (مثال: سلة، طقم، حقيبة، كجم)"
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-600 focus:bg-white transition"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white transition"
               />
             </div>
 
@@ -804,10 +804,10 @@ function InKindTypesTab({ types, isStaff, onTypeCreated, onTypeDeleted, showToas
           return (
             <div
               key={t.id}
-              className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm flex items-center justify-between gap-3 hover:border-emerald-300 transition"
+              className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm flex items-center justify-between gap-3 hover:border-[#1B5E8C]/40 transition"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center flex-shrink-0 font-bold">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1B5E8C] flex items-center justify-center flex-shrink-0 font-bold">
                   <Box size={20} />
                 </div>
                 <div className="min-w-0">
@@ -911,7 +911,7 @@ function CreateProgramModal({ open, onClose, types, sponsors, onCreated, showToa
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1B5E8C] flex items-center justify-center">
               <Package size={20} />
             </div>
             <div>
@@ -942,7 +942,7 @@ function CreateProgramModal({ open, onClose, types, sponsors, onCreated, showToa
                 setFieldErrors((prev) => ({ ...prev, title: '' }));
               }}
               placeholder="مثال: مشروع توزيع السلال الغذائية لشهر رمضان"
-              className={`w-full px-4 py-2.5 bg-gray-50 border rounded-xl text-sm focus:outline-none focus:border-emerald-600 focus:bg-white transition ${
+              className={`w-full px-4 py-2.5 bg-gray-50 border rounded-xl text-sm focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white transition ${
                 fieldErrors.title ? 'border-rose-500 bg-rose-50/40 ring-1 ring-rose-500' : 'border-gray-200'
               }`}
             />
@@ -967,7 +967,7 @@ function CreateProgramModal({ open, onClose, types, sponsors, onCreated, showToa
                   setTypeId(e.target.value);
                   setFieldErrors((prev) => ({ ...prev, typeId: '' }));
                 }}
-                className={`w-full px-4 py-2.5 bg-gray-50 border rounded-xl text-sm focus:outline-none focus:border-emerald-600 focus:bg-white transition cursor-pointer ${
+                className={`w-full px-4 py-2.5 bg-gray-50 border rounded-xl text-sm focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white transition cursor-pointer ${
                   fieldErrors.typeId ? 'border-rose-500 bg-rose-50/40 ring-1 ring-rose-500' : 'border-gray-200'
                 }`}
               >
@@ -992,7 +992,7 @@ function CreateProgramModal({ open, onClose, types, sponsors, onCreated, showToa
               <select
                 value={sponsorId}
                 onChange={(e) => setSponsorId(e.target.value)}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-600 focus:bg-white transition cursor-pointer"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white transition cursor-pointer"
               >
                 <option value="">فاعل خير / تمويل متعدد من المؤسسة</option>
                 {sponsors.map((s) => (
@@ -1011,7 +1011,7 @@ function CreateProgramModal({ open, onClose, types, sponsors, onCreated, showToa
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-600 focus:bg-white transition cursor-pointer"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white transition cursor-pointer"
               >
                 <option value="active">نشط ومستمر للتوزيع</option>
                 <option value="draft">مسودة قيد التجهيز</option>
@@ -1032,7 +1032,7 @@ function CreateProgramModal({ open, onClose, types, sponsors, onCreated, showToa
                   setTargetQuantity(e.target.value);
                   setFieldErrors((prev) => ({ ...prev, targetQuantity: '' }));
                 }}
-                className={`w-full px-4 py-2.5 bg-gray-50 border rounded-xl text-sm focus:outline-none focus:border-emerald-600 focus:bg-white transition ${
+                className={`w-full px-4 py-2.5 bg-gray-50 border rounded-xl text-sm focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white transition ${
                   fieldErrors.targetQuantity ? 'border-rose-500 bg-rose-50/40 ring-1 ring-rose-500' : 'border-gray-200'
                 }`}
               />
@@ -1059,7 +1059,7 @@ function CreateProgramModal({ open, onClose, types, sponsors, onCreated, showToa
                   setStartDate(e.target.value);
                   setFieldErrors((prev) => ({ ...prev, startDate: '' }));
                 }}
-                className={`w-full px-4 py-2.5 bg-gray-50 border rounded-xl text-sm focus:outline-none focus:border-emerald-600 focus:bg-white transition cursor-pointer ${
+                className={`w-full px-4 py-2.5 bg-gray-50 border rounded-xl text-sm focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white transition cursor-pointer ${
                   fieldErrors.startDate ? 'border-rose-500 bg-rose-50/40 ring-1 ring-rose-500' : 'border-gray-200'
                 }`}
               />
@@ -1077,7 +1077,7 @@ function CreateProgramModal({ open, onClose, types, sponsors, onCreated, showToa
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-600 focus:bg-white transition cursor-pointer"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white transition cursor-pointer"
               />
             </div>
           </div>
@@ -1090,7 +1090,7 @@ function CreateProgramModal({ open, onClose, types, sponsors, onCreated, showToa
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="مثال: مخصص لأيتام أمانة العاصمة ومحافظة صنعاء الأكثر احتياجاً..."
-              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-600 focus:bg-white transition"
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white transition"
             />
           </div>
 
@@ -1215,13 +1215,13 @@ function ProgramDetailsModal({
             </p>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200/80">
-            <p className="text-xs font-bold text-emerald-800">تم التسليم ونسبة الإنجاز</p>
+          <div className="p-3.5 rounded-2xl bg-blue-50 border border-blue-200/80">
+            <p className="text-xs font-bold text-[#1B5E8C]">تم التسليم ونسبة الإنجاز</p>
             <div className="flex items-baseline gap-2 mt-1">
-              <p className="text-base font-black text-emerald-900">
+              <p className="text-base font-black text-[#134569]">
                 {program.delivered_count || 0}
               </p>
-              <span className="text-xs font-bold text-emerald-700">({program.coverage_percent || 0}%)</span>
+              <span className="text-xs font-bold text-[#1B5E8C]">({program.coverage_percent || 0}%)</span>
             </div>
           </div>
         </div>
@@ -1229,7 +1229,7 @@ function ProgramDetailsModal({
         {/* Beneficiaries Section Header */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+            <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#1B5E8C] flex items-center justify-center font-bold">
               <Users size={17} />
             </div>
             <div>
@@ -1245,7 +1245,7 @@ function ProgramDetailsModal({
               <Button
                 variant="primary"
                 onClick={onOpenAssign}
-                className="!bg-emerald-700 hover:!bg-emerald-800 !rounded-xl !py-2 !px-4 text-xs font-bold"
+                className="!bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:!from-[#2E7EB8] hover:!to-[#1B5E8C] text-white !rounded-xl !py-2 !px-4 text-xs font-bold shadow-[0_2px_8px_rgba(27,94,140,0.25)]"
               >
                 <UserPlus size={16} />
                 <span>+ تعيين أيتام للمشروع</span>
@@ -1262,7 +1262,7 @@ function ProgramDetailsModal({
             value={filterQuery}
             onChange={(e) => setFilterQuery(e.target.value)}
             placeholder="بحث بكود اليتيم، الاسم، أو الكافل الداعم..."
-            className="w-full pl-4 pr-10 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-emerald-600 focus:bg-white transition"
+            className="w-full pl-4 pr-10 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white transition"
           />
         </div>
 
@@ -1275,7 +1275,7 @@ function ProgramDetailsModal({
               {isStaff && (
                 <button
                   onClick={onOpenAssign}
-                  className="text-xs text-emerald-700 hover:underline font-bold mt-1 inline-block"
+                  className="text-xs text-[#1B5E8C] hover:underline font-bold mt-1 inline-block"
                 >
                   اضغط هنا لاختيار وتعيين الأيتام وتحديد الكافل الداعم
                 </button>
@@ -1320,8 +1320,8 @@ function ProgramDetailsModal({
 
                       {/* Sponsor */}
                       <td className="py-3 px-4">
-                        <div className="flex items-center gap-1.5 text-emerald-800 font-bold">
-                          <HeartHandshake size={14} className="text-emerald-600 flex-shrink-0" />
+                        <div className="flex items-center gap-1.5 text-[#1B5E8C] font-bold">
+                          <HeartHandshake size={14} className="text-[#1B5E8C] flex-shrink-0" />
                           <span className="truncate max-w-[150px]">{b.sponsor_name || 'فاعل خير / دعم عام'}</span>
                         </div>
                       </td>
@@ -1371,7 +1371,7 @@ function ProgramDetailsModal({
                             className={`p-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
                               isDelivered
                                 ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                                : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm'
+                                : 'bg-[#1B5E8C] hover:bg-[#134569] text-white shadow-sm'
                             }`}
                           >
                             <UserCheck size={14} />
@@ -1510,7 +1510,7 @@ function AssignBeneficiaryModal({ open, onClose, program, orphans, sponsors, onA
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 pb-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1B5E8C] flex items-center justify-center font-bold">
               <UserPlus size={20} />
             </div>
             <div>
@@ -1540,14 +1540,14 @@ function AssignBeneficiaryModal({ open, onClose, program, orphans, sponsors, onA
                 value={orphanSearch}
                 onChange={(e) => setOrphanSearch(e.target.value)}
                 placeholder="تصفية قائمة الأيتام بالاسم أو الكود..."
-                className="w-full pl-3 pr-8 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-emerald-600 focus:bg-white"
+                className="w-full pl-3 pr-8 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white"
               />
             </div>
             <select
               required
               value={selectedOrphanId}
               onChange={(e) => handleOrphanChange(e.target.value)}
-              className={`w-full px-3.5 py-2.5 bg-gray-50 border rounded-xl text-xs font-medium text-gray-800 focus:outline-none focus:border-emerald-600 focus:bg-white transition cursor-pointer ${
+              className={`w-full px-3.5 py-2.5 bg-gray-50 border rounded-xl text-xs font-medium text-gray-800 focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white transition cursor-pointer ${
                 fieldErrors.orphan ? 'border-rose-500 bg-rose-50/40 ring-1 ring-rose-500' : 'border-gray-200'
               }`}
             >
@@ -1605,7 +1605,7 @@ function AssignBeneficiaryModal({ open, onClose, program, orphans, sponsors, onA
                 setDeliveryMethod(e.target.value);
                 setFieldErrors((prev) => ({ ...prev, deliveryMethod: '' }));
               }}
-              className={`w-full px-3.5 py-2.5 bg-gray-50 border rounded-xl text-xs font-medium text-gray-800 focus:outline-none focus:border-emerald-600 focus:bg-white transition cursor-pointer ${
+              className={`w-full px-3.5 py-2.5 bg-gray-50 border rounded-xl text-xs font-medium text-gray-800 focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white transition cursor-pointer ${
                 fieldErrors.deliveryMethod ? 'border-rose-500 bg-rose-50/40 ring-1 ring-rose-500' : 'border-gray-200'
               }`}
             >
@@ -1637,7 +1637,7 @@ function AssignBeneficiaryModal({ open, onClose, program, orphans, sponsors, onA
                   setFieldErrors((prev) => ({ ...prev, receiverName: '' }));
                 }}
                 placeholder="اسم ولي الأمر أو الوصي"
-                className={`w-full px-3 py-2 bg-gray-50 border rounded-xl text-xs focus:outline-none focus:border-emerald-600 focus:bg-white transition ${
+                className={`w-full px-3 py-2 bg-gray-50 border rounded-xl text-xs focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white transition ${
                   fieldErrors.receiverName ? 'border-rose-500 bg-rose-50/40 ring-1 ring-rose-500' : 'border-gray-200'
                 }`}
               />
@@ -1660,7 +1660,7 @@ function AssignBeneficiaryModal({ open, onClose, program, orphans, sponsors, onA
                   setReceiverRelation(e.target.value);
                   setFieldErrors((prev) => ({ ...prev, receiverRelation: '' }));
                 }}
-                className={`w-full px-3 py-2 bg-gray-50 border rounded-xl text-xs font-semibold text-gray-800 focus:outline-none focus:border-emerald-600 focus:bg-white transition cursor-pointer ${
+                className={`w-full px-3 py-2 bg-gray-50 border rounded-xl text-xs font-semibold text-gray-800 focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white transition cursor-pointer ${
                   fieldErrors.receiverRelation ? 'border-rose-500 bg-rose-50/40 ring-1 ring-rose-500' : 'border-gray-200'
                 }`}
               >
@@ -1691,7 +1691,7 @@ function AssignBeneficiaryModal({ open, onClose, program, orphans, sponsors, onA
                 value={customRelation}
                 onChange={(e) => setCustomRelation(e.target.value)}
                 placeholder="مثال: زوج الأخت، الجارة المتبنية..."
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-emerald-600 focus:bg-white"
+                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white"
               />
             </div>
           )}
@@ -1704,7 +1704,7 @@ function AssignBeneficiaryModal({ open, onClose, program, orphans, sponsors, onA
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="أي تفاصيل خاصة بتسليم هذا اليتيم..."
-              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-emerald-600 focus:bg-white"
+              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white"
             />
           </div>
 
@@ -1800,7 +1800,7 @@ function MarkDeliveryModal({ open, onClose, beneficiary, program, onDelivered, s
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 pb-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+            <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#1B5E8C] flex items-center justify-center font-bold">
               <CheckCircle2 size={18} />
             </div>
             <div>
@@ -1830,7 +1830,7 @@ function MarkDeliveryModal({ open, onClose, beneficiary, program, onDelivered, s
                 setFieldErrors((prev) => ({ ...prev, receiverName: '' }));
               }}
               placeholder="الاسم الثلاثي أو الرباعي للمستلم"
-              className={`w-full px-3 py-2 bg-gray-50 border rounded-xl text-xs focus:outline-none focus:border-emerald-600 focus:bg-white transition ${
+              className={`w-full px-3 py-2 bg-gray-50 border rounded-xl text-xs focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white transition ${
                 fieldErrors.receiverName ? 'border-rose-500 bg-rose-50/40 ring-1 ring-rose-500' : 'border-gray-200'
               }`}
             />
@@ -1854,7 +1854,7 @@ function MarkDeliveryModal({ open, onClose, beneficiary, program, onDelivered, s
                   setReceiverRelation(e.target.value);
                   setFieldErrors((prev) => ({ ...prev, receiverRelation: '' }));
                 }}
-                className={`w-full px-3 py-2 bg-gray-50 border rounded-xl text-xs font-semibold text-gray-800 focus:outline-none focus:border-emerald-600 focus:bg-white transition cursor-pointer ${
+                className={`w-full px-3 py-2 bg-gray-50 border rounded-xl text-xs font-semibold text-gray-800 focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white transition cursor-pointer ${
                   fieldErrors.receiverRelation ? 'border-rose-500 bg-rose-50/40 ring-1 ring-rose-500' : 'border-gray-200'
                 }`}
               >
@@ -1885,7 +1885,7 @@ function MarkDeliveryModal({ open, onClose, beneficiary, program, onDelivered, s
                   setDeliveredAt(e.target.value);
                   setFieldErrors((prev) => ({ ...prev, deliveredAt: '' }));
                 }}
-                className={`w-full px-3 py-2 bg-gray-50 border rounded-xl text-xs focus:outline-none focus:border-emerald-600 focus:bg-white cursor-pointer ${
+                className={`w-full px-3 py-2 bg-gray-50 border rounded-xl text-xs focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white cursor-pointer ${
                   fieldErrors.deliveredAt ? 'border-rose-500 bg-rose-50/40 ring-1 ring-rose-500' : 'border-gray-200'
                 }`}
               />
@@ -1908,7 +1908,7 @@ function MarkDeliveryModal({ open, onClose, beneficiary, program, onDelivered, s
                 value={customRelation}
                 onChange={(e) => setCustomRelation(e.target.value)}
                 placeholder="صلة القرابة الفردية..."
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-emerald-600 focus:bg-white"
+                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white"
               />
             </div>
           )}
@@ -1924,7 +1924,7 @@ function MarkDeliveryModal({ open, onClose, beneficiary, program, onDelivered, s
                 setDeliveryMethod(e.target.value);
                 setFieldErrors((prev) => ({ ...prev, deliveryMethod: '' }));
               }}
-              className={`w-full px-3 py-2 bg-gray-50 border rounded-xl text-xs font-medium text-gray-800 focus:outline-none focus:border-emerald-600 focus:bg-white cursor-pointer ${
+              className={`w-full px-3 py-2 bg-gray-50 border rounded-xl text-xs font-medium text-gray-800 focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white cursor-pointer ${
                 fieldErrors.deliveryMethod ? 'border-rose-500 bg-rose-50/40 ring-1 ring-rose-500' : 'border-gray-200'
               }`}
             >
@@ -1948,7 +1948,7 @@ function MarkDeliveryModal({ open, onClose, beneficiary, program, onDelivered, s
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="مثال: تم التأكد من الهوية واستلام سلة غذائية كاملة"
-              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-emerald-600 focus:bg-white"
+              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 focus:bg-white"
             />
           </div>
 
