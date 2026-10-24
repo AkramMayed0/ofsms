@@ -1,4 +1,5 @@
 require('dotenv').config();
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
@@ -53,6 +54,9 @@ app.use(cookieParser());
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// ── Local static files (dev storage fallback) ────────────────────────────────
+app.use('/local-files', express.static(path.resolve(__dirname, '../uploads')));
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use('/api/auth',         require('./modules/auth/auth.routes'));

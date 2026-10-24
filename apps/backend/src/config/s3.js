@@ -1,17 +1,17 @@
 /**
  * s3.js — OFSMS S3 Storage Helper
  *
- * Fixed: replaced s3.upload() with s3.putObject() for aws-sdk v2 compatibility.
- * Also added LOCAL_STORAGE fallback — if S3_BUCKET_NAME is not set or
- * NODE_ENV=development with no real AWS creds, files are skipped and a
- * fake key is returned so the rest of the app keeps working.
- *
- * Compatible with: AWS S3, Supabase Storage (S3-compatible), MinIO (local dev)
+ * Supports:
+ * - AWS S3 & Supabase Storage (S3-compatible) in production
+ * - Automatic local file disk storage fallback for development
  */
 
 const AWS  = require('aws-sdk');
 const path = require('path');
+const fs   = require('fs');
 const { v4: uuidv4 } = require('uuid');
+
+const UPLOADS_DIR = path.resolve(__dirname, '../../uploads');
 
 // ── S3 client ─────────────────────────────────────────────────────────────────
 const s3 = new AWS.S3({
@@ -25,15 +25,32 @@ const s3 = new AWS.S3({
 const BUCKET = process.env.S3_BUCKET_NAME;
 
 // ── Local dev mode detection ──────────────────────────────────────────────────
-// If bucket is not configured or creds are dummy, skip real S3 calls
+// If bucket is not configured or creds are dummy/test, use local disk storage
 const isLocalDev = () =>
   !BUCKET ||
   process.env.AWS_ACCESS_KEY_ID === 'dummy' ||
-  process.env.AWS_ACCESS_KEY_ID === 'test';
+  process.env.AWS_ACCESS_KEY_ID === 'test' ||
+  process.env.STORAGE_DRIVER === 'local' ||
+  !process.env.AWS_ACCESS_KEY_ID;
+
+const saveLocalFile = async (key, buffer) => {
+  const filePath = path.join(UPLOADS_DIR, key);
+  await fs.promises.mkdir(path.dirname(filePath), { recursive: true });
+  await fs.promises.writeFile(filePath, buffer);
+};
+
+const deleteLocalFile = async (key) => {
+  const filePath = path.join(UPLOADS_DIR, key);
+  try {
+    await fs.promises.unlink(filePath);
+  } catch (err) {
+    // Ignore if file doesn't exist
+  }
+};
 
 // ── uploadFile ────────────────────────────────────────────────────────────────
 /**
- * Upload a file buffer to S3 using putObject (compatible with all aws-sdk v2).
+ * Upload a file buffer to S3 or local storage in development.
  *
  * @param {Object} options
  * @param {Buffer}  options.buffer       - File buffer (from multer memoryStorage)
@@ -46,25 +63,33 @@ const uploadFile = async ({ buffer, originalName, mimetype, folder = 'documents'
   const ext = path.extname(originalName).toLowerCase();
   const key = `${folder}/${uuidv4()}${ext}`;
 
-  // ── Local dev: skip real S3 upload, return fake key ───────────────────────
+  // ── Local dev: save locally, return local URL ─────────────────────────────
   if (isLocalDev()) {
-    // eslint-disable-next-line no-console
-    console.log(`[S3 LOCAL] Skipping upload — fake key: ${key}`);
+    console.log(`[Storage LOCAL] Saving file locally: ${key}`);
+    await saveLocalFile(key, buffer);
     return { key, url: `http://localhost:4000/local-files/${key}` };
   }
 
-  // ── Production: use putObject (works in all aws-sdk v2 versions) ──────────
-  const params = {
-    Bucket:      BUCKET,
-    Key:         key,
-    Body:        buffer,
-    ContentType: mimetype,
-  };
+  // ── S3 Upload with automatic fallback in development ──────────────────────
+  try {
+    const params = {
+      Bucket:      BUCKET,
+      Key:         key,
+      Body:        buffer,
+      ContentType: mimetype,
+    };
 
-  await s3.putObject(params).promise();
-
-  const url = await getSignedUrl(key);
-  return { key, url };
+    await s3.putObject(params).promise();
+    const url = await getSignedUrl(key);
+    return { key, url };
+  } catch (err) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(`[S3 Warning] S3 upload failed (${err.message}). Falling back to local storage.`);
+      await saveLocalFile(key, buffer);
+      return { key, url: `http://localhost:4000/local-files/${key}` };
+    }
+    throw err;
+  }
 };
 
 // ── getSignedUrl ──────────────────────────────────────────────────────────────
@@ -73,16 +98,23 @@ const uploadFile = async ({ buffer, originalName, mimetype, folder = 'documents'
  * @param {number} expires - Seconds until expiry (default: 1 hour)
  * @returns {Promise<string>}
  */
-const getSignedUrl = (key, expires = 3600) => {
+const getSignedUrl = async (key, expires = 3600) => {
   if (isLocalDev()) {
-    return Promise.resolve(`http://localhost:4000/local-files/${key}`);
+    return `http://localhost:4000/local-files/${key}`;
   }
 
-  return s3.getSignedUrlPromise('getObject', {
-    Bucket:  BUCKET,
-    Key:     key,
-    Expires: expires,
-  });
+  try {
+    return await s3.getSignedUrlPromise('getObject', {
+      Bucket:  BUCKET,
+      Key:     key,
+      Expires: expires,
+    });
+  } catch (err) {
+    if (process.env.NODE_ENV !== 'production') {
+      return `http://localhost:4000/local-files/${key}`;
+    }
+    throw err;
+  }
 };
 
 // ── deleteFile ────────────────────────────────────────────────────────────────
@@ -92,12 +124,19 @@ const getSignedUrl = (key, expires = 3600) => {
  */
 const deleteFile = async (key) => {
   if (isLocalDev()) {
-    // eslint-disable-next-line no-console
-    console.log(`[S3 LOCAL] Skipping delete — key: ${key}`);
+    await deleteLocalFile(key);
     return;
   }
 
-  await s3.deleteObject({ Bucket: BUCKET, Key: key }).promise();
+  try {
+    await s3.deleteObject({ Bucket: BUCKET, Key: key }).promise();
+  } catch (err) {
+    if (process.env.NODE_ENV !== 'production') {
+      await deleteLocalFile(key);
+      return;
+    }
+    throw err;
+  }
 };
 
 module.exports = { uploadFile, getSignedUrl, deleteFile };
