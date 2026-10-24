@@ -104,15 +104,6 @@ export default function SupervisorBiometricLogPage() {
     <AppShell>
       <div className="flex flex-col gap-7 font-cairo max-w-[1100px] mx-auto pb-12" dir="rtl">
 
-        {/* Back button */}
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="self-start flex items-center gap-2 bg-[#f1f5f9] border-none rounded-lg px-5 py-2 font-bold text-[#0d3d5c] cursor-pointer text-base transition-colors duration-150 hover:bg-[#e2e8f0]"
-          aria-label="عودة"
-        >
-          <span aria-hidden="true">←</span> عودة
-        </button>
 
         {/* Header row */}
         <PageHeader

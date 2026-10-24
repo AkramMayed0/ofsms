@@ -200,14 +200,6 @@ export default function SponsorManagementPage() {
 
           <div className="flex items-center gap-2.5 flex-wrap">
             <button
-              onClick={() => router.back()}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition shadow-xs"
-            >
-              <ArrowRight size={15} />
-              <span>الرجوع</span>
-            </button>
-
-            <button
               onClick={() => setShowCreateModal(true)}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold shadow-[0_2px_8px_rgba(27,94,140,0.25)] hover:-translate-y-0.5 active:scale-95 transition"
             >

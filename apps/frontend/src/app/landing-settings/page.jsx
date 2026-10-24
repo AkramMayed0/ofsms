@@ -142,14 +142,6 @@ export default function LandingSettingsPage() {
               <ExternalLink size={14} className="text-gray-500" />
               <span>معاينة الموقع</span>
             </Link>
-
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-gray-700 hover:bg-gray-50 shadow-xs transition"
-            >
-              <ArrowLeft size={14} className="text-gray-500" />
-              <span>لوحة التحكم</span>
-            </Link>
           </div>
         </div>
 
