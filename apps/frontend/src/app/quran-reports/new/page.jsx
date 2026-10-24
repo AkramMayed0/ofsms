@@ -5,18 +5,31 @@
  * Route:  /quran-reports/new  (Agent only)
  * Task:   feature/ui-quran-report-submission
  *
- * Agent submits monthly Quran memorization report for one of their active orphans.
+ * Agent selects an orphan from the list, which opens a pop-up modal
+ * to submit the monthly Quran memorization report.
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import { AlertTriangle, CheckCircle2, Info, Check, ClipboardList, Send } from 'lucide-react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Info,
+  Check,
+  ClipboardList,
+  Send,
+  Search,
+  X,
+  Calendar,
+  BookOpen,
+  ArrowRight,
+  Sparkles,
+  Users
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
 
 import api from '@/lib/api';
 import AppShell from '@/components/AppShell';
 import Button from '@/components/ui/Button';
-import Select from '@/components/ui/Select';
 import PageHeader from '@/components/ui/PageHeader';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -58,7 +71,7 @@ const getThresholdForAge = (age, thresholds) => {
 
 function JuzQuickPick({ value, onChange }) {
   return (
-    <div className="flex gap-2 flex-wrap">
+    <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
       {JUZ_PRESETS.map(({ value: v, label, sub }) => {
         const active = parseFloat(value) === v;
         return (
@@ -66,12 +79,16 @@ function JuzQuickPick({ value, onChange }) {
             key={v}
             type="button"
             onClick={() => onChange(v)}
-            className={`flex flex-col items-center gap-[2px] min-w-[72px] py-2 px-3.5 border-[1.5px] rounded-xl font-sans cursor-pointer transition-all ${active ? 'border-[#1B5E8C] bg-[#1B5E8C] shadow-[0_2px_8px_rgba(27,94,140,0.2)]' : 'border-gray-300 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] hover:border-[#1B5E8C]'}`}
+            className={`flex flex-col items-center justify-center gap-1 py-2 px-1.5 border-[1.5px] rounded-xl font-sans cursor-pointer transition-all ${
+              active
+                ? 'border-[#1B5E8C] bg-[#1B5E8C] text-white shadow-[0_2px_8px_rgba(27,94,140,0.25)]'
+                : 'border-gray-200 bg-white hover:border-[#1B5E8C] hover:bg-blue-50/40 text-gray-800'
+            }`}
           >
-            <span className={`text-[0.82rem] font-bold leading-tight ${active ? 'text-white' : 'text-gray-800'}`}>
+            <span className={`text-xs font-bold leading-tight ${active ? 'text-white' : 'text-gray-800'}`}>
               {label}
             </span>
-            <span className={`text-[0.67rem] font-medium leading-none ltr ${active ? 'text-white/75' : 'text-gray-400'}`}>
+            <span className={`text-[10px] font-medium leading-none ltr ${active ? 'text-white/80' : 'text-gray-400'}`}>
               {sub}
             </span>
           </button>
@@ -85,17 +102,23 @@ function ThresholdHint({ threshold, juzValue }) {
   if (!threshold) return null;
   const juz = parseFloat(juzValue) || 0;
   const meets = juz >= threshold.min_juz_per_month;
-  
-  const statusClass = meets 
-    ? 'bg-emerald-50 border-emerald-300 text-emerald-800' 
-    : juz === 0 
-      ? 'bg-gray-50 border-gray-200 text-gray-700' 
+
+  const statusClass = meets
+    ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+    : juz === 0
+      ? 'bg-blue-50 border-blue-200 text-[#1B5E8C]'
       : 'bg-amber-50 border-amber-200 text-amber-800';
-  
+
   return (
-    <div className={`flex items-start gap-2.5 py-3 px-4 rounded-xl text-[0.82rem] leading-relaxed border ${statusClass}`}>
-      <span className="text-[1rem] shrink-0 mt-0.5">
-        {meets ? <CheckCircle2 size={16} className="text-emerald-600" /> : juz === 0 ? <Info size={16} className="text-gray-500" /> : <AlertTriangle size={18} className="text-amber-500" />}
+    <div className={`flex items-start gap-2.5 py-3 px-4 rounded-xl text-xs leading-relaxed border ${statusClass}`}>
+      <span className="shrink-0 mt-0.5">
+        {meets ? (
+          <CheckCircle2 size={16} className="text-emerald-600" />
+        ) : juz === 0 ? (
+          <Info size={16} className="text-[#1B5E8C]" />
+        ) : (
+          <AlertTriangle size={16} className="text-amber-500" />
+        )}
       </span>
       <div>
         <span className="font-bold ml-1">{threshold.label}</span>
@@ -103,9 +126,15 @@ function ThresholdHint({ threshold, juzValue }) {
           {` · الحد الأدنى: `}
           <strong>{threshold.min_juz_per_month} جزء/شهر</strong>
           {juz > 0 && (
-            meets
-              ? <span className="text-emerald-600 font-bold"> — يستوفي الشرط <Check size={16} className="inline-block align-text-bottom" /></span>
-              : <span className="text-amber-600 font-bold"> — لا يستوفي الشرط (قد يُوقف الصرف)</span>
+            meets ? (
+              <span className="text-emerald-700 font-bold mr-1">
+                — يستوفي الشرط <Check size={14} className="inline-block align-text-bottom" />
+              </span>
+            ) : (
+              <span className="text-amber-700 font-bold mr-1">
+                — لا يستوفي الشرط (قد يُوقف الصرف)
+              </span>
+            )
           )}
         </span>
       </div>
@@ -121,144 +150,445 @@ export default function QuranReportSubmissionPage() {
   const [orphans, setOrphans] = useState([]);
   const [thresholds, setThresholds] = useState([]);
   const [dataLoading, setDataLoading] = useState(true);
-  const [submitState, setSubmitState] = useState('idle'); // idle | loading | success | error
-  const [apiError, setApiError] = useState('');
-  const [submitted, setSubmitted] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
+  // Modal State
+  const [selectedOrphan, setSelectedOrphan] = useState(null);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [apiError, setApiError] = useState('');
+  const [submittedSuccess, setSubmittedSuccess] = useState(null);
+
+  // Form Fields inside modal
   const now = new Date();
   const defaultMonth = now.getMonth() + 1;
   const defaultYear = now.getFullYear();
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors },
-    reset,
-  } = useForm({
-    defaultValues: {
-      orphanId: '',
-      month: defaultMonth,
-      year: defaultYear,
-      juzMemorized: '',
-    },
-  });
+  const [month, setMonth] = useState(defaultMonth);
+  const [year, setYear] = useState(defaultYear);
+  const [juzMemorized, setJuzMemorized] = useState('');
 
-  const selectedOrphanId = watch('orphanId');
-  const juzValue = watch('juzMemorized');
-  const selectedMonth = watch('month');
-  const selectedYear = watch('year');
-
-  const selectedOrphan = useMemo(
-    () => orphans.find((o) => o.id === selectedOrphanId) || null,
-    [selectedOrphanId, orphans]
-  );
+  const yearOptions = [defaultYear - 1, defaultYear, defaultYear + 1];
 
   const orphanAge = selectedOrphan ? calcAge(selectedOrphan.date_of_birth) : null;
   const threshold = getThresholdForAge(orphanAge, thresholds);
 
   useEffect(() => {
-    setDataLoading(true);
-    Promise.all([
-      api.get(API.ORPHANS),
-      api.get(API.QURAN_THRESHOLDS),
-    ])
-      .then(([orphanRes, thresholdRes]) => {
-        setOrphans(orphanRes.data.orphans || []);
-        setThresholds(thresholdRes.data.thresholds || []);
-      })
-      .catch(() => {
-        setOrphans([]);
-        setThresholds([]);
-      })
-      .finally(() => setDataLoading(false));
+    fetchInitialData();
   }, []);
 
-  const yearOptions = [defaultYear - 1, defaultYear, defaultYear + 1];
+  const fetchInitialData = async () => {
+    try {
+      setDataLoading(true);
+      const [orphanRes, thresholdRes] = await Promise.all([
+        api.get(API.ORPHANS),
+        api.get(API.QURAN_THRESHOLDS),
+      ]);
+      setOrphans(orphanRes.data.orphans || []);
+      setThresholds(thresholdRes.data.thresholds || []);
+    } catch (err) {
+      console.error('Failed to load orphans/thresholds:', err);
+      setOrphans([]);
+      setThresholds([]);
+    } finally {
+      setDataLoading(false);
+    }
+  };
 
-  const onSubmit = async (data) => {
-    setSubmitState('loading');
+  // Filter orphans by search query
+  const filteredOrphans = useMemo(() => {
+    if (!searchQuery.trim()) return orphans;
+    const q = searchQuery.toLowerCase().trim();
+    return orphans.filter(
+      (o) =>
+        o.full_name?.toLowerCase().includes(q) ||
+        o.orphan_code?.toLowerCase().includes(q) ||
+        o.governorate_ar?.toLowerCase().includes(q)
+    );
+  }, [orphans, searchQuery]);
+
+  // Open modal when orphan is clicked
+  const handleSelectOrphan = (orphan) => {
+    setSelectedOrphan(orphan);
+    setMonth(defaultMonth);
+    setYear(defaultYear);
+    setJuzMemorized('');
     setApiError('');
+    setReportModalOpen(true);
+  };
+
+  // Close report modal
+  const handleCloseReportModal = () => {
+    if (submitting) return;
+    setReportModalOpen(false);
+    setSelectedOrphan(null);
+    setApiError('');
+  };
+
+  // Submit report via API
+  const handleSubmitReport = async (e) => {
+    e.preventDefault();
+    if (!selectedOrphan) return;
+
+    if (juzMemorized === '' || isNaN(parseFloat(juzMemorized))) {
+      setApiError('يرجى تحديد أو إدخال مقدار الحفظ');
+      return;
+    }
+
+    const juzNum = parseFloat(juzMemorized);
+    if (juzNum < 0 || juzNum > 30) {
+      setApiError('مقدار الحفظ يجب أن يكون بين 0 و 30 جزءاً');
+      return;
+    }
+
+    setSubmitting(true);
+    setApiError('');
+
     try {
       await api.post(API.QURAN_REPORTS, {
-        orphanId: data.orphanId,
-        month: parseInt(data.month),
-        year: parseInt(data.year),
-        juzMemorized: parseFloat(data.juzMemorized),
+        orphanId: selectedOrphan.id,
+        month: parseInt(month, 10),
+        year: parseInt(year, 10),
+        juzMemorized: juzNum,
       });
-      setSubmitted({
-        orphanName: selectedOrphan?.full_name,
-        month: parseInt(data.month),
-        year: parseInt(data.year),
-        juz: parseFloat(data.juzMemorized),
-        meetsThreshold: threshold ? parseFloat(data.juzMemorized) >= threshold.min_juz_per_month : null,
+
+      const meets = threshold ? juzNum >= threshold.min_juz_per_month : null;
+
+      setSubmittedSuccess({
+        orphanName: selectedOrphan.full_name,
+        month: parseInt(month, 10),
+        year: parseInt(year, 10),
+        juz: juzNum,
+        meetsThreshold: meets,
       });
-      setSubmitState('success');
-      reset({
-        orphanId: '', month: defaultMonth, year: defaultYear, juzMemorized: '',
-      });
+
+      setReportModalOpen(false);
     } catch (err) {
-      setSubmitState('error');
       setApiError(
         err.response?.data?.errors?.[0]?.msg ||
         err.response?.data?.error ||
-        'حدث خطأ أثناء الإرسال. يرجى المحاولة مجدداً'
+        'حدث خطأ أثناء رفع التقرير. يرجى المحاولة مجدداً'
       );
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
     <AppShell>
-      {/* ── Success modal ──────────────────────────────────────────────── */}
-      {submitState === 'success' && submitted && (
-        <div className="fixed inset-0 z-[1000] bg-black/45 backdrop-blur-[3px] flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease]" dir="rtl">
-          <div className="bg-white rounded-[1.25rem] p-10 px-8 max-w-[460px] w-full text-center shadow-[0_20px_60px_rgba(0,0,0,0.2)] flex flex-col items-center gap-4 animate-[slideUp_0.25s_ease]">
-            <div className="flex items-center justify-center">
-              {submitted.meetsThreshold === true
-                ? <CheckCircle2 size={48} className="text-emerald-500" />
-                : submitted.meetsThreshold === false
-                  ? <AlertTriangle size={48} className="text-amber-500" />
-                  : <ClipboardList size={48} className="text-[#1B5E8C]" />}
+      {/* ── Pop-up Success Confirmation Modal ────────────────────────────── */}
+      {submittedSuccess && (
+        <div
+          className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in"
+          dir="rtl"
+        >
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-2xl border border-slate-100 flex flex-col items-center gap-4 animate-in zoom-in-95">
+            <div className="w-16 h-16 rounded-2xl bg-blue-50 text-[#1B5E8C] flex items-center justify-center">
+              {submittedSuccess.meetsThreshold === true ? (
+                <CheckCircle2 size={40} className="text-emerald-500" />
+              ) : submittedSuccess.meetsThreshold === false ? (
+                <AlertTriangle size={40} className="text-amber-500" />
+              ) : (
+                <ClipboardList size={40} className="text-[#1B5E8C]" />
+              )}
             </div>
-            <h2 className="text-[1.35rem] font-extrabold text-[#0d3d5c] m-0">تم رفع التقرير بنجاح</h2>
-            <p className="text-[0.88rem] text-gray-700 leading-relaxed m-0">
-              تم رفع تقرير حفظ القرآن لـ <strong>{submitted.orphanName}</strong>
+
+            <h2 className="text-xl font-black text-slate-900 m-0">تم رفع التقرير بنجاح</h2>
+
+            <p className="text-sm text-slate-600 leading-relaxed m-0">
+              تم رفع تقرير حفظ القرآن لـ <strong className="text-slate-900">{submittedSuccess.orphanName}</strong>
               {' '}عن شهر{' '}
-              <strong>{MONTHS_AR[submitted.month]} {submitted.year}</strong>
-              {' '}بمقدار <strong>{submitted.juz} جزء</strong>.
+              <strong className="text-[#1B5E8C]">{MONTHS_AR[submittedSuccess.month]} {submittedSuccess.year}</strong>
+              {' '}بمقدار <strong className="text-slate-900">{submittedSuccess.juz} جزء</strong>.
             </p>
 
-            {submitted.meetsThreshold === false && (
-              <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl py-3 px-4 text-[0.82rem] text-amber-800 text-right w-full">
+            {submittedSuccess.meetsThreshold === false && (
+              <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl py-3 px-4 text-xs text-amber-800 text-right w-full">
                 <AlertTriangle size={16} className="shrink-0 mt-0.5" />
                 <span>مقدار الحفظ أقل من الحد الأدنى المطلوب. قد يقرر المشرف تعليق الصرف هذا الشهر.</span>
               </div>
             )}
 
-            <p className="text-[0.82rem] text-gray-500 m-0 flex items-center justify-center gap-1.5"><Send size={14} /> التقرير الآن في قائمة انتظار المشرف للمراجعة.</p>
+            <p className="text-xs text-slate-500 m-0 flex items-center justify-center gap-1.5">
+              <Send size={14} className="text-[#1B5E8C]" />
+              <span>التقرير الآن في قائمة انتظار المشرف للمراجعة والاعتماد.</span>
+            </p>
 
-            <div className="flex gap-3 justify-center flex-wrap mt-1">
+            <div className="flex gap-3 justify-center flex-wrap mt-2 w-full">
               <Button
                 variant="primary"
                 onClick={() => {
-                  setSubmitState('idle');
-                  reset({ orphanId: '', month: defaultMonth, year: defaultYear, juzMemorized: '' });
+                  setSubmittedSuccess(null);
+                  setSelectedOrphan(null);
                 }}
+                className="flex-1 !py-2.5 !rounded-xl !bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white shadow-[0_2px_8px_rgba(27,94,140,0.25)] font-bold text-xs"
               >
-                رفع تقرير آخر
+                رفع تقرير ليتيم آخر
               </Button>
-              <Button variant="outline" onClick={() => router.push('/my-orphans')}>
-                عرض أيتامي
+              <Button
+                variant="outline"
+                onClick={() => router.push('/quran-reports')}
+                className="flex-1 !py-2.5 !rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50"
+              >
+                قائمة التقارير
               </Button>
             </div>
           </div>
         </div>
       )}
 
-      <div className="max-w-[780px] mx-auto pb-16 font-sans flex flex-col gap-5" dir="rtl">
+      {/* ── The Report Submission Pop-up Modal (The thing in Picture 2) ── */}
+      {reportModalOpen && selectedOrphan && (
+        <div
+          className="fixed inset-0 z-[900] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-in fade-in"
+          dir="rtl"
+        >
+          <div className="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-100 overflow-hidden my-6 relative animate-in zoom-in-95 duration-150">
 
-        {/* Page header */}
+            {/* Modal Header */}
+            <div className="p-6 pb-4 border-b border-gray-100 bg-white">
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#1B5E8C] flex items-center justify-center font-bold">
+                    <BookOpen size={18} />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-black text-slate-900">رفع تقرير حفظ القرآن</h2>
+                    <p className="text-xs text-slate-500">أدخل مقدار الحفظ وسيقوم المشرف باعتماده</p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleCloseReportModal}
+                  className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition"
+                  title="إغلاق"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Selected Orphan Highlight Card */}
+              <div className="flex items-center gap-3.5 p-3.5 bg-blue-50/70 border border-blue-200/80 rounded-2xl">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#1B5E8C] to-[#134569] text-white flex items-center justify-center text-lg font-black shrink-0 shadow-md shadow-[#1B5E8C]/20">
+                  {selectedOrphan.full_name?.charAt(0) || '؟'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm sm:text-base font-extrabold text-slate-900 truncate">
+                      {selectedOrphan.full_name}
+                    </h3>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#1B5E8C]/10 text-[#1B5E8C]">
+                      يتيم مكفول
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                    {orphanAge != null && <span>{orphanAge} سنة</span>}
+                    {selectedOrphan.governorate_ar && (
+                      <>
+                        <span className="w-1 h-1 rounded-full bg-slate-300" />
+                        <span>{selectedOrphan.governorate_ar}</span>
+                      </>
+                    )}
+                    {selectedOrphan.orphan_code && (
+                      <>
+                        <span className="w-1 h-1 rounded-full bg-slate-300" />
+                        <span className="font-mono text-slate-600 font-bold">{selectedOrphan.orphan_code}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Body / Form */}
+            <form onSubmit={handleSubmitReport} className="p-6 space-y-5 max-h-[72vh] overflow-y-auto">
+
+              {/* ── Section 2: الفترة الزمنية ── */}
+              <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-5 space-y-3">
+                <div className="flex items-center gap-3 pb-2 border-b border-slate-200/60">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1B5E8C] to-[#134569] text-white flex items-center justify-center text-sm font-bold shrink-0">
+                    ٢
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-900">الفترة الزمنية</h4>
+                    <p className="text-[11px] text-slate-500">الشهر والسنة الذي يغطيهما التقرير</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end pt-1">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      الشهر <span className="text-rose-500">*</span>
+                    </label>
+                    <select
+                      value={month}
+                      onChange={(e) => setMonth(parseInt(e.target.value, 10))}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 transition cursor-pointer"
+                    >
+                      {MONTHS_AR.slice(1).map((name, i) => (
+                        <option key={i + 1} value={i + 1}>
+                          {name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      السنة <span className="text-rose-500">*</span>
+                    </label>
+                    <select
+                      value={year}
+                      onChange={(e) => setYear(parseInt(e.target.value, 10))}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 transition cursor-pointer"
+                    >
+                      {yearOptions.map((y) => (
+                        <option key={y} value={y}>
+                          {y}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-200 text-center">
+                    <span className="text-[10px] font-bold text-slate-400 block">الفترة المعتمدة</span>
+                    <span className="text-xs font-black text-[#1B5E8C]">
+                      {MONTHS_AR[month]} {year}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Section 3: مقدار الحفظ ── */}
+              <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-5 space-y-4">
+                <div className="flex items-center gap-3 pb-2 border-b border-slate-200/60">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1B5E8C] to-[#134569] text-white flex items-center justify-center text-sm font-bold shrink-0">
+                    ٣
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-900">مقدار الحفظ</h4>
+                    <p className="text-[11px] text-slate-500">أدخل عدد الأجزاء المحفوظة هذا الشهر (يمكن كسر)</p>
+                  </div>
+                </div>
+
+                {/* Threshold hint for orphan's age */}
+                <ThresholdHint
+                  threshold={threshold}
+                  juzValue={juzMemorized}
+                />
+
+                {/* Quick presets */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-2">
+                    اختر سريعاً أو أدخل يدوياً
+                  </label>
+                  <JuzQuickPick
+                    value={juzMemorized}
+                    onChange={(v) => {
+                      setJuzMemorized(v);
+                      setApiError('');
+                    }}
+                  />
+                </div>
+
+                {/* Manual input */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1" htmlFor="modalJuzInput">
+                    عدد الأجزاء <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      id="modalJuzInput"
+                      type="number"
+                      min="0"
+                      max="30"
+                      step="0.25"
+                      value={juzMemorized}
+                      onChange={(e) => {
+                        setJuzMemorized(e.target.value);
+                        setApiError('');
+                      }}
+                      className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-base font-black text-slate-800 text-center font-sans focus:outline-none focus:border-[#1B5E8C] focus:ring-2 focus:ring-[#1B5E8C]/20 transition"
+                      placeholder="مثال: 1 أو 0.5"
+                      required
+                    />
+                    <span className="text-xs font-bold text-slate-500 bg-white px-3 py-2.5 rounded-xl border border-slate-200 whitespace-nowrap">
+                      جزء / شهر
+                    </span>
+                  </div>
+                </div>
+
+                {/* Progress bar towards minimum requirement */}
+                {threshold && juzMemorized !== '' && parseFloat(juzMemorized) >= 0 && (
+                  <div className="space-y-1.5 pt-1">
+                    <div className="flex justify-between text-[11px] text-slate-500">
+                      <span>٠ جزء</span>
+                      <span className="text-[#1B5E8C] font-bold">
+                        الحد الأدنى: {threshold.min_juz_per_month} جزء
+                      </span>
+                    </div>
+                    <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ${
+                          parseFloat(juzMemorized) >= threshold.min_juz_per_month
+                            ? 'bg-emerald-500'
+                            : 'bg-amber-500'
+                        }`}
+                        style={{
+                          width: `${Math.min((parseFloat(juzMemorized) / threshold.min_juz_per_month) * 100, 100)}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Error feedback */}
+              {apiError && (
+                <div className="flex items-start gap-2.5 p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 animate-in fade-in">
+                  <AlertTriangle size={16} className="shrink-0 mt-0.5 text-rose-600" />
+                  <span>{apiError}</span>
+                </div>
+              )}
+
+              {/* Footer Buttons inside modal */}
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={handleCloseReportModal}
+                  disabled={submitting}
+                  className="py-2.5 px-5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="inline-flex items-center gap-2 py-2.5 px-6 rounded-xl bg-gradient-to-br from-[#1B5E8C] to-[#134569] hover:from-[#2E7EB8] hover:to-[#1B5E8C] text-white text-xs font-bold shadow-[0_2px_8px_rgba(27,94,140,0.25)] transition disabled:opacity-50"
+                >
+                  {submitting ? (
+                    <>
+                      <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin shrink-0" />
+                      <span>جارٍ الإرسال…</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>إرسال التقرير</span>
+                      <ArrowRight size={14} className="rotate-180" />
+                    </>
+                  )}
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Main Page Layout ────────────────────────────────────────────── */}
+      <div className="max-w-4xl mx-auto pb-16 font-sans space-y-6" dir="rtl">
+
+        {/* Page Header */}
         <PageHeader
           title="رفع تقرير حفظ القرآن"
           subtitle="أدخل مقدار ما حفظه اليتيم هذا الشهر. سيراجع المشرف التقرير ويقرر الاستحقاق المالي."
@@ -270,240 +600,143 @@ export default function QuranReportSubmissionPage() {
           }
         />
 
-        {/* Info banner */}
-        <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-[0.875rem] py-3.5 px-4 text-[0.82rem] text-blue-700 leading-relaxed">
-          <span className="shrink-0 text-blue-600 mt-0.5">ℹ</span>
-          <p className="m-0">
-            التقرير يُرفع مرة واحدة لكل يتيم كل شهر. إذا تم رفع تقرير سابق لنفس الشهر، سيتم استبداله تلقائياً.
+        {/* Info Banner */}
+        <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-2xl p-4 text-xs text-[#1B5E8C] leading-relaxed shadow-xs">
+          <span className="shrink-0 text-[#1B5E8C] font-bold text-sm">ℹ</span>
+          <p className="m-0 font-medium">
+            التقرير يُرفع مرة واحدة لكل يتيم كل شهر. انقر على أي يتيم من القائمة أدناه لفتح نافذة إدخال وتوثيق الحفظ مباشرة.
           </p>
         </div>
 
+        {/* Loading state */}
         {dataLoading ? (
-          <div className="flex flex-col items-center gap-4 bg-white border border-gray-200 rounded-2xl p-12 text-center text-[0.88rem] text-gray-500">
-            <div className="w-9 h-9 border-4 border-gray-200 border-t-[#1B5E8C] rounded-full animate-[spin_0.7s_linear_infinite]" />
-            <p className="m-0">جارٍ تحميل قائمة الأيتام…</p>
+          <div className="flex flex-col items-center gap-4 bg-white border border-slate-200 rounded-3xl p-16 text-center text-sm text-slate-500 shadow-xs">
+            <div className="w-9 h-9 border-4 border-slate-200 border-t-[#1B5E8C] rounded-full animate-spin" />
+            <p className="m-0 font-medium">جارٍ تحميل قائمة الأيتام المكفولين…</p>
           </div>
         ) : orphans.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 bg-white border border-gray-200 rounded-2xl p-12 text-center">
-            <div><ClipboardList size={48} className="text-[#1B5E8C]" /></div>
-            <h3 className="text-[1rem] font-bold text-gray-700 m-0">لا يوجد أيتام نشطون</h3>
-            <p className="text-[0.85rem] text-gray-400 m-0">لديك حالياً لا أيتام مكفولين. لا يمكن رفع تقارير إلا للأيتام تحت الكفالة.</p>
+          <div className="flex flex-col items-center gap-3 bg-white border border-slate-200 rounded-3xl p-14 text-center shadow-xs">
+            <ClipboardList size={48} className="text-[#1B5E8C]" />
+            <h3 className="text-base font-bold text-slate-800 m-0">لا يوجد أيتام مكفولون حالياً</h3>
+            <p className="text-xs text-slate-400 m-0">
+              لا توجد لديك حالات أيتام تحت الكفالة النشطة في الوقت الراهن لرفع تقارير حفظ القرآن لها.
+            </p>
             <Button variant="outline" className="mt-2" onClick={() => router.push('/my-orphans')}>
-              عرض أيتامي
+              عرض قائمة أيتامي
             </Button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-5">
+          /* Step 1: اختيار اليتيم */
+          <div className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-7 shadow-xs space-y-5">
 
-            {/* ── Step 1: Select orphan ── */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-7 shadow-[0_1px_4px_rgba(27,94,140,0.05)] flex flex-col gap-4">
-              <div className="flex items-start gap-4 pb-3 border-b-[1.5px] border-gray-50">
-                <div className="w-10 h-10 rounded-[10px] bg-gradient-to-br from-[#1B5E8C] to-[#0d3d5c] text-white flex items-center justify-center text-[1.1rem] font-bold shrink-0 font-sans">١</div>
+            {/* Section Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1B5E8C] to-[#134569] text-white flex items-center justify-center text-lg font-bold shrink-0 shadow-md shadow-[#1B5E8C]/20">
+                  ١
+                </div>
                 <div>
-                  <h2 className="text-[1.05rem] font-bold text-[#0d3d5c] m-0 mb-0.5">اختيار اليتيم</h2>
-                  <p className="text-[0.78rem] text-gray-400 m-0">اختر اليتيم الذي تريد رفع تقرير حفظه</p>
+                  <h2 className="text-base font-black text-slate-900 m-0">اختيار اليتيم</h2>
+                  <p className="text-xs text-slate-500 m-0">اختر اليتيم من القائمة لفتح نافذة رفع التقرير</p>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                {orphans.map((o) => {
+              <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full self-start sm:self-center">
+                إجمالي الأيتام: {orphans.length}
+              </span>
+            </div>
+
+            {/* Search filter input */}
+            <div className="relative">
+              <Search size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="ابحث باسم اليتيم، الكود، أو المحافظة..."
+                className="w-full pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#1B5E8C] focus:bg-white focus:ring-2 focus:ring-[#1B5E8C]/20 transition"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+                >
+                  مسح
+                </button>
+              )}
+            </div>
+
+            {/* Orphans List / Interactive Cards */}
+            <div className="space-y-2.5">
+              {filteredOrphans.length === 0 ? (
+                <div className="py-10 text-center text-slate-400 space-y-1">
+                  <Users size={28} className="mx-auto text-slate-300" />
+                  <p className="text-xs font-bold">لا يوجد أيتام يطابقون نتائج البحث</p>
+                </div>
+              ) : (
+                filteredOrphans.map((o) => {
                   const age = calcAge(o.date_of_birth);
-                  const isSelected = selectedOrphanId === o.id;
+                  const isSelected = selectedOrphan?.id === o.id;
+
                   return (
-                    <label
+                    <button
                       key={o.id}
-                      className={`flex items-center gap-3.5 py-3 px-4 border-[1.5px] rounded-[0.875rem] cursor-pointer transition-all ${isSelected ? 'border-[#1B5E8C] bg-blue-50 shadow-[0_0_0_2px_rgba(27,94,140,0.12)]' : 'border-gray-200 bg-gray-50 hover:border-[#1B5E8C] hover:bg-blue-50/50'}`}
+                      type="button"
+                      onClick={() => handleSelectOrphan(o)}
+                      className={`w-full flex items-center justify-between gap-3.5 py-3.5 px-4 rounded-2xl border-[1.5px] text-right cursor-pointer transition-all duration-150 group ${
+                        isSelected
+                          ? 'border-[#1B5E8C] bg-blue-50/80 shadow-[0_2px_8px_rgba(27,94,140,0.15)] ring-1 ring-[#1B5E8C]'
+                          : 'border-slate-200 bg-slate-50/60 hover:border-[#1B5E8C] hover:bg-blue-50/40 hover:shadow-sm'
+                      }`}
                     >
-                      <input
-                        type="radio"
-                        value={o.id}
-                        {...register('orphanId', { required: 'يرجى اختيار اليتيم' })}
-                        className="hidden"
-                      />
-                      <div className="w-10 h-10 rounded-full shrink-0 bg-gradient-to-br from-[#1B5E8C] to-[#0d3d5c] text-white flex items-center justify-center text-[1rem] font-bold">
-                        {o.full_name?.charAt(0) || '؟'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[0.9rem] font-bold text-gray-800">{o.full_name}</div>
-                        <div className="text-[0.75rem] text-gray-500 mt-0.5">
-                          {age != null ? `${age} سنة` : ''}{o.governorate_ar ? ` · ${o.governorate_ar}` : ''}
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        {/* Circular Avatar with Initial Letter */}
+                        <div className="w-10 h-10 rounded-full shrink-0 bg-gradient-to-br from-[#1B5E8C] to-[#134569] text-white flex items-center justify-center text-base font-bold shadow-sm group-hover:scale-105 transition-transform">
+                          {o.full_name?.charAt(0) || '؟'}
+                        </div>
+
+                        {/* Name and Info */}
+                        <div className="min-w-0">
+                          <h4 className="text-sm font-extrabold text-slate-900 group-hover:text-[#1B5E8C] transition-colors truncate">
+                            {o.full_name}
+                          </h4>
+                          <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-2">
+                            {age != null && <span>{age} سنة</span>}
+                            {o.governorate_ar && (
+                              <>
+                                <span className="w-1 h-1 rounded-full bg-slate-300" />
+                                <span>{o.governorate_ar}</span>
+                              </>
+                            )}
+                            {o.orphan_code && (
+                              <>
+                                <span className="w-1 h-1 rounded-full bg-slate-300" />
+                                <span className="font-mono text-slate-400">{o.orphan_code}</span>
+                              </>
+                            )}
+                          </p>
                         </div>
                       </div>
-                      {isSelected && <span className="text-[#1B5E8C] font-extrabold text-[1rem] shrink-0"><Check size={16} /></span>}
-                    </label>
+
+                      {/* Action Prompt on Card */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 group-hover:border-[#1B5E8C] group-hover:bg-[#1B5E8C] group-hover:text-white text-slate-700 text-xs font-bold transition-all shadow-xs">
+                          <span>رفع التقرير</span>
+                          <ArrowRight size={13} className="rotate-180" />
+                        </span>
+                        <div className="sm:hidden w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 group-hover:text-[#1B5E8C]">
+                          <ArrowRight size={14} className="rotate-180" />
+                        </div>
+                      </div>
+                    </button>
                   );
-                })}
-              </div>
-              {errors.orphanId && <p className="text-[0.77rem] text-red-600 m-0 mt-1">{errors.orphanId.message}</p>}
-            </div>
-
-            {/* ── Step 2: Period ── */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-7 shadow-[0_1px_4px_rgba(27,94,140,0.05)] flex flex-col gap-4">
-              <div className="flex items-start gap-4 pb-3 border-b-[1.5px] border-gray-50">
-                <div className="w-10 h-10 rounded-[10px] bg-gradient-to-br from-[#1B5E8C] to-[#0d3d5c] text-white flex items-center justify-center text-[1.1rem] font-bold shrink-0 font-sans">٢</div>
-                <div>
-                  <h2 className="text-[1.05rem] font-bold text-[#0d3d5c] m-0 mb-0.5">الفترة الزمنية</h2>
-                  <p className="text-[0.78rem] text-gray-400 m-0">الشهر والسنة الذي يغطيهما التقرير</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-4 items-end">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[0.82rem] font-semibold text-gray-700">الشهر <span className="text-red-600">*</span></label>
-                  <Select className="rounded-xl p-2.5 pl-7" {...register('month', { required: true })}>
-                    {MONTHS_AR.slice(1).map((name, i) => (
-                      <option key={i + 1} value={i + 1}>{name}</option>
-                    ))}
-                  </Select>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[0.82rem] font-semibold text-gray-700">السنة <span className="text-red-600">*</span></label>
-                  <Select className="rounded-xl p-2.5 pl-7" {...register('year', { required: true })}>
-                    {yearOptions.map((y) => (
-                      <option key={y} value={y}>{y}</option>
-                    ))}
-                  </Select>
-                </div>
-                <div className="flex flex-col gap-1.5 py-2.5 px-4 bg-blue-50 border-[1.5px] border-blue-200 rounded-[0.625rem] whitespace-nowrap col-span-1 sm:col-span-full md:col-auto">
-                  <span className="text-[0.7rem] font-bold text-gray-400 uppercase tracking-wider">الفترة</span>
-                  <span className="text-[0.92rem] font-extrabold text-[#1B5E8C]">
-                    {MONTHS_AR[parseInt(selectedMonth)]} {selectedYear}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* ── Step 3: Juz memorized ── */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-7 shadow-[0_1px_4px_rgba(27,94,140,0.05)] flex flex-col gap-4">
-              <div className="flex items-start gap-4 pb-3 border-b-[1.5px] border-gray-50">
-                <div className="w-10 h-10 rounded-[10px] bg-gradient-to-br from-[#1B5E8C] to-[#0d3d5c] text-white flex items-center justify-center text-[1.1rem] font-bold shrink-0 font-sans">٣</div>
-                <div>
-                  <h2 className="text-[1.05rem] font-bold text-[#0d3d5c] m-0 mb-0.5">مقدار الحفظ</h2>
-                  <p className="text-[0.78rem] text-gray-400 m-0">أدخل عدد الأجزاء المحفوظة هذا الشهر (يمكن كسر)</p>
-                </div>
-              </div>
-
-              {/* Threshold hint */}
-              {selectedOrphan && (
-                <ThresholdHint
-                  threshold={threshold}
-                  juzValue={juzValue}
-                  age={orphanAge}
-                />
-              )}
-
-              {/* Quick pick */}
-              <div className="flex flex-col gap-1.5 mt-2">
-                <label className="text-[0.82rem] font-semibold text-gray-700">اختر سريعاً أو أدخل يدوياً</label>
-                <JuzQuickPick
-                  value={juzValue}
-                  onChange={(v) => setValue('juzMemorized', v, { shouldValidate: true })}
-                />
-              </div>
-
-              {/* Manual input */}
-              <div className="flex flex-col gap-1.5 mt-2">
-                <label className="text-[0.82rem] font-semibold text-gray-700" htmlFor="juzMemorized">
-                  عدد الأجزاء <span className="text-red-600">*</span>
-                </label>
-                <div className="flex items-center gap-3">
-                  <input
-                    id="juzMemorized"
-                    type="number"
-                    min="0"
-                    max="30"
-                    step="0.25"
-                    className={`flex-1 p-2.5 bg-gray-50 border-[1.5px] rounded-xl text-[1.1rem] font-bold text-gray-800 font-sans outline-none text-center ltr transition-colors focus:bg-white ${errors.juzMemorized ? 'border-red-600 focus:ring-[3px] focus:ring-red-600/10' : 'border-gray-300 focus:border-[#1B5E8C] focus:ring-[3px] focus:ring-[#1B5E8C]/10'}`}
-                    placeholder="مثال: 1 أو 0.5"
-                    {...register('juzMemorized', {
-                      required: 'مقدار الحفظ مطلوب',
-                      min: { value: 0, message: 'يجب أن يكون صفراً أو أكثر' },
-                      max: { value: 30, message: 'القيمة كبيرة جداً' },
-                    })}
-                  />
-                  <span className="text-[0.83rem] font-semibold text-gray-500 whitespace-nowrap">جزء / شهر</span>
-                </div>
-                {errors.juzMemorized && <p className="text-[0.77rem] text-red-600 m-0">{errors.juzMemorized.message}</p>}
-              </div>
-
-              {/* Visual progress bar if threshold exists */}
-              {threshold && juzValue !== '' && parseFloat(juzValue) >= 0 && (
-                <div className="flex flex-col gap-1.5 mt-2">
-                  <div className="flex justify-between text-[0.75rem] text-gray-500">
-                    <span>٠</span>
-                    <span className="text-[#1B5E8C] font-bold">
-                      الهدف: {threshold.min_juz_per_month}
-                    </span>
-                  </div>
-                  <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden relative">
-                    <div
-                      className="h-full rounded-full transition-all duration-400 ease-in-out"
-                      style={{
-                        width: `${Math.min((parseFloat(juzValue) / threshold.min_juz_per_month) * 100, 100)}%`,
-                        background: parseFloat(juzValue) >= threshold.min_juz_per_month ? '#10b981' : '#f59e0b',
-                      }}
-                    />
-                  </div>
-                  <p className="text-[0.75rem] text-gray-500 font-semibold m-0">
-                    {Math.round((parseFloat(juzValue) / threshold.min_juz_per_month) * 100)}% من الهدف
-                  </p>
-                </div>
+                })
               )}
             </div>
 
-            {/* ── Summary ── */}
-            {selectedOrphan && juzValue !== '' && (
-              <div className="bg-blue-50/50 border-[1.5px] border-blue-100 rounded-2xl p-5 px-6">
-                <div className="text-[0.85rem] font-bold text-[#1B5E8C] mb-3.5 flex items-center gap-1.5"><ClipboardList size={16} /> ملخص التقرير</div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[0.72rem] font-semibold text-gray-400">اليتيم</span>
-                    <span className="text-[0.88rem] font-bold text-gray-800">{selectedOrphan.full_name}</span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[0.72rem] font-semibold text-gray-400">الفترة</span>
-                    <span className="text-[0.88rem] font-bold text-gray-800">{MONTHS_AR[parseInt(selectedMonth)]} {selectedYear}</span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[0.72rem] font-semibold text-gray-400">الحفظ</span>
-                    <span className="text-[0.88rem] font-bold text-gray-800">{juzValue} جزء</span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[0.72rem] font-semibold text-gray-400">الحالة</span>
-                    <span className="text-[0.88rem] font-bold text-amber-500">قيد المراجعة</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* API error */}
-            {submitState === 'error' && apiError && (
-              <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4">
-                <span className="text-[1.2rem] shrink-0 text-red-600"><AlertTriangle size={18} /></span>
-                <div>
-                  <strong className="block text-[0.9rem] text-red-700 mb-1">فشل الإرسال</strong>
-                  <p className="text-[0.83rem] text-red-600 m-0">{apiError}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Submit */}
-            <div className="flex justify-end items-center gap-4 p-5 px-6 bg-white border border-gray-200 rounded-2xl">
-              <Button variant="outline" type="button" onClick={() => router.back()}>
-                إلغاء
-              </Button>
-              <Button
-                variant="primary"
-                type="submit"
-                disabled={submitState === 'loading'}
-              >
-                {submitState === 'loading'
-                  ? <><span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-[spin_0.7s_linear_infinite] shrink-0" /> جارٍ الإرسال…</>
-                  : 'إرسال التقرير ←'}
-              </Button>
-            </div>
-          </form>
+          </div>
         )}
+
       </div>
     </AppShell>
   );
