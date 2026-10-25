@@ -11,7 +11,20 @@ const nextConfig = {
     ],
   },
 
-  allowedDevOrigins: ['192.168.1.130'],
+  allowedDevOrigins: ['192.168.1.130', '192.168.43.199', '*.trycloudflare.com'],
+
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:4000/api/:path*',
+      },
+      {
+        source: '/local-files/:path*',
+        destination: 'http://localhost:4000/local-files/:path*',
+      },
+    ];
+  },
 };
 
-module.exports = nextConfig; // ✅ Fixed: was module.exports = { nextConfig, ... }
+module.exports = nextConfig;
