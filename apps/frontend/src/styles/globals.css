@@ -74,6 +74,73 @@ body {
   .dark label {
     color: #cbd5e1;
   }
+
+  /* Dark mode comprehensive overrides for dashboard & components */
+  html.dark, body.dark {
+    background-color: #0B131B !important;
+    color: #F1F5F9 !important;
+  }
+
+  html.dark .card,
+  html.dark .stat-card,
+  .dark .card,
+  .dark .stat-card {
+    background-color: #111E2E !important;
+    border-color: #1E344B !important;
+    color: #F1F5F9 !important;
+    box-shadow: none !important;
+  }
+
+  html.dark .greeting-title,
+  .dark .greeting-title {
+    color: #F1F5F9 !important;
+  }
+
+  html.dark .card-title,
+  .dark .card-title {
+    color: #F1F5F9 !important;
+  }
+
+  html.dark .stat-label,
+  .dark .stat-label {
+    color: #CBD5E1 !important;
+  }
+
+  html.dark .gov-name,
+  html.dark .sponsor-name,
+  .dark .gov-name,
+  .dark .sponsor-name {
+    color: #E2E8F0 !important;
+  }
+
+  html.dark .gov-bar-wrap,
+  .dark .gov-bar-wrap {
+    background-color: #17283C !important;
+  }
+
+  html.dark .table thead tr,
+  .dark .table thead tr {
+    background-color: #17283C !important;
+  }
+
+  html.dark .table th,
+  .dark .table th {
+    color: #94A3B8 !important;
+    border-bottom-color: #1E344B !important;
+  }
+
+  html.dark .table td,
+  .dark .table td {
+    border-bottom-color: #1E344B !important;
+    color: #E2E8F0 !important;
+  }
+
+  html.dark .trow:hover,
+  html.dark .sponsor-row:hover,
+  .dark .trow:hover,
+  .dark .sponsor-row:hover {
+    background-color: #17283C !important;
+  }
 }
 
 @keyframes toastIn {

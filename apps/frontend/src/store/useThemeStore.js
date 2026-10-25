@@ -13,13 +13,14 @@ export const useThemeStore = create((set, get) => ({
     if (typeof window === 'undefined') return;
     try {
       const saved = localStorage.getItem('ofsms_theme');
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const initial = saved || (prefersDark ? 'dark' : 'light');
+      const initial = saved === 'dark' ? 'dark' : 'light';
       
       if (initial === 'dark') {
         document.documentElement.classList.add('dark');
+        document.body?.classList.add('dark');
       } else {
         document.documentElement.classList.remove('dark');
+        document.body?.classList.remove('dark');
       }
       set({ theme: initial });
     } catch (_err) {
@@ -28,18 +29,19 @@ export const useThemeStore = create((set, get) => ({
   },
 
   toggleTheme: () => {
-    const current = get().theme;
-    const next = current === 'dark' ? 'light' : 'dark';
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem('ofsms_theme', next);
-        if (next === 'dark') {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-      } catch (_err) {}
-    }
+    if (typeof window === 'undefined') return;
+    const isCurrentlyDark = document.documentElement.classList.contains('dark');
+    const next = isCurrentlyDark ? 'light' : 'dark';
+    try {
+      localStorage.setItem('ofsms_theme', next);
+      if (next === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.body?.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.body?.classList.remove('dark');
+      }
+    } catch (_err) {}
     set({ theme: next });
   },
 
@@ -49,8 +51,10 @@ export const useThemeStore = create((set, get) => ({
         localStorage.setItem('ofsms_theme', theme);
         if (theme === 'dark') {
           document.documentElement.classList.add('dark');
+          document.body?.classList.add('dark');
         } else {
           document.documentElement.classList.remove('dark');
+          document.body?.classList.remove('dark');
         }
       } catch (_err) {}
     }
