@@ -45,13 +45,18 @@ jobs:
           # Launcher icons from the logo (plain PNGs; drop the adaptive-icon XMLs that need extra resources)
           RES=android/app/src/main/res
           rm -rf $RES/mipmap-anydpi-v26
-          for d in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
-            dir=$RES/mipmap-${d%%:*}; px=${d##*:}
-            mkdir -p $dir
-            for n in ic_launcher ic_launcher_round ic_launcher_foreground; do
-              convert ../frontend/public/logo.png -resize ${px}x${px} $dir/$n.png
-            done
-          done
+          python3 -m pip install -q pillow
+          python3 - <<'PY'
+          from PIL import Image
+          import os
+          res = 'android/app/src/main/res'
+          logo = Image.open('../frontend/public/logo.png').convert('RGBA')
+          for dens, px in {'mdpi': 48, 'hdpi': 72, 'xhdpi': 96, 'xxhdpi': 144, 'xxxhdpi': 192}.items():
+              d = os.path.join(res, 'mipmap-' + dens)
+              os.makedirs(d, exist_ok=True)
+              for name in ('ic_launcher', 'ic_launcher_round', 'ic_launcher_foreground'):
+                  logo.resize((px, px), Image.LANCZOS).save(os.path.join(d, name + '.png'))
+          PY
           npx cap sync android
 
       - name: Build debug APK
