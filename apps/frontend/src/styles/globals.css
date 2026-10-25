@@ -167,3 +167,36 @@ body {
   from { opacity: 0; transform: scale(0.95); }
   to   { opacity: 1; transform: none; }
 }
+
+/* ── Global dark-mode remap for light-only utility classes ───────────────
+   Most pages were written with light-only Tailwind classes; remap them under
+   html.dark so the toggle restyles the whole app. */
+html.dark .bg-white            { background-color: #111E2E; }
+html.dark .bg-gray-50,
+html.dark .bg-slate-50         { background-color: #0F1B29; }
+html.dark .bg-gray-100,
+html.dark .bg-slate-100        { background-color: #17283C; }
+html.dark .bg-slate-200,
+html.dark .bg-slate-300        { background-color: #1E344B; }
+html.dark .bg-slate-50\/50,
+html.dark .bg-slate-50\/70,
+html.dark .bg-slate-50\/80    { background-color: rgb(23 40 60 / 0.6); }
+html.dark .text-gray-900, html.dark .text-slate-900,
+html.dark .text-gray-800, html.dark .text-slate-800 { color: #F1F5F9; }
+html.dark .text-gray-700, html.dark .text-slate-700 { color: #E2E8F0; }
+html.dark .text-gray-600, html.dark .text-slate-600 { color: #CBD5E1; }
+html.dark .text-gray-500, html.dark .text-slate-500 { color: #94A3B8; }
+html.dark .text-gray-400, html.dark .text-slate-400 { color: #8392A5; }
+html.dark .border-gray-50, html.dark .border-gray-100, html.dark .border-gray-200,
+html.dark .border-gray-300, html.dark .border-slate-50, html.dark .border-slate-100,
+html.dark .border-slate-200, html.dark .border-slate-200\/60, html.dark .border-slate-200\/70,
+html.dark .border-slate-200\/80, html.dark .border-slate-200\/90, html.dark .border-gray-200\/80 { border-color: #1E344B; }
+html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) { border-color: #1E344B; }
+html.dark .from-gray-100, html.dark .from-slate-100 { --tw-gradient-from: #17283C var(--tw-gradient-from-position); --tw-gradient-to: rgb(23 40 60 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+html.dark .via-gray-200, html.dark .via-slate-200 { --tw-gradient-stops: var(--tw-gradient-from), #1E344B var(--tw-gradient-via-position), var(--tw-gradient-to); }
+html.dark .to-gray-100, html.dark .to-gray-200, html.dark .to-slate-100 { --tw-gradient-to: #17283C var(--tw-gradient-to-position); }
+html.dark input, html.dark select, html.dark textarea { color-scheme: dark; }
+html.dark input:not([type=checkbox]):not([type=radio]):not([type=range]),
+html.dark select, html.dark textarea { background-color: #17283C; color: #F1F5F9; border-color: #1E344B; }
+html.dark ::placeholder { color: #64748B; }
+html.dark table { color: #E2E8F0; }
