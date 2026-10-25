@@ -1,4 +1,6 @@
 import '../styles/globals.css';
+import '../styles/dark-overrides.generated.css';
+import '../styles/dark-overrides.css';
 import AuthBootstrap from '../components/AuthBootstrap';
 import OfflineBanner from '../components/OfflineBanner';
 import ThemeBootstrap from '../components/ThemeBootstrap';

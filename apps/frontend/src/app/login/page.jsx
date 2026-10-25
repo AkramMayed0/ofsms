@@ -13,6 +13,8 @@ import { AlertTriangle, Eye, EyeOff, Lock, Mail, ShieldCheck } from 'lucide-reac
 import useAuthStore from '../../store/useAuthStore';
 import api from '../../lib/api';
 import Button from '@/components/ui/Button';
+import ThemeToggleFab from '@/components/ThemeToggleFab';
+import Link from 'next/link';
 
 const REDIRECT_AFTER_LOGIN = '/dashboard';
 const LOGIN_ENDPOINT = '/auth/login';
@@ -171,8 +173,12 @@ export default function LoginPage() {
           <p className="m-0 mt-6 text-center text-xs tracking-wide text-gray-400">
             {ORG_NAME} · {APP_NAME}
           </p>
+          <p className="m-0 mt-2 text-center text-xs">
+            <Link href="/install" className="text-primary dark:text-sky-400 font-semibold">📱 تحميل التطبيق على الهاتف</Link>
+          </p>
         </section>
       </main>
+      <ThemeToggleFab />
     </div>
   );
 }

@@ -1,0 +1,203 @@
+/* Dark-mode overrides for styled-jsx / inline-styled components.
+   Scoped styles in dashboards and modals hard-code light colors, so these
+   rules use !important under html.dark. */
+
+/* surfaces */
+html.dark .stat-card, html.dark .card, html.dark .table-wrap, html.dark .breakdown-card,
+html.dark .skeleton-card, html.dark .empty, html.dark .rejected-item, html.dark .alert-chip,
+html.dark .notif-dropdown, html.dark .modal, html.dark .modal-box, html.dark .modal-card,
+html.dark .sponsor-row, html.dark .transfer-party, html.dark .user-list, html.dark .role-card,
+html.dark .template-chip, html.dark .mode-tab, html.dark .selected-info {
+  background-color: #111E2E !important; border-color: #1E344B !important; box-shadow: none !important;
+}
+html.dark .action-card, html.dark .review-btn, html.dark .history-item,
+html.dark .modal-footer, html.dark .modal-header, html.dark .steps, html.dark .stepper,
+html.dark .preview-box, html.dark .summary-box { background-color: #17283C !important; border-color: #1E344B !important; }
+html.dark .action-card:hover { background-color: #1E344B !important; }
+html.dark .table thead tr, html.dark .bar-bg, html.dark .gov-bar-wrap, html.dark .flow-bar-bg,
+html.dark .sponsor-rank, html.dark .alert-more { background-color: #17283C !important; color: #94A3B8 !important; border-color: #1E344B !important; }
+html.dark .trow:hover, html.dark .queue-item:hover, html.dark .history-item:hover,
+html.dark .sponsor-row:hover, html.dark .user-row:hover, html.dark .notif-item:hover { background-color: #17283C !important; }
+html.dark .user-row-checked { background-color: #132a42 !important; }
+html.dark .table td, html.dark .table th, html.dark .ts-row, html.dark .user-row, html.dark .flow-divider,
+html.dark .modal-header, html.dark .modal-footer { border-color: #1E344B !important; }
+html.dark .skel { background: linear-gradient(90deg,#17283C 25%,#1E344B 50%,#17283C 75%) !important; background-size: 200% 100% !important; }
+html.dark .err-banner, html.dark .alert-danger, html.dark .rej-notes { background-color: rgb(127 29 29 / .25) !important; border-color: rgb(248 113 113 / .35) !important; color: #fca5a5 !important; }
+html.dark .alert-card, html.dark .urgent-banner { background-color: rgb(154 52 18 / .2) !important; border-color: rgb(251 146 60 / .35) !important; }
+html.dark .month-badge, html.dark .queue-tag, html.dark .gifted, html.dark .rej-type { background-color: rgb(30 64 100 / .45) !important; border-color: #1E344B !important; }
+html.dark .month-badge { color: #93c5fd !important; }
+
+/* inputs in modals */
+html.dark .search-inp, html.dark .field-inp, html.dark .field-textarea, html.dark .modal-textarea {
+  background-color: #17283C !important; color: #F1F5F9 !important; border-color: #1E344B !important;
+}
+
+/* text */
+html.dark .greeting-title, html.dark .card-title, html.dark .section-title, html.dark .modal-title,
+html.dark .success-title, html.dark .party-name, html.dark .rej-name, html.dark .queue-name,
+html.dark .sponsor-name, html.dark .action-label, html.dark .history-period, html.dark .user-name,
+html.dark .gov-name, html.dark .field-lbl, html.dark .field-label, html.dark .flow-label,
+html.dark .notif-title { color: #F1F5F9 !important; }
+html.dark .stat-label, html.dark .sc-label, html.dark .muted, html.dark .queue-gov, html.dark .modal-sub,
+html.dark .success-body, html.dark .cs-label, html.dark .history-amount, html.dark .table th { color: #94A3B8 !important; }
+html.dark .greeting-sub, html.dark .stat-sub, html.dark .sc-sub, html.dark .queue-agent, html.dark .queue-date,
+html.dark .history-date, html.dark .empty-state p, html.dark .empty-text, html.dark .sponsor-unit,
+html.dark .sponsor-meta, html.dark .party-label, html.dark .party-email, html.dark .opt { color: #7889a0 !important; }
+html.dark .gov-count, html.dark .sponsor-num, html.dark .link-btn, html.dark .cs-name { color: #38bdf8 !important; }
+html.dark .close-btn:hover, html.dark .modal-close:hover { background-color: #17283C !important; color: #F1F5F9 !important; }
+
+/* inline-style colors set from JSX (React serialises hex to rgb) */
+html.dark [style*="color: rgb(55, 65, 81)"],  html.dark [style*="color: rgb(31, 41, 55)"],
+html.dark [style*="color: rgb(13, 61, 92)"]  { color: #F1F5F9 !important; }
+html.dark [style*="color: rgb(107, 114, 128)"], html.dark [style*="color: rgb(107, 122, 141)"] { color: #94A3B8 !important; }
+html.dark [style*="color: rgb(27, 94, 140)"] { color: #38bdf8 !important; }
+html.dark [style*="background: rgb(243, 244, 246)"], html.dark [style*="background: rgb(250, 250, 250)"],
+html.dark [style*="background: rgb(236, 253, 245)"] { background: #17283C !important; }
+
+/* leave knobs / white-on-color elements alone */
+html.dark .bg-white.rounded-full.shadow-xs { background-color: #fff !important; }
+
+/* loading shimmer gradients written as tailwind gradient utilities */
+html.dark .from-gray-100, html.dark .from-slate-100, html.dark .from-\[\#f0f4f8\], html.dark .from-\[\#f3f4f6\] { --tw-gradient-from: #17283C var(--tw-gradient-from-position) !important; }
+html.dark .via-\[\#e5eaf0\], html.dark .via-\[\#e5e7eb\] { --tw-gradient-stops: var(--tw-gradient-from), #1E344B var(--tw-gradient-via-position), var(--tw-gradient-to) !important; }
+html.dark .to-\[\#f0f4f8\], html.dark .to-\[\#f3f4f6\] { --tw-gradient-to: #17283C var(--tw-gradient-to-position) !important; }
+
+/* Tinted palette classes: pastel backgrounds/borders become translucent, dark text becomes light */
+html.dark .bg-red-50, html.dark .bg-red-50\/40, html.dark .bg-red-50\/50, html.dark .bg-red-50\/70, html.dark .bg-red-50\/80 { background-color: rgb(248 113 113 / 0.12) !important; }
+html.dark .bg-red-100, html.dark .bg-red-100\/40, html.dark .bg-red-100\/50, html.dark .bg-red-100\/70, html.dark .bg-red-100\/80 { background-color: rgb(248 113 113 / 0.2) !important; }
+html.dark .border-red-100, html.dark .border-red-100\/60, html.dark .border-red-100\/80 { border-color: rgb(248 113 113 / .3) !important; }
+html.dark .border-red-200, html.dark .border-red-200\/60, html.dark .border-red-200\/80 { border-color: rgb(248 113 113 / .3) !important; }
+html.dark .border-red-300, html.dark .border-red-300\/60, html.dark .border-red-300\/80 { border-color: rgb(248 113 113 / .3) !important; }
+html.dark .text-red-600 { color: #fca5a5 !important; }
+html.dark .text-red-700 { color: #fca5a5 !important; }
+html.dark .text-red-800 { color: #fca5a5 !important; }
+html.dark .text-red-900 { color: #fca5a5 !important; }
+html.dark .bg-rose-50, html.dark .bg-rose-50\/40, html.dark .bg-rose-50\/50, html.dark .bg-rose-50\/70, html.dark .bg-rose-50\/80 { background-color: rgb(251 113 133 / 0.12) !important; }
+html.dark .bg-rose-100, html.dark .bg-rose-100\/40, html.dark .bg-rose-100\/50, html.dark .bg-rose-100\/70, html.dark .bg-rose-100\/80 { background-color: rgb(251 113 133 / 0.2) !important; }
+html.dark .border-rose-100, html.dark .border-rose-100\/60, html.dark .border-rose-100\/80 { border-color: rgb(251 113 133 / .3) !important; }
+html.dark .border-rose-200, html.dark .border-rose-200\/60, html.dark .border-rose-200\/80 { border-color: rgb(251 113 133 / .3) !important; }
+html.dark .border-rose-300, html.dark .border-rose-300\/60, html.dark .border-rose-300\/80 { border-color: rgb(251 113 133 / .3) !important; }
+html.dark .text-rose-600 { color: #fda4af !important; }
+html.dark .text-rose-700 { color: #fda4af !important; }
+html.dark .text-rose-800 { color: #fda4af !important; }
+html.dark .text-rose-900 { color: #fda4af !important; }
+html.dark .bg-amber-50, html.dark .bg-amber-50\/40, html.dark .bg-amber-50\/50, html.dark .bg-amber-50\/70, html.dark .bg-amber-50\/80 { background-color: rgb(251 191 36 / 0.12) !important; }
+html.dark .bg-amber-100, html.dark .bg-amber-100\/40, html.dark .bg-amber-100\/50, html.dark .bg-amber-100\/70, html.dark .bg-amber-100\/80 { background-color: rgb(251 191 36 / 0.2) !important; }
+html.dark .border-amber-100, html.dark .border-amber-100\/60, html.dark .border-amber-100\/80 { border-color: rgb(251 191 36 / .3) !important; }
+html.dark .border-amber-200, html.dark .border-amber-200\/60, html.dark .border-amber-200\/80 { border-color: rgb(251 191 36 / .3) !important; }
+html.dark .border-amber-300, html.dark .border-amber-300\/60, html.dark .border-amber-300\/80 { border-color: rgb(251 191 36 / .3) !important; }
+html.dark .text-amber-600 { color: #fcd34d !important; }
+html.dark .text-amber-700 { color: #fcd34d !important; }
+html.dark .text-amber-800 { color: #fcd34d !important; }
+html.dark .text-amber-900 { color: #fcd34d !important; }
+html.dark .bg-emerald-50, html.dark .bg-emerald-50\/40, html.dark .bg-emerald-50\/50, html.dark .bg-emerald-50\/70, html.dark .bg-emerald-50\/80 { background-color: rgb(52 211 153 / 0.12) !important; }
+html.dark .bg-emerald-100, html.dark .bg-emerald-100\/40, html.dark .bg-emerald-100\/50, html.dark .bg-emerald-100\/70, html.dark .bg-emerald-100\/80 { background-color: rgb(52 211 153 / 0.2) !important; }
+html.dark .border-emerald-100, html.dark .border-emerald-100\/60, html.dark .border-emerald-100\/80 { border-color: rgb(52 211 153 / .3) !important; }
+html.dark .border-emerald-200, html.dark .border-emerald-200\/60, html.dark .border-emerald-200\/80 { border-color: rgb(52 211 153 / .3) !important; }
+html.dark .border-emerald-300, html.dark .border-emerald-300\/60, html.dark .border-emerald-300\/80 { border-color: rgb(52 211 153 / .3) !important; }
+html.dark .text-emerald-600 { color: #6ee7b7 !important; }
+html.dark .text-emerald-700 { color: #6ee7b7 !important; }
+html.dark .text-emerald-800 { color: #6ee7b7 !important; }
+html.dark .text-emerald-900 { color: #6ee7b7 !important; }
+html.dark .bg-green-50, html.dark .bg-green-50\/40, html.dark .bg-green-50\/50, html.dark .bg-green-50\/70, html.dark .bg-green-50\/80 { background-color: rgb(74 222 128 / 0.12) !important; }
+html.dark .bg-green-100, html.dark .bg-green-100\/40, html.dark .bg-green-100\/50, html.dark .bg-green-100\/70, html.dark .bg-green-100\/80 { background-color: rgb(74 222 128 / 0.2) !important; }
+html.dark .border-green-100, html.dark .border-green-100\/60, html.dark .border-green-100\/80 { border-color: rgb(74 222 128 / .3) !important; }
+html.dark .border-green-200, html.dark .border-green-200\/60, html.dark .border-green-200\/80 { border-color: rgb(74 222 128 / .3) !important; }
+html.dark .border-green-300, html.dark .border-green-300\/60, html.dark .border-green-300\/80 { border-color: rgb(74 222 128 / .3) !important; }
+html.dark .text-green-600 { color: #86efac !important; }
+html.dark .text-green-700 { color: #86efac !important; }
+html.dark .text-green-800 { color: #86efac !important; }
+html.dark .text-green-900 { color: #86efac !important; }
+html.dark .bg-blue-50, html.dark .bg-blue-50\/40, html.dark .bg-blue-50\/50, html.dark .bg-blue-50\/70, html.dark .bg-blue-50\/80 { background-color: rgb(96 165 250 / 0.12) !important; }
+html.dark .bg-blue-100, html.dark .bg-blue-100\/40, html.dark .bg-blue-100\/50, html.dark .bg-blue-100\/70, html.dark .bg-blue-100\/80 { background-color: rgb(96 165 250 / 0.2) !important; }
+html.dark .border-blue-100, html.dark .border-blue-100\/60, html.dark .border-blue-100\/80 { border-color: rgb(96 165 250 / .3) !important; }
+html.dark .border-blue-200, html.dark .border-blue-200\/60, html.dark .border-blue-200\/80 { border-color: rgb(96 165 250 / .3) !important; }
+html.dark .border-blue-300, html.dark .border-blue-300\/60, html.dark .border-blue-300\/80 { border-color: rgb(96 165 250 / .3) !important; }
+html.dark .text-blue-600 { color: #93c5fd !important; }
+html.dark .text-blue-700 { color: #93c5fd !important; }
+html.dark .text-blue-800 { color: #93c5fd !important; }
+html.dark .text-blue-900 { color: #93c5fd !important; }
+html.dark .bg-sky-50, html.dark .bg-sky-50\/40, html.dark .bg-sky-50\/50, html.dark .bg-sky-50\/70, html.dark .bg-sky-50\/80 { background-color: rgb(56 189 248 / 0.12) !important; }
+html.dark .bg-sky-100, html.dark .bg-sky-100\/40, html.dark .bg-sky-100\/50, html.dark .bg-sky-100\/70, html.dark .bg-sky-100\/80 { background-color: rgb(56 189 248 / 0.2) !important; }
+html.dark .border-sky-100, html.dark .border-sky-100\/60, html.dark .border-sky-100\/80 { border-color: rgb(56 189 248 / .3) !important; }
+html.dark .border-sky-200, html.dark .border-sky-200\/60, html.dark .border-sky-200\/80 { border-color: rgb(56 189 248 / .3) !important; }
+html.dark .border-sky-300, html.dark .border-sky-300\/60, html.dark .border-sky-300\/80 { border-color: rgb(56 189 248 / .3) !important; }
+html.dark .text-sky-600 { color: #7dd3fc !important; }
+html.dark .text-sky-700 { color: #7dd3fc !important; }
+html.dark .text-sky-800 { color: #7dd3fc !important; }
+html.dark .text-sky-900 { color: #7dd3fc !important; }
+html.dark .bg-orange-50, html.dark .bg-orange-50\/40, html.dark .bg-orange-50\/50, html.dark .bg-orange-50\/70, html.dark .bg-orange-50\/80 { background-color: rgb(251 146 60 / 0.12) !important; }
+html.dark .bg-orange-100, html.dark .bg-orange-100\/40, html.dark .bg-orange-100\/50, html.dark .bg-orange-100\/70, html.dark .bg-orange-100\/80 { background-color: rgb(251 146 60 / 0.2) !important; }
+html.dark .border-orange-100, html.dark .border-orange-100\/60, html.dark .border-orange-100\/80 { border-color: rgb(251 146 60 / .3) !important; }
+html.dark .border-orange-200, html.dark .border-orange-200\/60, html.dark .border-orange-200\/80 { border-color: rgb(251 146 60 / .3) !important; }
+html.dark .border-orange-300, html.dark .border-orange-300\/60, html.dark .border-orange-300\/80 { border-color: rgb(251 146 60 / .3) !important; }
+html.dark .text-orange-600 { color: #fdba74 !important; }
+html.dark .text-orange-700 { color: #fdba74 !important; }
+html.dark .text-orange-800 { color: #fdba74 !important; }
+html.dark .text-orange-900 { color: #fdba74 !important; }
+html.dark .bg-yellow-50, html.dark .bg-yellow-50\/40, html.dark .bg-yellow-50\/50, html.dark .bg-yellow-50\/70, html.dark .bg-yellow-50\/80 { background-color: rgb(250 204 21 / 0.12) !important; }
+html.dark .bg-yellow-100, html.dark .bg-yellow-100\/40, html.dark .bg-yellow-100\/50, html.dark .bg-yellow-100\/70, html.dark .bg-yellow-100\/80 { background-color: rgb(250 204 21 / 0.2) !important; }
+html.dark .border-yellow-100, html.dark .border-yellow-100\/60, html.dark .border-yellow-100\/80 { border-color: rgb(250 204 21 / .3) !important; }
+html.dark .border-yellow-200, html.dark .border-yellow-200\/60, html.dark .border-yellow-200\/80 { border-color: rgb(250 204 21 / .3) !important; }
+html.dark .border-yellow-300, html.dark .border-yellow-300\/60, html.dark .border-yellow-300\/80 { border-color: rgb(250 204 21 / .3) !important; }
+html.dark .text-yellow-600 { color: #fde047 !important; }
+html.dark .text-yellow-700 { color: #fde047 !important; }
+html.dark .text-yellow-800 { color: #fde047 !important; }
+html.dark .text-yellow-900 { color: #fde047 !important; }
+html.dark .bg-purple-50, html.dark .bg-purple-50\/40, html.dark .bg-purple-50\/50, html.dark .bg-purple-50\/70, html.dark .bg-purple-50\/80 { background-color: rgb(192 132 252 / 0.12) !important; }
+html.dark .bg-purple-100, html.dark .bg-purple-100\/40, html.dark .bg-purple-100\/50, html.dark .bg-purple-100\/70, html.dark .bg-purple-100\/80 { background-color: rgb(192 132 252 / 0.2) !important; }
+html.dark .border-purple-100, html.dark .border-purple-100\/60, html.dark .border-purple-100\/80 { border-color: rgb(192 132 252 / .3) !important; }
+html.dark .border-purple-200, html.dark .border-purple-200\/60, html.dark .border-purple-200\/80 { border-color: rgb(192 132 252 / .3) !important; }
+html.dark .border-purple-300, html.dark .border-purple-300\/60, html.dark .border-purple-300\/80 { border-color: rgb(192 132 252 / .3) !important; }
+html.dark .text-purple-600 { color: #d8b4fe !important; }
+html.dark .text-purple-700 { color: #d8b4fe !important; }
+html.dark .text-purple-800 { color: #d8b4fe !important; }
+html.dark .text-purple-900 { color: #d8b4fe !important; }
+html.dark .bg-violet-50, html.dark .bg-violet-50\/40, html.dark .bg-violet-50\/50, html.dark .bg-violet-50\/70, html.dark .bg-violet-50\/80 { background-color: rgb(167 139 250 / 0.12) !important; }
+html.dark .bg-violet-100, html.dark .bg-violet-100\/40, html.dark .bg-violet-100\/50, html.dark .bg-violet-100\/70, html.dark .bg-violet-100\/80 { background-color: rgb(167 139 250 / 0.2) !important; }
+html.dark .border-violet-100, html.dark .border-violet-100\/60, html.dark .border-violet-100\/80 { border-color: rgb(167 139 250 / .3) !important; }
+html.dark .border-violet-200, html.dark .border-violet-200\/60, html.dark .border-violet-200\/80 { border-color: rgb(167 139 250 / .3) !important; }
+html.dark .border-violet-300, html.dark .border-violet-300\/60, html.dark .border-violet-300\/80 { border-color: rgb(167 139 250 / .3) !important; }
+html.dark .text-violet-600 { color: #c4b5fd !important; }
+html.dark .text-violet-700 { color: #c4b5fd !important; }
+html.dark .text-violet-800 { color: #c4b5fd !important; }
+html.dark .text-violet-900 { color: #c4b5fd !important; }
+html.dark .bg-indigo-50, html.dark .bg-indigo-50\/40, html.dark .bg-indigo-50\/50, html.dark .bg-indigo-50\/70, html.dark .bg-indigo-50\/80 { background-color: rgb(129 140 248 / 0.12) !important; }
+html.dark .bg-indigo-100, html.dark .bg-indigo-100\/40, html.dark .bg-indigo-100\/50, html.dark .bg-indigo-100\/70, html.dark .bg-indigo-100\/80 { background-color: rgb(129 140 248 / 0.2) !important; }
+html.dark .border-indigo-100, html.dark .border-indigo-100\/60, html.dark .border-indigo-100\/80 { border-color: rgb(129 140 248 / .3) !important; }
+html.dark .border-indigo-200, html.dark .border-indigo-200\/60, html.dark .border-indigo-200\/80 { border-color: rgb(129 140 248 / .3) !important; }
+html.dark .border-indigo-300, html.dark .border-indigo-300\/60, html.dark .border-indigo-300\/80 { border-color: rgb(129 140 248 / .3) !important; }
+html.dark .text-indigo-600 { color: #a5b4fc !important; }
+html.dark .text-indigo-700 { color: #a5b4fc !important; }
+html.dark .text-indigo-800 { color: #a5b4fc !important; }
+html.dark .text-indigo-900 { color: #a5b4fc !important; }
+html.dark .bg-teal-50, html.dark .bg-teal-50\/40, html.dark .bg-teal-50\/50, html.dark .bg-teal-50\/70, html.dark .bg-teal-50\/80 { background-color: rgb(45 212 191 / 0.12) !important; }
+html.dark .bg-teal-100, html.dark .bg-teal-100\/40, html.dark .bg-teal-100\/50, html.dark .bg-teal-100\/70, html.dark .bg-teal-100\/80 { background-color: rgb(45 212 191 / 0.2) !important; }
+html.dark .border-teal-100, html.dark .border-teal-100\/60, html.dark .border-teal-100\/80 { border-color: rgb(45 212 191 / .3) !important; }
+html.dark .border-teal-200, html.dark .border-teal-200\/60, html.dark .border-teal-200\/80 { border-color: rgb(45 212 191 / .3) !important; }
+html.dark .border-teal-300, html.dark .border-teal-300\/60, html.dark .border-teal-300\/80 { border-color: rgb(45 212 191 / .3) !important; }
+html.dark .text-teal-600 { color: #5eead4 !important; }
+html.dark .text-teal-700 { color: #5eead4 !important; }
+html.dark .text-teal-800 { color: #5eead4 !important; }
+html.dark .text-teal-900 { color: #5eead4 !important; }
+html.dark .bg-cyan-50, html.dark .bg-cyan-50\/40, html.dark .bg-cyan-50\/50, html.dark .bg-cyan-50\/70, html.dark .bg-cyan-50\/80 { background-color: rgb(34 211 238 / 0.12) !important; }
+html.dark .bg-cyan-100, html.dark .bg-cyan-100\/40, html.dark .bg-cyan-100\/50, html.dark .bg-cyan-100\/70, html.dark .bg-cyan-100\/80 { background-color: rgb(34 211 238 / 0.2) !important; }
+html.dark .border-cyan-100, html.dark .border-cyan-100\/60, html.dark .border-cyan-100\/80 { border-color: rgb(34 211 238 / .3) !important; }
+html.dark .border-cyan-200, html.dark .border-cyan-200\/60, html.dark .border-cyan-200\/80 { border-color: rgb(34 211 238 / .3) !important; }
+html.dark .border-cyan-300, html.dark .border-cyan-300\/60, html.dark .border-cyan-300\/80 { border-color: rgb(34 211 238 / .3) !important; }
+html.dark .text-cyan-600 { color: #67e8f9 !important; }
+html.dark .text-cyan-700 { color: #67e8f9 !important; }
+html.dark .text-cyan-800 { color: #67e8f9 !important; }
+html.dark .text-cyan-900 { color: #67e8f9 !important; }
+
+/* translucent / gradient white surfaces (landing page, sticky headers) */
+html.dark .bg-white\/95, html.dark .bg-white\/90, html.dark .bg-white\/80 { background-color: rgb(17 30 46 / .92) !important; }
+html.dark .hover\:bg-white:hover, html.dark .hover\:bg-slate-50:hover, html.dark .hover\:bg-gray-50:hover { background-color: #1E344B !important; }
+html.dark .hover\:bg-slate-100:hover, html.dark .hover\:bg-gray-100:hover { background-color: #1E344B !important; }
+html.dark .from-white { --tw-gradient-from: #0B131B var(--tw-gradient-from-position) !important; --tw-gradient-to: rgb(11 19 27 / 0) var(--tw-gradient-to-position) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+html.dark .via-blue-50\/25 { --tw-gradient-stops: var(--tw-gradient-from), rgb(23 40 60 / .5) var(--tw-gradient-via-position), var(--tw-gradient-to) !important; }
+html.dark .to-slate-50, html.dark .to-white, html.dark .to-gray-50 { --tw-gradient-to: #0F1B29 var(--tw-gradient-to-position) !important; }
+html.dark .hover\:text-slate-900:hover, html.dark .hover\:text-slate-800:hover { color: #F1F5F9 !important; }
+html.dark .hover\:text-gray-700:hover, html.dark .hover\:text-slate-700:hover { color: #E2E8F0 !important; }
+html.dark .hover\:border-blue-200:hover { border-color: rgb(96 165 250 / .4) !important; }
+html.dark .shadow-sm, html.dark .shadow-md, html.dark .shadow-lg, html.dark .shadow-xl { --tw-shadow-color: rgb(0 0 0 / .4); }
