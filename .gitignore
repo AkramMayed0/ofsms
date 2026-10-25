@@ -6,3 +6,9 @@ dist/
 build/
 *.log
 .DS_Store
+apps/mobile/node_modules/
+apps/mobile/android/
+apps/mobile/package*.json
+apps/mobile/www/
+apps/mobile/assets/
+apps/mobile/capacitor.config.json

@@ -15,7 +15,7 @@ if (typeof window !== 'undefined') {
 const getApiBaseUrl = () => {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
-    if (host && host !== 'localhost' && host !== '127.0.0.1') {
+    if (!process.env.NEXT_PUBLIC_API_URL && host && host !== 'localhost' && host !== '127.0.0.1') {
       return `http://${host}:4000/api`;
     }
   }
