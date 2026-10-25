@@ -40,12 +40,18 @@ export default function OfflineBanner() {
     window.addEventListener('offline', handleOffline);
     window.addEventListener('online', handleOnline);
 
-    // Register Service Worker for offline PWA
+    // Register Service Worker for offline PWA (production only; in dev a stale
+    // worker serves old JS and hides new UI, so remove any existing one)
     if ('serviceWorker' in navigator && process.env.NODE_ENV !== 'test') {
-      navigator.serviceWorker
-        .register('/sw.js')
-        .then((reg) => console.log('✅ OFSMS Service Worker registered:', reg.scope))
-        .catch((err) => console.warn('Service Worker registration failed:', err));
+      if (process.env.NODE_ENV === 'production') {
+        navigator.serviceWorker
+          .register('/sw.js')
+          .then((reg) => console.log('✅ OFSMS Service Worker registered:', reg.scope))
+          .catch((err) => console.warn('Service Worker registration failed:', err));
+      } else {
+        navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => r.unregister()));
+        if (window.caches) caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
+      }
     }
 
     // Capture PWA install prompt

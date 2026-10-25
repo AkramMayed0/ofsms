@@ -29,12 +29,9 @@ jobs:
           SITE_URL: ${{ inputs.site_url }}
         run: |
           npm init -y >/dev/null
-          npm i @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6 @capacitor/assets@3
-          mkdir -p www assets
+          npm i @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
+          mkdir -p www
           echo '<!doctype html><title>OFSMS</title>' > www/index.html
-          cp ../frontend/public/logo.png assets/icon-only.png
-          cp ../frontend/public/logo.png assets/icon-foreground.png
-          cp ../frontend/public/logo.png assets/splash.png
           cat > capacitor.config.json <<JSON
           {
             "appId": "org.namaa.ofsms",
@@ -45,7 +42,16 @@ jobs:
           }
           JSON
           npx cap add android
-          npx capacitor-assets generate --android --iconBackgroundColor '#ffffff' || echo "icon generation skipped"
+          # Launcher icons from the logo (plain PNGs; drop the adaptive-icon XMLs that need extra resources)
+          RES=android/app/src/main/res
+          rm -rf $RES/mipmap-anydpi-v26
+          for d in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
+            dir=$RES/mipmap-${d%%:*}; px=${d##*:}
+            mkdir -p $dir
+            for n in ic_launcher ic_launcher_round ic_launcher_foreground; do
+              convert ../frontend/public/logo.png -resize ${px}x${px} $dir/$n.png
+            done
+          done
           npx cap sync android
 
       - name: Build debug APK
