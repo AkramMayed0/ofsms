@@ -38,6 +38,6 @@ router.patch('/:id/read', authenticate, controller.markOneRead);
 router.post('/broadcast', authenticate, authorize('gm'), validators.broadcastRules, controller.broadcast);
 
 // ── POST /api/notifications/test/trigger-cron ─────────────────────────────────
-router.post('/test/trigger-cron', authenticate, controller.triggerCron);
+router.post('/test/trigger-cron', authenticate, authorize('gm'), controller.triggerCron);
 
 module.exports = router;

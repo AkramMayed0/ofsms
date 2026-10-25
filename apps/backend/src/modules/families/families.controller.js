@@ -139,7 +139,20 @@ const shareFamilyToAds = async (req, res, next) => {
   }
 };
 
+// ── DELETE /api/families/:id ──────────────────────────────────────────────────
+const deleteFamily = async (req, res, next) => {
+  try {
+    const family = await service.deleteFamily(req.params.id);
+    if (!family) return res.status(404).json({ error: 'الأسرة غير موجودة' });
+    return res.json({ message: 'تم حذف الأسرة بنجاح' });
+  } catch (err) {
+    if (err.status === 409) return res.status(409).json({ error: err.message });
+    return next(err);
+  }
+};
+
 module.exports = {
+  deleteFamily,
   createFamily,
   getFamilies,
   getFamilyById,

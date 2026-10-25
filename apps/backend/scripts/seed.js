@@ -22,6 +22,11 @@ const bcrypt = require('bcryptjs');
 const { pool, query } = require('../src/config/db');
 
 async function seed() {
+  // This script TRUNCATEs all data and creates accounts with a known password.
+  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_SEED_IN_PRODUCTION !== 'yes') {
+    console.error('❌ Refusing to seed: NODE_ENV=production. This would DELETE all real data.');
+    process.exit(1);
+  }
   console.log('🌱 Starting OFSMS comprehensive database seeding...\n');
 
   const client = await pool.connect();

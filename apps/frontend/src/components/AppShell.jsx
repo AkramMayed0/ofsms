@@ -93,6 +93,12 @@ const NAV_ITEMS = {
         { label: 'إدارة المستخدمين', href: '/users', icon: UserCog },
       ],
     },
+    {
+      group: 'المساعدة',
+      items: [
+        { label: 'كيف تستخدم النظام', href: '/how-to-use', icon: BookOpen },
+      ],
+    },
   ],
   supervisor: [
     {
@@ -120,7 +126,7 @@ const NAV_ITEMS = {
     {
       group: 'المالية',
       items: [
-        { label: 'كشف الصرف', href: '/disbursements/', icon: DollarSign },
+        { label: 'كشف الصرف', href: '/disbursements', icon: DollarSign },
       ],
     },
     {
@@ -128,6 +134,12 @@ const NAV_ITEMS = {
       items: [
         { label: 'التقارير',  href: '/reports',       icon: FileText },
         { label: 'الإعلانات', href: '/announcements', icon: Megaphone },
+      ],
+    },
+    {
+      group: 'المساعدة',
+      items: [
+        { label: 'كيف تستخدم النظام', href: '/how-to-use', icon: BookOpen },
       ],
     },
   ],
@@ -160,6 +172,12 @@ const NAV_ITEMS = {
         { label: 'الإعلانات', href: '/announcements', icon: Megaphone },
       ],
     },
+    {
+      group: 'المساعدة',
+      items: [
+        { label: 'كيف تستخدم النظام', href: '/how-to-use', icon: BookOpen },
+      ],
+    },
   ],
   finance: [
     {
@@ -182,6 +200,12 @@ const NAV_ITEMS = {
         { label: 'الإعلانات', href: '/announcements', icon: Megaphone },
       ],
     },
+    {
+      group: 'المساعدة',
+      items: [
+        { label: 'كيف تستخدم النظام', href: '/how-to-use', icon: BookOpen },
+      ],
+    },
   ],
 };
 
@@ -195,7 +219,7 @@ const ROLE_LABELS = {
 
 const flatItems = (groups) => groups.flatMap((g) => g.items);
 
-const PUBLIC_PREFIXES = ['/login', '/sponsor/login', '/sponsor/portal', '/landing', '/install'];
+const PUBLIC_PREFIXES = ['/login', '/sponsor/login', '/sponsor/portal', '/landing', '/install', '/how-to-use'];
 const ROLE_EXTRA_PATHS = {
   gm: ['/ads', '/receipts/supervisor', '/landing-settings', '/landing', '/in-kind', '/educational', '/evaluations', '/settings'],
   supervisor: ['/receipts/supervisor', '/landing-settings', '/landing', '/in-kind', '/educational', '/evaluations', '/settings'],

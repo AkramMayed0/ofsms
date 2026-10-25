@@ -20,9 +20,13 @@ const { refreshAccessToken, authenticate } = require('../../middleware/rbac');
 const { loginValidation } = require('./auth.validator');
 const { handleLogin, handleLogout, handleMe } = require('./auth.controller');
 const { findUserById } = require('./auth.service');
+const { rateLimit } = require('../../middleware/rateLimit');
+
+// 20 attempts / 15 min per IP — slows down password guessing
+const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
 
 // POST /api/auth/login
-router.post('/login', loginValidation, handleLogin);
+router.post('/login', loginLimiter, loginValidation, handleLogin);
 
 // POST /api/auth/refresh
 router.post('/refresh', refreshAccessToken(findUserById));

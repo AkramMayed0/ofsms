@@ -575,8 +575,8 @@ export default function PublicLandingPage() {
           <div className="flex items-center gap-5">
             <Link href="/login" className="hover:text-sky-400 transition font-medium">دخول النظام</Link>
             <Link href="/install" className="hover:text-sky-400 transition font-medium">تحميل التطبيق</Link>
-            <Link href="/sponsor/portal?token=portal_demo_sponsor_token_04" className="hover:text-sky-400 transition font-medium">بوابة الكافل</Link>
-            <Link href="/landing-settings" className="hover:text-sky-400 transition font-medium">إدارة المحتوى</Link>
+            <Link href="/sponsor/login" className="hover:text-sky-400 transition font-medium">بوابة الكافل</Link>
+            <Link href="/how-to-use" className="hover:text-sky-400 transition font-medium">كيف تستخدم النظام</Link>
           </div>
         </div>
       </footer>

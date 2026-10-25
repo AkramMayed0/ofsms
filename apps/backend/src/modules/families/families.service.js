@@ -190,7 +190,33 @@ const getFamiliesUnderMarketing = async () => {
   return repository.getFamiliesUnderMarketing();
 };
 
+/**
+ * Delete a family record and its documents (GM only).
+ * Blocked if the family has an active sponsorship or appears in a disbursement list.
+ */
+const deleteFamily = async (id) => {
+  const { query } = require('../../config/db');
+  const { rows: activeRows } = await query(
+    `SELECT id FROM sponsorships WHERE beneficiary_id = $1 AND beneficiary_type = 'family' AND is_active = TRUE LIMIT 1`,
+    [id]
+  );
+  if (activeRows.length > 0) {
+    throw Object.assign(new Error('لا يمكن حذف أسرة لديها كفالة نشطة'), { status: 409 });
+  }
+  try {
+    await query(`DELETE FROM documents WHERE entity_type = 'family' AND entity_id = $1`, [id]);
+    const { rows } = await query(`DELETE FROM families WHERE id = $1 RETURNING *`, [id]);
+    return rows[0] || null;
+  } catch (err) {
+    if (err.code === '23503') { // foreign key: used in disbursement lists etc.
+      throw Object.assign(new Error('لا يمكن حذف أسرة مرتبطة بكشوف صرف سابقة'), { status: 409 });
+    }
+    throw err;
+  }
+};
+
 module.exports = {
+  deleteFamily,
   createFamily,
   getFamilies,
   getFamilyById,

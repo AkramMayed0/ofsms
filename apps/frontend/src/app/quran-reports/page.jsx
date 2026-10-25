@@ -24,9 +24,10 @@ import PageHeader from '@/components/ui/PageHeader';
 
 const API = {
   QURAN_REPORTS: '/quran-reports',
+  MINE: '/quran-reports/mine',
+  PENDING: '/quran-reports/pending',
   ORPHANS: '/orphans?status=under_sponsorship',
-  APPROVE: (id) => `/quran-reports/${id}/approve`,
-  REJECT: (id) => `/quran-reports/${id}/reject`,
+  REVIEW: (id) => `/quran-reports/${id}/review`,
 };
 
 const MONTHS_AR = [
@@ -311,11 +312,12 @@ export default function QuranReportsPage() {
 
   const fetchReports = useCallback(() => {
     setLoading(true);
-    api.get(API.QURAN_REPORTS)
+    // Agents see their own reports; supervisor/GM review the pending queue
+    api.get(role === 'agent' ? API.MINE : API.PENDING)
       .then(({ data }) => setReports(data.reports || []))
       .catch(() => setError('تعذّر تحميل البيانات'))
       .finally(() => setLoading(false));
-  }, []);
+  }, [role]);
 
   useEffect(() => { fetchReports(); }, [fetchReports]);
 
@@ -332,7 +334,7 @@ export default function QuranReportsPage() {
     if (!approveTarget) return;
     setActing(true);
     try {
-      await api.patch(API.APPROVE(approveTarget.id));
+      await api.patch(API.REVIEW(approveTarget.id), { action: 'approved' });
       setApproveTarget(null);
       fetchReports();
     } catch (err) {
@@ -344,7 +346,7 @@ export default function QuranReportsPage() {
     if (!rejectTarget) return;
     setActing(true);
     try {
-      await api.patch(API.REJECT(rejectTarget.id), { notes });
+      await api.patch(API.REVIEW(rejectTarget.id), { action: 'rejected', notes });
       setRejectTarget(null);
       fetchReports();
     } catch (err) {

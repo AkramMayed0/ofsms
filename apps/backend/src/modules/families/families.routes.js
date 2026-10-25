@@ -86,6 +86,14 @@ router.patch(
   controller.updateFamilyStatus
 );
 
+// GM only: delete family (blocked if active sponsorship exists)
+router.delete(
+  '/:id',
+  authenticate,
+  authorize('gm'),
+  controller.deleteFamily
+);
+
 // GM only: share family profile as a sponsor-facing ad/request
 router.post(
   '/:id/share',

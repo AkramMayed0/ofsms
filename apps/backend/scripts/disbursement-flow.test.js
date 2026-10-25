@@ -102,8 +102,8 @@ async function run() {
   const SUP_PASSWORD     = process.env.SUP_PASSWORD     || 'Test@1234';
   const FINANCE_EMAIL    = process.env.FINANCE_EMAIL    || 'finance@ofsms.local';
   const FINANCE_PASSWORD = process.env.FINANCE_PASSWORD || 'Test@1234';
-  const GM_EMAIL         = process.env.GM_EMAIL         || 'admin@ofsms.local';
-  const GM_PASSWORD      = process.env.GM_PASSWORD      || 'Admin@1234';
+  const GM_EMAIL         = process.env.GM_EMAIL         || 'gm@ofsms.local';
+  const GM_PASSWORD      = process.env.GM_PASSWORD      || 'Test@1234';
 
   let agentToken, supToken, finToken, gmToken;
   let orphanId, reportId, listId;
@@ -143,11 +143,10 @@ async function run() {
 
       // 409 = already submitted this month — fetch existing
       if (status === 409) {
-        const { data: listData } = await get(
-          `/quran-reports?month=${month}&year=${year}`, agentToken
-        );
+        // The agent's own list (/mine) has no orphan_id, so match on the supervisor's pending queue
+        const { data: listData } = await get('/quran-reports/pending', supToken);
         const existing = listData.reports?.find(
-          r => r.orphan_id === orphanId && r.month === month && r.year === year
+          r => r.month === month && r.year === year
         );
         assert(existing, 'Could not find existing report for this month');
         return existing.id;
@@ -162,7 +161,7 @@ async function run() {
     console.log(`\n${BOLD}Phase 4: Supervisor Approves Quran Report${RESET}`);
 
     await step('Supervisor approves Quran report', async () => {
-      const { status, data } = await patch(`/quran-reports/${reportId}/approve`, {}, supToken);
+      const { status, data } = await patch(`/quran-reports/${reportId}/review`, { action: 'approved' }, supToken);
       // 400 = already approved — that's fine
       if (status === 400 && data?.error?.includes('مراجعته')) return;
       assert(status === 200, `Approve report failed: ${data?.error || status}`);

@@ -29,6 +29,9 @@
     "pg": "^8.11.3",
     "puppeteer-core": "^25.0.2"
   },
+  "jest": {
+    "testPathIgnorePatterns": ["/node_modules/", "/scripts/"]
+  },
   "devDependencies": {
     "jest": "^30.3.0",
     "nodemon": "^3.1.0"

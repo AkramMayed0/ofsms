@@ -13,11 +13,15 @@ const validators = require('../sponsors/sponsors.validators');
 const { generateSponsorToken, authenticateSponsor } = require('../../middleware/sponsorAuth');
 const announcementsService = require('../announcements/announcements.service');
 
+const { rateLimit } = require('../../middleware/rateLimit');
+
 const router = Router();
+const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
 
 // ── POST /api/sponsor/login ───────────────────────────────────────────────────
 router.post(
   '/login',
+  loginLimiter,
   validators.sponsorLoginRules,
   async (req, res, next) => {
     try {

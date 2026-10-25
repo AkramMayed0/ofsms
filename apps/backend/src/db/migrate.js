@@ -15,7 +15,8 @@ const isDryRun = process.argv.includes('--dry-run');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }, // required for Supabase
+  // SSL is required for hosted databases (Supabase/Render) but not for a local one
+  ssl: /@(localhost|127\.0\.0\.1)(:|\/)/.test(process.env.DATABASE_URL || '') ? false : { rejectUnauthorized: false },
 });
 
 const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
