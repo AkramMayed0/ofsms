@@ -56,7 +56,7 @@ app.get('/health', (_req, res) => {
 });
 
 // ── Local static files (dev storage fallback) ────────────────────────────────
-app.use('/local-files', express.static(path.resolve(__dirname, '../uploads')));
+app.use('/local-files', express.static(process.env.UPLOADS_DIR || path.resolve(__dirname, '../uploads')));
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use('/api/auth',         require('./modules/auth/auth.routes'));

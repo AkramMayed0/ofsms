@@ -11,7 +11,12 @@ const path = require('path');
 const fs   = require('fs');
 const { v4: uuidv4 } = require('uuid');
 
-const UPLOADS_DIR = path.resolve(__dirname, '../../uploads');
+// Where local-mode files are written. On Railway point this at a mounted Volume (e.g. /data/uploads).
+const UPLOADS_DIR = process.env.UPLOADS_DIR || path.resolve(__dirname, '../../uploads');
+
+// Public address of this API, used to build file links in local-storage mode
+const localUrl = (key) =>
+  `${(process.env.PUBLIC_API_URL || 'http://localhost:4000').replace(/\/+$/, '')}/local-files/${key}`;
 
 // ── S3 client ─────────────────────────────────────────────────────────────────
 const s3 = new AWS.S3({
@@ -67,7 +72,7 @@ const uploadFile = async ({ buffer, originalName, mimetype, folder = 'documents'
   if (isLocalDev()) {
     console.log(`[Storage LOCAL] Saving file locally: ${key}`);
     await saveLocalFile(key, buffer);
-    return { key, url: `http://localhost:4000/local-files/${key}` };
+    return { key, url: localUrl(key) };
   }
 
   // ── S3 Upload with automatic fallback in development ──────────────────────
@@ -86,7 +91,7 @@ const uploadFile = async ({ buffer, originalName, mimetype, folder = 'documents'
     if (process.env.NODE_ENV !== 'production') {
       console.warn(`[S3 Warning] S3 upload failed (${err.message}). Falling back to local storage.`);
       await saveLocalFile(key, buffer);
-      return { key, url: `http://localhost:4000/local-files/${key}` };
+      return { key, url: localUrl(key) };
     }
     throw err;
   }
@@ -100,7 +105,7 @@ const uploadFile = async ({ buffer, originalName, mimetype, folder = 'documents'
  */
 const getSignedUrl = async (key, expires = 3600) => {
   if (isLocalDev()) {
-    return `http://localhost:4000/local-files/${key}`;
+    return localUrl(key);
   }
 
   try {
@@ -111,7 +116,7 @@ const getSignedUrl = async (key, expires = 3600) => {
     });
   } catch (err) {
     if (process.env.NODE_ENV !== 'production') {
-      return `http://localhost:4000/local-files/${key}`;
+      return localUrl(key);
     }
     throw err;
   }

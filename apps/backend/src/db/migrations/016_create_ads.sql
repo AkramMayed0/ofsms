@@ -11,6 +11,16 @@ CREATE TABLE IF NOT EXISTS ads (
 CREATE INDEX IF NOT EXISTS idx_ads_beneficiary ON ads(beneficiary_type, beneficiary_id);
 CREATE INDEX IF NOT EXISTS idx_ads_published ON ads(published_at DESC);
 
+-- Row-level security only exists on Supabase (needs the `authenticated` role and auth.jwt()).
+-- On plain PostgreSQL (Railway, local) this block is skipped; the API checks roles itself.
+DO $rls$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated')
+     AND EXISTS (
+       SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+       WHERE n.nspname = 'auth' AND p.proname = 'jwt'
+     ) THEN
+    EXECUTE $q$
 ALTER TABLE ads ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS ads_select_authenticated ON ads;
@@ -30,3 +40,7 @@ CREATE POLICY ads_delete_admin_only
   ON ads FOR DELETE
   TO authenticated
   USING ((auth.jwt() ->> 'role') = 'admin');
+    $q$;
+  END IF;
+END
+$rls$;

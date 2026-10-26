@@ -1,0 +1,9 @@
+node_modules
+.next
+.env
+.env.*
+playwright-report
+test-results
+scratch
+e2e
+*.docx

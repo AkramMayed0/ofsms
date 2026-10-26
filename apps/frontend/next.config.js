@@ -1,3 +1,6 @@
+// Backend used by the /api and /local-files dev proxy below (override with BACKEND_URL)
+const BACKEND_URL = (process.env.BACKEND_URL || 'http://localhost:4000').replace(/\/+$/, '');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -17,11 +20,11 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:4000/api/:path*',
+        destination: `${BACKEND_URL}/api/:path*`,
       },
       {
         source: '/local-files/:path*',
-        destination: 'http://localhost:4000/local-files/:path*',
+        destination: `${BACKEND_URL}/local-files/:path*`,
       },
     ];
   },

@@ -15,8 +15,11 @@ const isDryRun = process.argv.includes('--dry-run');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  // SSL is required for hosted databases (Supabase/Render) but not for a local one
-  ssl: /@(localhost|127\.0\.0\.1)(:|\/)/.test(process.env.DATABASE_URL || '') ? false : { rejectUnauthorized: false },
+  // SSL for hosted databases (Supabase). Off for local databases and when DATABASE_SSL=false
+  // (e.g. Railway's private network, which does not offer SSL).
+  ssl: process.env.DATABASE_SSL === 'false' || /@(localhost|127\.0\.0\.1|[^/:@]*\.railway\.internal)(:|\/)/.test(process.env.DATABASE_URL || '')
+    ? false
+    : { rejectUnauthorized: false },
 });
 
 const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
